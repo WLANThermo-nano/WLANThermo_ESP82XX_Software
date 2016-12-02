@@ -1,14 +1,14 @@
 #include <Wire.h>                 // I2C
 #include <SPI.h>                  // SPI
 #include <Ticker.h>               // TIMER
-#include <SSD1306.h>              // TFT - ESP8266 OLED Driver for SSD1306
+#include <SSD1306.h>              // TFT - ESP8266 OLED Driver for SSD1306: https://github.com/squix78/esp8266-oled-ssd1306
 #include <ESP8266WiFi.h>          // WIFI
 #include <ESP8266WiFiMulti.h>     // WIFI
-#include <OLEDDisplayUi.h>        // TFT
+#include <OLEDDisplayUi.h>        // TFT- ESP8266 OLED Driver for SSD1306: https://github.com/squix78/esp8266-oled-ssd1306
 #include <MAX11613.h>             // NTC
-#include <Adafruit_MAX31855.h>    // K-TYPE
+#include <Adafruit_MAX31855.h>    // K-TYPE: https://github.com/adafruit/Adafruit-MAX31855-library
 #include <RunningMedian.h>        // SAMPLES SMOOTH
-#include <TelegramBot.h>          // TELEGRAM
+#include <TelegramBot.h>          // TELEGRAM: https://github.com/Lstt2005/ESP8266_I.O.Broker
 #include <ESP8266mDNS.h>          // OTA
 #include <ArduinoOTA.h>           // OTA
 
