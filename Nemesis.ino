@@ -52,6 +52,9 @@ void setup() {
   // Current Battery Voltage
   get_Vbat();
   get_rssi();
+  
+  // Initialize Timer
+  set_timer();
 
 }
 
@@ -71,18 +74,18 @@ void loop() {
       get_Vbat();
       get_rssi();
       
-      if (!isAP) sendData();
-      
+      if (!isAP) {
+        sendData();
+        
+        bot.getUpdates(bot.message[0][1]);
+        Bot_ExecMessages();
+      }
       readyForUpdate = false;
     }
     
     if (readyForTemp) {
       get_Temperature();
       
-      if (!isAP) {
-        bot.getUpdates(bot.message[0][1]);
-        Bot_ExecMessages();
-      }
       readyForTemp = false;
     }
     
