@@ -20,23 +20,23 @@
 // Benutzerdaten
 
 // WIFI
-#define WIFISSID1 "WLAN-DDC234"
-#define PASSWORD1 "FTZuh5842OBU8753pip"
+#define WIFISSID1 "xxx"
+#define PASSWORD1 "xxx"
 
-#define WIFISSID2 "NTGR92B4"
-#define PASSWORD2 "31909140" 
+#define WIFISSID2 "xxx"
+#define PASSWORD2 "xxx" 
 
 // ACCESS POINT
 #define APNAME "APOLLO"
 #define APPASSWORT "12345678"
 
 // TELEGRAM
-#define BOTTOKEN "280220123:AAHdw_5QeO1lfIhXU8ja_IlpSSg2gYTJXtU" 
-#define BOTNAME "nano_ochs01"
-#define BOTUSERNAME "nano_ochs_bot"
+#define BOTTOKEN "xxx" 
+#define BOTNAME "xxx"
+#define BOTUSERNAME "xxx"
 
 // THINGSPEAK
-#define THINGSPEAK_KEY "B0H7EU8PX7D30AN5"
+#define THINGSPEAK_KEY "xxx"
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
