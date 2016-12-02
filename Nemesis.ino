@@ -53,34 +53,16 @@ void setup() {
   get_Vbat();
   get_rssi();
 
-  /*
-  int test = 0x34;
-  Serial.println(test, BIN);
-  Serial.println(test << 1, BIN);
-  Serial.println(1 + (test << 1), BIN);
-  */
-
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 void loop() {
-
-  /*
-  if (readyForUpdate && display.getFrameState() == display.FRAME_STATE_FIX) {
-  */
   
   ArduinoOTA.handle();
   
-  //display.clear();
-  //display.nextFrameTick();
-  //display.display();
-
   int remainingTimeBudget = ui.update();
-
-  //Serial.println(remainingTimeBudget);
-
   if (remainingTimeBudget > 0) {
     // Don't do stuff if you are below your
     // time budget.
@@ -96,11 +78,7 @@ void loop() {
     
     if (readyForTemp) {
       get_Temperature();
-      if (temp[0]> 30) {
-        String postStr = "ACHTUNG: ";
-        postStr += String(temp[0],1);
-        bot.sendMessage("256288661", postStr, "");
-      }
+      
       if (!isAP) {
         bot.getUpdates(bot.message[0][1]);
         Bot_ExecMessages();
