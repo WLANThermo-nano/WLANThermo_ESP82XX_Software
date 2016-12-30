@@ -16,6 +16,7 @@
 
     HISTORY:
     0.1.00 - 2016-12-30 initial version
+    0.2.00 - 2016-12-30 impliment ChannelData
     
  ****************************************************/
 
@@ -69,16 +70,16 @@ bool loadConfig() {
   for (int i=0; i < CHANNELS; i++){
     
     // Fühlertyp auslesen  
-    ttyp[i]  = json["ttyp"][i];
+    ch[i].typ = json["ttyp"][i];
 
     // Temperatur MIN auslesen
-    tmin[i]  = json["tmin"][i];
+    ch[i].min = json["tmin"][i];
 
     // Temperatur MAX auslesen
-    tmax[i]  = json["tmax"][i];  
+    ch[i].max = json["tmax"][i];  
 
     // Temperatur ALARM auslesen
-    talarm[i]  = json["talarm"][i];  
+    ch[i].alarm = json["talarm"][i];  
   }
 
   Serial.print("Loaded Author: ");
@@ -192,10 +193,10 @@ bool changeConfig() {
   JsonArray& _alarm = neu.createNestedArray("talarm");
     
   for (int i=0; i < CHANNELS; i++){
-    _typ.add(ttyp[i]); 
-    _min.add(tmin[i],1);
-    _max.add(tmax[i],1); 
-    _alarm.add(talarm[i]); 
+    _typ.add(ch[i].typ); 
+    _min.add(ch[i].min,1);
+    _max.add(ch[i].max,1); 
+    _alarm.add(ch[i].alarm); 
   }
 
   // Alte Daten überschreiben

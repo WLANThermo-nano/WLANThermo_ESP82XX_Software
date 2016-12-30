@@ -16,6 +16,7 @@
     
     HISTORY:
     0.1.00 - 2016-12-30 initial version
+    0.2.00 - 2016-12-30 implement ChannelData
     
  ****************************************************/
  
@@ -109,55 +110,55 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
 
 void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
-  display->fillRect(x+28,y+43-match[current_ch],4,match[current_ch]);   // Current level
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
   display->drawString(114+x, 20+y, "Kanal " + String(current_ch+1));    // Channel Name
   display->setFont(ArialMT_Plain_16);
-  display->drawString(114+x, 36+y, String(temp[current_ch],1) + " °C"); // Channel Temp
+  display->drawString(114+x, 36+y, String(ch[current_ch].temp,1) + " °C"); // Channel Temp
 
 }
 
 void drawlimito(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
-  display->fillRect(x+28,y+43-match[current_ch],4,match[current_ch]);   // Current level
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
-  display->drawString(104+x, 19+y, String(tmax[current_ch],1)+ " °C");  // Upper Limit
+  display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ " °C");  // Upper Limit
   display->drawLine(33+x,25+y,50,25);
 }
 
 
 void drawlimitu(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
-  display->fillRect(x+28,y+43-match[current_ch],4,match[current_ch]);   // Current level
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
-  display->drawString(104+x, 34+y, String(tmin[current_ch],1)+ " °C");  // Lower Limit
+  display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ " °C");  // Lower Limit
   display->drawLine(33+x,39+y,50,39);
 }
 
 void drawtyp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
-  display->fillRect(x+28,y+43-match[current_ch],4,match[current_ch]);   // Current level
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
   display->drawString(114+x, 20+y, "TYP:");                         
-  display->drawString(114+x, 36+y, ttypname[ttyp[current_ch]]);            // Typ
+  display->drawString(114+x, 36+y, ttypname[ch[current_ch].typ]);            // Typ
 }
 
 void drawalarm(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
-  display->fillRect(x+28,y+43-match[current_ch],4,match[current_ch]);   // Current level
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
   display->drawString(114+x, 20+y, "ALARM:");           
-  if (talarm[current_ch]) display->drawString(114+x, 36+y, "JA");
+  if (ch[current_ch].alarm) display->drawString(114+x, 36+y, "JA");
   else display->drawString(114+x, 36+y, "NEIN");                        // Alarm
 }
 

@@ -16,6 +16,7 @@
     
     HISTORY:
     0.1.00 - 2016-12-30 initial version
+    0.2.00 - 2016-12-30 implement ChannelData
     
  ****************************************************/
 
@@ -67,39 +68,38 @@ void get_Temperature() {
   // Read NTC Channels
   for (int i=0; i < CHANNELS; i++)  {
 
-    // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
-    // KTYPE wandert dann auf Kanal 5
-    #if KTYPE
-    if (i == 4) {
-      temp[i] = get_thermocouple();
-      continue;
-    }
-    #endif
-
+    float value;
+  
     if (CHANNELS > 3 && i == CHANNELS-1) {
       // Letzter Kanal ist immer Umgebungstemperatur und der ist Kanal 7
-      temp[i] = calcT(get_adc_average(6),ttyp[i]);
+      value = calcT(get_adc_average(6),ch[i].typ);
     }
     // NTC der Reihe nach auslesen
     else  {
-      temp[i] = calcT(get_adc_average(i),ttyp[i]);
+      value = calcT(get_adc_average(i),ch[i].typ);
     }
-  }
+ 
+    // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
+    // KTYPE wandert dann auf Kanal 5
+    #if KTYPE
+    if (i == 4) value = get_thermocouple();
+    #endif
 
-
-  // Temperature monitoring  
-  for (int i=0; i < CHANNELS; i++){
-
-    // Show limits in OLED
-    if (tmax[i] > tmin[i]) {
-      match[i] = map(temp[i],tmin[i],tmax[i],3,18);
-      match[i] = constrain(match[i], 0, 20);
+    ch[i].temp = value;
+    
+    float max = ch[i].max;
+    float min = ch[i].min;
+    
+    // Show limits in OLED  
+    if (max > min) {
+      int match = map(value,min,max,3,18);
+      ch[i].match = constrain(match, 0, 20);
     }
-    else match[i] = 0;
+    else ch[i].match = 0;
 
     // Check limit exceeded
-    if (temp[i] > tmax[i] || temp[i] < tmin[i]) alarm[i] = true;
-    else alarm[i] = false;
+    if (value > max || value < min) ch[i].isalarm = true;
+    else ch[i].isalarm = false;
   }
 }
 
@@ -110,14 +110,15 @@ void set_Channels() {
 
   // Grundwerte einrichten
   for (int i=0; i<CHANNELS; i++) {
-    temp[i] = 0.0;
-    match[i] = 0;
-    alarm[i] = false;
+        
+    ch[i].temp = 0.0;
+    ch[i].match = 0;
+    ch[i].isalarm = false;
   }
 
   // Wenn KTYPE muss Kanal 5 auch KTYPE sein
   #if KTYPE
-  ttyp[4] = 6;
+  ch[4].typ = 6;
   #endif
 
 }

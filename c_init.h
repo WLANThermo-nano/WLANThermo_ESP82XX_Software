@@ -16,6 +16,7 @@
     
     HISTORY:
     0.1.00 - 2016-12-30 initial version
+    0.2.00 - 2016-12-30 implement ChannelData
     
  ****************************************************/
 
@@ -79,16 +80,20 @@
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 // GLOBAL VARIABLES
 
+
 // CHANNELS
-float   temp[CHANNELS];           // TEMPERATURE ARRAY
-int     match[CHANNELS];          // Anzeige im Temperatursymbol
+struct ChannelData {
+   float temp;            // TEMPERATURE
+   int   match;           // Anzeige im Temperatursymbol
+   float max;             // MAXIMUM TEMPERATURE
+   float min;             // MINIMUM TEMPERATURE
+   byte  typ;             // TEMPERATURE SENSOR
+   bool  alarm;           // CHANNEL ALARM
+   bool  isalarm;         // CURRENT ALARM
+};
 
-float   tmax[CHANNELS];           // MAXIMUM TEMPERATURE ARRAY
-float   tmin[CHANNELS];           // MINIMUM TEMPERATURE ARRAY
-byte    ttyp[CHANNELS];           // TEMPERATURE SENSOR TYPE ARRAY
-boolean talarm[CHANNELS];         // CHANNEL ALARM ARRAY
+ChannelData ch[CHANNELS];
 
-boolean alarm[CHANNELS];
 String  ttypname[] = {"Maverik",
                       "Fantast-Neu",
                       "100K6A1B",
@@ -286,22 +291,22 @@ void button_get() {
       
       switch (ui.getCurrentFrameCount()) {
         case 1:  // Upper Limit
-          tempor = tmax[current_ch] +(0.1*mupi);
+          tempor = ch[current_ch].max +(0.1*mupi);
           if (tempor > 95.0) tempor = 20.0;
-          tmax[current_ch] = tempor;
+          ch[current_ch].max = tempor;
           break;
         case 2:  // Lower Limit
-          tempor = tmin[current_ch] +(0.1*mupi);
+          tempor = ch[current_ch].min +(0.1*mupi);
           if (tempor > 95.0) tempor = 20.0;
-          tmin[current_ch] = tempor;
+          ch[current_ch].min = tempor;
           break;
         case 3:  // Typ
-          tempor = ttyp[current_ch] +1;
+          tempor = ch[current_ch].typ +1;
           if (tempor > 5) tempor = 0;
-          ttyp[current_ch] = tempor;
+          ch[current_ch].typ = tempor;
           break;
         case 4:  // Alarm
-          talarm[current_ch] = !talarm[current_ch];
+          ch[current_ch].alarm = !ch[current_ch].alarm;
           break;
         default:
           break; 
@@ -326,6 +331,7 @@ void button_get() {
   }
 
 }
+
 
 
 

@@ -16,6 +16,7 @@
     
     HISTORY:
     0.1.00 - 2016-12-30 initial version
+    0.2.00 - 2016-12-30 implement ChannelData
     
  ****************************************************/
 
@@ -153,13 +154,12 @@ void loop() {
       get_Temperature();
       
       if (!isAP) {
-      if (temp[0]> tmax[0] && talarm[0]) {
+      if (ch[0].alarm && ch[0].isalarm) {
         
         // Alarmfunktion
         String postStr = "ACHTUNG: ";
-        postStr += String(temp[0],1);
-        
-      }
+        postStr += String(ch[0].temp,1);
+      }  
       
       }
       lastUpdateSensor = millis();

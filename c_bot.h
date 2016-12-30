@@ -16,6 +16,7 @@
     
     HISTORY:
     0.1.00 - 2016-12-30 initial version
+    0.2.00 - 2016-12-30 implement ChannelData
     
  ****************************************************/
 
@@ -32,19 +33,19 @@ void sendData() {
    
     String postStr = apiKey;
     postStr +="&1=";
-    postStr += String(temp[0],1);
+    postStr += String(ch[0].temp,1);
     postStr +="&2=";
-    postStr += String(temp[1],1);
+    postStr += String(ch[1].temp,1);
     postStr +="&3=";
-    postStr += String(temp[2],1);
+    postStr += String(ch[2].temp,1);
     postStr +="&4=";
-    postStr += String(temp[3],1);
+    postStr += String(ch[3].temp,1);
     postStr +="&5=";
-    postStr += String(temp[4],1);
+    postStr += String(ch[4].temp,1);
     postStr +="&6=";
-    postStr += String(temp[5],1);
+    postStr += String(ch[5].temp,1);
     postStr +="&7=";
-    postStr += String(temp[5],1);
+    postStr += String(ch[5].temp,1);
     postStr +="&8=";
     postStr += String(BatteryPercentage);
 
@@ -157,14 +158,14 @@ void Bot_ExecMessages(struct UserData* userData) {
   
     if (strcmp(userData->text, "/temp1")==0) {
         postStr = "Kanal 1: ";
-        postStr += String(temp[0],1);
+        postStr += String(ch[0].temp,1);
         postStr += " °C";
         sendMessage(userData->chat_id, postStr, "");
     }
 
     else if (strcmp(userData->text, "/temp2")==0) {
         postStr = "Kanal 2: ";
-        postStr += String(temp[1],1);
+        postStr += String(ch[1].temp,1);
         postStr += " °C";
         sendMessage(userData->chat_id, postStr, "");
     }
