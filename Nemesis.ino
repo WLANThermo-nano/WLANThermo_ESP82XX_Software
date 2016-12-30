@@ -28,8 +28,8 @@
 
 // bitte nicht zutreffendes auskommentieren
 //#define VARIANT_A                           // 3xNTC// CHOOSE HARDWARE
-//#define VARIANT_B                           // 6xNTC, 1xSYSTEM
-#define VARIANT_C                           // 4xNTC, 1xKYTPE, 1xSYSTEM
+#define VARIANT_B                           // 6xNTC, 1xSYSTEM
+//#define VARIANT_C                           // 4xNTC, 1xKYTPE, 1xSYSTEM
 
 // falls erstes Flashen "xxx" ersetzen (nicht auskommentieren)
 #define WIFISSID "xxx"              // SET WIFI SSID (falls noch kein wifi.json angelegt ist)  
