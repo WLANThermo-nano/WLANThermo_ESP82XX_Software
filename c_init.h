@@ -1,5 +1,5 @@
  /*************************************************** 
-    Copyright (C) 2016  Steffen Ochs
+    Copyright (C) 2016  Steffen Ochs, Phantomias2006
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
     HISTORY:
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 implement ChannelData
+    0.2.01 - 2017-01-02 Change Button Event
     
  ****************************************************/
 
@@ -46,7 +47,7 @@
 #endif
 
 // BATTERY
-#define BATTMIN 3400                  // MINIMUM BATTERY VOLTAGE in mV
+#define BATTMIN 3600                  // MINIMUM BATTERY VOLTAGE in mV
 #define BATTMAX 4185                  // MAXIMUM BATTERY VOLTAGE in mV 
 #define ANALOGREADBATTPIN 0
 #define BATTDIV 5.9F
@@ -66,6 +67,10 @@
 // BUTTONS
 #define BUT1  4      // Pullup vorhanden
 #define BUT2  5      // Pullup vorhanden
+#define INPUTMODE INPUT_PULLUP      // INPUT oder INPUT_PULLUP
+#define PRELLZEIT 5                 // Prellzeit in Millisekunden   
+#define DOUBLECLICKTIME 400         // Längste Zeit für den zweiten Klick beim DOUBLECLICK
+#define LONGCLICKTIME 600           // Mindestzeit für einen LONGCLICK
 #define MINCOUNTER 0
 #define MAXCOUNTER CHANNELS-1
 
@@ -79,7 +84,6 @@
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 // GLOBAL VARIABLES
-
 
 // CHANNELS
 struct ChannelData {
@@ -115,15 +119,16 @@ byte isAP = 0;                    // WIFI MODE
 String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;
+long rssi = 0;                   // Buffer rssi
 
 // BUTTONS
-volatile int but1_flag;     // Variable liegt im RAM nicht im REGISTER
-volatile int but2_flag;     // Variable liegt im RAM nicht im REGISTER
-volatile int but1_rst; 
-volatile int but2_rst; 
+byte buttonPins[]={4,5};          // Pins
+#define NUMBUTTONS sizeof(buttonPins)
+byte buttonState[NUMBUTTONS];     // Aktueller Status des Buttons HIGH/LOW
+enum {NONE, FIRSTDOWN, FIRSTUP, SHORTCLICK, DOUBLECLICK, LONGCLICK};
+byte buttonResult[NUMBUTTONS];    // Aktueller Klickstatus der Buttons NONE/SHORTCLICK/LONGCLICK
+unsigned long buttonDownTime[NUMBUTTONS]; // Zeitpunkt FIRSTDOWN
 int b_counter = 0;
-int mupi = 1;               // Multiplier
-long rssi = 0;              // Buffer rssi
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -133,8 +138,9 @@ long rssi = 0;              // Buffer rssi
 
 // INIT
 void set_serial();                                // Initialize Serial
-void set_button();                                // Initialize Button Event
-void button_get();                                // Button Event
+void set_button();                                // Initialize Buttons
+static inline boolean button_input();             // Dectect Button Input
+static inline void button_event();                // Response Button Status
 
 // SENSORS
 byte set_sensor();                                // Initialize Sensors
@@ -200,95 +206,113 @@ void set_serial() {
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Button Flags
-void but1_event() {
-  but1_flag = true;
-}
-
-void but1_long() {
-  but1_rst = true;
-}
-
-void but2_event() {
-  but2_flag = true;
-}
-
-void but2_long() {
-  but2_rst = true;
-}
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Initialize Button_Event
+// Initialize Buttons
 void set_button() {
-
-  but1_flag = false;
-  but2_flag = false;
-  but1_rst = false;
-  but2_rst = false;
   
-  pinMode(BUT1, INPUT);
-  pinMode(BUT2, INPUT);
-
-  attachInterrupt(digitalPinToInterrupt(BUT1),but1_event,FALLING);
-  attachInterrupt(digitalPinToInterrupt(BUT2),but2_event,FALLING);
+  for (int i=0;i<NUMBUTTONS;i++) pinMode(buttonPins[i],INPUTMODE);
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Button_Event
-void button_get() {
+// Dedect Button Input
+static inline boolean button_input() {
+// Rückgabewert false ==> Prellzeit läuft, Taster wurden nicht abgefragt
+// Rückgabewert true ==> Taster wurden abgefragt und Status gesetzt
 
-  bool event1 = false;
-  bool event2 = false;
-    
-  if (but1_flag) {
-    delay(400); // Doppelschlag vermeiden
-    but1_flag = false;
-    event1 = true;
-  }
-  if (but2_flag) {
-    delay(400); // Doppelschlag vermeiden
-    but2_flag = false;
-    event2 = true;
-  }
+  static unsigned long lastRunTime;
+  //static unsigned long buttonDownTime[NUMBUTTONS];
+  unsigned long now=millis();
+  
+  if (now-lastRunTime<PRELLZEIT) return false; // Prellzeit läuft noch
+  
+  lastRunTime=now;
+  
+  for (int i=0;i<NUMBUTTONS;i++)
+  {
+    byte curState=digitalRead(buttonPins[i]);
+    if (INPUTMODE==INPUT_PULLUP) curState=!curState; // Vertauschte Logik bei INPUT_PULLUP
+    if (buttonResult[i]>=SHORTCLICK) buttonResult[i]=NONE; // Letztes buttonResult löschen
+    if (curState!=buttonState[i]) // Flankenwechsel am Button festgestellt
+    {
+      if (curState)   // Taster wird gedrückt, Zeit merken
+      {
+        if (buttonResult[i]==FIRSTUP && now-buttonDownTime[i]<DOUBLECLICKTIME)
+          buttonResult[i]=DOUBLECLICK;
+        else
+        { 
+          buttonDownTime[i]=now;
+          buttonResult[i]=FIRSTDOWN;
+        }
+      }
+      else  // Taster wird losgelassen
+      {
+        if (buttonResult[i]==FIRSTDOWN) buttonResult[i]=FIRSTUP;
+        if (now-buttonDownTime[i]>=LONGCLICKTIME) buttonResult[i]=LONGCLICK;
+      }
+    }
+    else // kein Flankenwechsel, Up/Down Status ist unverändert
+    {
+      if (buttonResult[i]==FIRSTUP && now-buttonDownTime[i]>DOUBLECLICKTIME)
+        buttonResult[i]=SHORTCLICK;
+    }
+    buttonState[i]=curState;
+  } // for
+  return true;
+}
 
-  if (!digitalRead(BUT1) && !digitalRead(BUT2)) {
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Response Button Status
+static inline void button_event() {
+
+  static unsigned long lastMupiTime;    // Zeitpunkt letztes schnelles Zeppen
+
+  if (buttonResult[0]==LONGCLICK && buttonResult[1]==LONGCLICK) {
+
+      Serial.println("Config Reset");
+      setConfig();
+      delay(500);
+      loadConfig();
     
-    setConfig();
-    delay(500);
-    loadConfig();
-    Serial.println("Config Reset");
-    delay(2000);  // Falls länger gedrückt wird
-    
+      return;
+  }
+  
+  // Button 1 gedrückt während man sich im Hauptmenü befindet
+  // -> Zum nächsten Kanal switchen
+  if (buttonResult[0]==SHORTCLICK && ui.getCurrentFrameCount()==0) {
+
+    b_counter = 0;
+    current_ch++;
+
+    if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
+    ui.transitionToFrame(0);
     return;
   }
-  
-  if (event1) {
 
-    // Zum nächsten Kanal switchen
-    if (ui.getCurrentFrameCount()==0) {
-    
-      b_counter = 0;
-      current_ch++;
+  // Button 1 gedrückt während man im Kontextmenu ist
+  // -> Eingabe im Kontextmenu
+  if (ui.getCurrentFrameCount()!=0) {
 
-      if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-      ui.transitionToFrame(0);
+    float tempor;
+    int mupi;
+    bool event = false;
+
+    // Bei SHORTCLICK kleiner Zahlensprung
+    if (buttonResult[0]==SHORTCLICK) {
+      mupi = 1;
+      event = 1;
     }
 
-    // Eingabe im Kontextmenu
-    else {
-      
-      float tempor;
-          
-      if (!digitalRead(BUT1)) {  // Button wird gedrückt gehalten
-        mupi = 10;
-        but1_flag = true;
+    // Bei LONGCLICK großer Zahlensprung jedoch gebremst
+    if (buttonResult[0]==FIRSTDOWN && (millis()-buttonDownTime[0]>400)) {
+      mupi = 10;
+      if (millis()-lastMupiTime > 200) {
+        event = 1;
+        lastMupiTime = millis();
       }
-      else if (mupi == 10) {  // falls letzter Aufruf während Button gehalten
-        mupi = 1;
-        return;
-      }
-      
+    }
+    
+    if (event) {  
       switch (ui.getCurrentFrameCount()) {
         case 1:  // Upper Limit
           tempor = ch[current_ch].max +(0.1*mupi);
@@ -313,9 +337,9 @@ void button_get() {
       }
     }
   }
-
-  // Durchs Kontextmenu bewegen
-  if (event2) {
+  
+  // Button 2 gedrückt: -> Durchs Kontextmenu bewegen
+  if (buttonResult[1]==SHORTCLICK) {
     
     b_counter = ui.getCurrentFrameCount();
     
@@ -331,12 +355,4 @@ void button_get() {
   }
 
 }
-
-
-
-
-
-
-
-
 
