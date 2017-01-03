@@ -90,7 +90,11 @@ void setup() {
     set_wifi();
 
     // Update Time
-    if (!isAP)  get_ntp_time();
+    if (!isAP)  setTime(getNtpTime()); //setSyncProvider(getNtpTime);
+
+    #ifdef DEBUG
+    digitalClockDisplay();
+    #endif
 
     // Initialize OTA
     #ifdef OTA  
