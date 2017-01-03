@@ -59,23 +59,23 @@ void set_wifi() {
   while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
     delay(500);
     #ifdef DEBUG
-    Serial.print(".");
+      Serial.print(".");
     #endif
     drawConnect(3, counter % 3);
     counter++;
   }
 
   #ifdef DEBUG
-  Serial.println();
+    Serial.println();
   #endif
   
   if (WiFi.status() == WL_CONNECTED) {
 
     #ifdef DEBUG
-    Serial.print("WiFi connected to: ");
-	  Serial.println(WiFi.SSID());
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
+      Serial.print("WiFi connected to: ");
+	    Serial.println(WiFi.SSID());
+      Serial.print("IP address: ");
+      Serial.println(WiFi.localIP());
     #endif
     
     isAP = false;
@@ -83,9 +83,9 @@ void set_wifi() {
     udp.begin(2390);  // localPort = 2390;
 
     #ifdef DEBUG
-    Serial.println("Starting UDP");
-    Serial.print("Local port: ");
-    Serial.println(udp.localPort());
+      Serial.println("Starting UDP");
+      Serial.print("Local port: ");
+      Serial.println(udp.localPort());
     #endif
     
   }
@@ -94,17 +94,17 @@ void set_wifi() {
     WiFi.mode(WIFI_AP);
 
     #ifdef DEBUG
-    Serial.print("Configuring access point: ");
-    Serial.print(APNAME);
-    Serial.println(" ...");
+      Serial.print("Configuring access point: ");
+      Serial.print(APNAME);
+      Serial.println(" ...");
     #endif
     
     WiFi.softAPConfig(local_IP, gateway, subnet);
     WiFi.softAP(apname, appass, 5);  // Channel 5
 
     #ifdef DEBUG
-    Serial.print("AP IP address: ");
-    Serial.println(WiFi.softAPIP());
+      Serial.print("AP IP address: ");
+      Serial.println(WiFi.softAPIP());
     #endif
     
     isAP = true;

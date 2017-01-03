@@ -156,7 +156,11 @@ void get_Vbat()
   
   median_add(((voltage - BATTMIN)*100)/(BATTMAX - BATTMIN));
   BatteryPercentage = median_get();
-
+  #ifdef DEBUG
+    Serial.println("Battery charge:");
+    Serial.println(BatteryPercentage);
+    Serial.println("%");
+  #endif
   // Schwankungen verschiedener Batterien ausgleichen
   if (BatteryPercentage > 100) BatteryPercentage = 100;
 
