@@ -193,10 +193,6 @@ void set_wifi();                                  // Connect WiFi
 void get_rssi();
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
 void set_serial() {
   Serial.begin(115200);
@@ -204,14 +200,12 @@ void set_serial() {
   Serial.println();
 }
 
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Buttons
 void set_button() {
   
   for (int i=0;i<NUMBUTTONS;i++) pinMode(buttonPins[i],INPUTMODE);
 }
-
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Dedect Button Input
@@ -259,7 +253,6 @@ static inline boolean button_input() {
   } // for
   return true;
 }
-
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Response Button Status

@@ -64,7 +64,6 @@ float calcT(int r, byte typ){
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Temperature ADC
 void get_Temperature() {
-
   // Read NTC Channels
   for (int i=0; i < CHANNELS; i++)  {
 
@@ -86,7 +85,6 @@ void get_Temperature() {
     #endif
 
     ch[i].temp = value;
-    
     float max = ch[i].max;
     float min = ch[i].min;
     
