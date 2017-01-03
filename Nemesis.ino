@@ -94,8 +94,8 @@ void setup() {
 
     // Initialize OTA
     #ifdef OTA  
-    set_ota();
-    ArduinoOTA.begin();
+      set_ota();
+      ArduinoOTA.begin();
     #endif
     
     // Initialize Sensors
@@ -136,7 +136,7 @@ void loop() {
 
   // Detect OTA
   #ifdef OTA
-  ArduinoOTA.handle();
+    ArduinoOTA.handle();
   #endif
   
   // Detect Button Event
@@ -175,12 +175,12 @@ void loop() {
       if (!isAP) {
 
         #ifdef THINGSPEAK
-        sendData();
+          sendData();
         #endif
 
         #ifdef TELEGRAM
-        UserData userData;
-        getUpdates(id, &userData);
+          UserData userData;
+          getUpdates(id, &userData);
         #endif
       }
       
