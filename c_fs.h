@@ -26,11 +26,15 @@
 #include <ArduinoJson.h>
 
 
+#define CHANNEL_FILE "/channel.json"
+#define WIFI_FILE "/wifi.json"
+
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Load Config.json at system start
 bool loadConfig() {
   
-  File configFile = SPIFFS.open("/config.json", "r");
+  File configFile = SPIFFS.open(CHANNEL_FILE, "r");
   if (!configFile) {
     #ifdef DEBUG
     Serial.println("Failed to open config file");
@@ -117,7 +121,7 @@ bool setConfig() {
     _alarm.add(false); 
   }
  
-  File configFile = SPIFFS.open("/config.json", "w");
+  File configFile = SPIFFS.open(CHANNEL_FILE, "w");
   
   if (!configFile) {
     #ifdef DEBUG
@@ -140,7 +144,7 @@ bool changeConfig() {
 
   // Alte Daten auslesen
 
-  File configFile = SPIFFS.open("/config.json", "r");
+  File configFile = SPIFFS.open(CHANNEL_FILE, "r");
   if (!configFile) {
     #ifdef DEBUG
     Serial.println("Failed to open config file");
@@ -200,7 +204,7 @@ bool changeConfig() {
   }
 
   // Alte Daten überschreiben
-  configFile = SPIFFS.open("/config.json", "w");
+  configFile = SPIFFS.open(CHANNEL_FILE, "w");
   
   if (!configFile) {
     #ifdef DEBUG
@@ -227,7 +231,7 @@ bool changeConfig() {
 // Load wifi.json at system start
 bool loadWifiSettings() {
   
-  File configFile = SPIFFS.open("/wifi.json", "r");
+  File configFile = SPIFFS.open(WIFI_FILE, "r");
   if (!configFile) {
     #ifdef DEBUG
     Serial.println("Failed to open wifi config file");
@@ -293,7 +297,7 @@ bool setWifiSettings() {
   _wifi1["SSID"] = WIFISSID;
   _wifi1["PASS"] = PASSWORD;
  
-  File configFile = SPIFFS.open("/wifi.json", "w");
+  File configFile = SPIFFS.open(WIFI_FILE, "w");
   
   if (!configFile) {
     #ifdef DEBUG
@@ -316,7 +320,7 @@ bool setWifiSettings() {
 bool addWifiSettings(char* ssid, char* pass) {
 
   // Alte Daten auslesen
-  File configFile = SPIFFS.open("/wifi.json", "r");
+  File configFile = SPIFFS.open(WIFI_FILE, "r");
   if (!configFile) {
     #ifdef DEBUG
     Serial.println("Failed to open wifi config file");
@@ -368,7 +372,7 @@ bool addWifiSettings(char* ssid, char* pass) {
   _wifi["SSID"] = ssid;
   _wifi["PASS"] = pass;
  
-  configFile = SPIFFS.open("/wifi.json", "w");
+  configFile = SPIFFS.open(WIFI_FILE, "w");
   
   if (!configFile) {
     #ifdef DEBUG
@@ -400,7 +404,7 @@ void start_fs() {
 
   //setConfig();
 
-  if (SPIFFS.exists("/config.json")) {
+  if (SPIFFS.exists(CHANNEL_FILE)) {
     
     if (!loadConfig()) {
       #ifdef DEBUG
@@ -426,7 +430,7 @@ void start_fs() {
     //setWifiSettings();
     //addWifiSettings(WIFISSID2, PASSWORD2);
     
-  if (SPIFFS.exists("/wifi.json")) {
+  if (SPIFFS.exists(WIFI_FILE)) {
     
     if (!loadWifiSettings()) {
       #ifdef DEBUG
