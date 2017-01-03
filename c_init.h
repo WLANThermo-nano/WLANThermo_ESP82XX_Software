@@ -65,8 +65,8 @@
 #define SCL 2
 
 // BUTTONS
-#define BUT1  4      // Pullup vorhanden
-#define BUT2  5      // Pullup vorhanden
+#define btn_r  4      // Pullup vorhanden
+#define btn_l  5      // Pullup vorhanden
 #define INPUTMODE INPUT_PULLUP      // INPUT oder INPUT_PULLUP
 #define PRELLZEIT 5                 // Prellzeit in Millisekunden   
 #define DOUBLECLICKTIME 400         // Längste Zeit für den zweiten Klick beim DOUBLECLICK
@@ -122,7 +122,7 @@ int lenwifi = 0;
 long rssi = 0;                   // Buffer rssi
 
 // BUTTONS
-byte buttonPins[]={4,5};          // Pins
+byte buttonPins[]={btn_r,btn_l};          // Pins
 #define NUMBUTTONS sizeof(buttonPins)
 byte buttonState[NUMBUTTONS];     // Aktueller Status des Buttons HIGH/LOW
 enum {NONE, FIRSTDOWN, FIRSTUP, SHORTCLICK, DOUBLECLICK, LONGCLICK};
