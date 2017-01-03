@@ -27,6 +27,7 @@
 #include <ESP8266WiFiMulti.h>     // WIFI
 #include <WiFiClientSecure.h>     // HTTPS
 #include <WiFiUdp.h>              // NTP
+#include <TimeLib.h>              // TIME
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
