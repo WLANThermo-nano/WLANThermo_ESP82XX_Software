@@ -17,6 +17,7 @@
     HISTORY:
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 implement ChannelData
+    0.2.01 - 2017-01-04 optimize Thingspeak Communication
     
  ****************************************************/
 
@@ -26,43 +27,41 @@ WiFiClient THINGclient;;
 
 void sendData() {
 
+  unsigned long vorher = millis();
+   
   String apiKey = THINGSPEAK_KEY;
   const char* server = "api.thingspeak.com";
 
-  if (THINGclient.connect(server,80)) { // "184.106.153.149" or api.thingspeak.com
-   
+  // Verbindungsaufbau: ~120 ms
+  if (THINGclient.connect(server,80)) {
+
     String postStr = apiKey;
-    postStr +="&1=";
-    postStr += String(ch[0].temp,1);
-    postStr +="&2=";
-    postStr += String(ch[1].temp,1);
-    postStr +="&3=";
-    postStr += String(ch[2].temp,1);
-    postStr +="&4=";
-    postStr += String(ch[3].temp,1);
-    postStr +="&5=";
-    postStr += String(ch[4].temp,1);
-    postStr +="&6=";
-    postStr += String(ch[5].temp,1);
-    postStr +="&7=";
-    postStr += String(ch[5].temp,1);
+
+    for (int i=0; i < CHANNELS; i++)  {
+      if (ch[i].temp!=INACTIVEVALUE) {
+        postStr += "&";
+        postStr += String(i+1);
+        postStr += "=";
+        postStr += String(ch[i].temp,1);
+      }
+    }
     postStr +="&8=";
     postStr += String(BatteryPercentage);
 
-    // Sendedauer: 1s  
-    THINGclient.print("POST /update HTTP/1.1\n");
-    THINGclient.print("Host: api.thingspeak.com\n");
-    THINGclient.print("Connection: close\n");
-    THINGclient.print("X-THINGSPEAKAPIKEY: "+apiKey+"\n");
-    THINGclient.print("Content-Type: application/x-www-form-urlencoded\n");
-    THINGclient.print("Content-Length: ");
-    THINGclient.print(postStr.length());
-    THINGclient.print("\n\n");
-    THINGclient.print(postStr);
+    // Sendedauer: ~115ms  
+    THINGclient.print("POST /update HTTP/1.1\nHost: api.thingspeak.com\nConnection: close\nX-THINGSPEAKAPIKEY: "
+                      +apiKey+"\nContent-Type: application/x-www-form-urlencoded\nContent-Length: "
+                      +postStr.length()+"\n\n"+postStr);
+
+    #ifdef DEBUG
+      Serial.printf("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
+    #endif
   }
-  
-  THINGclient.stop();
- }
+
+  //THINGclient.stop();
+    
+    
+}
 
 #endif
 
