@@ -60,7 +60,7 @@
 #include "c_frames.h"
 #include "c_bot.h"
 #include "c_ota.h"
-
+#include "c_server.h"
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -95,6 +95,9 @@ void setup() {
     #ifdef DEBUG
     digitalClockDisplay();
     #endif
+   
+    // Initialize Server
+    server_setup();
 
     // Initialize OTA
     #ifdef OTA  
@@ -142,6 +145,9 @@ void loop() {
   #ifdef OTA
     ArduinoOTA.handle();
   #endif
+ 
+ // Server
+  server.handleClient();
   
   // Detect Button Event
   if (button_input()) {
