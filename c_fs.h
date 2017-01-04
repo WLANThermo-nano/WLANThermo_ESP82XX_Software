@@ -13,465 +13,231 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+    
     HISTORY:
     0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 impliment ChannelData
-    0.2.01 - 2017-01-04 add version and temp_unit in channel.json
+    0.2.00 - 2016-12-30 implement ChannelData
+    0.2.01 - 2017-01-04 add inactive/active channels and temperature unit
     
  ****************************************************/
-
- // HELP: https://github.com/bblanchon/ArduinoJson
-
-#include <FS.h>
-#include <ArduinoJson.h>
-
-
-#define CHANNEL_FILE "/channel.json"
-#define WIFI_FILE "/wifi.json"
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Load Config.json at system start
-bool loadConfig() {
-  
-  File configFile = SPIFFS.open(CHANNEL_FILE, "r");
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file");
-    #endif
-    return false;
-  }
-
-  size_t size = configFile.size();
-  if (size > 1024) {
-    #ifdef DEBUG
-    Serial.println("Config file size is too large");
-    #endif
-    return false;
-  }
-
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-  
-  configFile.close();
-
-  //StaticJsonBuffer<200> jsonBuffer;
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(buf.get());
-
-  if (!json.success()) {
-    #ifdef DEBUG
-    Serial.println("Failed to parse config file");
-    #endif
-    return false;
-  }
-  
-  #ifdef DEBUG
-  json.printTo(Serial);
-  Serial.println();
-  #endif
-
-  int _version = json["VERSION"];
-
-  if (_version == CHANNELJSONVERSION) {
-  
-    const char* author = json["AUTHOR"];
-    temp_unit = json["temp_unit"].asString();
-
-    for (int i=0; i < CHANNELS; i++){
-    
-      // Fühlertyp auslesen  
-      ch[i].typ = json["ttyp"][i];
-
-      // Temperatur MIN auslesen
-      ch[i].min = json["tmin"][i];
-
-      // Temperatur MAX auslesen
-      ch[i].max = json["tmax"][i];  
-
-      // Temperatur ALARM auslesen
-      ch[i].alarm = json["talarm"][i];  
-    }
-
-    return true;
-  
-  }
-
-  // Falsche Version
-  return false;
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Reset config.json to default
-bool setConfig() {
-  
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
-  
-  json["AUTHOR"] = "s.ochs";
-  json["VERSION"] = CHANNELJSONVERSION;
-  json["temp_unit"] = "C";
-
-  JsonArray& _typ = json.createNestedArray("ttyp");
-  JsonArray& _min = json.createNestedArray("tmin");
-  JsonArray& _max = json.createNestedArray("tmax");
-  JsonArray& _alarm = json.createNestedArray("talarm");
-  
-  for (int i=0; i < CHANNELS; i++){
-    _typ.add(2); 
-    _min.add(20.0,1);
-    _max.add(30.0,1); 
-    _alarm.add(false); 
-  }
  
-  File configFile = SPIFFS.open(CHANNEL_FILE, "w");
-  
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file for writing");
-    #endif
-    return false;
-  }
+#define MAXBATTERYBAR 13
 
-  json.printTo(configFile);    
-  configFile.close();
-
-  return true;
-
-}
+byte flash = 0;                       // Flash Battery Symbol in Status Row
 
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Set config.json after Change
-bool changeConfig() {
-
-  // Alte Daten auslesen
-
-  File configFile = SPIFFS.open(CHANNEL_FILE, "r");
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file");
-    #endif
-    return false;
-  }
-  
-  size_t size = configFile.size();
-  if (size > 1024) {
-    #ifdef DEBUG
-    Serial.println("Config file size is too large");
-    #endif
-    return false;
-  }
-
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-
-  //StaticJsonBuffer<200> jsonBuffer;
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& alt = jsonBuffer.parseObject(buf.get());
-
-  if (!alt.success()) {
-    #ifdef DEBUG
-    Serial.println("Failed to parse current config file");
-    #endif
-    return false;
-  }
-
-  configFile.close();
-
-  // Neue Daten erzeugen
-
-  DynamicJsonBuffer jsonBuffer2;
-  JsonObject& neu = jsonBuffer2.createObject();
-
-  neu["AUTHOR"] = alt["AUTHOR"];
-  neu["VERSION"] = CHANNELJSONVERSION;
-  neu["temp_unit"] = temp_unit;
-
-  JsonArray& _typ = neu.createNestedArray("ttyp");
-  JsonArray& _min = neu.createNestedArray("tmin");
-  JsonArray& _max = neu.createNestedArray("tmax");
-  JsonArray& _alarm = neu.createNestedArray("talarm");
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Frame while system start 
+void drawConnect(int count, int active) {
     
-  for (int i=0; i < CHANNELS; i++){
-    _typ.add(ch[i].typ); 
-    _min.add(ch[i].min,1);
-    _max.add(ch[i].max,1); 
-    _alarm.add(ch[i].alarm); 
-  }
-
-  // Alte Daten überschreiben
-  configFile = SPIFFS.open(CHANNEL_FILE, "w");
-  
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file for writing");
-    #endif
-    return false;
-  }
-  else Serial.println("Update SPIFFS");
-
-  neu.printTo(configFile);
-
-  #ifdef DEBUG
-  neu.printTo(Serial);
-  Serial.println();
-  #endif
+    display.clear();
+    display.setColor(WHITE);
     
-  configFile.close();
-
-  return true;
-
-}
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Load wifi.json at system start
-bool loadWifiSettings() {
-  
-  File configFile = SPIFFS.open(WIFI_FILE, "r");
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open wifi config file");
-    #endif
-    return false;
-  }
-
-  size_t size = configFile.size();
-  if (size > 1024) {
-    #ifdef DEBUG
-    Serial.println("Wifi config file size is too large");
-    #endif
-    return false;
-  }
-
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-
-  //StaticJsonBuffer<200> jsonBuffer;
-  DynamicJsonBuffer jsonBuffer;
-  JsonArray& json = jsonBuffer.parseArray(buf.get());
-  
-  if (!json.success()) {
-    #ifdef DEBUG
-    Serial.println("Failed to parse wifi config file");
-    #endif
-    return false;
-  }
-
-  // Wie viele WLAN Schlüssel sind vorhanden
-  for (JsonArray::iterator it=json.begin(); it!=json.end(); ++it) {  
-    wifissid[lenwifi] = json[lenwifi]["SSID"].asString();
-    wifipass[lenwifi] = json[lenwifi]["PASS"].asString();  
-    lenwifi++;
-  }
-
-  configFile.close();
-
-  #ifdef DEBUG
-  json.printTo(Serial);
-  Serial.println();
-  #endif
-  
-  return true;
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Reset config.json to default
-bool setWifiSettings() {
-  
-  //StaticJsonBuffer<200> jsonBuffer;
-  DynamicJsonBuffer jsonBuffer;
-  JsonArray& json = jsonBuffer.createArray();
-  
-  JsonObject& _wifi1 = json.createNestedObject();
-
-  _wifi1["SSID"] = WIFISSID;
-  _wifi1["PASS"] = PASSWORD;
- 
-  File configFile = SPIFFS.open(WIFI_FILE, "w");
-  
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file for writing");
-    #endif
-    return false;
-  }
-
-  json.printTo(configFile);
+    // Draw Logo
+    display.drawXbm(4, 20, 120, 39, xbmwlanthermo);
     
-  configFile.close();
-
-  return true;
-
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Add Wifi Settings to config.json 
-bool addWifiSettings(char* ssid, char* pass) {
-
-  // Alte Daten auslesen
-  File configFile = SPIFFS.open(WIFI_FILE, "r");
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open wifi config file");
-    #endif
-    return false;
-  }
-
-  size_t size = configFile.size();
-  if (size > 1024) {
-    #ifdef DEBUG
-    Serial.println("Wifi config file size is too large");
-    #endif
-    return false;
-  }
-
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-
-  //StaticJsonBuffer<200> jsonBuffer;
-  DynamicJsonBuffer jsonBuffer;
-  JsonArray& json = jsonBuffer.parseArray(buf.get());
-  
-  if (!json.success()) {
-    #ifdef DEBUG
-    Serial.println("Failed to parse wifi config file");
-    #endif
-    return false;
-  }
-
-  // Wie viele WLAN Schlüssel sind vorhanden
-  int len = 0;
-  
-  for (JsonArray::iterator it=json.begin(); it!=json.end(); ++it) {  
-    len++;
-  }
-
-  configFile.close();
-
-  if (len < 5) {
-
-  // Neue Daten eintragen
-  JsonObject& _wifi = json.createNestedObject();
-
-  _wifi["SSID"] = ssid;
-  _wifi["PASS"] = pass;
- 
-  configFile = SPIFFS.open(WIFI_FILE, "w");
-  
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file for writing");
-    #endif
-    return false;
-  }
-
-  json.printTo(configFile);
-  
-  configFile.close();
-  
-  return true;
-  }
-
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Initialize FileSystem
-void start_fs() {
-  
-  if (!SPIFFS.begin()) {
-    #ifdef DEBUG
-    Serial.println("Failed to mount file system");
-    #endif
-    return;
-  }
-
-  if (SPIFFS.exists(CHANNEL_FILE)) {
-    
-    if (!loadConfig()) {
-      #ifdef DEBUG
-        Serial.println("Failed to load config");
-      #endif
-
-      // Falsche Version ueberschreiben
-      if (!setConfig()) {
-        #ifdef DEBUG
-          Serial.println("Failed to save config");
-        #endif
+    // Draw status
+    for (int i = 0; i < count; i++) {
+      const char *xbm;
+      if (active == i) {
+        xbm = active_bits;
       } else {
-        #ifdef DEBUG
-          Serial.println("Config saved");
-        #endif
-        ESP.restart();
+        xbm = inactive_bits;
       }
-      
-    } else {
-      #ifdef DEBUG
-      Serial.println("Config loaded");
-      #endif
+      display.drawXbm(64 - (12 * count / 2) + 12 * i, 5, 8, 8, xbm);
     }
-  }
-  else
-    if (!setConfig()) {
-      #ifdef DEBUG
-        Serial.println("Failed to save config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("Config saved");
-      #endif
-      ESP.restart();
-    }
+    
+    display.display();
+}
 
-    //setWifiSettings();
-    //addWifiSettings(WIFISSID2, PASSWORD2);
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Frame while Loading
+void drawLoading() {
+  
+    display.clear();
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
+    display.setFont(ArialMT_Plain_10);
     
-  if (SPIFFS.exists(WIFI_FILE)) {
+    display.drawString(10, 49, "LADE-LED BEACHTEN");
+
+    // Lade-Batterie
+    display.fillRect(93,21,4,16);   // Draw battery end button
     
-    if (!loadWifiSettings()) {
-      #ifdef DEBUG
-        Serial.println("Failed to load wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("Wifi config loaded");
-      #endif
-    }
+    display.fillRect(32,18,17,2);   // Rahmen oben links
+    display.fillRect(74,18,18,2);   // Rahmen oben rechts
+    
+    display.fillRect(32,38,26,2);   // Rahmen unten links
+    display.fillRect(66,38,26,2);   // Rahmen unten rechts
+
+    display.fillRect(32,18,2,21);   // Rahmen links
+    display.fillRect(90,18,2,21);   // Rahmen rechts
+    
+    display.fillRect(51,17,21,13);  // Stecker Hauptteil
+    display.fillRect(60,30,4,13);   // Stecker Kabel
+    display.fillRect(54,7,3,9);     // Stecker Pin
+    display.fillRect(66,7,3,9);     // Stecker Pin
+
+    display.display();
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Status Row
+
+void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
+
+  int battPixel = (BatteryPercentage*MAXBATTERYBAR)/100;  
+  flash = !flash; //Toggle flash flag for icon blinking later
+  
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->setFont(Noto_Sans_8);
+  display->drawString(24,0,String(BatteryPercentage));
+  
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  if (isAP)  display->drawString(128,0,"AP");
+  else display->drawString(128,0,String(rssi)+" dBm");
+  
+  if (flash && BatteryPercentage < 10) {} // nothing for flash effect
+  else {
+  display->fillRect(18,3,2,4); //Draw battery end button
+  display->fillRect(16,8,1,1); //Untere Ecke
+  display->drawRect(0,1,16,7); //Draw Outline
+  display->fillRect(2,3,battPixel,4);  // Draw Battery Status
   }
-  else
-    if (!setWifiSettings()) {
-      #ifdef DEBUG
-        Serial.println("Failed to save wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("Wifi config saved");
-      #endif
-    }
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Main Frames
+
+void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
+  display->drawString(114+x, 20+y, "Kanal " + String(current_ch+1));    // Channel Name
+  display->setFont(ArialMT_Plain_16);
+  if (ch[current_ch].temp!=INACTIVEVALUE) {
+    display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ " °" + temp_unit); // Channel Temp
+  } else display->drawString(114+x, 36+y, "OFF");
 
 }
+
+void drawlimito(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
+  display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ " °" + temp_unit);  // Upper Limit
+  display->drawLine(33+x,25+y,50,25);
+}
+
+
+void drawlimitu(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
+  display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ " °" + temp_unit);  // Lower Limit
+  display->drawLine(33+x,39+y,50,39);
+}
+
+void drawtyp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
+  display->drawString(114+x, 20+y, "TYP:");                         
+  display->drawString(114+x, 36+y, ttypname[ch[current_ch].typ]);            // Typ
+}
+
+void drawalarm(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
+  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
+  display->drawString(114+x, 20+y, "ALARM:");           
+  if (ch[current_ch].alarm) display->drawString(114+x, 36+y, "JA");
+  else display->drawString(114+x, 36+y, "NEIN");                        // Alarm
+}
+
+void drawwifi(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  //display.drawXbm(x + 7, y + 7, 50, 50, getIconFromString(weather.getIconTomorrow()));
+  display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+  display->setFont(ArialMT_Plain_10);
+  //display->drawString(90 + x, 20 + y, "");
+  if (isAP) {
+    display->drawString(DISPLAY_WIDTH/2 +x, DISPLAY_HEIGHT/3 +y, "IP Adresse: \n" + WiFi.softAPIP().toString()+ "\n SSID:" + APNAME);
+  }
+  else {
+     display->drawString(DISPLAY_WIDTH/2 +x, DISPLAY_HEIGHT/2 +y, "IP Adresse: \n" + WiFi.localIP().toString());
+  }
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Initialising Frames
+
+// this array keeps function pointers to all frames
+// frames are the single views that slide from right to left
+FrameCallback frames[] = { drawTemp, drawlimito, drawlimitu, drawtyp, drawalarm};  // drawFrame3
+
+// how many frames are there?
+int frameCount = 5;   // 3
+
+// Overlays are statically drawn on top of a frame eg. a clock
+OverlayCallback overlays[] = { gBattery };
+int overlaysCount = 1;
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Configuration OLEDDisplay
+
+void set_OLED() {
+  
+  // The ESP is capable of rendering 60fps in 80Mhz mode
+  // but that won't give you much time for anything else
+  // run it in 160Mhz mode or just set it to 30 fps
+  ui.setTargetFPS(30);
+
+  // Customize the active and inactive symbol
+  //ui.setActiveSymbol(activeSymbol);
+  //ui.setInactiveSymbol(inactiveSymbol);
+
+  // You can change this to
+  // TOP, LEFT, BOTTOM, RIGHT
+  //ui.setIndicatorPosition(TOP);
+
+  // Defines where the first frame is located in the bar.
+  //ui.setIndicatorDirection(LEFT_RIGHT);
+
+  // You can change the transition that is used
+  // SLIDE_LEFT, SLIDE_RIGHT, SLIDE_UP, SLIDE_DOWN
+  ui.setFrameAnimation(SLIDE_LEFT);
+
+  // Add frames
+  ui.setFrames(frames, frameCount);
+
+  // Add overlays
+  ui.setOverlays(overlays, overlaysCount);
+
+  ui.setTimePerFrame(10000);
+
+  ui.disableAutoTransition();
+  ui.disableIndicator();
+
+  // Initialising the UI will init the display too.
+  ui.init();
+
+  display.flipScreenVertically();
+
+  display.clear();
+  display.display();
+
+}
+
+
