@@ -16,6 +16,7 @@
     
     HISTORY:
     0.1.00 - 2016-12-30 initial version
+    0.2.00 - 2017-01-03 change NTP time communication
     
  ****************************************************/
 
@@ -73,7 +74,7 @@ void set_wifi() {
 
     #ifdef DEBUG
       Serial.print("WiFi connected to: ");
-	    Serial.println(WiFi.SSID());
+      Serial.println(WiFi.SSID());
       Serial.print("IP address: ");
       Serial.println(WiFi.localIP());
     #endif
@@ -126,9 +127,9 @@ void get_rssi() {
 void sendNTPpacket(IPAddress& address) {
   
   #ifdef DEBUG
-  	Serial.println("sending NTP packet...");
+    Serial.println("sending NTP packet...");
   #endif
-	
+  
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
   // Initialize values needed to form NTP request
@@ -160,7 +161,7 @@ time_t getNtpTime() {
   while (udp.parsePacket() > 0) ; // discard any previously received packets
 
   #ifdef DEBUG
-  	Serial.println("Transmit NTP Request");
+    Serial.println("Transmit NTP Request");
   #endif
   
   sendNTPpacket(timeServerIP);
@@ -169,7 +170,7 @@ time_t getNtpTime() {
     int size = udp.parsePacket();
     if (size >= NTP_PACKET_SIZE) {
       #ifdef DEBUG
-      	Serial.println("Receive NTP Response");
+        Serial.println("Receive NTP Response");
       #endif
       udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
       unsigned long secsSince1900;
@@ -182,7 +183,7 @@ time_t getNtpTime() {
     }
   }
   #ifdef DEBUG
-  	Serial.println("No NTP Response!");
+    Serial.println("No NTP Response!");
   #endif
   return 0; // return 0 if unable to get the time
 }
