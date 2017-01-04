@@ -107,7 +107,7 @@ struct ChannelData {
 
 ChannelData ch[CHANNELS];
 
-String  ttypname[] = {"Maverik",
+String  ttypname[] = {"Maverick",
                       "Fantast-Neu",
                       "100K6A1B",
                       "100K",
