@@ -17,6 +17,7 @@
     HISTORY:
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 implement ChannelData
+    0.2.01 - 2017-01-04 add inactive/active channels and temperature unit
     
  ****************************************************/
  
@@ -116,7 +117,9 @@ void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
   display->drawString(114+x, 20+y, "Kanal " + String(current_ch+1));    // Channel Name
   display->setFont(ArialMT_Plain_16);
-  display->drawString(114+x, 36+y, String(ch[current_ch].temp,1) + " °C"); // Channel Temp
+  if (ch[current_ch].temp!=INACTIVEVALUE) {
+    display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ " °" + temp_unit); // Channel Temp
+  } else display->drawString(114+x, 36+y, "OFF");
 
 }
 
@@ -126,7 +129,7 @@ void drawlimito(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
-  display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ " °C");  // Upper Limit
+  display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ " °" + temp_unit);  // Upper Limit
   display->drawLine(33+x,25+y,50,25);
 }
 
@@ -137,7 +140,7 @@ void drawlimitu(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
-  display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ " °C");  // Lower Limit
+  display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ " °" + temp_unit);  // Lower Limit
   display->drawLine(33+x,39+y,50,39);
 }
 
@@ -236,6 +239,5 @@ void set_OLED() {
   display.display();
 
 }
-
 
 
