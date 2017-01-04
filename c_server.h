@@ -152,7 +152,7 @@ void handleData() {
 }
 
 
-void test_setup() {
+void server_setup() {
 
     MDNS.begin(host);
     Serial.print("[INFO]\tOpen http://");
