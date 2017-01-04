@@ -406,44 +406,54 @@ void start_fs() {
   
   if (!SPIFFS.begin()) {
     #ifdef DEBUG
-    Serial.println("Failed to mount file system");
+    Serial.println("[INFO]\tFailed to mount file system");
     #endif
     return;
   }
+
+  /*
+  Dir dir = SPIFFS.openDir("/");
+  while (dir.next()) {
+    String fileName = dir.fileName();
+    size_t fileSize = dir.fileSize();
+    Serial.printf("FS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
+  }
+  */
+  
 
   if (SPIFFS.exists(CHANNEL_FILE)) {
     
     if (!loadConfig()) {
       #ifdef DEBUG
-        Serial.println("Failed to load config");
+        Serial.println("[INFO]\tFailed to load config");
       #endif
 
       // Falsche Version ueberschreiben
       if (!setConfig()) {
         #ifdef DEBUG
-          Serial.println("Failed to save config");
+          Serial.println("[INFO]\tFailed to save config");
         #endif
       } else {
         #ifdef DEBUG
-          Serial.println("Config saved");
+          Serial.println("[INFO]\tChannel config saved");
         #endif
         ESP.restart();
       }
       
     } else {
       #ifdef DEBUG
-      Serial.println("Config loaded");
+      Serial.println("[INFO]\tChannel config loaded");
       #endif
     }
   }
   else
     if (!setConfig()) {
       #ifdef DEBUG
-        Serial.println("Failed to save config");
+        Serial.println("[INFO]\tFailed to save channel config");
       #endif
     } else {
       #ifdef DEBUG
-        Serial.println("Config saved");
+        Serial.println("[INFO]\tChannel config saved");
       #endif
       ESP.restart();
     }
@@ -455,24 +465,23 @@ void start_fs() {
     
     if (!loadWifiSettings()) {
       #ifdef DEBUG
-        Serial.println("Failed to load wifi config");
+        Serial.println("[INFO]\tFailed to load wifi config");
       #endif
     } else {
       #ifdef DEBUG
-        Serial.println("Wifi config loaded");
+        Serial.println("[INFO]\tWifi config loaded");
       #endif
     }
   }
   else
     if (!setWifiSettings()) {
       #ifdef DEBUG
-        Serial.println("Failed to save wifi config");
+        Serial.println("[INFO]\tFailed to save wifi config");
       #endif
     } else {
       #ifdef DEBUG
-        Serial.println("Wifi config saved");
+        Serial.println("[INFO]\tWifi config saved");
       #endif
     }
 
 }
-
