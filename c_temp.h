@@ -17,6 +17,8 @@
     HISTORY:
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 implement ChannelData
+    0.2.01 - 2017-01-04 add inactive channels
+    0.2.02 - 2017-01-04 add temperature unit
     
  ****************************************************/
 
@@ -57,7 +59,7 @@ float calcT(int r, byte typ){
   float v = log(Rt/Rn);
   float erg = (1/(a + b*v + c*v*v)) - 273;
   
-  return (erg>-10)?erg:0x00;
+  return (erg>-10)?erg:INACTIVEVALUE;
 }
 
 
@@ -84,19 +86,26 @@ void get_Temperature() {
     if (i == 4) value = get_thermocouple();
     #endif
 
+    // Umwandlung C/F
+    if (temp_unit == "F") {
+      value *= 9.0;
+      value /= 5.0;
+      value += 32;
+    }
+    
     ch[i].temp = value;
     float max = ch[i].max;
     float min = ch[i].min;
     
     // Show limits in OLED  
-    if (max > min) {
+    if ((max > min) && value!=INACTIVEVALUE) {
       int match = map(value,min,max,3,18);
       ch[i].match = constrain(match, 0, 20);
     }
     else ch[i].match = 0;
 
     // Check limit exceeded
-    if (value > max || value < min) ch[i].isalarm = true;
+    if ((value > max || value < min) && value!=INACTIVEVALUE) ch[i].isalarm = true;
     else ch[i].isalarm = false;
   }
 }
@@ -109,7 +118,7 @@ void set_Channels() {
   // Grundwerte einrichten
   for (int i=0; i<CHANNELS; i++) {
         
-    ch[i].temp = 0.0;
+    ch[i].temp = INACTIVEVALUE;
     ch[i].match = 0;
     ch[i].isalarm = false;
   }
