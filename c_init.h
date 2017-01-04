@@ -17,7 +17,9 @@
     HISTORY:
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 implement ChannelData
-    0.2.01 - 2017-01-02 Change Button Event
+    0.2.01 - 2017-01-02 change button events
+    0.2.02 - 2017-01-04 add inactive and temperatur unit
+    0.2.03 - 2017-01-04 add button events
     
  ****************************************************/
 
@@ -46,6 +48,9 @@
   #define CHANNELS 3                  // 3xNTC
   #define MAX1161x_ADDRESS 0x34       // MAX11613
 #endif
+
+// CHANNELS
+#define INACTIVEVALUE  999             // NO NTC CONNECTED
 
 // BATTERY
 #define BATTMIN 3600                  // MINIMUM BATTERY VOLTAGE in mV
@@ -79,6 +84,9 @@
 #define APNAME "NEMESIS"
 #define APPASSWORD "12345678"
 
+// FILESYSTEM
+#define CHANNELJSONVERSION 1
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -107,6 +115,8 @@ String  ttypname[] = {"Maverik",
                       "5K3A1B",
                       "K-Type"};
 
+String  temp_unit = "C";
+
 // SYSTEM
 bool  LADEN = false;              // USB POWER SUPPLY?
 
@@ -114,6 +124,7 @@ bool  LADEN = false;              // USB POWER SUPPLY?
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL
 int BatteryPercentage = 0;        // BATTERY CHARGE STATE in %
 bool LADENSHOW = false;           // LOADING INFORMATION?
+bool INACTIVESHOW = true;         // SHOW INACTIVE CHANNELS
 
 // WIFI
 byte isAP = 0;                    // WIFI MODE
@@ -270,15 +281,55 @@ static inline void button_event() {
     
       return;
   }
+
+  // Button 1 Doppelclick während man sich im Hauptmenu befindet
+  if (buttonResult[0]==DOUBLECLICK && ui.getCurrentFrameCount()==0) {
+    INACTIVESHOW = !INACTIVESHOW;
+
+    #ifdef DEBUG
+      Serial.println("[INFO]\tAnzeigewechsel");
+    #endif
+    return;
+    
+  }
+
+
+  // Button 2 Doppelclick während man sich im Hauptmenu befindet
+  if (buttonResult[1]==DOUBLECLICK && ui.getCurrentFrameCount()==0) {
+    if (temp_unit == "C") temp_unit = "F";
+    else temp_unit = "C";
+
+    // Update Temperature
+    get_Temperature();
+
+    #ifdef DEBUG
+      Serial.println("[INFO]\tEinheitenwechsel");
+    #endif
+    return;
+    
+  }
+  
   
   // Button 1 gedrückt während man sich im Hauptmenü befindet
-  // -> Zum nächsten Kanal switchen
+  // -> Zum nächsten (aktiven) Kanal switchen
   if (buttonResult[0]==SHORTCLICK && ui.getCurrentFrameCount()==0) {
 
     b_counter = 0;
-    current_ch++;
+    int i = 0;          // Endlosschleife verhindern
 
-    if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
+    if (INACTIVESHOW) {
+      current_ch++;
+      if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
+    }
+    else {
+      do {
+        current_ch++;
+        i++;
+        if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
+      }
+      while ((ch[current_ch].temp==INACTIVEVALUE) && (i<CHANNELS)); 
+    }
+
     ui.transitionToFrame(0);
     return;
   }
