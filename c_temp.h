@@ -87,7 +87,7 @@ void get_Temperature() {
     #endif
 
     // Umwandlung C/F
-    if (temp_unit == "F") {
+    if ((temp_unit == "F") && value!=INACTIVEVALUE) {
       value *= 9.0;
       value /= 5.0;
       value += 32;
