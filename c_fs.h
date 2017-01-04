@@ -17,6 +17,7 @@
     HISTORY:
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 impliment ChannelData
+    0.2.01 - 2017-01-04 add version and temp_unit in channel.json
     
  ****************************************************/
 
@@ -57,6 +58,8 @@ bool loadConfig() {
   // buffer to be mutable. If you don't use ArduinoJson, you may as well
   // use configFile.readString instead.
   configFile.readBytes(buf.get(), size);
+  
+  configFile.close();
 
   //StaticJsonBuffer<200> jsonBuffer;
   DynamicJsonBuffer jsonBuffer;
@@ -68,35 +71,40 @@ bool loadConfig() {
     #endif
     return false;
   }
-
-  const char* author = json["AUTHOR"];
-
-  for (int i=0; i < CHANNELS; i++){
-    
-    // Fühlertyp auslesen  
-    ch[i].typ = json["ttyp"][i];
-
-    // Temperatur MIN auslesen
-    ch[i].min = json["tmin"][i];
-
-    // Temperatur MAX auslesen
-    ch[i].max = json["tmax"][i];  
-
-    // Temperatur ALARM auslesen
-    ch[i].alarm = json["talarm"][i];  
-  }
-
-  Serial.print("Loaded Author: ");
-  Serial.println(author);
-
-  configFile.close();
   
   #ifdef DEBUG
   json.printTo(Serial);
   Serial.println();
   #endif
+
+  int _version = json["VERSION"];
+
+  if (_version == CHANNELJSONVERSION) {
   
-  return true;
+    const char* author = json["AUTHOR"];
+    temp_unit = json["temp_unit"].asString();
+
+    for (int i=0; i < CHANNELS; i++){
+    
+      // Fühlertyp auslesen  
+      ch[i].typ = json["ttyp"][i];
+
+      // Temperatur MIN auslesen
+      ch[i].min = json["tmin"][i];
+
+      // Temperatur MAX auslesen
+      ch[i].max = json["tmax"][i];  
+
+      // Temperatur ALARM auslesen
+      ch[i].alarm = json["talarm"][i];  
+    }
+
+    return true;
+  
+  }
+
+  // Falsche Version
+  return false;
 }
 
 
@@ -108,6 +116,8 @@ bool setConfig() {
   JsonObject& json = jsonBuffer.createObject();
   
   json["AUTHOR"] = "s.ochs";
+  json["VERSION"] = CHANNELJSONVERSION;
+  json["temp_unit"] = "C";
 
   JsonArray& _typ = json.createNestedArray("ttyp");
   JsonArray& _min = json.createNestedArray("tmin");
@@ -186,10 +196,9 @@ bool changeConfig() {
   DynamicJsonBuffer jsonBuffer2;
   JsonObject& neu = jsonBuffer2.createObject();
 
-  if (alt.containsKey("AUTHOR")) {
-    neu["AUTHOR"] = alt["AUTHOR"];
-  }
-  else neu["AUTHOR"] = "neuer Author";
+  neu["AUTHOR"] = alt["AUTHOR"];
+  neu["VERSION"] = CHANNELJSONVERSION;
+  neu["temp_unit"] = temp_unit;
 
   JsonArray& _typ = neu.createNestedArray("ttyp");
   JsonArray& _min = neu.createNestedArray("tmin");
@@ -402,14 +411,25 @@ void start_fs() {
     return;
   }
 
-  //setConfig();
-
   if (SPIFFS.exists(CHANNEL_FILE)) {
     
     if (!loadConfig()) {
       #ifdef DEBUG
-      Serial.println("Failed to load config");
+        Serial.println("Failed to load config");
       #endif
+
+      // Falsche Version ueberschreiben
+      if (!setConfig()) {
+        #ifdef DEBUG
+          Serial.println("Failed to save config");
+        #endif
+      } else {
+        #ifdef DEBUG
+          Serial.println("Config saved");
+        #endif
+        ESP.restart();
+      }
+      
     } else {
       #ifdef DEBUG
       Serial.println("Config loaded");
@@ -419,12 +439,13 @@ void start_fs() {
   else
     if (!setConfig()) {
       #ifdef DEBUG
-      Serial.println("Failed to save config");
+        Serial.println("Failed to save config");
       #endif
     } else {
       #ifdef DEBUG
-      Serial.println("Config saved");
+        Serial.println("Config saved");
       #endif
+      ESP.restart();
     }
 
     //setWifiSettings();
@@ -434,22 +455,22 @@ void start_fs() {
     
     if (!loadWifiSettings()) {
       #ifdef DEBUG
-      Serial.println("Failed to load wifi config");
+        Serial.println("Failed to load wifi config");
       #endif
     } else {
       #ifdef DEBUG
-      Serial.println("Wifi config loaded");
+        Serial.println("Wifi config loaded");
       #endif
     }
   }
   else
     if (!setWifiSettings()) {
       #ifdef DEBUG
-      Serial.println("Failed to save wifi config");
+        Serial.println("Failed to save wifi config");
       #endif
     } else {
       #ifdef DEBUG
-      Serial.println("Wifi config saved");
+        Serial.println("Wifi config saved");
       #endif
     }
 
