@@ -33,6 +33,9 @@ const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of th
 byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
 const int timeZone = 1;     // Central European Time
 
+#define HOSTNAME "NEMESIS-OTA-" ///< Hostename. The setup function adds the Chip ID at the end.
+
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Connect WiFi
 
@@ -45,10 +48,18 @@ void set_wifi() {
   IPAddress gateway(192,168,66,1);
   IPAddress subnet(255,255,255,0);
 
+  String hostname = HOSTNAME;
+  hostname += String(ESP.getChipId(), HEX);
+  WiFi.hostname(hostname);
+
+  #ifdef DEBUG
+    Serial.println("[INFO]\tHostname: " + hostname);
+  #endif
+
   WiFi.mode(WIFI_STA);
   
   #ifdef DEBUG
-  Serial.print("Connecting");
+  Serial.print("[INFO]\tConnecting");
   #endif
 
   // Add Wifi Settings
@@ -73,9 +84,9 @@ void set_wifi() {
   if (WiFi.status() == WL_CONNECTED) {
 
     #ifdef DEBUG
-      Serial.print("WiFi connected to: ");
+      Serial.print("[INFO]\tWiFi connected to: ");
       Serial.println(WiFi.SSID());
-      Serial.print("IP address: ");
+      Serial.print("[INFO]\tIP address: ");
       Serial.println(WiFi.localIP());
     #endif
     
@@ -84,8 +95,7 @@ void set_wifi() {
     udp.begin(2390);  // localPort = 2390;
 
     #ifdef DEBUG
-      Serial.println("Starting UDP");
-      Serial.print("Local port: ");
+      Serial.print("[INFO]\tStarting UDP: Local port ");
       Serial.println(udp.localPort());
     #endif
     
@@ -95,7 +105,7 @@ void set_wifi() {
     WiFi.mode(WIFI_AP);
 
     #ifdef DEBUG
-      Serial.print("Configuring access point: ");
+      Serial.print("[INFO]\tConfiguring access point: ");
       Serial.print(APNAME);
       Serial.println(" ...");
     #endif
@@ -104,7 +114,7 @@ void set_wifi() {
     WiFi.softAP(apname, appass, 5);  // Channel 5
 
     #ifdef DEBUG
-      Serial.print("AP IP address: ");
+      Serial.print("[INFO]\tAP IP address: ");
       Serial.println(WiFi.softAPIP());
     #endif
     
@@ -127,7 +137,7 @@ void get_rssi() {
 void sendNTPpacket(IPAddress& address) {
   
   #ifdef DEBUG
-    Serial.println("sending NTP packet...");
+    Serial.println("[INFO]\tsending NTP packet...");
   #endif
   
   // set all bytes in the buffer to 0
@@ -161,7 +171,7 @@ time_t getNtpTime() {
   while (udp.parsePacket() > 0) ; // discard any previously received packets
 
   #ifdef DEBUG
-    Serial.println("Transmit NTP Request");
+    Serial.println("[INFO]\tTransmit NTP Request");
   #endif
   
   sendNTPpacket(timeServerIP);
@@ -170,7 +180,7 @@ time_t getNtpTime() {
     int size = udp.parsePacket();
     if (size >= NTP_PACKET_SIZE) {
       #ifdef DEBUG
-        Serial.println("Receive NTP Response");
+        Serial.println("[INFO]\tReceive NTP Response");
       #endif
       udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
       unsigned long secsSince1900;
@@ -183,7 +193,7 @@ time_t getNtpTime() {
     }
   }
   #ifdef DEBUG
-    Serial.println("No NTP Response!");
+    Serial.println("[INFO]\tNo NTP Response!");
   #endif
   return 0; // return 0 if unable to get the time
 }
@@ -201,7 +211,8 @@ void printDigits(int digits){
 }
 
 void digitalClockDisplay(){
-  
+
+  Serial.print("[INFO]\t");
   Serial.print(hour());
   printDigits(minute());
   printDigits(second());
@@ -213,4 +224,3 @@ void digitalClockDisplay(){
   Serial.print(year()); 
   Serial.println(); 
 }
-
