@@ -18,6 +18,7 @@
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 impliment ChannelData
     0.2.01 - 2017-01-04 add version and temp_unit in channel.json
+    0.2.02 - 2017-01-05 add serial communication
     
  ****************************************************/
 
@@ -295,7 +296,7 @@ bool loadWifiSettings() {
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reset config.json to default
-bool setWifiSettings() {
+bool setWifiSettings(String ssid, String pass) {
   
   //StaticJsonBuffer<200> jsonBuffer;
   DynamicJsonBuffer jsonBuffer;
@@ -303,8 +304,8 @@ bool setWifiSettings() {
   
   JsonObject& _wifi1 = json.createNestedObject();
 
-  _wifi1["SSID"] = WIFISSID;
-  _wifi1["PASS"] = PASSWORD;
+  _wifi1["SSID"] = ssid;
+  _wifi1["PASS"] = pass;
  
   File configFile = SPIFFS.open(WIFI_FILE, "w");
   
@@ -326,7 +327,7 @@ bool setWifiSettings() {
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Add Wifi Settings to config.json 
-bool addWifiSettings(char* ssid, char* pass) {
+bool addWifiSettings(String ssid, String pass) {
 
   // Alte Daten auslesen
   File configFile = SPIFFS.open(WIFI_FILE, "r");
@@ -393,6 +394,12 @@ bool addWifiSettings(char* ssid, char* pass) {
   json.printTo(configFile);
   
   configFile.close();
+
+  #ifdef DEBUG
+  json.printTo(Serial);
+  Serial.println();
+  #endif
+  
   
   return true;
   }
@@ -474,7 +481,7 @@ void start_fs() {
     }
   }
   else
-    if (!setWifiSettings()) {
+    if (!setWifiSettings(WIFISSID,PASSWORD)) {
       #ifdef DEBUG
         Serial.println("[INFO]\tFailed to save wifi config");
       #endif
@@ -483,5 +490,117 @@ void start_fs() {
         Serial.println("[INFO]\tWifi config saved");
       #endif
     }
+}
 
+// wenn Schnittstelle fertig kommen Sie in die c_init.h
+String inputString = "";        // a string to hold incoming data
+bool receiveSerial = false;     // whether the string is complete
+String expectString[2] = "";    // buffer for expected inputs
+int expectCount = 0;            // how many expected inputs
+String holdString = "";         // which inputString cause expected input
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// React to Serial Input 
+void read_serial() {
+
+  // String bereinigen
+  inputString.replace("\r", "");
+
+  // es wird eine Eingabe erwartet
+  if (expectCount > 0)  {
+    expectCount--;
+    expectString[expectCount] = inputString;
+    inputString = "";
+    receiveSerial = false;
+    if (expectCount != 0) return;
+  }
+
+  // neuer Befehl oder alten abarbeiten
+  if (holdString != "") inputString = holdString;
+
+
+  // mögliche Befehle
+  if (strcmp(inputString.c_str(), "addWIFI")==0) {
+    if (holdString != "") {   // Daten gesammelt
+      holdString = "";
+      if (!addWifiSettings(expectString[1], expectString[0])) {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tFailed to save wifi config");
+      #endif
+      } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tWifi config saved");
+      #endif
+      }
+      expectString[0] = "";
+      expectString[1] = "";
+    } 
+    else {                  // Daten bitte erst sammeln
+      expectCount = 2;
+      holdString = inputString;
+      Serial.println(1);      // Empfang bestätigen
+    }
+  }
+
+  else if (strcmp(inputString.c_str(), "setWIFI")==0) {
+    if (holdString != "") {   // Daten gesammelt
+      holdString = "";
+      if (!setWifiSettings(expectString[1], expectString[0])) {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tFailed to save wifi config");
+      #endif
+      } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tWifi config saved");
+      #endif
+      }
+      expectString[0] = "";
+      expectString[1] = "";
+    } 
+    else {                    // Daten bitte erst sammeln
+      expectCount = 2;
+      holdString = inputString;
+      Serial.println(1);      // Empfang bestätigen
+    }
+  }
+  
+  else if (strcmp(inputString.c_str(), "getSSID")==0) {
+    Serial.println(WiFi.SSID());
+  }
+
+  else if (strcmp(inputString.c_str(), "help")==0) {
+    Serial.println();
+    Serial.println("Possible instructions");
+    Serial.println("getSSID -> send current SSID");
+    Serial.println("setWIFI -> Reset wifi.json and add new SSID");
+    Serial.println("        -> expected one after the other SSID and PASSWORD");
+    Serial.println("addWIFI -> Add new SSID to wifi.json");
+    Serial.println("        -> expected one after the other SSID and PASSWORD");
+    Serial.println();
+  }
+
+  else Serial.println(0);     // Befehl nicht erkannt
+    
+  // clear the string:
+  inputString = "";
+  receiveSerial = false;
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Put together Serial Input 
+void serialEvent() {
+
+  while (Serial.available()) {
+    // get the new byte:
+    char inChar = (char)Serial.read();
+        
+    // if the incoming character is a newline, set a flag
+    if (inChar == '\n') {
+      receiveSerial = true;
+    } else inputString += inChar;
+  }
+
+  
 }
