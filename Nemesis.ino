@@ -140,6 +140,10 @@ void loop() {
     
     return;
   }
+ 
+  // Detect Serial
+  serialEvent();
+  if (receiveSerial) read_serial();
 
   // Detect OTA
   #ifdef OTA
