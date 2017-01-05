@@ -58,7 +58,7 @@ void sendData() {
     #endif
   }
 
-  //THINGclient.stop();
+  THINGclient.stop();
     
     
 }
