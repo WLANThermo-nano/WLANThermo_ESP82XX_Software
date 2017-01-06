@@ -17,6 +17,7 @@
     HISTORY:
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 implement ChannelData
+    0.2.01 - 2017-01-04 optimize Thingspeak Communication
     
  ****************************************************/
 
@@ -26,43 +27,41 @@ WiFiClient THINGclient;;
 
 void sendData() {
 
+  unsigned long vorher = millis();
+   
   String apiKey = THINGSPEAK_KEY;
   const char* server = "api.thingspeak.com";
 
-  if (THINGclient.connect(server,80)) { // "184.106.153.149" or api.thingspeak.com
-   
+  // Verbindungsaufbau: ~120 ms
+  if (THINGclient.connect(server,80)) {
+
     String postStr = apiKey;
-    postStr +="&1=";
-    postStr += String(ch[0].temp,1);
-    postStr +="&2=";
-    postStr += String(ch[1].temp,1);
-    postStr +="&3=";
-    postStr += String(ch[2].temp,1);
-    postStr +="&4=";
-    postStr += String(ch[3].temp,1);
-    postStr +="&5=";
-    postStr += String(ch[4].temp,1);
-    postStr +="&6=";
-    postStr += String(ch[5].temp,1);
-    postStr +="&7=";
-    postStr += String(ch[5].temp,1);
+
+    for (int i=0; i < CHANNELS; i++)  {
+      if (ch[i].temp!=INACTIVEVALUE) {
+        postStr += "&";
+        postStr += String(i+1);
+        postStr += "=";
+        postStr += String(ch[i].temp,1);
+      }
+    }
     postStr +="&8=";
     postStr += String(BatteryPercentage);
 
-    // Sendedauer: 1s  
-    THINGclient.print("POST /update HTTP/1.1\n");
-    THINGclient.print("Host: api.thingspeak.com\n");
-    THINGclient.print("Connection: close\n");
-    THINGclient.print("X-THINGSPEAKAPIKEY: "+apiKey+"\n");
-    THINGclient.print("Content-Type: application/x-www-form-urlencoded\n");
-    THINGclient.print("Content-Length: ");
-    THINGclient.print(postStr.length());
-    THINGclient.print("\n\n");
-    THINGclient.print(postStr);
+    // Sendedauer: ~115ms  
+    THINGclient.print("POST /update HTTP/1.1\nHost: api.thingspeak.com\nConnection: close\nX-THINGSPEAKAPIKEY: "
+                      +apiKey+"\nContent-Type: application/x-www-form-urlencoded\nContent-Length: "
+                      +postStr.length()+"\n\n"+postStr);
+
+    #ifdef DEBUG
+      Serial.printf("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
+    #endif
   }
-  
+
   THINGclient.stop();
- }
+    
+    
+}
 
 #endif
 
@@ -88,12 +87,17 @@ String connectToTelegram(String command)  {
     String mess="";
         
     // Connect to api.telegram.org       
-    IPAddress server(149,154,167,198);
+    const char* server = "api.telegram.org";
+ 
+    #ifdef DEBUG
     Serial.print(".... ");
-
+    #endif
+ 
     // Verbindung aufgebaut
     if (!TELEGRAMMclient.connect(server, 443)) {  
+        #ifdef DEBUG
         Serial.println("connection failed");
+        #endif
         return mess;
     }
 
@@ -104,7 +108,9 @@ String connectToTelegram(String command)  {
     unsigned long timeout = millis();
     while (TELEGRAMMclient.available() == 0) {
       if (millis() - timeout > 3000) {
+        #ifdef DEBUG
         Serial.println(">>> Client Timeout !");
+        #endif
         TELEGRAMMclient.stop();
         return mess;
       }
@@ -125,7 +131,9 @@ String connectToTelegram(String command)  {
 void sendMessage(String chat_id, String text, String reply_markup)  {
 
     bool sent=false;
+    #ifdef DEBUG
     Serial.println("SEND Message ");
+    #endif
     long sttime=millis();
     while (millis()<sttime+8000) {    // loop for a while to send the message
         String command="bot"+_token+"/sendMessage?chat_id="+chat_id+"&text="+text+"&reply_markup="+reply_markup;
@@ -139,14 +147,18 @@ void sendMessage(String chat_id, String text, String reply_markup)  {
           sent = ack["ok"];
         
           if (sent==true)   {
+            #ifdef DEBUG
             Serial.print("Message delivred: \"");
             Serial.print(text);
             Serial.println("\"");
+            #endif
             break;
           }
         }
     }
+    #ifdef DEBUG
     if (sent==false) Serial.println("Message not delivered");
+    #endif
 }
 
 
@@ -186,17 +198,20 @@ void Bot_ExecMessages(struct UserData* userData) {
 // Get TELEGRAM Update
 void getUpdates(String offset, struct UserData* userData)  {
   
+    #ifdef DEBUG
     Serial.print("GET Update Messages up to: ");
+    #endif
     
     String command="bot"+_token+"/getUpdates?offset="+offset;
     String mess=connectToTelegram(command);       //recieve reply from telegram.org
     
+    #ifdef DEBUG
     //String mess = "";
     Serial.println(offset);
-    
     //Serial.println(command);
     //Serial.println(mess);
-    
+    #endif   
+ 
     if (mess!="") {
 
       // Ergebnisse auslesen falls neue Message bekommen
@@ -208,14 +223,18 @@ void getUpdates(String offset, struct UserData* userData)  {
 
         long up_id = root["result"][ii]["update_id"];
         
+        #ifdef DEBUG
         Serial.print("new message: ");
         Serial.println(up_id);
+        #endif
+       
         id = String(up_id+1);   // Nachrichten-Counter hochzaehlen
         
         strcpy(userData->name, root["result"][ii]["message"]["from"]["last_name"]);
         strcpy(userData->text, root["result"][ii]["message"]["text"]);
         strcpy(userData->chat_id, root["result"][ii]["message"]["chat"]["id"]);
         
+        #ifdef DEBUG
         Serial.print("Name = ");
         Serial.println(userData->name);
         Serial.print("Chat = ");
@@ -223,6 +242,7 @@ void getUpdates(String offset, struct UserData* userData)  {
         Serial.print("Text = ");
         Serial.println(userData->text);
         Serial.println();
+        #endif
 
         // Nachricht verarbeiten
         Bot_ExecMessages(userData);
@@ -234,16 +254,21 @@ void getUpdates(String offset, struct UserData* userData)  {
       }
       
       if (ii == 0) {
+       
+        #ifdef DEBUG
         Serial.println("no new messages");
         Serial.println();
+        #endif
         strcpy(userData->name, "0");
         strcpy(userData->chat_id, "0");
         strcpy(userData->text, "0");  
       }  
     }
 
-    if (mess=="") {     
+    if (mess=="") {  
+        #ifdef DEBUG
         Serial.println("failed to update");
+        #endif
         return;
     }
 

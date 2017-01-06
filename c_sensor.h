@@ -25,6 +25,7 @@
     
     HISTORY:
     0.1.00 - 2016-12-30 initial version
+    0.2.00 - 2017-01-04 add inactive channels
     
  ****************************************************/
 
@@ -111,7 +112,7 @@ double get_thermocouple(void) {
     #ifdef DEBUG
     //Serial.println("No thermocouple!");
     #endif
-    return 0; 
+    return INACTIVEVALUE; 
   }
 
   if (dd & 0x80000000) {
@@ -156,10 +157,12 @@ void get_Vbat()
   
   median_add(((voltage - BATTMIN)*100)/(BATTMAX - BATTMIN));
   BatteryPercentage = median_get();
-
   // Schwankungen verschiedener Batterien ausgleichen
   if (BatteryPercentage > 100) BatteryPercentage = 100;
-
+  
+  #ifdef DEBUG
+    Serial.printf("[INFO]\tBattery voltage:%umV\tcharge:%u%%\r\n", voltage, BatteryPercentage); 
+  #endif
 }
 
 

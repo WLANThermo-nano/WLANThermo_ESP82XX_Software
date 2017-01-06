@@ -1,5 +1,5 @@
-/*************************************************** 
-    Copyright (C) 2016  Steffen Ochs
+ /*************************************************** 
+    Copyright (C) 2016  Steffen Ochs, Phantomias2006
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
     HISTORY:
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 implement ChannelData
+    0.2.01 - 2017-01-02 Change Button Event
     
  ****************************************************/
 
@@ -32,16 +33,16 @@
 #define VARIANT_B                           // 6xNTC, 1xSYSTEM
 //#define VARIANT_C                           // 4xNTC, 1xKYTPE, 1xSYSTEM
 
-// falls erstes Flashen "xxx" ersetzen (nicht auskommentieren)
+// falls erstes Flashen "xxx" ersetzen
 #define WIFISSID "xxx"              // SET WIFI SSID (falls noch kein wifi.json angelegt ist)  
 #define PASSWORD "xxx"              // SET WIFI PASSWORD (falls noch kein wifi.json angelegt ist)
 
 // bitte auskommentieren falls nicht benutzt
-#define TELEGRAM
+//#define TELEGRAM
 #define BOTTOKEN "xxx" 
 
 // bitte auskommentieren falls nicht benutzt
-#define THINGSPEAK
+//#define THINGSPEAK
 #define THINGSPEAK_KEY "xxx"
 
 
@@ -59,7 +60,7 @@
 #include "c_frames.h"
 #include "c_bot.h"
 #include "c_ota.h"
-
+#include "c_server.h"
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -89,12 +90,19 @@ void setup() {
     set_wifi();
 
     // Update Time
-    if (!isAP)  get_ntp_time();
+    if (!isAP)  setTime(getNtpTime()); //setSyncProvider(getNtpTime);
+
+    #ifdef DEBUG
+    digitalClockDisplay();
+    #endif
+   
+    // Initialize Server
+    server_setup();
 
     // Initialize OTA
     #ifdef OTA  
-    set_ota();
-    ArduinoOTA.begin();
+      set_ota();
+      ArduinoOTA.begin();
     #endif
     
     // Initialize Sensors
@@ -132,17 +140,29 @@ void loop() {
     
     return;
   }
+ 
+  // Detect Serial
+  serialEvent();
+  if (receiveSerial) read_serial();
 
   // Detect OTA
   #ifdef OTA
-  ArduinoOTA.handle();
+    ArduinoOTA.handle();
   #endif
+ 
+ // Server
+  server.handleClient();
   
   // Detect Button Event
-  button_get();
+  if (button_input()) {
+    button_event();
+  }
 
-  // Update Display
-  int remainingTimeBudget = ui.update();
+    // Update Display
+  int remainingTimeBudget;
+  if (!displayblocked) {
+    remainingTimeBudget = ui.update();
+  } else remainingTimeBudget = 1;
 
 
   if (remainingTimeBudget > 0) {
@@ -159,7 +179,7 @@ void loop() {
         // Alarmfunktion
         String postStr = "ACHTUNG: ";
         postStr += String(ch[0].temp,1);
-      }  
+      }
       
       }
       lastUpdateSensor = millis();
@@ -172,12 +192,12 @@ void loop() {
       if (!isAP) {
 
         #ifdef THINGSPEAK
-        sendData();
+          sendData();
         #endif
 
         #ifdef TELEGRAM
-        UserData userData;
-        getUpdates(id, &userData);
+          UserData userData;
+          getUpdates(id, &userData);
         #endif
       }
       
