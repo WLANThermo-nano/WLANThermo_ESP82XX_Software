@@ -106,6 +106,7 @@ void setup() {
         
     // Current Wifi Signal Strength
     get_rssi();
+
   }
 
 }
