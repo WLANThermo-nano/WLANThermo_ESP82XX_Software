@@ -19,6 +19,7 @@
     0.2.00 - 2016-12-30 implement ChannelData
     0.2.01 - 2017-01-04 add inactive channels
     0.2.02 - 2017-01-04 add temperature unit
+    0.2.03 - 2017-01-06 add limits transformation
     
  ****************************************************/
 
@@ -87,7 +88,7 @@ void get_Temperature() {
     #endif
 
     // Umwandlung C/F
-    if ((temp_unit == "F") && value!=INACTIVEVALUE) {
+    if ((temp_unit == "F") && value!=INACTIVEVALUE) {  // Vorsicht mit INACTIVEVALUE
       value *= 9.0;
       value /= 5.0;
       value += 32;
@@ -130,4 +131,36 @@ void set_Channels() {
 
 }
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Transform Channel Limits
+void transform_limits() {
+  
+  float max;
+  float min;
+  
+  for (int i=0; i < CHANNELS; i++)  {
+    max = ch[i].max;
+    min = ch[i].min;
+
+    if (temp_unit == "F") {               // Transform to °F
+      max *= 9.0;
+      max /= 5.0;
+      max += 32;
+      min *= 9.0;
+      min /= 5.0;
+      min += 32;  
+    } else {                              // Transform to °C
+      max -= 32;
+      max *= 5.0;
+      max /= 9.0;
+      min -= 32;
+      min *= 5.0;
+      min /= 9.0;
+    }
+
+    ch[i].max = max;
+    ch[i].min = min;
+  }
+}
 
