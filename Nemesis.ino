@@ -42,7 +42,7 @@
 #define BOTTOKEN "xxx" 
 
 // bitte auskommentieren falls nicht benutzt
-#define THINGSPEAK
+//#define THINGSPEAK
 #define THINGSPEAK_KEY "xxx"
 
 
