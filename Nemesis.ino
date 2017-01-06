@@ -158,8 +158,11 @@ void loop() {
     button_event();
   }
 
-  // Update Display
-  int remainingTimeBudget = ui.update();
+    // Update Display
+  int remainingTimeBudget;
+  if (!displayblocked) {
+    remainingTimeBudget = ui.update();
+  } else remainingTimeBudget = 1;
 
 
   if (remainingTimeBudget > 0) {
