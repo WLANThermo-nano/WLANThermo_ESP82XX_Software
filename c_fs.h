@@ -118,7 +118,7 @@ bool setConfig() {
   
   json["AUTHOR"] = "s.ochs";
   json["VERSION"] = CHANNELJSONVERSION;
-  json["temp_unit"] = "C";
+  json["temp_unit"] = temp_unit;
 
   JsonArray& _typ = json.createNestedArray("ttyp");
   JsonArray& _min = json.createNestedArray("tmin");
@@ -126,9 +126,15 @@ bool setConfig() {
   JsonArray& _alarm = json.createNestedArray("talarm");
   
   for (int i=0; i < CHANNELS; i++){
-    _typ.add(2); 
-    _min.add(20.0,1);
-    _max.add(30.0,1); 
+    _typ.add(2);
+    
+    if (temp_unit == "F") {
+      _min.add(68.0,1);
+      _max.add(86.0,1);
+    } else {
+      _min.add(20.0,1);
+      _max.add(30.0,1); 
+    }
     _alarm.add(false); 
   }
  
@@ -218,11 +224,11 @@ bool changeConfig() {
   
   if (!configFile) {
     #ifdef DEBUG
-    Serial.println("Failed to open config file for writing");
+    Serial.println("[INFO]\tFailed to open channel config file for writing");
     #endif
     return false;
   }
-  else Serial.println("Update SPIFFS");
+  else Serial.println("[INFO]\tUpdate Channel Config");
 
   neu.printTo(configFile);
 
