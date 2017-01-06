@@ -82,6 +82,35 @@ void drawLoading() {
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Frame while Question
+void drawQuestion() {
+    
+    display.clear();
+    display.setColor(WHITE);
+    
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
+    display.setFont(ArialMT_Plain_10);
+    
+    switch (question) {                   // Which Question?
+
+      case CONFIGRESET:
+        display.drawString(32,3,"Reset Config?");
+        break;
+
+      case CHANGEUNIT:
+        display.drawString(35,3,"Change Unit?");
+        break;
+    }
+
+    display.setFont(ArialMT_Plain_16);
+    display.drawString(10,40,"NO");
+    display.setTextAlignment(TEXT_ALIGN_RIGHT);
+    display.drawString(118,40,"YES");
+    display.display();
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Status Row
 
 void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
@@ -96,6 +125,8 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   if (isAP)  display->drawString(128,0,"AP");
   else display->drawString(128,0,String(rssi)+" dBm");
+
+  if (!INACTIVESHOW) display->drawString(85,0,"F");
   
   if (flash && BatteryPercentage < 10) {} // nothing for flash effect
   else {
