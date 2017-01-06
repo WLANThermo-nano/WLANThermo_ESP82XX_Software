@@ -47,6 +47,7 @@
 
 
 
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 // INCLUDE SUBROUTINES
 
@@ -61,6 +62,7 @@
 #include "c_bot.h"
 #include "c_ota.h"
 #include "c_server.h"
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -95,10 +97,10 @@ void setup() {
     #ifdef DEBUG
     digitalClockDisplay();
     #endif
-   
+
     // Initialize Server
     server_setup();
-
+    
     // Initialize OTA
     #ifdef OTA  
       set_ota();
@@ -114,6 +116,7 @@ void setup() {
         
     // Current Wifi Signal Strength
     get_rssi();
+
   }
 
 }
@@ -140,7 +143,7 @@ void loop() {
     
     return;
   }
- 
+
   // Detect Serial
   serialEvent();
   if (receiveSerial) read_serial();
@@ -149,16 +152,16 @@ void loop() {
   #ifdef OTA
     ArduinoOTA.handle();
   #endif
- 
- // Server
+
+  // Server
   server.handleClient();
   
   // Detect Button Event
   if (button_input()) {
     button_event();
   }
-
-    // Update Display
+  
+  // Update Display
   int remainingTimeBudget;
   if (!displayblocked) {
     remainingTimeBudget = ui.update();
@@ -207,4 +210,5 @@ void loop() {
     //delay(remainingTimeBudget);
   }
 }
+
 
