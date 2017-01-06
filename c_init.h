@@ -35,7 +35,7 @@
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
 
-// HARDEWARE
+// HARDWARE
 #ifdef VARIANT_C
   #define CHANNELS 6                  // 4xNTC, 1xKYTPE, 1xSYSTEM
   #define KTYPE 1
@@ -113,7 +113,7 @@ String  ttypname[] = {"Maverick",
                       "100K",
                       "SMD NTC",
                       "5K3A1B",
-                      "K-Type"};
+                      "Typ K"};
 
 String  temp_unit = "C";
 
@@ -125,6 +125,10 @@ int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL
 int BatteryPercentage = 0;        // BATTERY CHARGE STATE in %
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool INACTIVESHOW = true;         // SHOW INACTIVE CHANNELS
+bool displayblocked = false;                     // No OLED Update
+enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE};
+int question = NO;                               // Which Question;
+
 
 // WIFI
 byte isAP = 0;                    // WIFI MODE
@@ -141,6 +145,8 @@ enum {NONE, FIRSTDOWN, FIRSTUP, SHORTCLICK, DOUBLECLICK, LONGCLICK};
 byte buttonResult[NUMBUTTONS];    // Aktueller Klickstatus der Buttons NONE/SHORTCLICK/LONGCLICK
 unsigned long buttonDownTime[NUMBUTTONS]; // Zeitpunkt FIRSTDOWN
 int b_counter = 0;
+
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -164,6 +170,7 @@ void get_Vbat();                                  // Reading Battery Voltage
 float calcT(int r, byte typ);                     // Calculate Temperature from ADC-Bytes
 void get_Temperature();                           // Reading Temperature ADC
 void set_Channels();                              // Initialize Temperature Channels
+void transform_limits();                          // Transform Channel Limits
 
 // OLED
 #include <SSD1306.h>              
@@ -174,6 +181,7 @@ OLEDDisplayUi ui     ( &display );
 // FRAMES
 void drawConnect(int count, int active);          // Frame while system start
 void drawLoading();                               // Frame while Loading
+void drawQuestion();                    // Frame while Question
 void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state);
 void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawlimito(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
@@ -191,6 +199,8 @@ bool loadWifiSettings();                          // Load wifi.json at system st
 bool setWifiSettings();                           // Reset config.json to default
 bool addWifiSettings(char* ssid, char* pass);     // Add Wifi Settings to config.json 
 void start_fs();                                  // Initialize FileSystem
+void read_serial();                               // React to Serial Input 
+void serialEvent();                               // Put together Serial Input
 
 // MEDIAN
 void median_add(int value);                       // add Value to Buffer
@@ -272,17 +282,50 @@ static inline void button_event() {
 
   static unsigned long lastMupiTime;    // Zeitpunkt letztes schnelles Zeppen
 
-  if (buttonResult[0]==LONGCLICK && buttonResult[1]==LONGCLICK) {
+  // Frage nach Reset der Config wurde bestätigt
+  if ((buttonResult[0]==SHORTCLICK) && question > 0) {
+      
+      switch (question) {
+        case CONFIGRESET:
+          setConfig();
+          loadConfig();
+          set_Channels();
+          break;
 
-      Serial.println("Config Reset");
-      setConfig();
-      delay(500);
-      loadConfig();
-    
+        case CHANGEUNIT:
+          if (temp_unit == "C") temp_unit = "F";          // Change Unit
+          else temp_unit = "C";
+          transform_limits();                             // Transform Limits
+          changeConfig();                                 // Save Config
+          get_Temperature();                              // Update Temperature
+          #ifdef DEBUG
+            Serial.println("[INFO]\tEinheitenwechsel");
+          #endif
+          break;
+
+      }
+      question = NO;
+      displayblocked = false;
+      return;
+  }
+
+  // Frage nach Reset der Config wurde verneint
+  if ((buttonResult[1]==SHORTCLICK) && question > 0) {
+      question = NO;
+      displayblocked = false;
+      return;
+  }
+
+  // Reset der Config erwuenscht
+  if (buttonResult[1]==LONGCLICK && ui.getCurrentFrameCount()==0) {
+      displayblocked = true;
+      question = CONFIGRESET;
+      drawQuestion();
       return;
   }
 
   // Button 1 Doppelclick während man sich im Hauptmenu befindet
+  // -> Anzeigemodus wechseln
   if (buttonResult[0]==DOUBLECLICK && ui.getCurrentFrameCount()==0) {
     INACTIVESHOW = !INACTIVESHOW;
 
@@ -295,18 +338,12 @@ static inline void button_event() {
 
 
   // Button 2 Doppelclick während man sich im Hauptmenu befindet
+  // -> Einheit wechseln
   if (buttonResult[1]==DOUBLECLICK && ui.getCurrentFrameCount()==0) {
-    if (temp_unit == "C") temp_unit = "F";
-    else temp_unit = "C";
-
-    // Update Temperature
-    get_Temperature();
-
-    #ifdef DEBUG
-      Serial.println("[INFO]\tEinheitenwechsel");
-    #endif
+    displayblocked = true;
+    question = CHANGEUNIT;
+    drawQuestion();
     return;
-    
   }
   
   
@@ -393,7 +430,7 @@ static inline void button_event() {
     }
     else {
       b_counter = 0;
-      changeConfig();
+      changeConfig();             // Am Ende des Kontextmenu Config speichern
     }
     
     ui.switchToFrame(b_counter);
@@ -415,4 +452,5 @@ String formatBytes(size_t bytes){
     return String(bytes/1024.0/1024.0/1024.0)+"GB";
   }
 }
+
 
