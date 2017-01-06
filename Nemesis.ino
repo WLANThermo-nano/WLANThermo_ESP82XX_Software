@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-/*************************************************** 
-    Copyright (C) 2016  Steffen Ochs
-=======
  /*************************************************** 
     Copyright (C) 2016  Steffen Ochs, Phantomias2006
->>>>>>> refs/remotes/origin/master
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,10 +17,7 @@
     HISTORY:
     0.1.00 - 2016-12-30 initial version
     0.2.00 - 2016-12-30 implement ChannelData
-<<<<<<< HEAD
-=======
     0.2.01 - 2017-01-02 Change Button Event
->>>>>>> refs/remotes/origin/master
     
  ****************************************************/
 
@@ -41,29 +33,18 @@
 #define VARIANT_B                           // 6xNTC, 1xSYSTEM
 //#define VARIANT_C                           // 4xNTC, 1xKYTPE, 1xSYSTEM
 
-<<<<<<< HEAD
-// falls erstes Flashen "xxx" ersetzen (nicht auskommentieren)
-=======
 // falls erstes Flashen "xxx" ersetzen
->>>>>>> refs/remotes/origin/master
 #define WIFISSID "xxx"              // SET WIFI SSID (falls noch kein wifi.json angelegt ist)  
 #define PASSWORD "xxx"              // SET WIFI PASSWORD (falls noch kein wifi.json angelegt ist)
 
 // bitte auskommentieren falls nicht benutzt
-<<<<<<< HEAD
-#define TELEGRAM
-#define BOTTOKEN "xxx" 
-
-// bitte auskommentieren falls nicht benutzt
-#define THINGSPEAK
-=======
 //#define TELEGRAM
 #define BOTTOKEN "xxx" 
 
 // bitte auskommentieren falls nicht benutzt
-//#define THINGSPEAK
->>>>>>> refs/remotes/origin/master
+#define THINGSPEAK
 #define THINGSPEAK_KEY "xxx"
+
 
 
 
@@ -80,11 +61,8 @@
 #include "c_frames.h"
 #include "c_bot.h"
 #include "c_ota.h"
-<<<<<<< HEAD
-
-=======
 #include "c_server.h"
->>>>>>> refs/remotes/origin/master
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -114,28 +92,19 @@ void setup() {
     set_wifi();
 
     // Update Time
-<<<<<<< HEAD
-    if (!isAP)  get_ntp_time();
-
-    // Initialize OTA
-    #ifdef OTA  
-    set_ota();
-    ArduinoOTA.begin();
-=======
     if (!isAP)  setTime(getNtpTime()); //setSyncProvider(getNtpTime);
 
     #ifdef DEBUG
     digitalClockDisplay();
     #endif
-   
+
     // Initialize Server
     server_setup();
-
+    
     // Initialize OTA
     #ifdef OTA  
       set_ota();
       ArduinoOTA.begin();
->>>>>>> refs/remotes/origin/master
     #endif
     
     // Initialize Sensors
@@ -147,10 +116,7 @@ void setup() {
         
     // Current Wifi Signal Strength
     get_rssi();
-<<<<<<< HEAD
 
-=======
->>>>>>> refs/remotes/origin/master
   }
 
 }
@@ -177,20 +143,7 @@ void loop() {
     
     return;
   }
-<<<<<<< HEAD
 
-  // Detect OTA
-  #ifdef OTA
-  ArduinoOTA.handle();
-  #endif
-  
-  // Detect Button Event
-  button_get();
-
-  // Update Display
-  int remainingTimeBudget = ui.update();
-=======
- 
   // Detect Serial
   serialEvent();
   if (receiveSerial) read_serial();
@@ -199,21 +152,20 @@ void loop() {
   #ifdef OTA
     ArduinoOTA.handle();
   #endif
- 
- // Server
+
+  // Server
   server.handleClient();
   
   // Detect Button Event
   if (button_input()) {
     button_event();
   }
-
-    // Update Display
+  
+  // Update Display
   int remainingTimeBudget;
   if (!displayblocked) {
     remainingTimeBudget = ui.update();
   } else remainingTimeBudget = 1;
->>>>>>> refs/remotes/origin/master
 
 
   if (remainingTimeBudget > 0) {
@@ -230,11 +182,7 @@ void loop() {
         // Alarmfunktion
         String postStr = "ACHTUNG: ";
         postStr += String(ch[0].temp,1);
-<<<<<<< HEAD
-      }  
-=======
       }
->>>>>>> refs/remotes/origin/master
       
       }
       lastUpdateSensor = millis();
@@ -247,21 +195,12 @@ void loop() {
       if (!isAP) {
 
         #ifdef THINGSPEAK
-<<<<<<< HEAD
-        sendData();
-        #endif
-
-        #ifdef TELEGRAM
-        UserData userData;
-        getUpdates(id, &userData);
-=======
           sendData();
         #endif
 
         #ifdef TELEGRAM
           UserData userData;
           getUpdates(id, &userData);
->>>>>>> refs/remotes/origin/master
         #endif
       }
       
@@ -271,4 +210,5 @@ void loop() {
     //delay(remainingTimeBudget);
   }
 }
+
 
