@@ -62,7 +62,7 @@
 #include "c_bot.h"
 #include "c_ota.h"
 #include "c_server.h"
-
+#include "c_pitmaster.h"
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -117,6 +117,8 @@ void setup() {
     // Current Wifi Signal Strength
     get_rssi();
 
+    // Initialize Pitmaster
+    set_pitmaster();
   }
 
 }
