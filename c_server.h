@@ -196,7 +196,7 @@ void server_setup() {
         JsonObject& root = jsonBuffer.createObject();
 
         root["heap"] = ESP.getFreeHeap();
-        root["analog"] = analogRead(A0);
+        root["analog"] = ch[0].temp;
         root["gpio"] = (uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16));
 
         size_t size = root.measureLength() + 1;
