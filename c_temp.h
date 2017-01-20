@@ -31,6 +31,8 @@ float calcT(int r, byte typ){
   float Rmess = 47;
   float a, b, c, Rn;
 
+  if (r < 2) return INACTIVEVALUE;        // Kanal ist mit GND gebrückt
+
   switch (typ) {
   case 0:  // Maverik
     Rn = 1000; a = 0.003358; b = 0.0002242; c = 0.00000261;
@@ -53,12 +55,12 @@ float calcT(int r, byte typ){
     break; 
    
   default:  
-    return 0;
+    return INACTIVEVALUE;
   }
   
   float Rt = Rmess*((4096.0/(4096-r)) - 1);
   float v = log(Rt/Rn);
-  float erg = (1/(a + b*v + c*v*v)) - 273;
+  float erg = (1/(a + b*v + c*v*v)) - 273.15;
   
   return (erg>-10)?erg:INACTIVEVALUE;
 }
