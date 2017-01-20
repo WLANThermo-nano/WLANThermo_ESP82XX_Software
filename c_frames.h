@@ -35,6 +35,11 @@ void drawConnect(int count, int active) {
     
     // Draw Logo
     display.drawXbm(4, 20, 120, 39, xbmwlanthermo);
+
+    // Draw Version
+    display->setTextAlignment(TEXT_ALIGN_RIGHT);
+    display->setFont(Noto_Sans_8);
+    display->drawString(100,0,String("V0.1"));
     
     // Draw status
     for (int i = 0; i < count; i++) {
@@ -125,6 +130,8 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   if (isAP)  display->drawString(128,0,"AP");
   else display->drawString(128,0,String(rssi)+" dBm");
+
+  //display->drawString(80,0,String(map(pit_y,0,pit_pause,0,100)) + "%");
 
   if (!INACTIVESHOW) display->drawString(85,0,"F");
   
