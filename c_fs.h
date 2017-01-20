@@ -19,6 +19,7 @@
     0.2.00 - 2016-12-30 impliment ChannelData
     0.2.01 - 2017-01-04 add version and temp_unit in channel.json
     0.2.02 - 2017-01-05 add serial communication
+    0.2.03 - 2017-01-20 add Thingspeak config
     
  ****************************************************/
 
@@ -30,6 +31,7 @@
 
 #define CHANNEL_FILE "/channel.json"
 #define WIFI_FILE "/wifi.json"
+#define THING_FILE "/thing.json"
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -301,7 +303,7 @@ bool loadWifiSettings() {
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Reset config.json to default
+// Reset wifi.json to default
 bool setWifiSettings(String ssid, String pass) {
   
   //StaticJsonBuffer<200> jsonBuffer;
@@ -332,7 +334,7 @@ bool setWifiSettings(String ssid, String pass) {
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Add Wifi Settings to config.json 
+// Add Wifi Settings to wifi.json 
 bool addWifiSettings(String ssid, String pass) {
 
   // Alte Daten auslesen
@@ -411,6 +413,85 @@ bool addWifiSettings(String ssid, String pass) {
   }
 
 }
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Load thing.json at system start
+bool loadThingSettings() {
+  
+  File configFile = SPIFFS.open(THING_FILE, "r");
+  if (!configFile) {
+    #ifdef DEBUG
+    Serial.println("Failed to open Thingspeak config file");
+    #endif
+    return false;
+  }
+
+  size_t size = configFile.size();
+  if (size > 1024) {
+    #ifdef DEBUG
+    Serial.println("Thingspeak config file size is too large");
+    #endif
+    return false;
+  }
+
+  // Allocate a buffer to store contents of the file.
+  std::unique_ptr<char[]> buf(new char[size]);
+
+  // We don't use String here because ArduinoJson library requires the input
+  // buffer to be mutable. If you don't use ArduinoJson, you may as well
+  // use configFile.readString instead.
+  configFile.readBytes(buf.get(), size);
+
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.parseObject(buf.get());
+  
+  if (!json.success()) {
+    #ifdef DEBUG
+    Serial.println("Failed to parse Thingspeak config file");
+    #endif
+    return false;
+  }
+
+  THINGSPEAK_KEY = json["KEY"].asString();
+  
+  configFile.close();
+
+  #ifdef DEBUG
+  json.printTo(Serial);
+  Serial.println();
+  #endif
+  
+  return true;
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Set thing.json
+bool setThingSettings(String key) {
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.createObject();
+  
+  THINGSPEAK_KEY = key;
+  json["KEY"] = THINGSPEAK_KEY;
+  
+  File configFile = SPIFFS.open(THING_FILE, "w");
+  
+  if (!configFile) {
+    #ifdef DEBUG
+    Serial.println("Failed to open config file for writing");
+    #endif
+    return false;
+  }
+
+  json.printTo(configFile);
+    
+  configFile.close();
+
+  return true;
+
+}
+
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -496,6 +577,19 @@ void start_fs() {
         Serial.println("[INFO]\tWifi config saved");
       #endif
     }
+
+  if (SPIFFS.exists(THING_FILE)) {
+    
+    if (!loadThingSettings()) {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tNo Thingspeak config available");
+      #endif
+    } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tThingspeak config loaded");
+      #endif
+    }
+  }
 }
 
 // wenn Schnittstelle fertig kommen Sie in die c_init.h
@@ -575,14 +669,42 @@ void read_serial() {
     Serial.println(WiFi.SSID());
   }
 
+  else if (strcmp(inputString.c_str(), "setTS")==0) {
+    if (holdString != "") {   // Daten gesammelt
+      holdString = "";
+      
+      if (!setThingSettings(expectString[0])) {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tFailed to save Thingspeak config");
+        #endif
+      } else {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tThingspeak config saved");
+        #endif
+      }
+      expectString[0] = "";
+    } 
+    else {                  // Daten bitte erst sammeln
+      expectCount = 1;
+      holdString = inputString;
+      Serial.println(1);      // Empfang bestätigen
+    }
+  }
+  
+  else if (strcmp(inputString.c_str(), "getTS")==0) {
+    Serial.println(THINGSPEAK_KEY);
+  }
+
   else if (strcmp(inputString.c_str(), "help")==0) {
     Serial.println();
     Serial.println("Possible instructions");
-    Serial.println("getSSID -> send current SSID");
+    Serial.println("getSSID -> Show current SSID");
     Serial.println("setWIFI -> Reset wifi.json and add new SSID");
     Serial.println("        -> expected one after the other SSID and PASSWORD");
     Serial.println("addWIFI -> Add new SSID to wifi.json");
     Serial.println("        -> expected one after the other SSID and PASSWORD");
+    Serial.println("setTS   -> Add THINGSPEAK KEY");
+    Serial.println("getTS   -> Show THINGSPEAK KEY");
     Serial.println();
   }
 
