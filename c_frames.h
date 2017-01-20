@@ -37,9 +37,9 @@ void drawConnect(int count, int active) {
     display.drawXbm(4, 20, 120, 39, xbmwlanthermo);
 
     // Draw Version
-    display->setTextAlignment(TEXT_ALIGN_RIGHT);
-    display->setFont(Noto_Sans_8);
-    display->drawString(100,0,String("V0.1"));
+    display.setTextAlignment(TEXT_ALIGN_RIGHT);
+    display.setFont(Noto_Sans_8);
+    display.drawString(100,0,"V0.1");
     
     // Draw status
     for (int i = 0; i < count; i++) {

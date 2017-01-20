@@ -136,6 +136,7 @@ String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;
 long rssi = 0;                   // Buffer rssi
+String THINGSPEAK_KEY;
 
 // BUTTONS
 byte buttonPins[]={btn_r,btn_l};          // Pins
@@ -146,6 +147,10 @@ byte buttonResult[NUMBUTTONS];    // Aktueller Klickstatus der Buttons NONE/SHOR
 unsigned long buttonDownTime[NUMBUTTONS]; // Zeitpunkt FIRSTDOWN
 int b_counter = 0;
 
+// PITMASTER
+int pit_manuell = 0;
+int16_t pit_y = 0;
+int16_t pit_pause = 3000;       // Regler Intervall
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -333,9 +338,16 @@ static inline void button_event() {
       Serial.println("[INFO]\tAnzeigewechsel");
     #endif
     return;
-    
   }
 
+  
+  // Button 1 Longclick während man sich im Hauptmenu befindet
+  // -> Zur Pitmaster-Übersicht wechseln
+  if (buttonResult[0]==LONGCLICK && ui.getCurrentFrameCount()==0) {
+    // Falls Pitmaster nicht aktiv -> erstmal aktivieren
+    // Code fehlt noch
+    return;
+  }
 
   // Button 2 Doppelclick während man sich im Hauptmenu befindet
   // -> Einheit wechseln

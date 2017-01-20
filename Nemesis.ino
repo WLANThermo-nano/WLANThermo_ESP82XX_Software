@@ -42,8 +42,8 @@
 #define BOTTOKEN "xxx" 
 
 // bitte auskommentieren falls nicht benutzt
-//#define THINGSPEAK
-#define THINGSPEAK_KEY "xxx"
+#define THINGSPEAK
+
 
 
 
@@ -72,10 +72,8 @@ unsigned long lastUpdateCommunication;
 
 void setup() {  
 
-  // Initialize Debug 
-  #ifdef DEBUG
-    set_serial();
-  #endif
+  // Initialize Serial 
+  set_serial();
   
   // Initialize OLED
   set_OLED();
@@ -157,6 +155,8 @@ void loop() {
 
   // Server
   server.handleClient();
+
+  //pitmaster_control();
   
   // Detect Button Event
   if (button_input()) {
@@ -197,7 +197,7 @@ void loop() {
       if (!isAP) {
 
         #ifdef THINGSPEAK
-          sendData();
+          if (THINGSPEAK_KEY != "") sendData();
         #endif
 
         #ifdef TELEGRAM
