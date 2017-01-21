@@ -600,8 +600,28 @@ void start_fs() {
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // React to Serial Input 
-void read_serial(char *buffer) 
-{
+void read_serial(char *buffer) {
+
+  // GET HELP
+  if (strcmp(buffer, "help")==0) {
+    Serial.println();
+    Serial.println("Syntax: {\"command\":\"xxx\",\"data\":[\"xxx\",\"xxx\"]}");
+    Serial.println("Possible commands");
+    Serial.println("restart    -> Restart ESP");
+    Serial.println("getVersion -> Show Firmware Version Number");
+    Serial.println("getSSID    -> Show current SSID");
+    Serial.println("setWIFI    -> Reset wifi.json and add new SSID");
+    Serial.println("           -> expected data SSID and PASSWORD");
+    Serial.println("addWIFI    -> Add new SSID to wifi.json");
+    Serial.println("           -> expected data SSID and PASSWORD");
+    Serial.println("setTS      -> Add THINGSPEAK KEY");
+    Serial.println("           -> expected data KEY");
+    Serial.println("getTS      -> Show THINGSPEAK KEY");
+    Serial.println();
+    return;
+  }
+
+  // Wenn nicht help dann json-Befehl auslesen
   StaticJsonBuffer<200> jsonBuffer;
   JsonObject& json = jsonBuffer.parseObject(buffer);
   
@@ -681,24 +701,6 @@ void read_serial(char *buffer)
   // GET FIRMWAREVERSION
   else if (strcmp(command, "getVersion")==0) {
     Serial.println(FIRMWAREVERSION);
-  }
-
-  // GET HELP
-  else if (strcmp(command, "help")==0) {
-    Serial.println();
-    Serial.println("Syntax: {\"command\":\"xxx\",\"data\":[\"xxx\",\"xxx\"]}");
-    Serial.println("Possible commands");
-    Serial.println("restart    -> Restart ESP");
-    Serial.println("getVersion -> Show Firmware Version Number");
-    Serial.println("getSSID    -> Show current SSID");
-    Serial.println("setWIFI    -> Reset wifi.json and add new SSID");
-    Serial.println("           -> expected data SSID and PASSWORD");
-    Serial.println("addWIFI    -> Add new SSID to wifi.json");
-    Serial.println("           -> expected data SSID and PASSWORD");
-    Serial.println("setTS      -> Add THINGSPEAK KEY");
-    Serial.println("           -> expected data KEY");
-    Serial.println("getTS      -> Show THINGSPEAK KEY");
-    Serial.println();
   }
 
   else Serial.println("Unkwown command");     // Befehl nicht erkannt
