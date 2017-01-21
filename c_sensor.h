@@ -163,6 +163,13 @@ void get_Vbat()
   #ifdef DEBUG
     Serial.printf("[INFO]\tBattery voltage:%umV\tcharge:%u%%\r\n", voltage, BatteryPercentage); 
   #endif
+
+  if (BatteryPercentage < 0) {
+    // Eventuell noch ein Warnhinweis auf dem Display für ein paar Sekunden einblenden
+    display.displayOff();
+    ESP.deepSleep(0);
+    delay(100); // notwendig um Prozesse zu beenden
+  }
 }
 
 

@@ -209,6 +209,7 @@ void loop() {
           UserData userData;
           getUpdates(id, &userData);
         #endif
+        
       }
       
       lastUpdateCommunication = millis();

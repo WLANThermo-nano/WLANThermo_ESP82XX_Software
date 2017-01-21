@@ -698,6 +698,13 @@ void read_serial(char *buffer) {
     ESP.restart();
   }
 
+  // LET ESP SLEEP
+  else if (strcmp(command, "sleep")==0) {
+    display.displayOff();
+    ESP.deepSleep(0);
+    delay(100); // notwendig um Prozesse zu beenden
+  }
+
   // GET FIRMWAREVERSION
   else if (strcmp(command, "getVersion")==0) {
     Serial.println(FIRMWAREVERSION);
