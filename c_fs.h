@@ -582,13 +582,18 @@ void start_fs() {
     
     if (!loadThingSettings()) {
       #ifdef DEBUG
-        Serial.println("[INFO]\tNo Thingspeak config available");
+        Serial.println("[INFO]\tFailed to load Thingspeak config");
       #endif
     } else {
       #ifdef DEBUG
         Serial.println("[INFO]\tThingspeak config loaded");
       #endif
     }
+  }
+  else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tNo Thingspeak config available");
+      #endif
   }
 }
 
