@@ -39,7 +39,7 @@ void drawConnect(int count, int active) {
     // Draw Version
     display.setTextAlignment(TEXT_ALIGN_RIGHT);
     display.setFont(Noto_Sans_8);
-    display.drawString(124,3,"V0.1");
+    display.drawString(124,3,FIRMWAREVERSION);
     
     // Draw status
     for (int i = 0; i < count; i++) {

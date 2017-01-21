@@ -35,6 +35,8 @@
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
 
+#define FIRMWAREVERSION "V0.1"
+
 // HARDWARE
 #ifdef VARIANT_C
   #define CHANNELS 6                  // 4xNTC, 1xKYTPE, 1xSYSTEM
@@ -202,10 +204,10 @@ bool setConfig();                                 // Reset config.json to defaul
 bool changeConfig();                              // Set config.json after Change
 bool loadWifiSettings();                          // Load wifi.json at system start
 bool setWifiSettings();                           // Reset config.json to default
-bool addWifiSettings(char* ssid, char* pass);     // Add Wifi Settings to config.json 
+bool addWifiSettings();                           // Add Wifi Settings to config.json 
 void start_fs();                                  // Initialize FileSystem
-void read_serial();                               // React to Serial Input 
-void serialEvent();                               // Put together Serial Input
+void read_serial(char *buffer);                   // React to Serial Input 
+int readline(int readch, char *buffer, int len);  // Put together Serial Input
 
 // MEDIAN
 void median_add(int value);                       // add Value to Buffer
