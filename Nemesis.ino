@@ -206,7 +206,7 @@ void loop() {
 
       // Erst aufwachen falls im EcoModus
       // UpdateCommunication wird so lange wiederholt bis ESP wieder wach
-      if (isEco && !awaking && WiFi.status() != WL_CONNECTED)) {
+      if (isEco && !awaking && (WiFi.status() != WL_CONNECTED)) {
         reconnect_wifi();
       }
       else if (!awaking) {
