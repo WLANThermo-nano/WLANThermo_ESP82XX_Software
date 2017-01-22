@@ -167,6 +167,11 @@ void loop() {
   if (button_input()) {
     button_event();
   }
+
+  if (awaking) {
+    check_wifi();
+    //monitorWiFi();
+  }
   
   // Update Display
   int remainingTimeBudget;
@@ -196,23 +201,38 @@ void loop() {
     }
 
     if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
-      
+
       get_rssi();
-      
-      if (!isAP) {
 
-        #ifdef THINGSPEAK
-          if (THINGSPEAK_KEY != "") sendData();
-        #endif
+      // Erst aufwachen falls im EcoModus
+      // UpdateCommunication wird so lange wiederholt bis ESP wieder wach
+      if (isEco && !awaking && WiFi.status() != WL_CONNECTED)) {
+        reconnect_wifi();
+      }
+      else if (!awaking) {
 
-        #ifdef TELEGRAM
-          UserData userData;
-          getUpdates(id, &userData);
-        #endif
+        // falls wach und nicht AP
+        if (!isAP) {
+
+          #ifdef THINGSPEAK
+            if (THINGSPEAK_KEY != "") sendData();
+          #endif
+
+          #ifdef TELEGRAM
+            UserData userData;
+            getUpdates(id, &userData);
+          #endif
         
+        }
+
+        // Wieder einschlafen
+        if (isEco) {
+          stop_wifi();
+        }
+      
+        lastUpdateCommunication = millis();
       }
       
-      lastUpdateCommunication = millis();
     }
     
     //delay(remainingTimeBudget);

@@ -32,6 +32,10 @@
 #include <TimeLib.h>              // TIME
 
 
+extern "C" {
+#include "user_interface.h"
+}
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
 
@@ -220,6 +224,9 @@ void set_ota();                                   // Configuration OTA
 // WIFI
 void set_wifi();                                  // Connect WiFi
 void get_rssi();
+void reconnect_wifi();
+void stop_wifi();
+void check_wifi();
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
@@ -283,12 +290,14 @@ static inline boolean button_input() {
   return true;
 }
 
+bool isEco = false;
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Response Button Status
 static inline void button_event() {
 
   static unsigned long lastMupiTime;    // Zeitpunkt letztes schnelles Zeppen
-
+  
   // Frage nach Reset der Config wurde bestätigt
   if ((buttonResult[0]==SHORTCLICK) && question > 0) {
       
@@ -348,6 +357,26 @@ static inline void button_event() {
   if (buttonResult[0]==LONGCLICK && ui.getCurrentFrameCount()==0) {
     // Falls Pitmaster nicht aktiv -> erstmal aktivieren
     // Code fehlt noch
+    //displayblocked = true;
+
+    if (isEco) {
+      reconnect_wifi();
+      isEco = false;
+    } else {
+      stop_wifi();
+      isEco = true;  
+    }
+    
+
+    /*
+    display.clear();
+    display.setFont(ArialMT_Plain_10);
+    display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+    display.drawString(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2, "ECO MODE");
+    display.display();
+    
+    */
+    
     return;
   }
 
