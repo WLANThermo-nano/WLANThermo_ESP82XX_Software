@@ -165,8 +165,14 @@ void get_Vbat()
   #endif
 
   if (BatteryPercentage < 0) {
-    // Eventuell noch ein Warnhinweis auf dem Display für ein paar Sekunden einblenden
-    display.displayOff();
+    display.clear();
+    display.setFont(ArialMT_Plain_10);
+    display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+    display.drawString(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/3, "LOW BATTERY");
+    display.drawString(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/3, "PLEASE SWITCH OFF");
+    display.display();
+    //delay(5000);
+    //display.displayOff();
     ESP.deepSleep(0);
     delay(100); // notwendig um Prozesse zu beenden
   }

@@ -347,9 +347,6 @@ static inline void button_event() {
   // -> Zur Pitmaster-Übersicht wechseln
   if (buttonResult[0]==LONGCLICK && ui.getCurrentFrameCount()==0) {
     // Falls Pitmaster nicht aktiv -> erstmal aktivieren
-    display.displayOff();
-    ESP.deepSleep(0);
-    delay(100); // notwendig um Prozesse zu beenden
     // Code fehlt noch
     return;
   }
