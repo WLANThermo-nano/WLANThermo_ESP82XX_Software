@@ -169,7 +169,7 @@ void get_Vbat()
     display.setFont(ArialMT_Plain_10);
     display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
     display.drawString(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/3, "LOW BATTERY");
-    display.drawString(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/3, "PLEASE SWITCH OFF");
+    display.drawString(DISPLAY_WIDTH/2, 2*DISPLAY_HEIGHT/3, "PLEASE SWITCH OFF");
     display.display();
     //delay(5000);
     //display.displayOff();
