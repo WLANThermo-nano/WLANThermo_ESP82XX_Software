@@ -132,6 +132,7 @@ void loop() {
     if (!LADENSHOW) {
       drawLoading();
       LADENSHOW = true;
+      //WiFi.mode(WIFI_OFF);
     }
     
     if (millis() - lastUpdateBatteryMode > INTERVALBATTERYMODE) {
@@ -202,7 +203,7 @@ void loop() {
 
     if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
 
-      get_rssi();
+      get_rssi(); // müsste noch an einen anderen Ort wo es unabhängig von INTERVALCOM.. ist
 
       // Erst aufwachen falls im EcoModus
       // UpdateCommunication wird so lange wiederholt bis ESP wieder wach
@@ -236,7 +237,11 @@ void loop() {
     }
     
     //delay(remainingTimeBudget);
+    delay(1); // sonst geht das Wifi Modul nicht in Standby
+    //yield();  // reicht nicht
   }
+
+  
 }
 
 
