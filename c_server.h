@@ -210,7 +210,9 @@ void server_setup() {
     server.on("/data", HTTP_GET, handleData);
 
     server.begin();
+    #ifdef DEBUG
     Serial.println("[INFO]\tHTTP server started");
+    #endif
     MDNS.addService("http", "tcp", 80);
 
 }
