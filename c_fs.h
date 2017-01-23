@@ -19,6 +19,7 @@
     0.2.00 - 2016-12-30 impliment ChannelData
     0.2.01 - 2017-01-04 add version and temp_unit in channel.json
     0.2.02 - 2017-01-05 add serial communication
+    0.2.03 - 2017-01-20 add Thingspeak config
     
  ****************************************************/
 
@@ -30,6 +31,7 @@
 
 #define CHANNEL_FILE "/channel.json"
 #define WIFI_FILE "/wifi.json"
+#define THING_FILE "/thing.json"
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -301,8 +303,8 @@ bool loadWifiSettings() {
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Reset config.json to default
-bool setWifiSettings(String ssid, String pass) {
+// Reset wifi.json to default
+bool setWifiSettings(const char* ssid, const char* pass) {
   
   //StaticJsonBuffer<200> jsonBuffer;
   DynamicJsonBuffer jsonBuffer;
@@ -332,8 +334,8 @@ bool setWifiSettings(String ssid, String pass) {
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Add Wifi Settings to config.json 
-bool addWifiSettings(String ssid, String pass) {
+// Add Wifi Settings to wifi.json 
+bool addWifiSettings(const char* ssid, const char* pass) {
 
   // Alte Daten auslesen
   File configFile = SPIFFS.open(WIFI_FILE, "r");
@@ -411,6 +413,85 @@ bool addWifiSettings(String ssid, String pass) {
   }
 
 }
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Load thing.json at system start
+bool loadThingSettings() {
+  
+  File configFile = SPIFFS.open(THING_FILE, "r");
+  if (!configFile) {
+    #ifdef DEBUG
+    Serial.println("Failed to open Thingspeak config file");
+    #endif
+    return false;
+  }
+
+  size_t size = configFile.size();
+  if (size > 1024) {
+    #ifdef DEBUG
+    Serial.println("Thingspeak config file size is too large");
+    #endif
+    return false;
+  }
+
+  // Allocate a buffer to store contents of the file.
+  std::unique_ptr<char[]> buf(new char[size]);
+
+  // We don't use String here because ArduinoJson library requires the input
+  // buffer to be mutable. If you don't use ArduinoJson, you may as well
+  // use configFile.readString instead.
+  configFile.readBytes(buf.get(), size);
+
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.parseObject(buf.get());
+  
+  if (!json.success()) {
+    #ifdef DEBUG
+    Serial.println("Failed to parse Thingspeak config file");
+    #endif
+    return false;
+  }
+
+  THINGSPEAK_KEY = json["KEY"].asString();
+  
+  configFile.close();
+
+  #ifdef DEBUG
+  json.printTo(Serial);
+  Serial.println();
+  #endif
+  
+  return true;
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Set thing.json
+bool setThingSettings(const char* key) {
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.createObject();
+  
+  THINGSPEAK_KEY = key;
+  json["KEY"] = THINGSPEAK_KEY;
+  
+  File configFile = SPIFFS.open(THING_FILE, "w");
+  
+  if (!configFile) {
+    #ifdef DEBUG
+    Serial.println("Failed to open config file for writing");
+    #endif
+    return false;
+  }
+
+  json.printTo(configFile);
+    
+  configFile.close();
+
+  return true;
+
+}
+
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -496,117 +577,167 @@ void start_fs() {
         Serial.println("[INFO]\tWifi config saved");
       #endif
     }
-}
 
-// wenn Schnittstelle fertig kommen Sie in die c_init.h
-String inputString = "";        // a string to hold incoming data
-bool receiveSerial = false;     // whether the string is complete
-String expectString[2] = "";    // buffer for expected inputs
-int expectCount = 0;            // how many expected inputs
-String holdString = "";         // which inputString cause expected input
+  if (SPIFFS.exists(THING_FILE)) {
+    
+    if (!loadThingSettings()) {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tFailed to load Thingspeak config");
+      #endif
+    } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tThingspeak config loaded");
+      #endif
+    }
+  }
+  else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tNo Thingspeak config available");
+      #endif
+  }
+}
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // React to Serial Input 
-void read_serial() {
+void read_serial(char *buffer) {
 
-  // String bereinigen
-  inputString.replace("\r", "");
-
-  // es wird eine Eingabe erwartet
-  if (expectCount > 0)  {
-    expectCount--;
-    expectString[expectCount] = inputString;
-    inputString = "";
-    receiveSerial = false;
-    if (expectCount != 0) return;
+  // GET HELP
+  if (strcmp(buffer, "help")==0) {
+    Serial.println();
+    Serial.println("Syntax: {\"command\":\"xxx\",\"data\":[\"xxx\",\"xxx\"]}");
+    Serial.println("Possible commands");
+    Serial.println("restart    -> Restart ESP");
+    Serial.println("getVersion -> Show Firmware Version Number");
+    Serial.println("getSSID    -> Show current SSID");
+    Serial.println("setWIFI    -> Reset wifi.json and add new SSID");
+    Serial.println("           -> expected data SSID and PASSWORD");
+    Serial.println("addWIFI    -> Add new SSID to wifi.json");
+    Serial.println("           -> expected data SSID and PASSWORD");
+    Serial.println("setTS      -> Add THINGSPEAK KEY");
+    Serial.println("           -> expected data KEY");
+    Serial.println("getTS      -> Show THINGSPEAK KEY");
+    Serial.println();
+    return;
   }
 
-  // neuer Befehl oder alten abarbeiten
-  if (holdString != "") inputString = holdString;
-
-
-  // mögliche Befehle
-  if (strcmp(inputString.c_str(), "addWIFI")==0) {
-    if (holdString != "") {   // Daten gesammelt
-      holdString = "";
-      if (!addWifiSettings(expectString[1], expectString[0])) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save wifi config");
-      #endif
-      } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config saved");
-      #endif
-      }
-      expectString[0] = "";
-      expectString[1] = "";
-    } 
-    else {                  // Daten bitte erst sammeln
-      expectCount = 2;
-      holdString = inputString;
-      Serial.println(1);      // Empfang bestätigen
-    }
-  }
-
-  else if (strcmp(inputString.c_str(), "setWIFI")==0) {
-    if (holdString != "") {   // Daten gesammelt
-      holdString = "";
-      if (!setWifiSettings(expectString[1], expectString[0])) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save wifi config");
-      #endif
-      } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config saved");
-      #endif
-      }
-      expectString[0] = "";
-      expectString[1] = "";
-    } 
-    else {                    // Daten bitte erst sammeln
-      expectCount = 2;
-      holdString = inputString;
-      Serial.println(1);      // Empfang bestätigen
-    }
-  }
+  // Wenn nicht help dann json-Befehl auslesen
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject& json = jsonBuffer.parseObject(buffer);
   
-  else if (strcmp(inputString.c_str(), "getSSID")==0) {
+  if (!json.success()) {
+    Serial.println("String invalid");
+    return;
+  }
+
+  // new command
+  const char* command = json["command"];
+
+  // ADD WIFI SETTINGS
+  if (strcmp(command, "addWIFI")==0) {
+    //const char* ssid = json["data"][0];
+    //const char* pass = json["data"][1];
+
+    if (!addWifiSettings(json["data"][0], json["data"][1])) {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tFailed to save wifi config");
+      #endif
+    } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tWifi config saved");
+     #endif
+    }
+  }
+
+  // SET WIFI SETTINGS
+  else if (strcmp(command, "setWIFI")==0) {
+    //const char* ssid = json["data"][0];
+    //const char* pass = json["data"][1];
+    
+    if (!setWifiSettings(json["data"][0], json["data"][1])) {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tFailed to save wifi config");
+      #endif
+    } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tWifi config saved");
+      #endif
+    } 
+    
+  }
+
+  // GET CURRENT WIFI SSID
+  else if (strcmp(command, "getSSID")==0) {
     Serial.println(WiFi.SSID());
   }
 
-  else if (strcmp(inputString.c_str(), "help")==0) {
-    Serial.println();
-    Serial.println("Possible instructions");
-    Serial.println("getSSID -> send current SSID");
-    Serial.println("setWIFI -> Reset wifi.json and add new SSID");
-    Serial.println("        -> expected one after the other SSID and PASSWORD");
-    Serial.println("addWIFI -> Add new SSID to wifi.json");
-    Serial.println("        -> expected one after the other SSID and PASSWORD");
-    Serial.println();
+  // SET THINGSPEAK KEY
+  else if (strcmp(command, "setTS")==0) {
+
+    //const char* key = json["data"][0];
+    
+    if (!setThingSettings(json["data"][0])) {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tFailed to save Thingspeak config");
+      #endif
+    } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tThingspeak config saved");
+      #endif
+    }
+    
   }
 
-  else Serial.println(0);     // Befehl nicht erkannt
+  // GET THINGSPEAK KEY
+  else if (strcmp(command, "getTS")==0) {
+    Serial.println(THINGSPEAK_KEY);
+  }
+
+  // RESTART SYSTEM
+  else if (strcmp(command, "restart")==0) {
+    ESP.restart();
+  }
+
+  // LET ESP SLEEP
+  else if (strcmp(command, "sleep")==0) {
+    display.displayOff();
+    ESP.deepSleep(0);
+    delay(100); // notwendig um Prozesse zu beenden
+  }
+
+  // GET FIRMWAREVERSION
+  else if (strcmp(command, "getVersion")==0) {
+    Serial.println(FIRMWAREVERSION);
+  }
+
+  else Serial.println("Unkwown command");     // Befehl nicht erkannt
     
-  // clear the string:
-  inputString = "";
-  receiveSerial = false;
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Put together Serial Input 
-void serialEvent() {
-
-  while (Serial.available()) {
-    // get the new byte:
-    char inChar = (char)Serial.read();
-        
-    // if the incoming character is a newline, set a flag
-    if (inChar == '\n') {
-      receiveSerial = true;
-    } else inputString += inChar;
-  }
-
+int readline(int readch, char *buffer, int len) {
   
+  static int pos = 0;
+  int rpos;
+
+  if (readch > 0) {
+    switch (readch) {
+      case '\n': // Ignore new-lines
+        break;
+      case '\r': // Return on CR
+        rpos = pos;
+        pos = 0;  // Reset position index ready for next time
+        return rpos;
+      default:
+        if (pos < len-1) {
+          buffer[pos++] = readch;
+          buffer[pos] = 0;
+        }
+    }
+  }
+  // No end of line has been found, so return -1.
+  return -1;
 }
+

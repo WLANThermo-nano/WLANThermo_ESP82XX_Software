@@ -32,8 +32,14 @@
 #include <TimeLib.h>              // TIME
 
 
+extern "C" {
+#include "user_interface.h"
+}
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
+
+#define FIRMWAREVERSION "V0.1"
 
 // HARDWARE
 #ifdef VARIANT_C
@@ -136,6 +142,7 @@ String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;
 long rssi = 0;                   // Buffer rssi
+String THINGSPEAK_KEY;
 
 // BUTTONS
 byte buttonPins[]={btn_r,btn_l};          // Pins
@@ -146,6 +153,10 @@ byte buttonResult[NUMBUTTONS];    // Aktueller Klickstatus der Buttons NONE/SHOR
 unsigned long buttonDownTime[NUMBUTTONS]; // Zeitpunkt FIRSTDOWN
 int b_counter = 0;
 
+// PITMASTER
+int pit_manuell = 0;
+int16_t pit_y = 0;
+int16_t pit_pause = 3000;       // Regler Intervall
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -197,10 +208,10 @@ bool setConfig();                                 // Reset config.json to defaul
 bool changeConfig();                              // Set config.json after Change
 bool loadWifiSettings();                          // Load wifi.json at system start
 bool setWifiSettings();                           // Reset config.json to default
-bool addWifiSettings(char* ssid, char* pass);     // Add Wifi Settings to config.json 
+bool addWifiSettings();                           // Add Wifi Settings to config.json 
 void start_fs();                                  // Initialize FileSystem
-void read_serial();                               // React to Serial Input 
-void serialEvent();                               // Put together Serial Input
+void read_serial(char *buffer);                   // React to Serial Input 
+int readline(int readch, char *buffer, int len);  // Put together Serial Input
 
 // MEDIAN
 void median_add(int value);                       // add Value to Buffer
@@ -213,6 +224,9 @@ void set_ota();                                   // Configuration OTA
 // WIFI
 void set_wifi();                                  // Connect WiFi
 void get_rssi();
+void reconnect_wifi();
+void stop_wifi();
+void check_wifi();
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
@@ -276,12 +290,14 @@ static inline boolean button_input() {
   return true;
 }
 
+bool isEco = false;
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Response Button Status
 static inline void button_event() {
 
   static unsigned long lastMupiTime;    // Zeitpunkt letztes schnelles Zeppen
-
+  
   // Frage nach Reset der Config wurde bestätigt
   if ((buttonResult[0]==SHORTCLICK) && question > 0) {
       
@@ -333,9 +349,27 @@ static inline void button_event() {
       Serial.println("[INFO]\tAnzeigewechsel");
     #endif
     return;
-    
   }
 
+  
+  // Button 1 Longclick während man sich im Hauptmenu befindet
+  // -> Zur Pitmaster-Übersicht wechseln
+  if (buttonResult[0]==LONGCLICK && ui.getCurrentFrameCount()==0) {
+    // Falls Pitmaster nicht aktiv -> erstmal aktivieren
+    // Code fehlt noch
+
+    /*
+    if (isEco) {
+      reconnect_wifi();
+      isEco = false;
+    } else {
+      stop_wifi();
+      isEco = true;  
+    }
+    */
+    
+    return;
+  }
 
   // Button 2 Doppelclick während man sich im Hauptmenu befindet
   // -> Einheit wechseln

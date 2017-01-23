@@ -163,6 +163,19 @@ void get_Vbat()
   #ifdef DEBUG
     Serial.printf("[INFO]\tBattery voltage:%umV\tcharge:%u%%\r\n", voltage, BatteryPercentage); 
   #endif
+
+  if (BatteryPercentage < 0) {
+    display.clear();
+    display.setFont(ArialMT_Plain_10);
+    display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+    display.drawString(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/3, "LOW BATTERY");
+    display.drawString(DISPLAY_WIDTH/2, 2*DISPLAY_HEIGHT/3, "PLEASE SWITCH OFF");
+    display.display();
+    //delay(5000);
+    //display.displayOff();
+    ESP.deepSleep(0);
+    delay(100); // notwendig um Prozesse zu beenden
+  }
 }
 
 

@@ -91,8 +91,8 @@ void set_wifi() {
     #endif
     
     isAP = false;
-
-    udp.begin(2390);  // localPort = 2390;
+ 
+     udp.begin(2390);  // localPort = 2390;
 
     #ifdef DEBUG
       Serial.print("[INFO]\tStarting UDP: Local port ");
@@ -224,3 +224,53 @@ void digitalClockDisplay(){
   Serial.print(year()); 
   Serial.println(); 
 }
+
+
+#define FPM_SLEEP_MAX_TIME 0xFFFFFFF
+bool awaking = false;
+
+
+void stop_wifi() {
+  
+  Serial.println("diconnecting wifi");
+  
+  wifi_station_disconnect();
+  wifi_set_opmode(NULL_MODE);
+  wifi_set_sleep_type(MODEM_SLEEP_T);
+  wifi_fpm_open();
+  wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+  delay(100); // leider notwendig
+
+  isAP = true;
+}
+
+void reconnect_wifi() {
+
+  // wake up to use WiFi again
+  wifi_fpm_do_wakeup();
+  wifi_fpm_close();
+  wifi_set_opmode(STATION_MODE);
+  wifi_station_connect();
+
+  if (WiFi.status() != WL_CONNECTED) {
+    
+    WiFi.mode(WIFI_STA);
+    Serial.println("Reconnecting");
+    awaking = true;
+  }
+}
+
+void check_wifi() {
+
+  if (wifiMulti.run() == WL_CONNECTED) {
+    isAP = false;
+    awaking = false;
+    Serial.printf(" connected to %s\n", WiFi.SSID().c_str());
+  }
+  else { 
+    yield();
+    //isAP = true;
+  }
+
+}
+

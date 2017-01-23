@@ -196,7 +196,7 @@ void server_setup() {
         JsonObject& root = jsonBuffer.createObject();
 
         root["heap"] = ESP.getFreeHeap();
-        root["analog"] = analogRead(A0);
+        root["analog"] = ch[0].temp;
         root["gpio"] = (uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16));
 
         size_t size = root.measureLength() + 1;
@@ -210,7 +210,9 @@ void server_setup() {
     server.on("/data", HTTP_GET, handleData);
 
     server.begin();
+    #ifdef DEBUG
     Serial.println("[INFO]\tHTTP server started");
+    #endif
     MDNS.addService("http", "tcp", 80);
 
 }

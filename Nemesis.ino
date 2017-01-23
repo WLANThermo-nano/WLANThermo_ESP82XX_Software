@@ -42,8 +42,8 @@
 #define BOTTOKEN "xxx" 
 
 // bitte auskommentieren falls nicht benutzt
-//#define THINGSPEAK
-#define THINGSPEAK_KEY "xxx"
+#define THINGSPEAK
+
 
 
 
@@ -62,7 +62,7 @@
 #include "c_bot.h"
 #include "c_ota.h"
 #include "c_server.h"
-
+#include "c_pitmaster.h"
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -72,10 +72,8 @@ unsigned long lastUpdateCommunication;
 
 void setup() {  
 
-  // Initialize Debug 
-  #ifdef DEBUG
-    set_serial();
-  #endif
+  // Initialize Serial 
+  set_serial();
   
   // Initialize OLED
   set_OLED();
@@ -117,6 +115,8 @@ void setup() {
     // Current Wifi Signal Strength
     get_rssi();
 
+    // Initialize Pitmaster
+    set_pitmaster();
   }
 
 }
@@ -132,6 +132,7 @@ void loop() {
     if (!LADENSHOW) {
       drawLoading();
       LADENSHOW = true;
+      //WiFi.mode(WIFI_OFF);
     }
     
     if (millis() - lastUpdateBatteryMode > INTERVALBATTERYMODE) {
@@ -145,9 +146,14 @@ void loop() {
   }
 
   // Detect Serial
-  serialEvent();
-  if (receiveSerial) read_serial();
-
+  static char serialbuffer[80];
+  if (readline(Serial.read(), serialbuffer, 80) > 0) {
+    Serial.print("You entered: >");
+    Serial.print(serialbuffer);
+    Serial.println("<");
+    read_serial(serialbuffer);
+  }
+  
   // Detect OTA
   #ifdef OTA
     ArduinoOTA.handle();
@@ -155,10 +161,17 @@ void loop() {
 
   // Server
   server.handleClient();
+
+  //pitmaster_control();
   
   // Detect Button Event
   if (button_input()) {
     button_event();
+  }
+
+  if (awaking) {
+    check_wifi();
+    //monitorWiFi();
   }
   
   // Update Display
@@ -189,26 +202,46 @@ void loop() {
     }
 
     if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
-      
-      get_rssi();
-      
-      if (!isAP) {
 
-        #ifdef THINGSPEAK
-          sendData();
-        #endif
+      get_rssi(); // müsste noch an einen anderen Ort wo es unabhängig von INTERVALCOM.. ist
 
-        #ifdef TELEGRAM
-          UserData userData;
-          getUpdates(id, &userData);
-        #endif
+      // Erst aufwachen falls im EcoModus
+      // UpdateCommunication wird so lange wiederholt bis ESP wieder wach
+      if (isEco && !awaking && (WiFi.status() != WL_CONNECTED)) {
+        reconnect_wifi();
+      }
+      else if (!awaking) {
+
+        // falls wach und nicht AP
+        if (!isAP) {
+
+          #ifdef THINGSPEAK
+            if (THINGSPEAK_KEY != "") sendData();
+          #endif
+
+          #ifdef TELEGRAM
+            UserData userData;
+            getUpdates(id, &userData);
+          #endif
+        
+        }
+
+        // Wieder einschlafen
+        if (isEco) {
+          stop_wifi();
+        }
+      
+        lastUpdateCommunication = millis();
       }
       
-      lastUpdateCommunication = millis();
     }
     
     //delay(remainingTimeBudget);
+    delay(1); // sonst geht das Wifi Modul nicht in Standby
+    //yield();  // reicht nicht
   }
+
+  
 }
 
 
