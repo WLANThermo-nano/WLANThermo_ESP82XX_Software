@@ -140,10 +140,12 @@ void transform_limits() {
   
   float max;
   float min;
+  float soll;
   
   for (int i=0; i < CHANNELS; i++)  {
     max = ch[i].max;
     min = ch[i].min;
+    soll = ch[i].soll;
 
     if (temp_unit == "F") {               // Transform to °F
       max *= 9.0;
@@ -151,7 +153,10 @@ void transform_limits() {
       max += 32;
       min *= 9.0;
       min /= 5.0;
-      min += 32;  
+      min += 32;
+      soll *= 9.0;
+      soll /= 5.0;
+      soll += 32;  
     } else {                              // Transform to °C
       max -= 32;
       max *= 5.0;
@@ -159,10 +164,14 @@ void transform_limits() {
       min -= 32;
       min *= 5.0;
       min /= 9.0;
+      soll -= 32;
+      soll *= 5.0;
+      soll /= 9.0;
     }
 
     ch[i].max = max;
     ch[i].min = min;
+    ch[i].soll = soll;
   }
 }
 
