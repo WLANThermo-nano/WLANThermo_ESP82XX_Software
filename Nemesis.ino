@@ -114,7 +114,8 @@ void setup() {
         
     // Current Wifi Signal Strength
     get_rssi();
-
+    cal_soc();
+    
     // Initialize Pitmaster
     set_pitmaster();
   }
@@ -132,6 +133,7 @@ void loop() {
     if (!LADENSHOW) {
       drawLoading();
       LADENSHOW = true;
+      //wifi_station_disconnect();
       //WiFi.mode(WIFI_OFF);
     }
     
@@ -186,8 +188,9 @@ void loop() {
     // time budget.
     
     if (millis() - lastUpdateSensor > INTERVALSENSOR) {
-      get_Vbat();
+      
       get_Temperature();
+      get_Vbat();
       
       if (!isAP) {
       if (ch[0].alarm && ch[0].isalarm) {
@@ -195,6 +198,8 @@ void loop() {
         // Alarmfunktion
         String postStr = "ACHTUNG: ";
         postStr += String(ch[0].temp,1);
+        sendMessage(0,1);
+        controlAlarm(1);
       }
       
       }
@@ -204,7 +209,8 @@ void loop() {
     if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
 
       get_rssi(); // müsste noch an einen anderen Ort wo es unabhängig von INTERVALCOM.. ist
-
+      cal_soc();
+      
       // Erst aufwachen falls im EcoModus
       // UpdateCommunication wird so lange wiederholt bis ESP wieder wach
       if (isEco && !awaking && (WiFi.status() != WL_CONNECTED)) {
@@ -218,7 +224,7 @@ void loop() {
           #ifdef THINGSPEAK
             if (THINGSPEAK_KEY != "") sendData();
           #endif
-
+          
           #ifdef TELEGRAM
             UserData userData;
             getUpdates(id, &userData);
