@@ -33,7 +33,7 @@ const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of th
 byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
 const int timeZone = 1;     // Central European Time
 
-#define HOSTNAME "NEMESIS-OTA-" ///< Hostename. The setup function adds the Chip ID at the end.
+#define HOSTNAME "NANO-" ///< Hostename. The setup function adds the Chip ID at the end.
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
