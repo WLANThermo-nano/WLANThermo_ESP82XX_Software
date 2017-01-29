@@ -497,6 +497,22 @@ void read_serial(char *buffer) {
     Serial.println();
     return;
   }
+  else if (strcmp(buffer, "data")==0) {
+    static char sendbuffer[1000];
+    buildDatajson(sendbuffer, 1000);
+    Serial.println(sendbuffer);
+    return;
+  }
+  else if (strcmp(buffer, "settings")==0) {
+    static char sendbuffer[200];
+    buildSettingjson(sendbuffer, 200);
+    Serial.println(sendbuffer);
+    return;
+  }
+
+  Serial.print("You entered: >");
+  Serial.print(buffer);
+  Serial.println("<");
 
   // Wenn nicht help dann json-Befehl auslesen
   StaticJsonBuffer<200> jsonBuffer;

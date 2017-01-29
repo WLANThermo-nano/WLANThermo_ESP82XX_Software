@@ -57,6 +57,7 @@ extern "C" {
 
 // CHANNELS
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
+#define SENSORTYPEN    7               // NUMBER OF SENSORS
 
 // BATTERY
 #define BATTMIN 3600                  // MINIMUM BATTERY VOLTAGE in mV
@@ -114,7 +115,7 @@ struct ChannelData {
 
 ChannelData ch[CHANNELS];
 
-String  ttypname[] = {"Maverick",
+String  ttypname[SENSORTYPEN] = {"Maverick",
                       "Fantast-Neu",
                       "100K6A1B",
                       "100K",
@@ -236,6 +237,10 @@ void get_rssi();
 void reconnect_wifi();
 void stop_wifi();
 void check_wifi();
+
+// SERVER
+void buildDatajson(char *buffer, int len);
+void buildSettingjson(char *buffer, int len);
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial

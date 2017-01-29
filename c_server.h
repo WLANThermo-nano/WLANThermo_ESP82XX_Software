@@ -136,11 +136,8 @@ void handleFileList() {
   server.send(200, "text/json", output);
 }
 
-void handleData() {
+void buildDatajson(char *buffer, int len) {
   
-  String host = HOSTNAME;
-  host += String(ESP.getChipId(), HEX);
-
   DynamicJsonBuffer jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
@@ -148,12 +145,9 @@ void handleData() {
 
   system["time"] = String(now());
   system["utc"] = timeZone;
-  system["ap"] = APNAME;
-  system["host"] = host;
   system["soc"] = BatteryPercentage;
   system["charge"] = false;
   system["rssi"] = rssi;
-  system["version"] = FIRMWAREVERSION;
   system["unit"] = temp_unit;
 
   JsonArray& channel = root.createNestedArray("channel");
@@ -168,21 +162,68 @@ void handleData() {
     data["max"]   = ch[i].max;
     data["set"]   = ch[i].soll;
     data["alarm"] = ch[i].alarm;
+    data["color"] = String(0xFFFFFF, HEX);//ch[i].color;
   }
-
+  
   JsonObject& master = root.createNestedObject("pitmaster");
 
   master["channel"] = 0;
   master["typ"] = "";
+  master["value"] = 100;
 
-  
   size_t size = root.measureLength() + 1;
-  char json[size];
-  root.printTo(json, size);
+  //Serial.println(size);
   
-  server.send(200, "text/json", json);
+  if (size < len) {
+    root.printTo(buffer, size);
+  } else Serial.println("Buffer zu klein");
+  
 }
 
+void buildSettingjson(char *buffer, int len) {
+
+  String host = HOSTNAME;
+  host += String(ESP.getChipId(), HEX);
+
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+
+  JsonObject& system = root.createNestedObject("system");
+
+  system["time"] = String(now());
+  system["utc"] = timeZone;
+  system["ap"] = APNAME;
+  system["host"] = host;
+  system["version"] = FIRMWAREVERSION;
+  
+  JsonArray& typ = root.createNestedArray("sensors");
+  for (int i = 0; i < SENSORTYPEN; i++) {
+    typ.add(ttypname[i]);
+  }
+    
+  size_t size = root.measureLength() + 1;
+  //Serial.println(size);
+  
+  if (size < len) {
+    root.printTo(buffer, size);
+  } else Serial.println("Buffer zu klein");
+  
+}
+
+void handleData() {
+  
+  static char sendbuffer[1000];
+  buildDatajson(sendbuffer, 1000);
+  server.send(200, "text/json", sendbuffer);
+}
+
+
+void handleSettings() {
+
+  static char sendbuffer[200];
+  buildSettingjson(sendbuffer, 200);
+  server.send(200, "text/json", sendbuffer);
+}
 
 void server_setup() {
 
@@ -242,6 +283,10 @@ void server_setup() {
 
     //list Temperature Data
     server.on("/data", HTTP_GET, handleData);
+
+    
+    //list Setting Data
+    server.on("/settings", HTTP_GET, handleSettings);
 
     server.begin();
     #ifdef DEBUG

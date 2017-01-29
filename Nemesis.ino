@@ -150,9 +150,6 @@ void loop() {
   // Detect Serial
   static char serialbuffer[80];
   if (readline(Serial.read(), serialbuffer, 80) > 0) {
-    Serial.print("You entered: >");
-    Serial.print(serialbuffer);
-    Serial.println("<");
     read_serial(serialbuffer);
   }
   
