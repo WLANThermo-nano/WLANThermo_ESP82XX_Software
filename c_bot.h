@@ -59,9 +59,53 @@ void sendData() {
   }
 
   THINGclient.stop();
-    
-    
+        
 }
+
+void sendMessage(int ch, int count) {
+
+  unsigned long vorher = millis();
+   
+  String apiKey = "N08GS23IX7J2EA0E";
+  const char* server = "api.thingspeak.com";
+
+  // Verbindungsaufbau: ~120 ms
+  if (THINGclient.connect(server,80)) {
+ 
+    // Sendedauer: ~115ms  
+
+    //"GET /update?key=IJO0IVY7KD6PAA5E&field1=";
+
+    // We now create a URI for the request
+    String url = "/apps/thinghttp/send_request?api_key=";
+    url += apiKey;
+    url += "&message=";
+    if (count) url += "hoch";
+    else url += "niedrig";
+    url += "&ch=";
+    url += String(ch);
+    
+    //THINGclient.print("GET " + url + "&headers=false" + " HTTP/1.1\r\n" + "Host: " + server + "\r\n" + "Connection: close\r\n\r\n");
+    THINGclient.print("GET " + url + " HTTP/1.1\r\n" + "Host: " + server + "\r\n" + "Connection: close\r\n\r\n");
+  
+  
+  //delay(500);
+ 
+  // Read all the lines of the reply from server and print them to Serial
+  //while(THINGclient.available()){
+    //String line = THINGclient.readStringUntil('\r');
+    //Serial.println(line);
+  //}
+
+    #ifdef DEBUG
+      Serial.printf("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
+    #endif
+  }
+
+  THINGclient.stop();
+        
+}
+
 
 #endif
 
