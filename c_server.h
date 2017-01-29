@@ -172,6 +172,9 @@ void handleData() {
 
   JsonObject& master = root.createNestedObject("pitmaster");
 
+  master["channel"] = 0;
+  master["typ"] = "";
+
   
   size_t size = root.measureLength() + 1;
   char json[size];

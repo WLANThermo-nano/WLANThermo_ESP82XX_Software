@@ -39,7 +39,7 @@ extern "C" {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
 
-#define FIRMWAREVERSION "V0.1"
+#define FIRMWAREVERSION "V0.2"
 
 // HARDWARE
 #ifdef VARIANT_C
