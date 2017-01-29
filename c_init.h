@@ -91,7 +91,7 @@ extern "C" {
 #define APPASSWORD "12345678"
 
 // FILESYSTEM
-#define CHANNELJSONVERSION 1
+#define CHANNELJSONVERSION 2
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -106,6 +106,7 @@ struct ChannelData {
    int   match;           // Anzeige im Temperatursymbol
    float max;             // MAXIMUM TEMPERATURE
    float min;             // MINIMUM TEMPERATURE
+   float soll;            // TARGET TEMPERATURE
    byte  typ;             // TEMPERATURE SENSOR
    bool  alarm;           // CHANNEL ALARM
    bool  isalarm;         // CURRENT ALARM
@@ -132,9 +133,11 @@ int BatteryPercentage = 0;        // BATTERY CHARGE STATE in %
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool INACTIVESHOW = true;         // SHOW INACTIVE CHANNELS
 bool displayblocked = false;                     // No OLED Update
-enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE};
+enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM};
 int question = NO;                               // Which Question;
 
+// FILESYSTEM
+enum {eCHANNEL, eWIFI, eTHING, ePRESET};
 
 // WIFI
 byte isAP = 0;                    // WIFI MODE
@@ -170,12 +173,14 @@ void set_serial();                                // Initialize Serial
 void set_button();                                // Initialize Buttons
 static inline boolean button_input();             // Dectect Button Input
 static inline void button_event();                // Response Button Status
+void controlAlarm(boolean action);                // Control Hardware Alarm      
 
 // SENSORS
 byte set_sensor();                                // Initialize Sensors
 int  get_adc_average (byte ch);                   // Reading ADC-Channel Average
 double get_thermocouple(void);                    // Reading Temperature KTYPE
-void get_Vbat();                                  // Reading Battery Voltage
+void get_Vbat();                                   // Reading Battery Voltage
+void cal_soc();
 
 // TEMPERATURE (TEMP)
 float calcT(int r, byte typ);                     // Calculate Temperature from ADC-Bytes
@@ -197,18 +202,22 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state);
 void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawlimito(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawlimitu(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
+void drawtarget(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawtyp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawalarm(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawwifi(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void set_OLED();                                  // Configuration OLEDDisplay
 
 // FILESYSTEM (FS)
-bool loadConfig();                                // Load Config.json at system start
-bool setConfig();                                 // Reset config.json to default
-bool changeConfig();                              // Set config.json after Change
-bool loadWifiSettings();                          // Load wifi.json at system start
-bool setWifiSettings();                           // Reset config.json to default
-bool addWifiSettings();                           // Add Wifi Settings to config.json 
+//bool loadConfig();                                // Load Config.json at system start
+//bool setConfig();                                 // Reset config.json to default
+//bool changeConfig();                              // Set config.json after Change
+//bool loadWifiSettings();                          // Load wifi.json at system start
+//bool setWifiSettings();                           // Reset config.json to default
+//bool addWifiSettings();                           // Add Wifi Settings to config.json 
+bool loadconfig(byte count);
+bool setconfig(byte count, const char* data1, const char* data2);
+bool modifyconfig(byte count, const char* data1, const char* data2);
 void start_fs();                                  // Initialize FileSystem
 void read_serial(char *buffer);                   // React to Serial Input 
 int readline(int readch, char *buffer, int len);  // Put together Serial Input
@@ -303,8 +312,8 @@ static inline void button_event() {
       
       switch (question) {
         case CONFIGRESET:
-          setConfig();
-          loadConfig();
+          setconfig(eCHANNEL,"","");
+          loadconfig(eCHANNEL);
           set_Channels();
           break;
 
@@ -312,11 +321,15 @@ static inline void button_event() {
           if (temp_unit == "C") temp_unit = "F";          // Change Unit
           else temp_unit = "C";
           transform_limits();                             // Transform Limits
-          changeConfig();                                 // Save Config
+          modifyconfig(eCHANNEL,"","");                   // Save Config
           get_Temperature();                              // Update Temperature
           #ifdef DEBUG
             Serial.println("[INFO]\tEinheitenwechsel");
           #endif
+          break;
+
+        case HARDWAREALARM:
+          controlAlarm(0);
           break;
 
       }
@@ -437,15 +450,20 @@ static inline void button_event() {
           break;
         case 2:  // Lower Limit
           tempor = ch[current_ch].min +(0.1*mupi);
-          if (tempor > 95.0) tempor = 20.0;
+          if (tempor > 95.0) tempor = 10.0;
           ch[current_ch].min = tempor;
           break;
-        case 3:  // Typ
+        case 3:  // Soll
+          tempor = ch[current_ch].soll +(0.1*mupi);
+          if (tempor > ch[current_ch].max) tempor = ch[current_ch].min;
+          ch[current_ch].soll = tempor;
+          break;
+        case 4:  // Typ
           tempor = ch[current_ch].typ +1;
           if (tempor > 5) tempor = 0;
           ch[current_ch].typ = tempor;
           break;
-        case 4:  // Alarm
+        case 5:  // Alarm
           ch[current_ch].alarm = !ch[current_ch].alarm;
           break;
         default:
@@ -459,12 +477,12 @@ static inline void button_event() {
     
     b_counter = ui.getCurrentFrameCount();
     
-    if (b_counter < 4) { 
+    if (b_counter < 5) { 
       b_counter++; 
     }
     else {
       b_counter = 0;
-      changeConfig();             // Am Ende des Kontextmenu Config speichern
+      modifyconfig(eCHANNEL,"","");             // Am Ende des Kontextmenu Config speichern
     }
     
     ui.switchToFrame(b_counter);
@@ -485,6 +503,23 @@ String formatBytes(size_t bytes){
   } else {
     return String(bytes/1024.0/1024.0/1024.0)+"GB";
   }
+}
+
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//format bytes
+void controlAlarm(boolean action){
+
+  if (action) {
+    analogWrite(MOSI,512);
+    displayblocked = true;
+    question = HARDWAREALARM;
+    drawQuestion();
+  }
+  else {
+    analogWrite(MOSI,0);
+  }  
 }
 
 
