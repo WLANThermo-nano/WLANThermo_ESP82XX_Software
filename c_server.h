@@ -21,7 +21,6 @@
 
 #include <ESP8266WebServer.h>   // https://github.com/esp8266/Arduino
 
-const char* host = "nemesis";   // declare MDNS name for OTA
 ESP8266WebServer server(80);    // declare webserver to listen on port 80
 File fsUploadFile;              // holds the current upload
 
@@ -138,26 +137,58 @@ void handleFileList() {
 }
 
 void handleData() {
-  String output = "[{";
+  
+  String host = HOSTNAME;
+  host += String(ESP.getChipId(), HEX);
+
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+
+  JsonObject& system = root.createNestedObject("system");
+
+  system["time"] = String(now());
+  system["utc"] = timeZone;
+  system["ap"] = APNAME;
+  system["host"] = host;
+  system["soc"] = BatteryPercentage;
+  system["charge"] = false;
+  system["rssi"] = rssi;
+  system["version"] = FIRMWAREVERSION;
+  system["unit"] = temp_unit;
+
+  JsonArray& channel = root.createNestedArray("channel");
 
   for (int i = 0; i < CHANNELS; i++) {
-    if (output != "[{")
-      output += ",";
-    output += "\"" + String(i+1) + "\":";
-    output += String(ch[i].temp);
+  JsonObject& data = channel.createNestedObject();
+    data["number"]= i;
+    data["name"]  = "Kanal " + String(i+1);
+    data["typ"]   = ch[i].typ;
+    data["temp"]  = ch[i].temp;
+    data["min"]   = ch[i].min;
+    data["max"]   = ch[i].max;
+    data["set"]   = ch[i].soll;
+    data["alarm"] = ch[i].alarm;
   }
 
-  output += "}]";
-  server.send(200, "text/json", output);
+  JsonObject& master = root.createNestedObject("pitmaster");
+
+  
+  size_t size = root.measureLength() + 1;
+  char json[size];
+  root.printTo(json, size);
+  
+  server.send(200, "text/json", json);
 }
 
 
 void server_setup() {
 
-    MDNS.begin(host);
+    String host = HOSTNAME;
+    host += String(ESP.getChipId(), HEX);
+    MDNS.begin(host.c_str());
     Serial.print("[INFO]\tOpen http://");
     Serial.print(host);
-    Serial.println(".local/data to see the current temperature");
+    Serial.println("/data to see the current temperature");
   
 
     //SERVER INIT
@@ -216,5 +247,7 @@ void server_setup() {
     MDNS.addService("http", "tcp", 80);
 
 }
+
+
 
 
