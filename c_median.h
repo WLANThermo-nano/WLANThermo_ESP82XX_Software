@@ -24,10 +24,10 @@
  ****************************************************/
 
 
-#define MEDIAN_SIZE   10 
-uint16_t _cnt = 0;
-uint16_t _idx = 0;
-boolean _sorted = false;
+#define MEDIAN_SIZE   10
+uint16_t _cnt;
+uint16_t _idx;
+boolean _sorted;
 int _ar[MEDIAN_SIZE];
 uint16_t _p[MEDIAN_SIZE];
 
@@ -40,6 +40,14 @@ void median_add(int value) {
     if (_idx >= MEDIAN_SIZE) _idx = 0; // wrap around
     if (_cnt < MEDIAN_SIZE) _cnt++;
     _sorted = false;
+}
+
+void median_clear()
+{
+    _cnt = 0;
+    _idx = 0;
+    _sorted = false;
+    for (uint8_t i = 0; i< MEDIAN_SIZE; i++) _p[i] = i;
 }
 
 
@@ -72,6 +80,27 @@ double median_get()
         if (_sorted == false) median_sort();
         if (_cnt & 0x01) return _ar[_p[_cnt/2]];
         else return (_ar[_p[_cnt/2]] + _ar[_p[_cnt/2 - 1]]) / 2;
+    }
+    return NAN;
+}
+
+double median_getHighest()
+{
+  if (_cnt > 0)
+    {
+        if (_sorted == false) median_sort();
+        return _ar[_p[_cnt-1]];
+    }
+    return NAN;
+}
+
+double median_average()
+{
+    if (_cnt > 0)
+    {
+        double sum = 0;
+        for (uint8_t i = 0; i < _cnt; i++) sum += _ar[i];
+        return sum / _cnt;
     }
     return NAN;
 }
