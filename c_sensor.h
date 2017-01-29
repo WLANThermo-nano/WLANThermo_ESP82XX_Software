@@ -41,6 +41,10 @@ byte set_sensor() {
   SPI.begin();
   #endif
 
+  // Piepser
+  pinMode(MOSI, OUTPUT);
+  analogWriteFreq(4000);
+
   // MAX1161x
   byte reg = 0xA0;    // A0 = 10100000
   // page 14
@@ -133,11 +137,13 @@ double get_thermocouple(void) {
 
 #endif
 
+uint32_t vol_sum = 0;
+int vol_count = 0;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Battery Voltage
-void get_Vbat() 
-{
+void get_Vbat() {
+  
   // Digitalwert transformiert in Batteriespannung in mV
   int voltage = analogRead(ANALOGREADBATTPIN);
 
@@ -150,20 +156,43 @@ void get_Vbat()
 
   // Transformation Digitalwert in Batteriespannung
   voltage = voltage * BATTDIV; 
-       
-  // Batteriespannung wird in Prozent umgerechnet und in einen Buffer geschrieben
-  // da die gemessene Spannung leicht schwankt, wahrscheinlich je nach aktuellem Energieverbrauch
-  // wird die Batteriespannung als Mittel (Median) aus 8 Messungen ausgegeben
+
+  // Batteriespannung wird in einen Buffer geschrieben da die gemessene
+  // Spannung leicht schwankt, aufgrund des aktuellen Energieverbrauchs
+  // wird die Batteriespannung als Mittel (Median) aus 20 Messungen ausgegeben
+
+  vol_sum += voltage;
+  vol_count++;
   
-  median_add(((voltage - BATTMIN)*100)/(BATTMAX - BATTMIN));
-  BatteryPercentage = median_get();
+  //median_add(voltage);
+  
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Calculate SOC
+void cal_soc() {
+
+  // mittlere Batteriespannung aus dem Buffer lesen und in Prozent umrechnen
+  //int voltage = median_average();
+  //int voltage = median_getHighest();
+  int voltage;
+  
+  if (vol_count > 0) voltage = vol_sum / vol_count;
+  else voltage = 0;
+  median_add(voltage);
+  voltage = median_average();
+  
+  BatteryPercentage = ((voltage - BATTMIN)*100)/(BATTMAX - BATTMIN);
+  
   // Schwankungen verschiedener Batterien ausgleichen
   if (BatteryPercentage > 100) BatteryPercentage = 100;
   
   #ifdef DEBUG
-    Serial.printf("[INFO]\tBattery voltage:%umV\tcharge:%u%%\r\n", voltage, BatteryPercentage); 
+    Serial.printf("[INFO]\tBattery voltage: %umV\tcharge: %u%%\r\n", voltage, BatteryPercentage); 
   #endif
 
+  // Abschaltung des Systems bei <0% Akkuleistung
   if (BatteryPercentage < 0) {
     display.clear();
     display.setFont(ArialMT_Plain_10);
@@ -171,11 +200,12 @@ void get_Vbat()
     display.drawString(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/3, "LOW BATTERY");
     display.drawString(DISPLAY_WIDTH/2, 2*DISPLAY_HEIGHT/3, "PLEASE SWITCH OFF");
     display.display();
-    //delay(5000);
-    //display.displayOff();
     ESP.deepSleep(0);
     delay(100); // notwendig um Prozesse zu beenden
   }
+
+  vol_sum = 0;
+  vol_count = 0;
 }
 
 
