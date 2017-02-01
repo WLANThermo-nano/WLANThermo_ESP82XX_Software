@@ -23,7 +23,6 @@
 
 #ifdef OTA
 
-#include <ESP8266mDNS.h>          // OTA
 #include <ArduinoOTA.h>           // OTA
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -85,7 +84,6 @@ void set_ota(){
 }
 
 #endif
-
 
 
 
