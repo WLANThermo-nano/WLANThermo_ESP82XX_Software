@@ -20,6 +20,7 @@
  ****************************************************/
 
 #include <ESP8266WebServer.h>   // https://github.com/esp8266/Arduino
+#include <ESP8266mDNS.h>        
 
 ESP8266WebServer server(80);    // declare webserver to listen on port 80
 File fsUploadFile;              // holds the current upload
@@ -162,7 +163,7 @@ void buildDatajson(char *buffer, int len) {
     data["max"]   = ch[i].max;
     data["set"]   = ch[i].soll;
     data["alarm"] = ch[i].alarm;
-    data["color"] = String(0xFFFFFF, HEX);//ch[i].color;
+    data["color"] = ch[i].color;
   }
   
   JsonObject& master = root.createNestedObject("pitmaster");

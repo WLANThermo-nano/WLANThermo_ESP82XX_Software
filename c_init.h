@@ -30,7 +30,7 @@
 #include <WiFiClientSecure.h>     // HTTPS
 #include <WiFiUdp.h>              // NTP
 #include <TimeLib.h>              // TIME
-
+#include <EEPROM.h>               // EEPROM
 
 extern "C" {
 #include "user_interface.h"
@@ -92,8 +92,7 @@ extern "C" {
 #define APPASSWORD "12345678"
 
 // FILESYSTEM
-#define CHANNELJSONVERSION 2
-
+#define CHANNELJSONVERSION 3
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -111,6 +110,7 @@ struct ChannelData {
    byte  typ;             // TEMPERATURE SENSOR
    bool  alarm;           // CHANNEL ALARM
    bool  isalarm;         // CURRENT ALARM
+   String color;          // COLOR
 };
 
 ChannelData ch[CHANNELS];
@@ -124,6 +124,7 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
                       "Typ K"};
 
 String  temp_unit = "C";
+String colors[8] = {"6495ED", "CD2626", "66CDAA", "F4A460", "D02090", "FFEC8B", "BA55D3", "008B8B"};
 
 // SYSTEM
 bool  LADEN = false;              // USB POWER SUPPLY?
@@ -241,6 +242,12 @@ void check_wifi();
 // SERVER
 void buildDatajson(char *buffer, int len);
 void buildSettingjson(char *buffer, int len);
+
+// EEPROM
+void setEE();
+void writeEE(const char* json, int len, int startP);
+void readEE(char *buffer, int len, int startP);
+void clearEE(int startP, int endP);
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial

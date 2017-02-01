@@ -125,34 +125,34 @@ bool loadconfig(byte count) {
       configFile.close();
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjsonobject(json,CHANNEL_FILE)) return false;
-      if (!json["VERSION"] == CHANNELJSONVERSION) return false;
+      if (json["VERSION"] != CHANNELJSONVERSION) return false;
   
       const char* author = json["AUTHOR"];
       temp_unit = json["temp_unit"].asString();
 
       for (int i=0; i < CHANNELS; i++){
-          ch[i].typ = json["ttyp"][i];            // Fühlertyp auslesen
-          ch[i].min = json["tmin"][i];            // Temperatur MIN auslesen
-          ch[i].max = json["tmax"][i];            // Temperatur MAX auslesen
-          ch[i].soll = json["tsoll"][i];          // Temperatur SOLL auslesen   
-          ch[i].alarm = json["talarm"][i];        // Temperatur ALARM auslesen
+          ch[i].typ = json["ttyp"][i];            
+          ch[i].min = json["tmin"][i];            
+          ch[i].max = json["tmax"][i];            
+          ch[i].soll = json["tsoll"][i];          
+          ch[i].alarm = json["talarm"][i];        
+          ch[i].color = json["tcolor"][i].asString();        
       }
     }
     break;
     
     case 1:     // WIFI
     {
-      if (!loadfile(WIFI_FILE,configFile)) return false;
-      std::unique_ptr<char[]> buf(new char[configFile.size()]);
-      configFile.readBytes(buf.get(), configFile.size());
-      configFile.close();
-      JsonArray& json = jsonBuffer.parseArray(buf.get());
-      if (!checkjsonarray(json,WIFI_FILE)) return false;
+      std::unique_ptr<char[]> buf(new char[300]);
+      readEE(buf.get(),300, 0);
+
+      JsonArray& _wifi = jsonBuffer.parseArray(buf.get());
+      if (!checkjsonarray(_wifi,WIFI_FILE)) return false;
       
       // Wie viele WLAN Schlüssel sind vorhanden
-      for (JsonArray::iterator it=json.begin(); it!=json.end(); ++it) {  
-        wifissid[lenwifi] = json[lenwifi]["SSID"].asString();
-        wifipass[lenwifi] = json[lenwifi]["PASS"].asString();  
+      for (JsonArray::iterator it=_wifi.begin(); it!=_wifi.end(); ++it) {  
+        wifissid[lenwifi] = _wifi[lenwifi]["SSID"].asString();
+        wifipass[lenwifi] = _wifi[lenwifi]["PASS"].asString();  
         lenwifi++;
       }
     }
@@ -211,6 +211,7 @@ bool setconfig(byte count, const char* data1, const char* data2) {
       JsonArray& _max = json.createNestedArray("tmax");
       JsonArray& _soll = json.createNestedArray("tsoll");
       JsonArray& _alarm = json.createNestedArray("talarm");
+      JsonArray& _color = json.createNestedArray("tcolor");
   
       for (int i=0; i < CHANNELS; i++){
         _typ.add(2);
@@ -225,6 +226,7 @@ bool setconfig(byte count, const char* data1, const char* data2) {
           _soll.add(25.0,1); 
         }
         _alarm.add(false); 
+        _color.add(colors[i]);
       }
 
       if (!savefile(CHANNEL_FILE, configFile)) return false;
@@ -236,14 +238,10 @@ bool setconfig(byte count, const char* data1, const char* data2) {
     case 1:        // WIFI
     {
       JsonArray& json = jsonBuffer.createArray();
-      JsonObject& _wifi1 = json.createNestedObject();
-
-      _wifi1["SSID"] = data1;
-      _wifi1["PASS"] = data2;
-
-      if (!savefile(WIFI_FILE, configFile)) return false;
-      json.printTo(configFile);
-      configFile.close();
+      clearEE(0,299);  // Bereich reinigen
+      static char buffer[3];
+      json.printTo(buffer, 3);
+      writeEE(buffer, 3, 0);
     }
     break;
     
@@ -304,6 +302,7 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
       JsonArray& _max = json.createNestedArray("tmax");
       JsonArray& _soll = json.createNestedArray("tsoll");
       JsonArray& _alarm = json.createNestedArray("talarm");
+      JsonArray& _color = json.createNestedArray("tcolor");
     
       for (int i=0; i < CHANNELS; i++){
         _typ.add(ch[i].typ); 
@@ -311,6 +310,7 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
         _max.add(ch[i].max,1);
         _soll.add(ch[i].soll,1);
         _alarm.add(ch[i].alarm); 
+        _color.add(ch[i].color);
       }
 
       // Speichern
@@ -327,36 +327,33 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
     case 1:         // WIFI
     {
       // Alte Daten auslesen
-      if (!loadfile(WIFI_FILE,configFile)) return false;
-      std::unique_ptr<char[]> buf(new char[configFile.size()]);
-      configFile.readBytes(buf.get(), configFile.size());
-      configFile.close();
+      std::unique_ptr<char[]> buf(new char[300]);
+      readEE(buf.get(), 300, 0);
+
       JsonArray& json = jsonBuffer.parseArray(buf.get());
-      if (!checkjsonarray(json,WIFI_FILE)) return false;
-      
-      // Wie viele WLAN Schlüssel sind schon vorhanden
-      int len = 0;
-      for (JsonArray::iterator it=json.begin(); it!=json.end(); ++it) {  
-        len++;
+      if (!checkjsonarray(json,WIFI_FILE)) {
+        setconfig(eWIFI,"","");
+        return false;
       }
 
-      if (len > 5) {
+      // Neue Daten eintragen
+      JsonObject& _wifi = json.createNestedObject();
+
+      _wifi["SSID"] = data1;
+      _wifi["PASS"] = data2;
+
+      // Speichern
+      size_t size = json.measureLength() + 1;
+      
+      if (size > 300) {
         #ifdef DEBUG
         Serial.println("[INFO]\tZu viele WLAN Daten!");
         #endif
         return false;
       } else {
-
-        // Neue Daten eintragen
-        JsonObject& _wifi = json.createNestedObject();
-
-        _wifi["SSID"] = data1;
-        _wifi["PASS"] = data2;
-
-        // Speichern
-        if (!savefile(WIFI_FILE, configFile)) return false;
-        json.printTo(configFile);
-        configFile.close();
+        static char buffer[300];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, 0); 
       } 
     }
     break;
@@ -391,7 +388,8 @@ void start_fs() {
     Serial.printf("FS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
   }
   */
-  
+
+  // CHANNEL
   if (SPIFFS.exists(CHANNEL_FILE)) {
     
     if (!loadconfig(eCHANNEL)) {
@@ -429,32 +427,21 @@ void start_fs() {
       ESP.restart();
     }
 
-    //setWifiSettings();
-    //addWifiSettings(WIFISSID2, PASSWORD2);
-    
-  if (SPIFFS.exists(WIFI_FILE)) {
-    
-    if (!loadconfig(eWIFI)) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to load wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config loaded");
-      #endif
-    }
-  }
-  else
-    if (!setconfig(eWIFI,WIFISSID,PASSWORD)) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config saved");
-      #endif
-    }
 
+  // WIFI
+  if (!loadconfig(eWIFI)) {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tFailed to load wifi config");
+    #endif
+    setconfig(eWIFI,"","");  // Speicherplatz vorbereiten
+  } else {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tWifi config loaded");
+    #endif
+  }
+  
+  
+  // THINGSPEAK
   if (SPIFFS.exists(THING_FILE)) {
     
     if (!loadconfig(eTHING)) {
@@ -487,8 +474,8 @@ void read_serial(char *buffer) {
     Serial.println("restart    -> Restart ESP");
     Serial.println("getVersion -> Show Firmware Version Number");
     Serial.println("getSSID    -> Show current SSID");
-    Serial.println("setWIFI    -> Reset wifi.json and add new SSID");
-    Serial.println("           -> expected data SSID and PASSWORD");
+    Serial.println("setWIFI    -> Reset wifi.json");
+    Serial.println("           -> expected no data");
     Serial.println("addWIFI    -> Add new SSID to wifi.json");
     Serial.println("           -> expected data SSID and PASSWORD");
     Serial.println("setTS      -> Add THINGSPEAK KEY");
@@ -528,8 +515,6 @@ void read_serial(char *buffer) {
 
   // ADD WIFI SETTINGS
   if (strcmp(command, "addWIFI")==0) {
-    //const char* ssid = json["data"][0];
-    //const char* pass = json["data"][1];
 
     if (!modifyconfig(eWIFI,json["data"][0], json["data"][1])) {
       #ifdef DEBUG
@@ -544,19 +529,12 @@ void read_serial(char *buffer) {
 
   // SET WIFI SETTINGS
   else if (strcmp(command, "setWIFI")==0) {
-    //const char* ssid = json["data"][0];
-    //const char* pass = json["data"][1];
-    
-    if (!setconfig(eWIFI,json["data"][0], json["data"][1])) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config saved");
-      #endif
+        
+    if (!setconfig(eWIFI,"","")) {  
+    #ifdef DEBUG
+      Serial.println("[INFO]\tReset wifi config");
+    #endif
     } 
-    
   }
 
   // GET CURRENT WIFI SSID
@@ -633,5 +611,51 @@ int readline(int readch, char *buffer, int len) {
   // No end of line has been found, so return -1.
   return -1;
 }
+
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Initalize EEPROM
+void setEE() {
+  Serial.println("[INFO]\tInitalize EEPROM");
+  EEPROM.begin(512);
+}
+
+void writeEE(const char* json, int len, int startP) {
+  
+  Serial.print("[INFO]\tWriting to EE: (");
+  Serial.print(len);
+  Serial.print(") ");
+  Serial.println(json);
+  for (int i = startP; i < (startP+len); ++i)
+    {
+    EEPROM.write(i-startP, json[i-startP]);
+    } 
+  EEPROM.commit();
+}
+
+
+void readEE(char *buffer, int len, int startP) {
+  
+  for (int i = startP; i < (startP+len); ++i) {
+    buffer[i-startP] = char(EEPROM.read(i-startP));
+  }
+  Serial.print("[INFO]\tReading from EE: ");
+  Serial.println(buffer);
+}
+
+void clearEE(int startP, int endP) {   // Example: clearEE(0,512);
+  
+  Serial.print("[INFO]\tClear EEPROM from: ");
+  Serial.print(startP);
+  Serial.print(" to: ");
+  Serial.println(endP);
+  for (int i = startP; i < endP; ++i)
+    {
+    EEPROM.write(i, 0);
+    } 
+  EEPROM.commit();
+}
+
 
 

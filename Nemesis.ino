@@ -27,23 +27,12 @@
 // bitte auskommentieren falls nicht benutzt
 #define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
+#define THINGSPEAK
 
 // bitte nicht zutreffendes auskommentieren
 //#define VARIANT_A                           // 3xNTC// CHOOSE HARDWARE
 #define VARIANT_B                           // 6xNTC, 1xSYSTEM
 //#define VARIANT_C                           // 4xNTC, 1xKYTPE, 1xSYSTEM
-
-// falls erstes Flashen "xxx" ersetzen
-#define WIFISSID "xxx"              // SET WIFI SSID (falls noch kein wifi.json angelegt ist)  
-#define PASSWORD "xxx"              // SET WIFI PASSWORD (falls noch kein wifi.json angelegt ist)
-
-// bitte auskommentieren falls nicht benutzt
-//#define TELEGRAM
-#define BOTTOKEN "xxx" 
-
-// bitte auskommentieren falls nicht benutzt
-#define THINGSPEAK
-
 
 
 
@@ -84,7 +73,7 @@ void setup() {
   if (!LADEN) {
 
     // Open Config-File
-    start_fs();
+    setEE();start_fs();
     
     // Initialize Wifi
     set_wifi();
