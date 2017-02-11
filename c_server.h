@@ -291,6 +291,7 @@ void server_setup() {
     //list Setting Data
     server.on("/settings", HTTP_GET, handleSettings);
 
+    // Auth
     server.on("/", [](){
     if(!server.authenticate(www_username, www_password))
       return server.requestAuthentication();
