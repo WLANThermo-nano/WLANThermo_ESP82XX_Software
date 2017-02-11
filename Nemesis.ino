@@ -108,9 +108,9 @@ void setup() {
     // Initialize Pitmaster
     set_pitmaster();
 
-    check_ota_sector();
-    write_flash();
-    read_flash();
+    //check_ota_sector();
+    //write_flash();
+    //read_flash();
   }
 
 }
