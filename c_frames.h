@@ -138,16 +138,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
   
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   if (isAP)  display->drawString(128,0,"AP");
-  else  {
-    //display->drawString(128,0,String(rssi)+" dBm");
-    display->fillRect(116,8,2,1); //Draw ground line
-    display->fillRect(120,8,2,1); //Draw ground line
-    display->fillRect(124,8,2,1); //Draw ground line
-
-    if (rssi > -100) display->fillRect(116,5,2,3); //Draw 1 line
-    if (rssi > -85) display->fillRect(120,3,2,5); //Draw 2 line
-    if (rssi > -70) display->fillRect(124,1,2,7); //Draw 3 line
-  }
+  else display->drawString(128,0,String(rssi)+" dBm");
 
   //display->drawString(80,0,String(map(pit_y,0,pit_pause,0,100)) + "%");
 

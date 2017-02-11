@@ -83,32 +83,6 @@ void set_ota(){
 
 }
 
-
-void check_ota_sector() {
-  uint8_t pla = system_upgrade_userbin_check();
-  Serial.print("Current Sector: ");
-  Serial.println(pla);
-}
-
-unsigned char meinsatz[64] = "Ich nutze ab jetzt den Flash Speicher für meine Daten!\n";
-unsigned char meinflash[64];
-
-void write_flash() {
-  
-  spi_flash_erase_sector(0xD6);       // 0x81 bis 0xD6
-  spi_flash_write(0xD6000, (uint32 *) meinsatz, sizeof(meinsatz));
-  
-}
-
-void read_flash() {
-  spi_flash_read(0xD6000, (uint32 *) meinflash, sizeof(meinflash));
-  //os_printf("%s", meinflash); 
-  for (int i=0; i < 64; i++) {
-    char test = meinflash[i];
-    Serial.print(test);
-  }
-  Serial.println("");
-}
 #endif
 
 

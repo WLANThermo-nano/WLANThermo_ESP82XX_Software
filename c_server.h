@@ -25,8 +25,6 @@
 ESP8266WebServer server(80);    // declare webserver to listen on port 80
 File fsUploadFile;              // holds the current upload
 
-const char* www_username = "admin";
-const char* www_password = "esp8266";
 
 String getContentType(String filename){
   if(server.hasArg("download")) return "application/octet-stream";
@@ -290,13 +288,6 @@ void server_setup() {
     
     //list Setting Data
     server.on("/settings", HTTP_GET, handleSettings);
-
-    server.on("/", [](){
-    if(!server.authenticate(www_username, www_password))
-      return server.requestAuthentication();
-      if(!handleFileRead("/")) server.send(404, "text/plain", "FileNotFound");
-      //server.send(200, "text/plain", "Login OK");
-    });
 
     server.begin();
     #ifdef DEBUG
