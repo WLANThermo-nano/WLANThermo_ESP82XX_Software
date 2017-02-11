@@ -1,89 +1,68 @@
-<!-- 
-  FSWebServer - Example Index Page
-  Copyright (c) 2015 Hristo Gochkov. All rights reserved.
-  This file is part of the ESP8266WebServer library for Arduino environment.
- 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
--->
-<!DOCTYPE html>
-<html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de">
 <head>
-  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-  <title>NEMESIS</title>
-  <script type="text/javascript" src="graphs.js"></script>
-  <script type="text/javascript">
-    var heap,temp,digi;
-    var reloadPeriod = 1000;
-    var running = false;
-    
-    function loadValues(){
-      if(!running) return;
-      var xh = new XMLHttpRequest();
-      xh.onreadystatechange = function(){
-        if (xh.readyState == 4){
-          if(xh.status == 200) {
-            var res = JSON.parse(xh.responseText);
-            heap.add(res.heap);
-            temp.add(res.analog);
-            digi.add(res.gpio);
-            if(running) setTimeout(loadValues, reloadPeriod);
-          } else running = false;
-        }
-      };
-      xh.open("GET", "/all", true);
-      xh.send(null);
-    };
-    
-    function run(){
-      if(!running){
-        running = true;
-        loadValues();
-      }
-    }
-    
-    function onBodyLoad(){
-      var refreshInput = document.getElementById("refresh-rate");
-      refreshInput.value = reloadPeriod;
-      refreshInput.onchange = function(e){
-        var value = parseInt(e.target.value);
-        reloadPeriod = (value > 0)?value:0;
-        e.target.value = reloadPeriod;
-      }
-      var stopButton = document.getElementById("stop-button");
-      stopButton.onclick = function(e){
-        running = false;
-      }
-      var startButton = document.getElementById("start-button");
-      startButton.onclick = function(e){
-        run();
-      }
-      
-      temp = createGraph(document.getElementById("CH1"), "Analog", 100, 128, 0, 1023, false, "cyan");
-      heap = createGraph(document.getElementById("heap"), "Current Heap", 100, 125, 0, 30000, true, "orange");
-      digi = createDigiGraph(document.getElementById("digital"), "GPIO", 100, 146, [0, 4, 5, 16], "gold");
-      run();
-    }
-  </script>
+<meta http-equiv="Content-Script-Type" content="text/javascript">
 </head>
-<body id="index" style="margin:0; padding:0;" onload="onBodyLoad()">
-  <div id="controls" style="display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);">
-    <label>Period (ms):</label>
-    <input type="number" id="refresh-rate"/>
-    <input type="button" id="start-button" value="Start"/>
-    <input type="button" id="stop-button" value="Stop"/>
-  </div>
-  <div id="heap"></div>
-  <div id="analog"></div>
-  <div id="digital"></div>
+<body>
+    <div id="system">
+        <p id="time"></p>
+    </div>
+    <div id="ch0">
+        <p id="name0"></p><p id="typ0"></p><p id="temp0"></p><p id="min0"></p><p id="max0"></p><p id="set0"></p><p id="alarm0"></p><p id="color0"></p>
+    </div>
+    <div id="ch1">
+        <p id="name1"></p><p id="typ1"></p><p id="temp1"></p><p id="min1"></p><p id="max1"></p><p id="set1"></p><p id="alarm1"></p><p id="color1"></p>
+    </div>
+    <div id="ch2">
+        <p id="name2"></p><p id="typ2"></p><p id="temp2"></p><p id="min2"></p><p id="max2"></p><p id="set2"></p><p id="alarm2"></p><p id="color2"></p>
+    </div>
+    <div id="ch3">
+        <p id="name3"></p><p id="typ3"></p><p id="temp3"></p><p id="min3"></p><p id="max3"></p><p id="set3"></p><p id="alarm3"></p><p id="color3"></p>
+    </div>
+    <div id="ch4">
+        <p id="name4"></p><p id="typ4"></p><p id="temp4"></p><p id="min4"></p><p id="max4"></p><p id="set4"></p><p id="alarm4"></p><p id="color4"></p>
+    </div>
+    <div id="ch5">
+        <p id="name5"></p><p id="typ5"></p><p id="temp5"></p><p id="min5"></p><p id="max5"></p><p id="set5"></p><p id="alarm5"></p><p id="color5"></p>
+    </div>
+    <div id="ch6">
+        <p id="name6"></p><p id="typ6"></p><p id="temp6"></p><p id="min6"></p><p id="max6"></p><p id="set6"></p><p id="alarm6"></p><p id="color6"></p>
+    </div>   
+    <script language="JavaScript">
+        setInterval("readTemp();", 2000);
+    <!--
+        function loadJSON(callback) {
+            var xobj = new XMLHttpRequest();
+            xobj.overrideMimeType("application/json");
+            xobj.open('GET', 'data', true);
+            xobj.onreadystatechange = function () {
+                if (xobj.readyState == 4 && xobj.status == "200") {
+                    // .open will NOT return a value but simply returns undefined in async mode so use a callback
+                    callback(xobj.responseText);
+                }
+            }
+            xobj.send(null);
+        }
+        function readTemp(){
+            loadJSON(function(response) {
+                
+            // DO Something with the response e.g.
+            jsonresponse = JSON.parse(response);
+            document.getElementById("time").innerHTML = jsonresponse.system.time;
+            for (var i = 0; i <= 6; i++) {
+                document.getElementById("name" + i).innerHTML = jsonresponse.channel[i].name;
+                document.getElementById("typ" + i).innerHTML = jsonresponse.channel[i].typ;
+                document.getElementById("temp" + i).innerHTML = jsonresponse.channel[i].temp;
+                document.getElementById("min" + i).innerHTML = jsonresponse.channel[i].min;
+                document.getElementById("max" + i).innerHTML = jsonresponse.channel[i].max;
+                document.getElementById("set" + i).innerHTML = jsonresponse.channel[i].set;
+                document.getElementById("alarm" + i).innerHTML = jsonresponse.channel[i].alarm;     
+            }
+        });
+        }
+        readTemp();
+    //-->
+    </script>
 </body>
 </html>
