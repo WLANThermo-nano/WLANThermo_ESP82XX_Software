@@ -319,7 +319,7 @@ static inline void button_event() {
 
   static unsigned long lastMupiTime;    // Zeitpunkt letztes schnelles Zeppen
   
-  // Frage nach Reset der Config wurde bestätigt
+  // Frage wurde mit YES bestätigt
   if ((buttonResult[0]==SHORTCLICK) && question > 0) {
       
       switch (question) {
@@ -350,7 +350,7 @@ static inline void button_event() {
       return;
   }
 
-  // Frage nach Reset der Config wurde verneint
+  // Frage wurde verneint -> alles bleibt beim Alten
   if ((buttonResult[1]==SHORTCLICK) && question > 0) {
       question = NO;
       displayblocked = false;

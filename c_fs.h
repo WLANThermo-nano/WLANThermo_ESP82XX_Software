@@ -163,12 +163,7 @@ bool loadconfig(byte count) {
     break;
   
     case 2:     // THINGSPEAK
-    {
-      //if (!loadfile(THING_FILE,configFile)) return false;
-      //std::unique_ptr<char[]> buf(new char[configFile.size()]);
-      //configFile.readBytes(buf.get(), configFile.size());
-      //configFile.close();
-      
+    { 
       std::unique_ptr<char[]> buf(new char[100]);
       readEE(buf.get(),100, 300);
       
@@ -222,7 +217,7 @@ bool setconfig(byte count, const char* data1, const char* data2) {
       JsonArray& _color = json.createNestedArray("tcolor");
   
       for (int i=0; i < CHANNELS; i++){
-        _typ.add(2);
+        _typ.add(0);
     
         if (temp_unit == "F") {
           _min.add(68.0,1);
@@ -240,10 +235,11 @@ bool setconfig(byte count, const char* data1, const char* data2) {
       //if (!savefile(CHANNEL_FILE, configFile)) return false;
       //json.printTo(configFile);
       //configFile.close();
+      size_t size = json.measureLength() + 1;
       clearEE(500,400);  // Bereich reinigen
       static char buffer[500];
-      json.printTo(buffer, 500);
-      writeEE(buffer, 500, 400);
+      json.printTo(buffer, size);
+      writeEE(buffer, size, 400);
     }
     break;
 
@@ -263,13 +259,18 @@ bool setconfig(byte count, const char* data1, const char* data2) {
       THINGSPEAK_KEY = data1;
       json["KEY"] = THINGSPEAK_KEY;
       
-      //if (!savefile(THING_FILE, configFile)) return false;
-      //json.printTo(configFile);
-      //configFile.close();
-      clearEE(100,300);  // Bereich reinigen
-      static char buffer[100];
-      json.printTo(buffer, 100);
-      writeEE(buffer, 100, 300);
+      size_t size = json.measureLength() + 1;
+      if (size > 100) {
+        #ifdef DEBUG
+        Serial.println("[INFO]\tZu viele THINGSPEAK Daten!");
+        #endif
+        return false;
+      } else {
+        clearEE(100,300);  // Bereich reinigen
+        static char buffer[100];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, 300);
+      }
     }
     break;
 
@@ -337,11 +338,11 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
       //if (!savefile(CHANNEL_FILE, configFile)) return false;
       //json.printTo(configFile);
       //configFile.close();
-      
+      size_t size = json.measureLength() + 1;
       clearEE(500,400);  // Bereich reinigen
       static char buffer[500];
-      json.printTo(buffer, 500);
-      writeEE(buffer, 500, 400);
+      json.printTo(buffer, size);
+      writeEE(buffer, size, 400);
 
       //Serial.print("[JSON SET]\t");
       //json.printTo(Serial);
@@ -416,6 +417,20 @@ void start_fs() {
   */
 
   // CHANNEL
+  if (!loadconfig(eCHANNEL)) {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tFailed to load channel config");
+    #endif
+    setconfig(eCHANNEL,"","");  // Speicherplatz vorbereiten
+    ESP.restart();
+  } else {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tChannel config loaded");
+    #endif
+  }
+
+  /*
+  // CHANNEL
   if (SPIFFS.exists(CHANNEL_FILE)) {
     
     if (!loadconfig(eCHANNEL)) {
@@ -452,6 +467,7 @@ void start_fs() {
       #endif
       ESP.restart();
     }
+    */
 
 
   // WIFI
@@ -465,25 +481,17 @@ void start_fs() {
       Serial.println("[INFO]\tWifi config loaded");
     #endif
   }
-  
-  
+
+
   // THINGSPEAK
-  if (SPIFFS.exists(THING_FILE)) {
-    
-    if (!loadconfig(eTHING)) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to load Thingspeak config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tThingspeak config loaded");
-      #endif
-    }
-  }
-  else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tNo Thingspeak config available");
-      #endif
+  if (!loadconfig(eTHING)) {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tFailed to load Thingspeak config");
+    #endif
+  } else {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tThingspeak config loaded");
+    #endif
   }
 }
 
