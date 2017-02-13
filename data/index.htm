@@ -1,68 +1,93 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+<!doctype html>
 <html lang="de">
 <head>
-<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WLANThermo - Nano</title>
+	<link href="style.css" rel="stylesheet">
+	<script language="javascript" type="text/javascript" src="function.js"></script>
 </head>
 <body>
-    <div id="system">
-        <p id="time"></p>
-    </div>
-    <div id="ch0">
-        <p id="name0"></p><p id="typ0"></p><p id="temp0"></p><p id="min0"></p><p id="max0"></p><p id="set0"></p><p id="alarm0"></p><p id="color0"></p>
-    </div>
-    <div id="ch1">
-        <p id="name1"></p><p id="typ1"></p><p id="temp1"></p><p id="min1"></p><p id="max1"></p><p id="set1"></p><p id="alarm1"></p><p id="color1"></p>
-    </div>
-    <div id="ch2">
-        <p id="name2"></p><p id="typ2"></p><p id="temp2"></p><p id="min2"></p><p id="max2"></p><p id="set2"></p><p id="alarm2"></p><p id="color2"></p>
-    </div>
-    <div id="ch3">
-        <p id="name3"></p><p id="typ3"></p><p id="temp3"></p><p id="min3"></p><p id="max3"></p><p id="set3"></p><p id="alarm3"></p><p id="color3"></p>
-    </div>
-    <div id="ch4">
-        <p id="name4"></p><p id="typ4"></p><p id="temp4"></p><p id="min4"></p><p id="max4"></p><p id="set4"></p><p id="alarm4"></p><p id="color4"></p>
-    </div>
-    <div id="ch5">
-        <p id="name5"></p><p id="typ5"></p><p id="temp5"></p><p id="min5"></p><p id="max5"></p><p id="set5"></p><p id="alarm5"></p><p id="color5"></p>
-    </div>
-    <div id="ch6">
-        <p id="name6"></p><p id="typ6"></p><p id="temp6"></p><p id="min6"></p><p id="max6"></p><p id="set6"></p><p id="alarm6"></p><p id="color6"></p>
-    </div>   
-    <script language="JavaScript">
-        setInterval("readTemp();", 2000);
-    <!--
-        function loadJSON(callback) {
-            var xobj = new XMLHttpRequest();
-            xobj.overrideMimeType("application/json");
-            xobj.open('GET', 'data', true);
-            xobj.onreadystatechange = function () {
-                if (xobj.readyState == 4 && xobj.status == "200") {
-                    // .open will NOT return a value but simply returns undefined in async mode so use a callback
-                    callback(xobj.responseText);
-                }
-            }
-            xobj.send(null);
-        }
-        function readTemp(){
-            loadJSON(function(response) {
-                
-            // DO Something with the response e.g.
-            jsonresponse = JSON.parse(response);
-            document.getElementById("time").innerHTML = jsonresponse.system.time;
-            for (var i = 0; i <= 6; i++) {
-                document.getElementById("name" + i).innerHTML = jsonresponse.channel[i].name;
-                document.getElementById("typ" + i).innerHTML = jsonresponse.channel[i].typ;
-                document.getElementById("temp" + i).innerHTML = jsonresponse.channel[i].temp;
-                document.getElementById("min" + i).innerHTML = jsonresponse.channel[i].min;
-                document.getElementById("max" + i).innerHTML = jsonresponse.channel[i].max;
-                document.getElementById("set" + i).innerHTML = jsonresponse.channel[i].set;
-                document.getElementById("alarm" + i).innerHTML = jsonresponse.channel[i].alarm;     
-            }
-        });
-        }
-        readTemp();
-    //-->
-    </script>
+	<header> 
+		<h1>WLANThermo nano GUI</h1> 
+		<div id="system">
+			<p id="time"></p>
+		</div>
+	</header> 
+	<div class="flex-container">
+		<section id="ch0" class="flex-item">
+			<h1 id="name0"></h1>
+			<p id="typ0"></p>
+			<p id="temp0"></p>
+			<p id="min0"></p>
+			<p id="max0"></p>
+			<p id="set0"></p>
+			<p id="alarm0"></p>
+			<p id="color0"></p>
+		</section>
+		<section id="ch1" class="flex-item">
+			<h1 id="name1"></h1>
+			<p id="typ1"></p>
+			<p id="temp1"></p>
+			<p id="min1"></p>
+			<p id="max1"></p>
+			<p id="set1"></p>
+			<p id="alarm1"></p>
+			<p id="color1"></p>
+		</section>
+		<section id="ch2" class="flex-item">
+			<h1 id="name2"></h1>
+			<p id="typ2"></p>
+			<p id="temp2"></p>
+			<p id="min2"></p>
+			<p id="max2"></p>
+			<p id="set2"></p>
+			<p id="alarm2"></p>
+			<p id="color2"></p>
+		</section>
+		<section id="ch3" class="flex-item">
+			<h1 id="name3"></h1>
+			<p id="typ3"></p>
+			<p id="temp3"></p>
+			<p id="min3"></p>
+			<p id="max3"></p>
+			<p id="set3"></p>
+			<p id="alarm3"></p>
+			<p id="color3"></p>
+		</section>
+		<section id="ch4" class="flex-item">
+			<h1 id="name4"></h1>
+			<p id="typ4"></p>
+			<p id="temp4"></p>
+			<p id="min4"></p>
+			<p id="max4"></p>
+			<p id="set4"></p>
+			<p id="alarm4"></p>
+			<p id="color4"></p>
+		</section>
+		<section id="ch5" class="flex-item">
+			<h1 id="name5"></h1>
+			<p id="typ5"></p>
+			<p id="temp5"></p>
+			<p id="min5"></p>
+			<p id="max5"></p>
+			<p id="set5"></p>
+			<p id="alarm5"></p>
+			<p id="color5"></p>
+		</section>
+		<section id="ch6" class="flex-item">
+			<h1 id="name6"></h1>
+			<p id="typ6"></p>
+			<p id="temp6"></p>
+			<p id="min6"></p>
+			<p id="max6"></p>
+			<p id="set6"></p>
+			<p id="alarm6"></p>
+			<p id="color6"></p>
+		</section>
+	</div>	
+	<footer> 
+		<!-- <a href="#">Kontakt</a> <p>© 2017 by WLANThermo nano Team</p>  -->
+	</footer>
 </body>
 </html>
