@@ -1,6 +1,6 @@
 body {
     background-color: #F5F5DC;
-	margin: 2%;
+	margin: 0%;
 }
 p { 
 	color: #FFFFFF; 
@@ -20,7 +20,7 @@ header{
 }
 section {
   margin: 10px;
-  width: 22%;
+  width: 20%;
   background-color: #6C6C6C;
   border-left: 15px solid;
   border-color: #FFFFFF;
@@ -29,22 +29,13 @@ section {
 section:last-child {
 
 }
-@media only screen and (orientation: landscape) {
-	section{
-			width:45%;
-	}
-}
-@media only screen and (orientation: portrait) {
-	section{
-			width:90%;
-	}
-}
+
 /* ----------- iPad 1 and 2 ----------- */
 /* portrait & landscape */
 
 @media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (-webkit-min-device-pixel-ratio: 1)  { 
 	section{
-			width:45%;
+			width:40%;
 	}
 }
 
@@ -58,14 +49,14 @@ section:last-child {
 /* Portrait */
 @media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (orientation : portrait) and (-webkit-min-device-pixel-ratio: 1)  { 
 	section{
-			width:45%;
+			width:40%;
 	}
 }
 
 /* portrait & landscape */
 @media only screen and (min-device-width : 768px) and (max-device-width : 1024px)  { 
 	section{
-			width:45%;
+			width:40%;
 	}
 }
 
@@ -79,7 +70,7 @@ section:last-child {
 /* Portrait */
 @media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (orientation : portrait) { 
 	section{
-			width:45%;
+			width:40%;
 	}
 }
 
@@ -87,7 +78,7 @@ section:last-child {
 /* portrait & landscape */
 @media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (-webkit-min-device-pixel-ratio: 2) { 
 	section{
-			width:45%;
+			width:40%;
 	}
 }
 
@@ -101,7 +92,7 @@ section:last-child {
 /* Portrait */
 @media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (orientation : portrait) and (-webkit-min-device-pixel-ratio: 2) { 
 	section{
-			width:45%;
+			width:40%;
 	}
 }
 /* ----------- iPhone 4 and 4S ----------- */
@@ -109,21 +100,21 @@ section:last-child {
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 320px) and (max-device-width: 480px) and (-webkit-min-device-pixel-ratio: 2) {
 	section{
-		width:90%;
+		width:85%;
 	}
 }
 
 /* Portrait */
 @media only screen and (min-device-width: 320px) and (max-device-width: 480px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait) {
 	section{
-		width:90%;
+		width:85%;
 	}
 }
 
 /* Landscape */
 @media only screen and (min-device-width: 320px) and (max-device-width: 480px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
 	section{
-		width:45%;
+		width:40%;
 	}
 }
 
@@ -132,21 +123,21 @@ section:last-child {
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) {
 	section{
-		width:90%;
+		width:85%;
 	}
 }
 
 /* Portrait */
 @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait) {
 	section{
-		width:90%;
+		width:85%;
 	}
 }
 
 /* Landscape */
 @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
 	section{
-		width:45%;
+		width:40%;
 	}
 
 }
@@ -155,21 +146,21 @@ section:last-child {
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (-webkit-min-device-pixel-ratio: 2) { 
   	section{
-			width:90%;
+			width:85%;
 	}
 }
 
 /* Portrait */
 @media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait) { 
   	section{
-			width:90%;
+			width:85%;
 	}
 }
 
 /* Landscape */
 @media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
 	section{
-			width:45%;
+			width:40%;
 	}	  
 }
 
@@ -178,42 +169,63 @@ section:last-child {
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (-webkit-min-device-pixel-ratio: 3) { 
   	section{
-			width:90%;
+			width:85%;
 	}
 }
 
 /* Portrait */
 @media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (-webkit-min-device-pixel-ratio: 3) and (orientation: portrait) { 
   	section{
-			width:90%;
+			width:85%;
 	}
 }
 
 /* Landscape */
 @media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (-webkit-min-device-pixel-ratio: 3) and (orientation: landscape) { 
   	section{
-			width:45%;
+			width:40%;
 	}
 }
-/* (720x1280) Galaxy Nexus, WXGA */
-@media only screen and (min-device-width: 720px) and (max-device-width: 1280px) {
+/* (390x634) Galaxy Nexus, WXGA */
+@media only screen and (min-device-width: 390px) and (max-device-width: 634px) {
     /* insert styles here */  	
 	section{
-		width:90%;
+		width:85%;
 	}
 }
-/* (720x1280) Galaxy Nexus, Portrait */
-@media only screen and (min-device-width: 720px) and (max-device-width: 1280px) and (orientation: portrait) {
+/* (390x634) Galaxy Nexus, Portrait */
+@media only screen and (min-device-width: 390px) and (max-device-width: 634px) and (orientation: portrait) {
     /* insert styles here */
 	section{
-		width:90%;
+		width:85%;
 	}
 }
-/* (720x1280) Galaxy Nexus, Landscape */
-@media only screen and (min-device-width: 720px) and (max-device-width: 1280px) and (orientation: landscape) {
+/* (390x634) Galaxy Nexus, Landscape */
+@media only screen and (min-device-width: 390px) and (max-device-width: 634px) and (orientation: landscape) {
     /* insert styles here */
 	section{
-		width:45%;
+		width:40%;
+	}
+}
+/* (360x524) Galaxy Nexus, WXGA */
+@media only screen and (min-device-width: 360px) and (max-device-width: 524px) {
+    /* insert styles here */  	
+	section{
+		width:85%;
+	}
+}
+/* (360x524) Galaxy Nexus, Portrait */
+@media only screen and (min-device-width: 360px) and (max-device-width: 524px) and (orientation: portrait) {
+    /* insert styles here */
+	section{
+		width:85%;
+	}
+}
+/* (360x524) Galaxy Nexus, Landscape */
+@media only screen and (min-device-width: 360px) and (max-device-width: 524px) and (orientation: landscape) {
+    /* insert styles here */
+	section{
+		width:40%;
 	}
 }
 .flex-container {

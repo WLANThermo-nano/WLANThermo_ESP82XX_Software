@@ -1,5 +1,5 @@
 		setInterval("readTemp();", 2000);
-	<!--
+
 		function loadJSON(callback) { 
 			var xobj = new XMLHttpRequest();
 			xobj.overrideMimeType("application/json");
@@ -29,7 +29,6 @@
 		function readTemp(){
 			loadJSON(function(response) {
 				
-			// Do Something with the response e.g.
 			jsonresponse = JSON.parse(response);
 			document.getElementById("time").innerHTML = timeConverter(jsonresponse.system.time);
 			for (var i = 0; i <= 6; i++) {
