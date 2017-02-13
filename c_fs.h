@@ -119,10 +119,14 @@ bool loadconfig(byte count) {
     
     case 0:     // CHANNEL
     {
-      if (!loadfile(CHANNEL_FILE,configFile)) return false;
-      std::unique_ptr<char[]> buf(new char[configFile.size()]);
-      configFile.readBytes(buf.get(), configFile.size());
-      configFile.close();
+      //if (!loadfile(CHANNEL_FILE,configFile)) return false;
+      //std::unique_ptr<char[]> buf(new char[configFile.size()]);
+      //configFile.readBytes(buf.get(), configFile.size());
+      //configFile.close();
+
+      std::unique_ptr<char[]> buf(new char[500]);
+      readEE(buf.get(),500, 400);
+      
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjsonobject(json,CHANNEL_FILE)) return false;
       if (json["VERSION"] != CHANNELJSONVERSION) return false;
@@ -160,10 +164,14 @@ bool loadconfig(byte count) {
   
     case 2:     // THINGSPEAK
     {
-      if (!loadfile(THING_FILE,configFile)) return false;
-      std::unique_ptr<char[]> buf(new char[configFile.size()]);
-      configFile.readBytes(buf.get(), configFile.size());
-      configFile.close();
+      //if (!loadfile(THING_FILE,configFile)) return false;
+      //std::unique_ptr<char[]> buf(new char[configFile.size()]);
+      //configFile.readBytes(buf.get(), configFile.size());
+      //configFile.close();
+      
+      std::unique_ptr<char[]> buf(new char[100]);
+      readEE(buf.get(),100, 300);
+      
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjsonobject(json,THING_FILE)) return false;
       THINGSPEAK_KEY = json["KEY"].asString();
@@ -229,16 +237,20 @@ bool setconfig(byte count, const char* data1, const char* data2) {
         _color.add(colors[i]);
       }
 
-      if (!savefile(CHANNEL_FILE, configFile)) return false;
-      json.printTo(configFile);
-      configFile.close();
+      //if (!savefile(CHANNEL_FILE, configFile)) return false;
+      //json.printTo(configFile);
+      //configFile.close();
+      clearEE(500,400);  // Bereich reinigen
+      static char buffer[500];
+      json.printTo(buffer, 500);
+      writeEE(buffer, 500, 400);
     }
     break;
 
     case 1:        // WIFI
     {
       JsonArray& json = jsonBuffer.createArray();
-      clearEE(0,299);  // Bereich reinigen
+      clearEE(300,0);  // Bereich reinigen
       static char buffer[3];
       json.printTo(buffer, 3);
       writeEE(buffer, 3, 0);
@@ -251,9 +263,13 @@ bool setconfig(byte count, const char* data1, const char* data2) {
       THINGSPEAK_KEY = data1;
       json["KEY"] = THINGSPEAK_KEY;
       
-      if (!savefile(THING_FILE, configFile)) return false;
-      json.printTo(configFile);
-      configFile.close();
+      //if (!savefile(THING_FILE, configFile)) return false;
+      //json.printTo(configFile);
+      //configFile.close();
+      clearEE(100,300);  // Bereich reinigen
+      static char buffer[100];
+      json.printTo(buffer, 100);
+      writeEE(buffer, 100, 300);
     }
     break;
 
@@ -283,10 +299,14 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
     case 0:           // CHANNEL
     {
       // Alte Daten auslesen
-      if (!loadfile(CHANNEL_FILE,configFile)) return false;
-      std::unique_ptr<char[]> buf(new char[configFile.size()]);
-      configFile.readBytes(buf.get(), configFile.size());
-      configFile.close();
+      //if (!loadfile(CHANNEL_FILE,configFile)) return false;
+      //std::unique_ptr<char[]> buf(new char[configFile.size()]);
+      //configFile.readBytes(buf.get(), configFile.size());
+      //configFile.close();
+      
+      std::unique_ptr<char[]> buf(new char[500]);
+      readEE(buf.get(),500, 400);
+      
       JsonObject& alt = jsonBuffer.parseObject(buf.get());
       if (!checkjsonobject(alt,CHANNEL_FILE)) return false;
       
@@ -314,13 +334,19 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
       }
 
       // Speichern
-      if (!savefile(CHANNEL_FILE, configFile)) return false;
-      json.printTo(configFile);
+      //if (!savefile(CHANNEL_FILE, configFile)) return false;
+      //json.printTo(configFile);
+      //configFile.close();
+      
+      clearEE(500,400);  // Bereich reinigen
+      static char buffer[500];
+      json.printTo(buffer, 500);
+      writeEE(buffer, 500, 400);
 
-      Serial.print("[JSON SET]\t");
-      json.printTo(Serial);
-      Serial.println();
-      configFile.close();
+      //Serial.print("[JSON SET]\t");
+      //json.printTo(Serial);
+      //Serial.println();
+      
     }
     break;
 
@@ -617,8 +643,10 @@ int readline(int readch, char *buffer, int len) {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initalize EEPROM
 void setEE() {
-  Serial.println("[INFO]\tInitalize EEPROM");
-  EEPROM.begin(512);
+  Serial.println("[INFO]\tInitalize EEPROM at Sector 0xFB");
+  EEPROM.begin(1024);
+  // EEPROM Sector: 0xFB
+  // ab Sector: 0xFC liegen System Parameter
 }
 
 void writeEE(const char* json, int len, int startP) {
@@ -629,7 +657,7 @@ void writeEE(const char* json, int len, int startP) {
   Serial.println(json);
   for (int i = startP; i < (startP+len); ++i)
     {
-    EEPROM.write(i-startP, json[i-startP]);
+    EEPROM.write(i, json[i-startP]);
     } 
   EEPROM.commit();
 }
@@ -638,19 +666,19 @@ void writeEE(const char* json, int len, int startP) {
 void readEE(char *buffer, int len, int startP) {
   
   for (int i = startP; i < (startP+len); ++i) {
-    buffer[i-startP] = char(EEPROM.read(i-startP));
+    buffer[i-startP] = char(EEPROM.read(i));
   }
   Serial.print("[INFO]\tReading from EE: ");
   Serial.println(buffer);
 }
 
-void clearEE(int startP, int endP) {   // Example: clearEE(0,512);
+void clearEE(int len, int startP) {  
   
   Serial.print("[INFO]\tClear EEPROM from: ");
   Serial.print(startP);
   Serial.print(" to: ");
-  Serial.println(endP);
-  for (int i = startP; i < endP; ++i)
+  Serial.println(startP+len-1);
+  for (int i = startP; i < (startP+len); ++i)
     {
     EEPROM.write(i, 0);
     } 
