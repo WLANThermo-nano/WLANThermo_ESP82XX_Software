@@ -124,7 +124,7 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
                       "Typ K"};
 
 String  temp_unit = "C";
-String colors[8] = {"6495ED", "CD2626", "66CDAA", "F4A460", "D02090", "FFEC8B", "BA55D3", "008B8B"};
+String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
 
 // SYSTEM
 bool  LADEN = false;              // USB POWER SUPPLY?
