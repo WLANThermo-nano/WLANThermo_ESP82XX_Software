@@ -54,7 +54,7 @@ byte set_sensor() {
   // unipolar(0)/bipolar(1)
   // 0: reset the configuration register to default
   // 0: dont't care
-
+ 
   Wire.beginTransmission(MAX1161x_ADDRESS);
   Wire.write(reg);
   byte error = Wire.endTransmission();
