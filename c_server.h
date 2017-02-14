@@ -28,6 +28,8 @@ File fsUploadFile;              // holds the current upload
 const char* www_username = "admin";
 const char* www_password = "esp8266";
 
+void buildlist();
+
 String getContentType(String filename){
   if(server.hasArg("download")) return "application/octet-stream";
   else if(filename.endsWith(".htm")) return "text/html";
@@ -157,7 +159,7 @@ void buildDatajson(char *buffer, int len) {
 
   for (int i = 0; i < CHANNELS; i++) {
   JsonObject& data = channel.createNestedObject();
-    data["number"]= i;
+    data["number"]= i+1;
     data["name"]  = "Kanal " + String(i+1);
     data["typ"]   = ch[i].typ;
     data["temp"]  = ch[i].temp;
@@ -287,6 +289,8 @@ void server_setup() {
     //list Temperature Data
     server.on("/data", HTTP_GET, handleData);
 
+    //list Temperature Data
+    //server.on("/grafik", HTTP_GET, buildlist);
     
     //list Setting Data
     server.on("/settings", HTTP_GET, handleSettings);
@@ -306,7 +310,4 @@ void server_setup() {
     MDNS.addService("http", "tcp", 80);
 
 }
-
-
-
 
