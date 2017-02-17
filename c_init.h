@@ -96,7 +96,7 @@ extern "C" uint32_t _SPIFFS_end;
 #define APPASSWORD "12345678"
 
 // FILESYSTEM
-#define CHANNELJSONVERSION 3
+#define CHANNELJSONVERSION 4
 #define EEPROM_SIZE 1024
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -107,6 +107,7 @@ extern "C" uint32_t _SPIFFS_end;
 
 // CHANNELS
 struct ChannelData {
+   String name;           // CHANNEL NAME
    float temp;            // TEMPERATURE
    int   match;           // Anzeige im Temperatursymbol
    float max;             // MAXIMUM TEMPERATURE

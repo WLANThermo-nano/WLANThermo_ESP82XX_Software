@@ -135,6 +135,7 @@ bool loadconfig(byte count) {
       temp_unit = json["temp_unit"].asString();
 
       for (int i=0; i < CHANNELS; i++){
+          ch[i].name = json["tname"][i].asString();
           ch[i].typ = json["ttyp"][i];            
           ch[i].min = json["tmin"][i];            
           ch[i].max = json["tmax"][i];            
@@ -209,6 +210,7 @@ bool setconfig(byte count, const char* data1, const char* data2) {
       json["VERSION"] = CHANNELJSONVERSION;
       json["temp_unit"] = temp_unit;
 
+      JsonArray& _name = json.createNestedArray("tname");
       JsonArray& _typ = json.createNestedArray("ttyp");
       JsonArray& _min = json.createNestedArray("tmin");
       JsonArray& _max = json.createNestedArray("tmax");
@@ -217,6 +219,7 @@ bool setconfig(byte count, const char* data1, const char* data2) {
       JsonArray& _color = json.createNestedArray("tcolor");
   
       for (int i=0; i < CHANNELS; i++){
+        _name.add("Kanal " + String(i+1));
         _typ.add(0);
     
         if (temp_unit == "F") {
@@ -318,6 +321,7 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
       json["VERSION"] = CHANNELJSONVERSION;
       json["temp_unit"] = temp_unit;
 
+      JsonArray& _name = json.createNestedArray("tname");
       JsonArray& _typ = json.createNestedArray("ttyp");
       JsonArray& _min = json.createNestedArray("tmin");
       JsonArray& _max = json.createNestedArray("tmax");
@@ -326,6 +330,7 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
       JsonArray& _color = json.createNestedArray("tcolor");
     
       for (int i=0; i < CHANNELS; i++){
+        _name.add(ch[i].name);
         _typ.add(ch[i].typ); 
         _min.add(ch[i].min,1);
         _max.add(ch[i].max,1);

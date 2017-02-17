@@ -171,7 +171,7 @@ void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
-  display->drawString(114+x, 20+y, "Kanal " + String(current_ch+1));    // Channel Name
+  display->drawString(114+x, 20+y, ch[current_ch].name);    // Channel Name
   display->setFont(ArialMT_Plain_16);
   if (ch[current_ch].temp!=INACTIVEVALUE) {
     display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ " °" + temp_unit); // Channel Temp

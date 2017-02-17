@@ -2,6 +2,65 @@ body {
     background-color: #F5F5DC;
 	margin: 0%;
 }
+@font-face {
+  font-family: 'icomoon';
+  src:  url('icomoon.eot?jb0kk3');
+  src:  url('icomoon.eot?jb0kk3#iefix') format('embedded-opentype'),
+  url('icomoon.ttf?jb0kk3') format('truetype'),
+  url('icomoon.woff?jb0kk3') format('woff'),
+  url('icomoon.svg?jb0kk3#icomoon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icomoon' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-reorder:before {
+  content: "\f0c9";
+}
+.icon-_540:before {
+  content: "\f240";
+}
+.icon-_541:before {
+  content: "\f241";
+}
+.icon-_542:before {
+  content: "\f242";
+}
+.icon-_543:before {
+  content: "\f243";
+}
+.icon-_544:before {
+  content: "\f244";
+}
+.icon-uniF2C7:before {
+  content: "\f2c7";
+}
+.icon-uniF2C8:before {
+  content: "\f2c8";
+}
+.icon-uniF2C9:before {
+  content: "\f2c9";
+}
+.icon-uniF2CA:before {
+  content: "\f2ca";
+}
+.icon-uniF2CB:before {
+  content: "\f2cb";
+}
 p { 
 	color: #FFFFFF; 
 	font-size: 18px; 
@@ -9,10 +68,59 @@ p {
 	line-height: 0.5em; }
 h1 { 
 	color: #FFFFFF; 
+	margin:0.2em;
 }
 div.flex-container{
     background-color: #2D2D2D;
 
+}
+h1[id^="name"]{
+text-align: center;
+   width:60%;
+   margin:0% 0% 0% 19%;
+   float:left;
+   
+}
+p[id^="temp"]{
+   width:100%;
+   text-align:left;
+   font-size: 2.5em; 
+   font-weight: bold;
+   margin:0.25em 0em 0.25em 0em;
+   line-height: 1em; 
+padding:0;   
+   float:left;
+}
+p[id^="min"]{
+   width:33%;
+   font-size: 1.5em; 
+   float:left;
+   line-height: 0.5em;
+   text-align: center;	
+   margin:0.5em 0em 0.75em 0em;
+}
+p[id^="set"]{
+	width:33%;
+	font-size: 1.5em; 
+	float:left;
+   	line-height: 0.5em;
+	text-align: center;
+	margin:0.5em 0em 0.75em 0em;
+}
+p[id^="max"]{
+   width:33%;
+   font-size: 1.5em; 
+   float:left;
+   	line-height: 0.5em;
+	text-align: center;
+	margin:0.5em 0em 0.75em 0em;
+}
+p[id^="number"]{
+	width:18%;
+	float:right;
+	text-align:right;
+	margin-top:0.5em;
+	margin-right:0.25em;
 }
 header{
     background-color: #2D2D2D;
@@ -21,6 +129,7 @@ header{
 section {
   margin: 10px;
   width: 20%;
+  min-width:200px;
   background-color: #6C6C6C;
   border-left: 15px solid;
   border-color: #FFFFFF;
@@ -259,6 +368,12 @@ section:last-child {
     align-items: flex-start;
     }
 
+.flex-item {
+	border-top-left-radius: 3em;
+	border-bottom-right-radius: 3em;
+	border-bottom-left-radius: 0.25em;
+	border-top-right-radius: 0.25em;
+    }
 .flex-item:nth-child(1) {
     -webkit-box-ordinal-group: 1;
     -moz-box-ordinal-group: 1;
