@@ -27,7 +27,7 @@
 // bitte auskommentieren falls nicht benutzt
 #define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
-#define THINGSPEAK
+//#define THINGSPEAK
 
 // bitte nicht zutreffendes auskommentieren
 //#define VARIANT_A                           // 3xNTC// CHOOSE HARDWARE
@@ -58,6 +58,7 @@
 unsigned long lastUpdateBatteryMode;
 unsigned long lastUpdateSensor;
 unsigned long lastUpdateCommunication;
+unsigned long lastUpdateDatalog;
 
 void setup() {  
 
@@ -73,6 +74,7 @@ void setup() {
   if (!LADEN) {
 
     // Open Config-File
+    check_ota_sector();
     setEE();start_fs();
     
     // Initialize Wifi
@@ -107,10 +109,7 @@ void setup() {
     
     // Initialize Pitmaster
     set_pitmaster();
-
-    //check_ota_sector();
-    //write_flash();
-    //read_flash();
+    
   }
 
 }
@@ -186,9 +185,9 @@ void loop() {
       if (ch[0].alarm && ch[0].isalarm) {
         
         // Alarmfunktion
-        String postStr = "ACHTUNG: ";
-        postStr += String(ch[0].temp,1);
-        sendMessage(0,1);
+        #ifdef THINGSPEAK
+          sendMessage(0,1);
+        #endif
         controlAlarm(1);
       }
       
@@ -230,6 +229,37 @@ void loop() {
         lastUpdateCommunication = millis();
       }
       
+    }
+
+    if (millis() - lastUpdateDatalog > 5000) {
+      
+      for (int i=0; i < CHANNELS; i++)  {
+        mylog[log_count].tem[i] = (uint16_t) (ch[i].temp * 10);
+      }
+      mylog[log_count].timestamp = now();
+
+      if (log_count < MAXLOGCOUNT) {
+        log_count++;
+      } else {
+        log_count = 0;
+        write_flash(log_sector);
+        read_flash(log_sector);
+        log_sector++;
+        
+        // Test
+        for (int j=0; j<10; j++) {
+          int16_t test = archivlog[j].tem[0];
+          Serial.print(test/10.0);
+          Serial.print(" ");
+        }
+        Serial.println();
+      }
+
+      // TEST
+      //Serial.println(ulMeasCount%ulNoMeasValues);
+      //ulMeasCount++;
+
+      lastUpdateDatalog = millis();
     }
     
     //delay(remainingTimeBudget);
