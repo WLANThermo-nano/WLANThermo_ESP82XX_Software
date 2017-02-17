@@ -112,7 +112,6 @@ struct ChannelData {
    int   match;           // Anzeige im Temperatursymbol
    float max;             // MAXIMUM TEMPERATURE
    float min;             // MINIMUM TEMPERATURE
-   float soll;            // TARGET TEMPERATURE
    byte  typ;             // TEMPERATURE SENSOR
    bool  alarm;           // CHANNEL ALARM
    bool  isalarm;         // CURRENT ALARM
@@ -224,7 +223,6 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state);
 void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawlimito(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawlimitu(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawtarget(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawtyp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawalarm(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawwifi(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
@@ -485,17 +483,12 @@ static inline void button_event() {
           if (tempor > 95.0) tempor = 10.0;
           ch[current_ch].min = tempor;
           break;
-        case 3:  // Soll
-          tempor = ch[current_ch].soll +(0.1*mupi);
-          if (tempor > ch[current_ch].max) tempor = ch[current_ch].min;
-          ch[current_ch].soll = tempor;
-          break;
-        case 4:  // Typ
+        case 3:  // Typ
           tempor = ch[current_ch].typ +1;
           if (tempor > 5) tempor = 0;
           ch[current_ch].typ = tempor;
           break;
-        case 5:  // Alarm
+        case 4:  // Alarm
           ch[current_ch].alarm = !ch[current_ch].alarm;
           break;
         default:
@@ -509,7 +502,7 @@ static inline void button_event() {
     
     b_counter = ui.getCurrentFrameCount();
     
-    if (b_counter < 5) { 
+    if (b_counter < 4) { 
       b_counter++; 
     }
     else {

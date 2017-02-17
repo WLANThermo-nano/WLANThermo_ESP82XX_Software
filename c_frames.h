@@ -200,16 +200,6 @@ void drawlimitu(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->drawLine(33+x,39+y,50,39);
 }
 
-void drawtarget(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
-  display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(20+x, 20+y, String(current_ch+1));                // Channel
-  display->drawString(114+x, 20+y, "SOLL:");
-  display->drawString(114+x, 36+y, String(ch[current_ch].soll,1)+ " °" + temp_unit); // Soll
-}
-
 void drawtyp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->drawXbm(x+20,18+y,20,36,xbmtemp);                            // Symbol
   display->fillRect(x+28,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
@@ -250,10 +240,10 @@ void drawwifi(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
 
 // this array keeps function pointers to all frames
 // frames are the single views that slide from right to left
-FrameCallback frames[] = { drawTemp, drawlimito, drawlimitu, drawtarget, drawtyp, drawalarm};  // drawFrame3
+FrameCallback frames[] = { drawTemp, drawlimito, drawlimitu, drawtyp, drawalarm};  // drawFrame3
 
 // how many frames are there?
-int frameCount = 6;   // 3
+int frameCount = 5;   // 3
 
 // Overlays are statically drawn on top of a frame eg. a clock
 OverlayCallback overlays[] = { gBattery };

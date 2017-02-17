@@ -138,8 +138,7 @@ bool loadconfig(byte count) {
           ch[i].name = json["tname"][i].asString();
           ch[i].typ = json["ttyp"][i];            
           ch[i].min = json["tmin"][i];            
-          ch[i].max = json["tmax"][i];            
-          ch[i].soll = json["tsoll"][i];          
+          ch[i].max = json["tmax"][i];                     
           ch[i].alarm = json["talarm"][i];        
           ch[i].color = json["tcolor"][i].asString();        
       }
@@ -214,7 +213,6 @@ bool setconfig(byte count, const char* data1, const char* data2) {
       JsonArray& _typ = json.createNestedArray("ttyp");
       JsonArray& _min = json.createNestedArray("tmin");
       JsonArray& _max = json.createNestedArray("tmax");
-      JsonArray& _soll = json.createNestedArray("tsoll");
       JsonArray& _alarm = json.createNestedArray("talarm");
       JsonArray& _color = json.createNestedArray("tcolor");
   
@@ -225,11 +223,9 @@ bool setconfig(byte count, const char* data1, const char* data2) {
         if (temp_unit == "F") {
           _min.add(68.0,1);
           _max.add(86.0,1);
-          _soll.add(75.0,1);
         } else {
           _min.add(20.0,1);
           _max.add(30.0,1);
-          _soll.add(25.0,1); 
         }
         _alarm.add(false); 
         _color.add(colors[i]);
@@ -325,7 +321,6 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
       JsonArray& _typ = json.createNestedArray("ttyp");
       JsonArray& _min = json.createNestedArray("tmin");
       JsonArray& _max = json.createNestedArray("tmax");
-      JsonArray& _soll = json.createNestedArray("tsoll");
       JsonArray& _alarm = json.createNestedArray("talarm");
       JsonArray& _color = json.createNestedArray("tcolor");
     
@@ -334,7 +329,6 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
         _typ.add(ch[i].typ); 
         _min.add(ch[i].min,1);
         _max.add(ch[i].max,1);
-        _soll.add(ch[i].soll,1);
         _alarm.add(ch[i].alarm); 
         _color.add(ch[i].color);
       }

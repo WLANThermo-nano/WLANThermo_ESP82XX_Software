@@ -165,7 +165,6 @@ void buildDatajson(char *buffer, int len) {
     data["temp"]  = ch[i].temp;
     data["min"]   = ch[i].min;
     data["max"]   = ch[i].max;
-    //data["set"]   = ch[i].soll;
     data["alarm"] = ch[i].alarm;
     data["color"] = ch[i].color;
   }
@@ -247,7 +246,7 @@ bool handleSetChannels() {
     ch[i].color = _cha["color"].asString();
   }
 
-  Serial.println("[POST]\tMessage from ");
+  Serial.println("[POST]\tMessage from Client");
   modifyconfig(eCHANNEL,"","");
   return 1;
 }
