@@ -34,7 +34,11 @@
 
 extern "C" {
 #include "user_interface.h"
+#include "spi_flash.h"
 }
+
+extern "C" uint32_t _SPIFFS_start;
+extern "C" uint32_t _SPIFFS_end;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
@@ -93,6 +97,7 @@ extern "C" {
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 3
+#define EEPROM_SIZE 1024
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -125,6 +130,20 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
 
 String  temp_unit = "C";
 String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
+
+
+struct datalogger {
+ uint16_t tem[8];
+ long timestamp;
+};
+
+#define MAXLOGCOUNT 204             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
+datalogger mylog[MAXLOGCOUNT];
+datalogger archivlog[MAXLOGCOUNT];
+int log_count = 0;
+uint32_t log_sector;                // erster Sector von APP2
+uint32_t freeSpaceStart;            // First Sector of OTA
+uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
 // SYSTEM
 bool  LADEN = false;              // USB POWER SUPPLY?

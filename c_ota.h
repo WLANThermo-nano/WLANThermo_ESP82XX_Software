@@ -85,30 +85,58 @@ void set_ota(){
 
 
 void check_ota_sector() {
-  uint8_t pla = system_upgrade_userbin_check();
-  Serial.print("Current Sector: ");
-  Serial.println(pla);
+
+  freeSpaceStart = (ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));
+  freeSpaceEnd = (uint32_t)&_SPIFFS_start - 0x40200000;
+
+  Serial.print("[INFO]\tInitalize SKETCH at Sector: 0x01 (");
+  Serial.print((ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1)/1024);
+  Serial.println("K)");
+  Serial.print("[INFO]\tInitalize DATALG at Sector: 0x");
+  Serial.print(freeSpaceStart/SPI_FLASH_SEC_SIZE,HEX);
+  Serial.print(" (");
+  Serial.print((freeSpaceEnd - freeSpaceStart)/1024, DEC);  // ESP.getFreeSketchSpace()
+  Serial.println("K)");
+  log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
+    
+  
+  //uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
+      
+  //Serial.println(ESP.getFlashChipRealSize()/1024);
+  //Serial.println(ESP.getFlashChipSize() - 0x4000);
+    
+  
 }
 
-unsigned char meinsatz[64] = "Ich nutze ab jetzt den Flash Speicher für meine Daten!\n";
-unsigned char meinflash[64];
+//unsigned char meinsatz[64] = "Ich nutze ab jetzt den Flash Speicher für meine Daten!\n";
+//unsigned char meinflash[64];
 
-void write_flash() {
-  
-  spi_flash_erase_sector(0xD6);       // 0x81 bis 0xD6
-  spi_flash_write(0xD6000, (uint32 *) meinsatz, sizeof(meinsatz));
-  
-}
+void write_flash(uint32_t _sector) {
 
-void read_flash() {
-  spi_flash_read(0xD6000, (uint32 *) meinflash, sizeof(meinflash));
-  //os_printf("%s", meinflash); 
-  for (int i=0; i < 64; i++) {
-    char test = meinflash[i];
-    Serial.print(test);
+  //_sector = 0xD6;            // 0x81 bis 0xD6
+  noInterrupts();
+  if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK) {  // ESP.flashEraseSector
+    spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) mylog, sizeof(mylog));  //ESP.flashWrite
+    #ifdef DEBUG
+    Serial.print("[INFO]\tSpeicherung im Sector: ");
+    Serial.println(_sector, HEX);
+    #endif
+  } else {
+    #ifdef DEBUG
+    Serial.println("[INFO]\tFehler beim Speichern im Flash");
+    #endif
   }
-  Serial.println("");
+  interrupts(); 
 }
+
+void read_flash(uint32_t _sector) {
+
+  noInterrupts();
+  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) archivlog, sizeof(archivlog));  //ESP.flashRead
+  //spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) meinflash, sizeof(meinflash));
+  interrupts();
+}
+
 #endif
 
 

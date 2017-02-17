@@ -408,13 +408,21 @@ void start_fs() {
   }
 
   /*
-  Dir dir = SPIFFS.openDir("/");
+  Dir dir = SPIFFS.openDir("/");  // Alternativ: Dir dir = SPIFFS.openDir("/data");
   while (dir.next()) {
     String fileName = dir.fileName();
     size_t fileSize = dir.fileSize();
     Serial.printf("FS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
   }
   */
+  #ifdef DEBUG
+    Serial.print("[INFO]\tInitalize SPIFFS at Sector: 0x");
+    Serial.print((((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE), HEX);
+    Serial.print(" (");
+    Serial.print(((uint32_t)&_SPIFFS_end - (uint32_t)&_SPIFFS_start)/1024, DEC);
+    Serial.println("K)");
+    // 0x40200000 ist der Speicherort des SPI FLASH in der Memory Map
+  #endif
 
   // CHANNEL
   if (!loadconfig(eCHANNEL)) {
@@ -651,10 +659,18 @@ int readline(int readch, char *buffer, int len) {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initalize EEPROM
 void setEE() {
-  Serial.println("[INFO]\tInitalize EEPROM at Sector 0xFB");
-  EEPROM.begin(1024);
-  // EEPROM Sector: 0xFB
-  // ab Sector: 0xFC liegen System Parameter
+  
+  // EEPROM Sector: 0xFB, ab Sector 0xFC liegen System Parameter
+  
+  #ifdef DEBUG
+  Serial.print("[INFO]\tInitalize EEPROM at Sector: 0x"); // letzter Sector von APP2
+  Serial.print((((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE),HEX);
+  Serial.print(" (");
+  Serial.print(EEPROM_SIZE, DEC);  // ESP.getFreeSketchSpace()
+  Serial.println("B)");
+  #endif
+  
+  EEPROM.begin(EEPROM_SIZE);
 }
 
 void writeEE(const char* json, int len, int startP) {
