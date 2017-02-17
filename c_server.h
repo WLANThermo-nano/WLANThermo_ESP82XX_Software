@@ -165,7 +165,7 @@ void buildDatajson(char *buffer, int len) {
     data["temp"]  = ch[i].temp;
     data["min"]   = ch[i].min;
     data["max"]   = ch[i].max;
-    data["set"]   = ch[i].soll;
+    //data["set"]   = ch[i].soll;
     data["alarm"] = ch[i].alarm;
     data["color"] = ch[i].color;
   }
@@ -228,6 +228,73 @@ void handleSettings() {
   static char sendbuffer[200];
   buildSettingjson(sendbuffer, 200);
   server.send(200, "text/json", sendbuffer);
+}
+
+void handleSetSettings() {
+
+  if(!server.authenticate(www_username, www_password))
+      return server.requestAuthentication();
+
+  String inString = server.arg("channel"); 
+  int channel = inString.toInt();
+  
+  if ((channel > 0) && (channel < CHANNELS+1)) {
+    Serial.print("[POST]\tChannel: ");
+    Serial.print(channel);
+
+    inString = server.arg("typ");
+    int typ = inString.toInt();
+
+    if ((typ > -1) && (typ < SENSORTYPEN)) {
+      Serial.print(", Typ: ");
+      Serial.print(typ);
+      ch[channel-1].typ = typ;
+    }
+
+    inString = server.arg("min");
+    int min = inString.toInt();
+
+    if ((min > 10) && (min < 90)) {
+      Serial.print(", Min: ");
+      Serial.print(min);
+      ch[channel-1].min = min;
+    }
+
+    inString = server.arg("max");
+    int max = inString.toInt();
+
+    if ((max > 10) && (max < 90)) {
+      Serial.print(", Max: ");
+      Serial.print(max);
+      ch[channel-1].max = max;
+    }
+    server.send(200, "text/json", "1");
+  } else {
+    server.send(200, "text/json", "0");
+  }
+
+}
+
+void handleSetChannels() {
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+  if (!json.success()) Serial.println("Fehler");
+
+  for (int i = 0; i < CHANNELS; i++) {
+    JsonObject& _cha = json["channel"][i];
+    //ch[i].name =  _cha["name"].asString();
+    ch[i].typ =   _cha["typ"]; 
+    ch[i].min =   _cha["min"]; 
+    ch[i].max =   _cha["max"];
+    Serial.println(ch[i].max);
+    ch[i].alarm = _cha["alarm"]; 
+    ch[i].color = _cha["color"].asString();
+  }
+
+  Serial.println("Hallo");
+  //modifyconfig(eCHANNEL,"","");
+  server.send(200, "text/json", "1");
 }
 
 void server_setup() {
@@ -295,10 +362,18 @@ void server_setup() {
     //list Setting Data
     server.on("/settings", HTTP_GET, handleSettings);
 
+    //list Set Setting Data
+    server.on("/setsettings", HTTP_POST, handleSetSettings);
+
+    
+    //list Set Setting Data
+    server.on("/setchannels", HTTP_POST, handleSetChannels);
+
+    
     // Auth
     server.on("/", [](){
-    if(!server.authenticate(www_username, www_password))
-      return server.requestAuthentication();
+    //if(!server.authenticate(www_username, www_password))
+      //return server.requestAuthentication();
       if(!handleFileRead("/")) server.send(404, "text/plain", "FileNotFound");
       //server.send(200, "text/plain", "Login OK");
     });
@@ -310,4 +385,112 @@ void server_setup() {
     MDNS.addService("http", "tcp", 80);
 
 }
+
+
+
+unsigned long ulMeasCount=1;    // values already measured
+unsigned long ulNoMeasValues=10; // size of array
+
+unsigned long MakeList (bool bStream)
+{
+  unsigned long ulLength=0;
+  
+  // here we build a big list.
+  // we cannot store this in a string as this will blow the memory   
+  // thus we count first to get the number of bytes and later on 
+  // we stream this out
+  if (ulMeasCount>0) { 
+    
+    String sTable="";
+    for (unsigned long li = 0; li < ulMeasCount; li++)  {
+      
+      // result shall be ['18:24:08 - 21.5.2015',21.10,49.00],
+      unsigned long ulIndex=li%ulNoMeasValues;
+      sTable += "['";
+      sTable += "jetzt";//epoch_to_string(pulTime[ulIndex]).c_str();
+      sTable += "',";
+      sTable += 20; //pfTemp[ulIndex];
+      sTable += ",";
+      sTable += 20; //pfHum[ulIndex];
+      sTable += "],\n";
+
+      // play out in chunks of 1k
+      if(sTable.length()>1024)  {
+        if(bStream) {
+          //pclient->print(sTable);
+          server.send(200, "text/html", sTable);
+        }
+        ulLength += sTable.length();
+        sTable = "";
+      }
+    }
+    
+    // remaining chunk
+    if(bStream) {
+      //pclient->print(sTable);
+      server.send(200, "text/html", sTable);
+    } 
+    ulLength += sTable.length();  
+  }
+  
+  return(ulLength);
+}
+
+
+String MakeHTTPHeader(unsigned long ulLength) {
+  
+  String sHeader;
+  sHeader  = F("HTTP/1.1 200 OK\r\nContent-Length: ");
+  sHeader += ulLength;
+  sHeader += F("\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n");
+  return(sHeader);
+}
+
+String MakeHTTPFooter() {
+  
+  String sResponse;
+  sResponse  = F("<FONT SIZE=-2><BR>Freies RAM=");
+  sResponse += (uint32_t)system_get_free_heap_size();
+  sResponse += F(" - Max. Datenpunkte=");
+  sResponse += ulNoMeasValues;
+  sResponse += F("<BR>Nano 2017<BR></body></html>");
+  return(sResponse);
+}
+
+
+void buildlist()
+{
+    
+  String sResponse,sResponse2,sHeader;
+  unsigned long ulSizeList = MakeList(false); // get size of list first
+
+  //sResponse  = F("<html>\n<head>\n<title>WLAN Thermo Nano Logger</title>\n<script type=\"text/javascript\" src=\"https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1','packages':['corechart']}]}\"></script>\n");
+  //sResponse += F("<script type=\"text/javascript\"> google.setOnLoadCallback(drawChart);\nfunction drawChart() {var data = google.visualization.arrayToDataTable([\n['Zeit / UTC', 'Temp1', 'Temp2'],\n");    
+  sResponse  = F("<html>\n<head>\n<title>WLAN Logger f&uuml;r Lufttemperatur und Feuchtigkeit</title>\n<script type=\"text/javascript\" src=\"https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1','packages':['corechart']}]}\"></script>\n");
+  sResponse += F("<script type=\"text/javascript\"> google.setOnLoadCallback(drawChart);\nfunction drawChart() {var data = google.visualization.arrayToDataTable([\n['Zeit / UTC', 'Temperatur', 'Feuchtigkeit'],\n");    
+    
+  // part 2 of response - after the big list
+  sResponse2  = F("]);\nvar options = {title: 'Verlauf',vAxes:{0:{viewWindowMode:'explicit',gridlines:{color:'black'},format:\"##.##\260C\"},1: {gridlines:{color:'transparent'},format:\"##,##%\"},},series:{0:{targetAxisIndex:0},1:{targetAxisIndex:1},},curveType:'none',legend:{ position: 'bottom'}};");
+  sResponse2 += F("var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));chart.draw(data, options);}\n</script>\n</head>\n");
+  sResponse2 += F("<body>\n<font color=\"#000000\"><body bgcolor=\"#d0d0f0\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=yes\"><h1>WLAN Thermo Nano Logger</h1><BR>");
+  sResponse2 += F("<BR>\n<div id=\"curve_chart\" style=\"width: 600px; height: 400px\"></div>");
+  sResponse2 += MakeHTTPFooter().c_str();
+    
+  // Send the response to the client - delete strings after use to keep mem low
+  //client.print(MakeHTTPHeader(sResponse.length()+sResponse2.length()+ulSizeList).c_str()); 
+  //client.print(sResponse); sResponse="";
+  //MakeList(true);
+  //client.print(sResponse2);
+
+  server.send(200, "text/html", MakeHTTPHeader(sResponse.length()+sResponse2.length()+ulSizeList).c_str());
+  server.send(200, "text/html", sResponse); sResponse="";
+  MakeList(true);
+  server.send(200, "text/html", sResponse2);
+   
+}
+
+
+
+
+
 
