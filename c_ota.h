@@ -86,6 +86,7 @@ void set_ota(){
 
 void check_ota_sector() {
 
+  // https://github.com/esp8266/Arduino/blob/master/cores/esp8266/Esp.cpp
   freeSpaceStart = (ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));
   freeSpaceEnd = (uint32_t)&_SPIFFS_start - 0x40200000;
 

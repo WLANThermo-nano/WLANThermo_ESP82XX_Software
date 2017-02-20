@@ -137,7 +137,7 @@ void get_rssi() {
 void sendNTPpacket(IPAddress& address) {
   
   #ifdef DEBUG
-    Serial.println("[INFO]\tsending NTP packet...");
+    Serial.println("[INFO]\tSending NTP packet...");
   #endif
   
   // set all bytes in the buffer to 0
@@ -169,14 +169,10 @@ time_t getNtpTime() {
   WiFi.hostByName(ntpServerName, timeServerIP); 
 
   while (udp.parsePacket() > 0) ; // discard any previously received packets
-
-  #ifdef DEBUG
-    Serial.println("[INFO]\tTransmit NTP Request");
-  #endif
   
   sendNTPpacket(timeServerIP);
   uint32_t beginWait = millis();
-  while (millis() - beginWait < 1500) {
+  while (millis() - beginWait < 2500) {
     int size = udp.parsePacket();
     if (size >= NTP_PACKET_SIZE) {
       #ifdef DEBUG
