@@ -171,9 +171,11 @@ void buildDatajson(char *buffer, int len) {
   
   JsonObject& master = root.createNestedObject("pitmaster");
 
-  master["channel"] = 0;
-  master["typ"] = "";
-  master["value"] = 100;
+  master["channel"] = pitmaster.channel;
+  master["typ"] = pitmaster.typ;
+  master["value"] = pitmaster.value;
+  master["set"] = pitmaster.set;
+  master["active"] = pitmaster.active;
 
   size_t size = root.measureLength() + 1;
   //Serial.println(size);
@@ -216,8 +218,8 @@ void buildSettingjson(char *buffer, int len) {
 
 void handleData() {
   
-  static char sendbuffer[1000];
-  buildDatajson(sendbuffer, 1000);
+  static char sendbuffer[1200];
+  buildDatajson(sendbuffer, 1200);
   server.send(200, "text/json", sendbuffer);
 }
 
@@ -233,21 +235,31 @@ void handleSettings() {
 bool handleSetChannels() {
   
   DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+  JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
   if (!json.success()) return 0;
 
   for (int i = 0; i < CHANNELS; i++) {
     JsonObject& _cha = json["channel"][i];
-    ch[i].name =  _cha["name"].asString();
-    ch[i].typ =   _cha["typ"]; 
-    ch[i].min =   _cha["min"]; 
-    ch[i].max =   _cha["max"];
+    String _name = _cha["name"].asString(); 
+    if (_name.length() < 11)  ch[i].name = _name;
+    byte _typ = _cha["typ"];
+    if (_typ > -1 && _typ < SENSORTYPEN) ch[i].typ = _typ; 
+    float _limit = _cha["min"];
+    if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[i].min = _limit;
+    _limit = _cha["max"];
+    if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[i].max = _limit;
     ch[i].alarm = _cha["alarm"]; 
     ch[i].color = _cha["color"].asString();
   }
 
+  JsonObject& _pitmaster = json["pitmaster"];
+  pitmaster.channel = _pitmaster["channel"]; // 0
+  pitmaster.typ = _pitmaster["typ"]; // ""
+  pitmaster.set = _pitmaster["value"]; // 100
+  //pitmaster.active = _pitmaster["active"];
+
   Serial.println("[POST]\tMessage from Client");
-  modifyconfig(eCHANNEL,"","");
+  modifyconfig(eCHANNEL,{});
   return 1;
 }
 
