@@ -35,10 +35,9 @@
 byte set_sensor() {
 
   // THERMOCOUPLE
-  #if KTYPE
-  pinMode(THERMOCOUPLE_CS, OUTPUT);
-  digitalWrite(THERMOCOUPLE_CS, HIGH);
-  SPI.begin();
+  #ifdef KTYPE
+    // Kein CS, da nur ein SPI Teilnehmer
+    SPI.begin();  // Umprogrammieren, da so ja MOSI aktiviert wird
   #endif
 
   // Piepser
@@ -87,7 +86,7 @@ int get_adc_average (byte ch) {
 }
 
 
-#if KTYPE
+#ifdef KTYPE
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Temperature KTYPE
@@ -95,9 +94,7 @@ double get_thermocouple(void) {
 
   int32_t dd = 0;
 
-  digitalWrite(THERMOCOUPLE_CS, LOW);
-  delay(1);
-
+  // Ersetzen durch eigenen SPI
   SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
 
   dd = SPI.transfer(0);
@@ -109,8 +106,6 @@ double get_thermocouple(void) {
   dd |= SPI.transfer(0);
 
   SPI.endTransaction();
-
-  digitalWrite(THERMOCOUPLE_CS, HIGH);
 
   if (dd & 0x7) {
     #ifdef DEBUG
@@ -137,6 +132,13 @@ double get_thermocouple(void) {
 
 #endif
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Initialize Charge Detection
+void set_batdetect() {
+  pinMode(CHARGEDETECTION, INPUT);
+}
+
 uint32_t vol_sum = 0;
 int vol_count = 0;
 
@@ -146,13 +148,14 @@ void get_Vbat() {
   
   // Digitalwert transformiert in Batteriespannung in mV
   int voltage = analogRead(ANALOGREADBATTPIN);
-
-  // Ladevorgang erkennen
+  charge = digitalRead(CHARGEDETECTION);
+  
+  // Standby erkennen
   if (voltage < 10) {
-    LADEN = true;
+    stby = true;
     return;
   }
-  else LADEN = false;
+  else stby = false;
 
   // Transformation Digitalwert in Batteriespannung
   voltage = voltage * BATTDIV; 
@@ -164,8 +167,6 @@ void get_Vbat() {
   vol_sum += voltage;
   vol_count++;
   
-  //median_add(voltage);
-  
 }
 
 
@@ -174,8 +175,6 @@ void get_Vbat() {
 void cal_soc() {
 
   // mittlere Batteriespannung aus dem Buffer lesen und in Prozent umrechnen
-  //int voltage = median_average();
-  //int voltage = median_getHighest();
   int voltage;
   
   if (vol_count > 0) voltage = vol_sum / vol_count;
@@ -207,6 +206,51 @@ void cal_soc() {
   vol_sum = 0;
   vol_count = 0;
 }
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Initialize Hardware Alarm
+void set_piepser() {
+
+  // Hardware-Alarm bereit machen
+  pinMode(MOSI, OUTPUT);
+  analogWriteFreq(4000);
+  doAlarm = false;
+  
+}
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//Control Hardware Alarm
+void controlAlarm(bool action){
+
+  
+  bool setalarm = false;
+
+  for (int i=0; i < CHANNELS; i++) {
+    if (ch[i].alarm && ch[i].isalarm) {
+      setalarm = true;
+      if (!isAP) {
+        #ifdef THINGSPEAK
+          //if (ch[i].temp > ch[i].max) sendMessage(i+1,1);
+          //else if (ch[i].temp < ch[i].min) sendMessage(i+1,0);
+        #endif
+      }
+    }
+  }
+
+  if (doAlarm && setalarm) {
+    analogWrite(MOSI,512);
+    displayblocked = true;
+    question = HARDWAREALARM;
+    drawQuestion();
+  }
+  else {
+    analogWrite(MOSI,0);
+  }  
+  
+}
+
+
 
 
 

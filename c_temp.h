@@ -85,7 +85,7 @@ void get_Temperature() {
  
     // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
     // KTYPE wandert dann auf Kanal 5
-    #if KTYPE
+    #ifdef KTYPE
     if (i == 4) value = get_thermocouple();
     #endif
 
