@@ -24,17 +24,11 @@
 
 // CHOOSE CONFIGURATION (user input)
 
-// bitte auskommentieren falls nicht benutzt
+// Entwicklereinstellungen
 #define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
-//#define THINGSPEAK
-
-// bitte nicht zutreffendes auskommentieren
-//#define VARIANT_A                           // 3xNTC// CHOOSE HARDWARE
-#define VARIANT_B                           // 6xNTC, 1xSYSTEM
-//#define VARIANT_C                           // 4xNTC, 1xKYTPE, 1xSYSTEM
-
-
+#define THINGSPEAK
+//#define KTYPE
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -43,6 +37,7 @@
 #include "c_init.h"
 #include "c_median.h"
 #include "c_sensor.h"
+#include "c_pitmaster.h"
 #include "c_temp.h"
 #include "c_fs.h"
 #include "c_icons.h"
@@ -51,7 +46,6 @@
 #include "c_bot.h"
 #include "c_ota.h"
 #include "c_server.h"
-#include "c_pitmaster.h"
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -69,9 +63,9 @@ void setup() {
   set_OLED();
 
   // Current Battery Voltage
-  get_Vbat();
+  set_batdetect(); get_Vbat();
   
-  if (!LADEN) {
+  if (!stby) {
 
     // Open Config-File
     check_ota_sector();
@@ -99,6 +93,7 @@ void setup() {
     // Initialize Sensors
     set_sensor();
     set_Channels();
+    set_piepser();
 
     // Initialize Buttons
     set_button();
@@ -119,29 +114,30 @@ void setup() {
 
 void loop() {
 
-  // Lade-Betrieb oder Mess-Betrieb
-  if (LADEN) {
+  // Standby oder Mess-Betrieb
+  if (stby) {
 
     if (!LADENSHOW) {
       drawLoading();
       LADENSHOW = true;
       //wifi_station_disconnect();
       //WiFi.mode(WIFI_OFF);
+      // set_pitmaster();
     }
     
     if (millis() - lastUpdateBatteryMode > INTERVALBATTERYMODE) {
       get_Vbat();
       lastUpdateBatteryMode = millis();  
 
-      if (!LADEN) ESP.restart();
+      if (!stby) ESP.restart();
     }
     
     return;
   }
 
   // Detect Serial
-  static char serialbuffer[80];
-  if (readline(Serial.read(), serialbuffer, 80) > 0) {
+  static char serialbuffer[110];
+  if (readline(Serial.read(), serialbuffer, 110) > 0) {
     read_serial(serialbuffer);
   }
   
@@ -153,7 +149,7 @@ void loop() {
   // Server
   server.handleClient();
 
-  //pitmaster_control();
+  pitmaster_control();
   
   // Detect Button Event
   if (button_input()) {
@@ -180,19 +176,10 @@ void loop() {
       
       get_Temperature();
       get_Vbat();
-      
-      if (!isAP) {
-      if (ch[0].alarm && ch[0].isalarm) {
-        
-        // Alarmfunktion
-        #ifdef THINGSPEAK
-          sendMessage(0,1);
-        #endif
-        controlAlarm(1);
-      }
-      
-      }
+
+      controlAlarm(0);
       lastUpdateSensor = millis();
+    
     }
 
     if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
@@ -238,21 +225,23 @@ void loop() {
       }
       mylog[log_count].timestamp = now();
 
-      if (log_count < MAXLOGCOUNT) {
+      if (log_count < MAXLOGCOUNT-1) {
         log_count++;
       } else {
         log_count = 0;
-        write_flash(log_sector);
+        /*write_flash(log_sector);
         read_flash(log_sector);
         log_sector++;
         
         // Test
+        
         for (int j=0; j<10; j++) {
           int16_t test = archivlog[j].tem[0];
           Serial.print(test/10.0);
           Serial.print(" ");
         }
         Serial.println();
+        */
       }
 
       // TEST

@@ -31,43 +31,37 @@
 #include <WiFiUdp.h>              // NTP
 #include <TimeLib.h>              // TIME
 #include <EEPROM.h>               // EEPROM
+#include <FS.h>                   // FILESYSTEM
+#include <ArduinoJson.h>          // JSON
 
 extern "C" {
 #include "user_interface.h"
 #include "spi_flash.h"
 }
 
-extern "C" uint32_t _SPIFFS_start;
-extern "C" uint32_t _SPIFFS_end;
+extern "C" uint32_t _SPIFFS_start;      // START ADRESS FS
+extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
 
-#define FIRMWAREVERSION "V0.2"
-
 // HARDWARE
-#ifdef VARIANT_C
-  #define CHANNELS 6                  // 4xNTC, 1xKYTPE, 1xSYSTEM
-  #define KTYPE 1
-  #define MAX1161x_ADDRESS 0x33       // MAX11615
-  #define THERMOCOUPLE_CS 16
-#elif defined(VARIANT_B)
-  #define CHANNELS 7                  // 6xNTC, 1xSYSTEM
-  #define MAX1161x_ADDRESS 0x33       // MAX11615
-#else 
-  #define CHANNELS 3                  // 3xNTC
-  #define MAX1161x_ADDRESS 0x34       // MAX11613
-#endif
+#define FIRMWAREVERSION "V0.3"
 
 // CHANNELS
+#define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
 #define SENSORTYPEN    7               // NUMBER OF SENSORS
+#define LIMITUNTERGRENZE -20           // MINIMUM LIMIT
+#define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
+#define MAX1161x_ADDRESS 0x33          // MAX11615
 
 // BATTERY
 #define BATTMIN 3600                  // MINIMUM BATTERY VOLTAGE in mV
 #define BATTMAX 4185                  // MAXIMUM BATTERY VOLTAGE in mV 
-#define ANALOGREADBATTPIN 0
+#define ANALOGREADBATTPIN 0           // INTERNAL ADC PIN
 #define BATTDIV 5.9F
+#define CHARGEDETECTION 16              // LOAD DETECTION PIN
 
 // OLED
 #define OLED_ADRESS 0x3C              // OLED I2C ADRESS
@@ -82,8 +76,8 @@ extern "C" uint32_t _SPIFFS_end;
 #define SCL 2
 
 // BUTTONS
-#define btn_r  4      // Pullup vorhanden
-#define btn_l  5      // Pullup vorhanden
+#define btn_r  4                    // Pullup vorhanden
+#define btn_l  5                    // Pullup vorhanden
 #define INPUTMODE INPUT_PULLUP      // INPUT oder INPUT_PULLUP
 #define PRELLZEIT 5                 // Prellzeit in Millisekunden   
 #define DOUBLECLICKTIME 400         // Längste Zeit für den zweiten Klick beim DOUBLECLICK
@@ -92,12 +86,18 @@ extern "C" uint32_t _SPIFFS_end;
 #define MAXCOUNTER CHANNELS-1
 
 // WIFI
-#define APNAME "NEMESIS"
+#define APNAME "NANO-AP"
 #define APPASSWORD "12345678"
 
 // FILESYSTEM
-#define CHANNELJSONVERSION 4
-#define EEPROM_SIZE 1024
+#define CHANNELJSONVERSION 4        // FS VERSION
+#define EEPROM_SIZE 1536            // EEPROM SIZE
+
+// PITMASTER
+#define PITMASTER1 15               // PITMASTER PIN
+#define PITMIN 0                    // LOWER LIMIT SET
+#define PITMAX 100                  // UPPER LIMIT SET
+#define PITMASTERSIZE 5             // PITMASTER SETTINGS LIMIT
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -131,7 +131,23 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
 String  temp_unit = "C";
 String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
 
+// PITMASTER
+struct Pitmaster {
+   byte typ;           // PITMASTER NAME/TYP
+   float set;            // SET-TEMPERATUR
+   bool  active;           // IS PITMASTER ACTIVE
+   byte  channel;         // PITMASTER CHANNEL
+   float value;           // PITMASTER VALUE IN %
+   int manuel;            // MANUEL PITMASTER VALUE IN %
+   bool event;
+   int16_t msec;          // PITMASTER VALUE IN MILLISEC
+   unsigned long last;
+};
 
+Pitmaster pitmaster;
+int pidsize;
+
+// DATALOGGER
 struct datalogger {
  uint16_t tem[8];
  long timestamp;
@@ -146,7 +162,9 @@ uint32_t freeSpaceStart;            // First Sector of OTA
 uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
 // SYSTEM
-bool  LADEN = false;              // USB POWER SUPPLY?
+bool stby = false;                // USB POWER SUPPLY?
+bool doAlarm = false;             // HARDWARE ALARM
+bool charge = false;              // CHARGE DETECTION
 
 // OLED
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL
@@ -158,7 +176,7 @@ enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM};
 int question = NO;                               // Which Question;
 
 // FILESYSTEM
-enum {eCHANNEL, eWIFI, eTHING, ePRESET};
+enum {eCHANNEL, eWIFI, eTHING, ePIT, ePRESET};
 
 // WIFI
 byte isAP = 0;                    // WIFI MODE
@@ -176,11 +194,9 @@ enum {NONE, FIRSTDOWN, FIRSTUP, SHORTCLICK, DOUBLECLICK, LONGCLICK};
 byte buttonResult[NUMBUTTONS];    // Aktueller Klickstatus der Buttons NONE/SHORTCLICK/LONGCLICK
 unsigned long buttonDownTime[NUMBUTTONS]; // Zeitpunkt FIRSTDOWN
 int b_counter = 0;
-
-// PITMASTER
-int pit_manuell = 0;
-int16_t pit_y = 0;
-int16_t pit_pause = 3000;       // Regler Intervall
+byte menu_count = 0;                      // Counter for Menu
+byte inMenu = 1;
+enum {MAINMENU, TEMPSUB, TEMPKONTEXT, PITSUB, SYSTEMSUB};
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -194,7 +210,7 @@ void set_serial();                                // Initialize Serial
 void set_button();                                // Initialize Buttons
 static inline boolean button_input();             // Dectect Button Input
 static inline void button_event();                // Response Button Status
-void controlAlarm(boolean action);                // Control Hardware Alarm      
+void controlAlarm(bool action);                              // Control Hardware Alarm      
 
 // SENSORS
 byte set_sensor();                                // Initialize Sensors
@@ -216,28 +232,19 @@ SSD1306 display(OLED_ADRESS, SDA, SCL);
 OLEDDisplayUi ui     ( &display );
 
 // FRAMES
-void drawConnect(int count, int active);          // Frame while system start
+void drawConnect();                       // Frane while System Start
 void drawLoading();                               // Frame while Loading
 void drawQuestion();                    // Frame while Question
-void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state);
-void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawlimito(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawlimitu(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawtyp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawalarm(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawwifi(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
+void drawMenu();
 void set_OLED();                                  // Configuration OLEDDisplay
 
 // FILESYSTEM (FS)
-//bool loadConfig();                                // Load Config.json at system start
-//bool setConfig();                                 // Reset config.json to default
-//bool changeConfig();                              // Set config.json after Change
-//bool loadWifiSettings();                          // Load wifi.json at system start
-//bool setWifiSettings();                           // Reset config.json to default
-//bool addWifiSettings();                           // Add Wifi Settings to config.json 
+bool loadfile(const char* filename, File& configFile);
+bool savefile(const char* filename, File& configFile);
+bool checkjson(JsonVariant json, const char* filename);
 bool loadconfig(byte count);
-bool setconfig(byte count, const char* data1, const char* data2);
-bool modifyconfig(byte count, const char* data1, const char* data2);
+bool setconfig(byte count, const char* data[2]);
+bool modifyconfig(byte count, const char* data[12]);
 void start_fs();                                  // Initialize FileSystem
 void read_serial(char *buffer);                   // React to Serial Input 
 int readline(int readch, char *buffer, int len);  // Put together Serial Input
@@ -342,7 +349,7 @@ static inline void button_event() {
       
       switch (question) {
         case CONFIGRESET:
-          setconfig(eCHANNEL,"","");
+          setconfig(eCHANNEL,{});
           loadconfig(eCHANNEL);
           set_Channels();
           break;
@@ -351,7 +358,7 @@ static inline void button_event() {
           if (temp_unit == "C") temp_unit = "F";          // Change Unit
           else temp_unit = "C";
           transform_limits();                             // Transform Limits
-          modifyconfig(eCHANNEL,"","");                   // Save Config
+          modifyconfig(eCHANNEL,{});                   // Save Config
           get_Temperature();                              // Update Temperature
           #ifdef DEBUG
             Serial.println("[INFO]\tEinheitenwechsel");
@@ -394,12 +401,47 @@ static inline void button_event() {
     return;
   }
 
+  // Button 2 gedrückt während Menu -> Menupunkt bestätigen
+  if (buttonResult[1]==SHORTCLICK && inMenu == MAINMENU) {
+
+    displayblocked = false;
+    switch (menu_count) {
+      
+      case 0:
+        b_counter = 0;
+        inMenu = TEMPSUB;
+        break;
+
+      case 1:
+        b_counter = 5;
+        inMenu = PITSUB;
+        break;
+
+      case 2:
+        b_counter = 9;
+        inMenu = SYSTEMSUB;
+        break;
+    }
+
+    ui.switchToFrame(b_counter);
+    return;
+  }
+
+  // Button 1 gedrückt während Menu -> Menupunkte durchgehen
+  if (buttonResult[0]==SHORTCLICK && inMenu == MAINMENU) {
+    if (menu_count < 2) menu_count++;
+    else menu_count = 0;
+    drawMenu();
+    return;
+  }
   
   // Button 1 Longclick während man sich im Hauptmenu befindet
-  // -> Zur Pitmaster-Übersicht wechseln
   if (buttonResult[0]==LONGCLICK && ui.getCurrentFrameCount()==0) {
     // Falls Pitmaster nicht aktiv -> erstmal aktivieren
     // Code fehlt noch
+    displayblocked = true;
+    drawMenu();
+    inMenu = MAINMENU;
 
     /*
     if (isEco) {
@@ -414,6 +456,7 @@ static inline void button_event() {
     return;
   }
 
+  /*
   // Button 2 Doppelclick während man sich im Hauptmenu befindet
   // -> Einheit wechseln
   if (buttonResult[1]==DOUBLECLICK && ui.getCurrentFrameCount()==0) {
@@ -422,6 +465,7 @@ static inline void button_event() {
     drawQuestion();
     return;
   }
+  */
   
   
   // Button 1 gedrückt während man sich im Hauptmenü befindet
@@ -475,12 +519,12 @@ static inline void button_event() {
       switch (ui.getCurrentFrameCount()) {
         case 1:  // Upper Limit
           tempor = ch[current_ch].max +(0.1*mupi);
-          if (tempor > 95.0) tempor = 20.0;
+          if (tempor > 200.0) tempor = 50.0;
           ch[current_ch].max = tempor;
           break;
         case 2:  // Lower Limit
           tempor = ch[current_ch].min +(0.1*mupi);
-          if (tempor > 95.0) tempor = 10.0;
+          if (tempor > 150.0) tempor = 10.0;
           ch[current_ch].min = tempor;
           break;
         case 3:  // Typ
@@ -491,6 +535,37 @@ static inline void button_event() {
         case 4:  // Alarm
           ch[current_ch].alarm = !ch[current_ch].alarm;
           break;
+        case 5:  // Pitmaster Typ
+          if (pitmaster.typ < pidsize-1) pitmaster.typ++;
+          else pitmaster.typ = 0;
+          break;
+        case 6:  // Pitmaster Channel
+          if (pitmaster.channel < CHANNELS-1) pitmaster.channel++;
+          else pitmaster.channel = 0;
+          break;
+        case 7:  // Pitmaster Set
+          tempor = pitmaster.set +(0.1*mupi);
+          if (tempor > ch[pitmaster.channel].max) tempor = ch[pitmaster.channel].min;
+          pitmaster.set = tempor;
+          break;
+        case 8:  // Pitmaster Active
+          pitmaster.active = !pitmaster.active;
+          break;
+        case 12:  // Unit Change
+          if (temp_unit == "C") temp_unit = "F";          // Change Unit
+          else temp_unit = "C";
+          transform_limits();                             // Transform Limits
+          modifyconfig(eCHANNEL,{});                   // Save Config
+          get_Temperature();                              // Update Temperature
+          #ifdef DEBUG
+            Serial.println("[INFO]\tEinheitenwechsel");
+          #endif
+          break;
+        case 13:  // Hardware Alarm
+          doAlarm = !doAlarm;
+         
+        break;
+          
         default:
           break; 
       }
@@ -501,16 +576,44 @@ static inline void button_event() {
   if (buttonResult[1]==SHORTCLICK) {
     
     b_counter = ui.getCurrentFrameCount();
+
+    switch (inMenu) {
+
+      case TEMPSUB:
+        if (b_counter < 4) b_counter++;
+        else {
+          b_counter = 0;
+          modifyconfig(eCHANNEL,{});             // Am Ende des Kontextmenu Config speichern
+        }
+        ui.switchToFrame(b_counter);
+        break;
+
+      case PITSUB:
+        if (b_counter < 8) {
+          b_counter++;
+          ui.switchToFrame(b_counter);
+        }
+        else {
+          displayblocked = true;
+          drawMenu();
+          inMenu = MAINMENU;
+        }
+        break;
+
+      case SYSTEMSUB:
+        if (b_counter < 14) {
+          b_counter++;
+          ui.switchToFrame(b_counter);
+        }
+        else {
+          displayblocked = true;
+          drawMenu();
+          inMenu = MAINMENU;
+        }
+        break;
     
-    if (b_counter < 4) { 
-      b_counter++; 
-    }
-    else {
-      b_counter = 0;
-      modifyconfig(eCHANNEL,"","");             // Am Ende des Kontextmenu Config speichern
     }
     
-    ui.switchToFrame(b_counter);
   }
 
 }
@@ -532,19 +635,6 @@ String formatBytes(size_t bytes){
 
 
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//format bytes
-void controlAlarm(boolean action){
 
-  if (action) {
-    analogWrite(MOSI,512);
-    displayblocked = true;
-    question = HARDWAREALARM;
-    drawQuestion();
-  }
-  else {
-    analogWrite(MOSI,0);
-  }  
-}
 
 

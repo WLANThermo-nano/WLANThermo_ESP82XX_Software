@@ -66,14 +66,14 @@ void set_wifi() {
   for (int i = 0; i < lenwifi; i++) {
     wifiMulti.addAP(wifissid[i].c_str(), wifipass[i].c_str());
   }
-
+  
+  drawConnect();
   int counter = 0;
   while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
     delay(500);
     #ifdef DEBUG
       Serial.print(".");
     #endif
-    drawConnect(3, counter % 3);
     counter++;
   }
 
