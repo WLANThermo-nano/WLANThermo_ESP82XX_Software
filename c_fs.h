@@ -25,13 +25,10 @@
 
  // HELP: https://github.com/bblanchon/ArduinoJson
 
-#include <FS.h>
-#include <ArduinoJson.h>
-
-
 #define CHANNEL_FILE "/channel.json"
 #define WIFI_FILE "/wifi.json"
 #define THING_FILE "/thing.json"
+#define PIT_FILE "/pit.json"
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -77,24 +74,8 @@ bool savefile(const char* filename, File& configFile) {
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Check JSON OBJECT
-bool checkjsonobject(JsonObject& json, const char* filename) {
-  
-  if (!json.success()) {
-    #ifdef DEBUG
-    Serial.print("Failed to parse: ");
-    Serial.println(filename);
-    #endif
-    return false;
-  }
-  
-  return true;
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Check JSON ARRAY
-bool checkjsonarray(JsonArray& json, const char* filename) {
+// Check JSON
+bool checkjson(JsonVariant json, const char* filename) {
   
   if (!json.success()) {
     #ifdef DEBUG
@@ -112,7 +93,8 @@ bool checkjsonarray(JsonArray& json, const char* filename) {
 // Load xxx.json at system start
 bool loadconfig(byte count) {
 
-  DynamicJsonBuffer jsonBuffer;
+  const size_t bufferSize = 6*JSON_ARRAY_SIZE(CHANNELS) + JSON_OBJECT_SIZE(9) + 320;
+  DynamicJsonBuffer jsonBuffer(bufferSize);
   File configFile;
 
   switch (count) {
@@ -128,7 +110,7 @@ bool loadconfig(byte count) {
       readEE(buf.get(),500, 400);
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
-      if (!checkjsonobject(json,CHANNEL_FILE)) return false;
+      if (!checkjson(json,CHANNEL_FILE)) return false;
       if (json["VERSION"] != CHANNELJSONVERSION) return false;
   
       const char* author = json["AUTHOR"];
@@ -151,7 +133,7 @@ bool loadconfig(byte count) {
       readEE(buf.get(),300, 0);
 
       JsonArray& _wifi = jsonBuffer.parseArray(buf.get());
-      if (!checkjsonarray(_wifi,WIFI_FILE)) return false;
+      if (!checkjson(_wifi,WIFI_FILE)) return false;
       
       // Wie viele WLAN Schlüssel sind vorhanden
       for (JsonArray::iterator it=_wifi.begin(); it!=_wifi.end(); ++it) {  
@@ -168,13 +150,43 @@ bool loadconfig(byte count) {
       readEE(buf.get(),100, 300);
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
-      if (!checkjsonobject(json,THING_FILE)) return false;
+      if (!checkjson(json,THING_FILE)) return false;
       THINGSPEAK_KEY = json["KEY"].asString();
     }
     break;
 
+    case 3:     // PITMASTER
+    {
+      std::unique_ptr<char[]> buf(new char[600]);
+      readEE(buf.get(),600, 900);
+
+      JsonArray& _pid = jsonBuffer.parseArray(buf.get());
+      if (!checkjson(_pid,PIT_FILE)) return false;
+
+      pidsize = 0;
+      
+      // Wie viele Pitmaster sind vorhanden
+      for (JsonArray::iterator it=_pid.begin(); it!=_pid.end(); ++it) {  
+        pid[pidsize].name = _pid[pidsize]["name"].asString();
+        pid[pidsize].Kp = _pid[pidsize]["Kp"];  
+        pid[pidsize].Ki = _pid[pidsize]["Ki"];    
+        pid[pidsize].Kd = _pid[pidsize]["Kd"];                     
+        pid[pidsize].Kp_a = _pid[pidsize]["Kp_a"];                   
+        pid[pidsize].Ki_a = _pid[pidsize]["Ki_a"];                   
+        pid[pidsize].Kd_a = _pid[pidsize]["Kd_a"];                   
+        pid[pidsize].Ki_min = _pid[pidsize]["Ki_min"];                   
+        pid[pidsize].Ki_max = _pid[pidsize]["Ki_max"];                  
+        pid[pidsize].pswitch = _pid[pidsize]["switch"];               
+        pid[pidsize].pause = _pid[pidsize]["pause"];                   
+        pid[pidsize].freq = _pid[pidsize]["freq"];
+        pid[pidsize].esum = 0;             
+        pid[pidsize].elast = 0;       
+        pidsize++;
+      }
+    }
+    break;
     
-    //case 3:     // PRESETS
+    //case 4:     // PRESETS
     //break;
   
     default:
@@ -195,7 +207,7 @@ bool loadconfig(byte count) {
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Set xxx.json
-bool setconfig(byte count, const char* data1, const char* data2) {
+bool setconfig(byte count, const char* data[2]) {
   
   DynamicJsonBuffer jsonBuffer;
   File configFile;
@@ -255,7 +267,7 @@ bool setconfig(byte count, const char* data1, const char* data2) {
     case 2:         //THING
     {
       JsonObject& json = jsonBuffer.createObject();
-      THINGSPEAK_KEY = data1;
+      THINGSPEAK_KEY = data[0];
       json["KEY"] = THINGSPEAK_KEY;
       
       size_t size = json.measureLength() + 1;
@@ -273,7 +285,45 @@ bool setconfig(byte count, const char* data1, const char* data2) {
     }
     break;
 
-    case 3:         //PRESETS
+    case 3:        // PITMASTER
+    {
+      JsonArray& json = jsonBuffer.createArray();
+      JsonObject& _pid = json.createNestedObject();
+
+      // Default Pitmaster
+      pid[0] = {"SSR", 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 3000, 0, 0, 0};
+      pidsize = 0;  // Reset counter
+      
+      _pid["name"]    = pid[pidsize].name;
+      _pid["Kp"]      = pid[pidsize].Kp;  
+      _pid["Ki"]      = pid[pidsize].Ki;    
+      _pid["Kd"]      = pid[pidsize].Kd;                   
+      _pid["Kp_a"]    = pid[pidsize].Kp_a;               
+      _pid["Ki_a"]    = pid[pidsize].Ki_a;                  
+      _pid["Kd_a"]    = pid[pidsize].Kd_a;             
+      _pid["Ki_min"]  = pid[pidsize].Ki_min;             
+      _pid["Ki_max"]  = pid[pidsize].Ki_max;             
+      _pid["switch"]  = pid[pidsize].pswitch;           
+      _pid["pause"]   = pid[pidsize].pause;                
+      _pid["freq"]    = pid[pidsize].freq;
+      pidsize++;
+      
+      size_t size = json.measureLength() + 1;
+      if (size > 600) {
+        #ifdef DEBUG
+        Serial.println("[INFO]\tZu viele PITMASTER Daten!");
+        #endif
+        return false;
+      } else {
+        clearEE(600,900);  // Bereich reinigen
+        static char buffer[600];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, 900);
+      }
+    }
+    break;
+
+    case 4:         //PRESETS
     {
       
     }
@@ -290,7 +340,7 @@ bool setconfig(byte count, const char* data1, const char* data2) {
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Modify xxx.json
-bool modifyconfig(byte count, const char* data1, const char* data2) {
+bool modifyconfig(byte count, const char* data[12]) {
   
   DynamicJsonBuffer jsonBuffer;
   File configFile;
@@ -308,7 +358,7 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
       readEE(buf.get(),500, 400);
       
       JsonObject& alt = jsonBuffer.parseObject(buf.get());
-      if (!checkjsonobject(alt,CHANNEL_FILE)) return false;
+      if (!checkjson(alt,CHANNEL_FILE)) return false;
       
       // Neue Daten erzeugen
       JsonObject& json = jsonBuffer.createObject();
@@ -357,23 +407,23 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
       readEE(buf.get(), 300, 0);
 
       JsonArray& json = jsonBuffer.parseArray(buf.get());
-      if (!checkjsonarray(json,WIFI_FILE)) {
-        setconfig(eWIFI,"","");
+      if (!checkjson(json,WIFI_FILE)) {
+        setconfig(eWIFI,{});
         return false;
       }
 
       // Neue Daten eintragen
       JsonObject& _wifi = json.createNestedObject();
 
-      _wifi["SSID"] = data1;
-      _wifi["PASS"] = data2;
-
+      _wifi["SSID"] = data[0];
+      _wifi["PASS"] = data[1];
+      
       // Speichern
       size_t size = json.measureLength() + 1;
       
       if (size > 300) {
         #ifdef DEBUG
-        Serial.println("[INFO]\tZu viele WLAN Daten!");
+        Serial.println("[INFO]\tZu viele WIFI Daten!");
         #endif
         return false;
       } else {
@@ -385,6 +435,50 @@ bool modifyconfig(byte count, const char* data1, const char* data2) {
     break;
     
     case 2:         //THING
+    break;
+
+    case 3:         // PITMASTER
+    {
+      // Alte Daten auslesen
+      std::unique_ptr<char[]> buf(new char[600]);
+      readEE(buf.get(), 600, 900);
+
+      JsonArray& json = jsonBuffer.parseArray(buf.get());
+      if (!checkjson(json,PIT_FILE)) {
+        setconfig(ePIT,{});
+        return false;
+      }
+
+      // Neue Daten eintragen
+      JsonObject& _pid = json.createNestedObject();
+      
+      _pid["name"]    = pid[pidsize].name;
+      _pid["Kp"]      = pid[pidsize].Kp;  
+      _pid["Ki"]      = pid[pidsize].Ki;    
+      _pid["Kd"]      = pid[pidsize].Kd;                   
+      _pid["Kp_a"]    = pid[pidsize].Kp_a;               
+      _pid["Ki_a"]    = pid[pidsize].Ki_a;                  
+      _pid["Kd_a"]    = pid[pidsize].Kd_a;             
+      _pid["Ki_min"]  = pid[pidsize].Ki_min;             
+      _pid["Ki_max"]  = pid[pidsize].Ki_max;             
+      _pid["switch"]  = pid[pidsize].pswitch;           
+      _pid["pause"]   = pid[pidsize].pause;                
+      _pid["freq"]    = pid[pidsize].freq;
+    
+      // Speichern
+      size_t size = json.measureLength() + 1;
+      
+      if (size > 600) {
+        #ifdef DEBUG
+        Serial.println("[INFO]\tZu viele PITMASTER Daten!");
+        #endif
+        return false;
+      } else {
+        static char buffer[600];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, 900); 
+      } 
+    }
     break;
 
     default:
@@ -428,7 +522,7 @@ void start_fs() {
     #ifdef DEBUG
       Serial.println("[INFO]\tFailed to load channel config");
     #endif
-    setconfig(eCHANNEL,"","");  // Speicherplatz vorbereiten
+    setconfig(eCHANNEL,{});  // Speicherplatz vorbereiten
     ESP.restart();
   } else {
     #ifdef DEBUG
@@ -482,7 +576,7 @@ void start_fs() {
     #ifdef DEBUG
       Serial.println("[INFO]\tFailed to load wifi config");
     #endif
-    setconfig(eWIFI,"","");  // Speicherplatz vorbereiten
+    setconfig(eWIFI,{});  // Speicherplatz vorbereiten
   } else {
     #ifdef DEBUG
       Serial.println("[INFO]\tWifi config loaded");
@@ -498,6 +592,18 @@ void start_fs() {
   } else {
     #ifdef DEBUG
       Serial.println("[INFO]\tThingspeak config loaded");
+    #endif
+  }
+
+  // PITMASTER
+  if (!loadconfig(ePIT)) {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tFailed to load pitmaster config");
+    #endif
+    setconfig(ePIT,{});  // Reset pitmaster config
+  } else {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tPitmaster config loaded");
     #endif
   }
 }
@@ -526,8 +632,8 @@ void read_serial(char *buffer) {
     return;
   }
   else if (strcmp(buffer, "data")==0) {
-    static char sendbuffer[1000];
-    buildDatajson(sendbuffer, 1000);
+    static char sendbuffer[1200];
+    buildDatajson(sendbuffer, 1200);
     Serial.println(sendbuffer);
     return;
   }
@@ -543,7 +649,7 @@ void read_serial(char *buffer) {
   Serial.println("<");
 
   // Wenn nicht help dann json-Befehl auslesen
-  StaticJsonBuffer<200> jsonBuffer;
+  DynamicJsonBuffer jsonBuffer;
   JsonObject& json = jsonBuffer.parseObject(buffer);
   
   if (!json.success()) {
@@ -556,8 +662,11 @@ void read_serial(char *buffer) {
 
   // ADD WIFI SETTINGS
   if (strcmp(command, "addWIFI")==0) {
+    const char* data[2];
+    data[0] = json["data"][0];
+    data[1] = json["data"][1];
 
-    if (!modifyconfig(eWIFI,json["data"][0], json["data"][1])) {
+    if (!modifyconfig(eWIFI,data)) {
       #ifdef DEBUG
         Serial.println("[INFO]\tFailed to save wifi config");
       #endif
@@ -571,7 +680,7 @@ void read_serial(char *buffer) {
   // SET WIFI SETTINGS
   else if (strcmp(command, "setWIFI")==0) {
         
-    if (!setconfig(eWIFI,"","")) {  
+    if (setconfig(eWIFI,{})) {  
     #ifdef DEBUG
       Serial.println("[INFO]\tReset wifi config");
     #endif
@@ -586,9 +695,10 @@ void read_serial(char *buffer) {
   // SET THINGSPEAK KEY
   else if (strcmp(command, "setTS")==0) {
 
-    //const char* key = json["data"][0];
+    const char* data[1]; 
+    data[0] = json["data"][0];
     
-    if (!setconfig(eTHING,json["data"][0],"")) {
+    if (!setconfig(eTHING,data)) {
       #ifdef DEBUG
         Serial.println("[INFO]\tFailed to save Thingspeak config");
       #endif
@@ -620,6 +730,53 @@ void read_serial(char *buffer) {
   // GET FIRMWAREVERSION
   else if (strcmp(command, "getVersion")==0) {
     Serial.println(FIRMWAREVERSION);
+  }
+
+  // ADD PITMASTER PID
+  else if (strcmp(command, "addPID")==0) {
+
+    if (pidsize < PITMASTERSIZE) {
+
+      pid[pidsize].name =    json["data"][0].asString();
+      pid[pidsize].Kp =      json["data"][1];  
+      pid[pidsize].Ki =      json["data"][2];    
+      pid[pidsize].Kd =      json["data"][3];                     
+      pid[pidsize].Kp_a =    json["data"][4];                   
+      pid[pidsize].Ki_a =    json["data"][5];                   
+      pid[pidsize].Kd_a =    json["data"][6];                   
+      pid[pidsize].Ki_min =  json["data"][7];                   
+      pid[pidsize].Ki_max =  json["data"][8];                  
+      pid[pidsize].pswitch = json["data"][9];               
+      pid[pidsize].pause =   json["data"][10];                   
+      pid[pidsize].freq =    json["data"][11];
+      pid[pidsize].esum =    0;             
+      pid[pidsize].elast =   0;    
+
+      if (!modifyconfig(ePIT,{})) {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tFailed to save pitmaster config");
+        #endif
+      } else {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tPitmaster config saved");
+        #endif
+        pidsize++;   // Erhöhung von pidsize nur wenn auch gespeichert wurde
+      }
+    } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tTo many pitmaster");
+      #endif
+    }
+  }
+
+  // SET PITMASTER PID
+  else if (strcmp(command, "setPID")==0) {
+        
+    if (setconfig(ePIT,{})) {  
+      #ifdef DEBUG
+        Serial.println("[INFO]\tReset pitmaster config");
+      #endif
+    } 
   }
 
   else Serial.println("Unkwown command");     // Befehl nicht erkannt
