@@ -89,10 +89,6 @@ void drawQuestion() {
         display.drawString(32,3,"Reset Config?");
         break;
 
-      case CHANGEUNIT:
-        display.drawString(35,3,"Change Unit?");
-        break;
-
       case HARDWAREALARM:
         display.drawString(35,3,"ALARM! Stop?");
         b1 = false;
@@ -230,77 +226,95 @@ void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
 }
 
 void drawlimito(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x+19,18+y,20,36,xbmtemp);                            // Symbol
-  display->fillRect(x+27,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  if (flashinwork)    {
+    display->drawXbm(x+19,18+y,20,36,xbmtemp);         // Symbol
+    display->fillRect(x+27,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  }
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(19+x, 20+y, String(current_ch+1));                // Channel
-  display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ " °" + temp_unit);  // Upper Limit
+  if (inWork) display->drawString(104+x, 19+y, String(tempor,1)+ " °" + temp_unit);
+  else display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ " °" + temp_unit);  // Upper Limit
   display->drawLine(33+x,25+y,50,25);
 }
 
 
 void drawlimitu(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  if (flashinwork)    {
   display->drawXbm(x+19,18+y,20,36,xbmtemp);                            // Symbol
   display->fillRect(x+27,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  }
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(19+x, 20+y, String(current_ch+1));                // Channel
-  display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ " °" + temp_unit);  // Lower Limit
+  if (inWork) display->drawString(104+x, 34+y, String(tempor,1)+ " °" + temp_unit);
+  else display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ " °" + temp_unit);  // Lower Limit
   display->drawLine(33+x,39+y,50,39);
 }
 
 void drawtyp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  if (flashinwork)    {
   display->drawXbm(x+19,18+y,20,36,xbmtemp);                            // Symbol
   display->fillRect(x+27,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  }
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(19+x, 20+y, String(current_ch+1));                // Channel
   display->drawString(114+x, 20+y, "TYP:");                         
-  display->drawString(114+x, 36+y, ttypname[ch[current_ch].typ]);            // Typ
+  if (inWork) display->drawString(114+x, 36+y, ttypname[(int) tempor]);
+  else display->drawString(114+x, 36+y, ttypname[ch[current_ch].typ]);            // Typ
 }
 
 void drawalarm(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x+19,18+y,20,36,xbmtemp);                            // Symbol
-  display->fillRect(x+27,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  //if (flashinwork) {
+    display->drawXbm(x+19,18+y,20,36,xbmtemp);                            // Symbol
+    display->fillRect(x+27,y+43-ch[current_ch].match,4,ch[current_ch].match);   // Current level
+  //}
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(19+x, 20+y, String(current_ch+1));                // Channel
   display->drawString(114+x, 20+y, "ALARM:");           
-  if (ch[current_ch].alarm) display->drawString(114+x, 36+y, "YES");
-  else display->drawString(114+x, 36+y, "NO");                        // Alarm
+  if (flashinwork) {
+    if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
+    else if (!inWork && ch[current_ch].alarm) display->drawString(114+x, 36+y, "YES");
+    else display->drawString(114+x, 36+y, "NO");   // Alarm
+  }
 }
 
 void drawpit1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);                            // Symbol
+  if (flashinwork) display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);           // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(114+x, 20+y, "PITMASTER:");           
-  display->drawString(114+x, 36+y, pid[pitmaster.typ].name);
+  if (inWork) display->drawString(114+x, 36+y, pid[(int) tempor].name);
+  else display->drawString(114+x, 36+y, pid[pitmaster.typ].name);
 }
 
 void drawpit2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);                            // Symbol
+  if (flashinwork)  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);          // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(114+x, 20+y, "CHANNEL:");           
-  display->drawString(114+x, 36+y, String(pitmaster.channel+1));
+  if (inWork) display->drawString(114+x, 36+y, String((int)tempor +1));
+  else  display->drawString(114+x, 36+y, String(pitmaster.channel+1));
 }
 
 void drawpit3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);                            // Symbol
+  if (flashinwork)  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);          // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(114+x, 20+y, "SET:");           
-  display->drawString(114+x, 36+y, String(pitmaster.set,1)+ " °" + temp_unit);
+  if (inWork) display->drawString(114+x, 36+y, String(tempor,1)+ " °" + temp_unit);
+  else  display->drawString(114+x, 36+y, String(pitmaster.set,1)+ " °" + temp_unit);
 }
 
 void drawpit4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);                            // Symbol
+  if (flashinwork)   display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);         // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(114+x, 20+y, "ACTIVE:");           
-  if (pitmaster.active) display->drawString(114+x, 36+y, "YES");
+  if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
+  else if (!inWork && pitmaster.active) display->drawString(114+x, 36+y, "YES");
   else display->drawString(114+x, 36+y, "NO");  
 }
 
@@ -344,8 +358,7 @@ void drawsys3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
 }
 
 void drawsys4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-
-  display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
+  if (flashinwork)   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(114+x, 20+y, "UNIT:");
@@ -353,24 +366,36 @@ void drawsys4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
 }
 
 void drawsys5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-
-  display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
+  if (flashinwork)   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(120+x, 20+y, "HW-ALARM:");
-  if (doAlarm) display->drawString(114+x, 36+y, "YES");
+  display->drawString(114+x, 20+y, "HW-ALARM:");
+  if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
+  else if (!inWork && doAlarm) display->drawString(114+x, 36+y, "YES");
   else display->drawString(114+x, 36+y, "NO");
 }
 
 void drawsys6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-
+  
   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   
   // Draw Version
-  display->drawString(120+x, 20+y, "FIRMWARE:");
-  display->drawString(120,36+y,FIRMWAREVERSION);
+  display->drawString(114+x, 20+y, "FIRMWARE:");
+  display->drawString(114+x,36+y,FIRMWAREVERSION);
+}
+
+void drawsys7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  if (flashinwork)   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->setFont(ArialMT_Plain_10);
+  
+  // Draw Fastmode
+  display->drawString(114+x, 20+y, "FASTMODE:");
+  if (inWork && tempor) display->drawString(114+x, 36+y, "NO");
+  else if (!inWork && INACTIVESHOW) display->drawString(114+x, 36+y, "NO");
+  else display->drawString(114+x, 36+y, "YES");
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -380,10 +405,11 @@ void drawsys6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
 // frames are the single views that slide from right to left
 FrameCallback frames[] = { drawTemp, drawlimito, drawlimitu, drawtyp, drawalarm, 
                            drawpit1, drawpit2, drawpit3, drawpit4, 
-                           drawsys1, drawsys2, drawsys3, drawsys4, drawsys5, drawsys6};  // drawFrame3
+                           drawsys1, drawsys2, drawsys3, drawsys4, drawsys5, 
+                           drawsys6, drawsys7};  // drawFrame3
 
 // how many frames are there?
-int frameCount = 15;   // 3
+// int frameCount = 15;           // siehe c_init.h 
 
 // Overlays are statically drawn on top of a frame eg. a clock
 OverlayCallback overlays[] = { gBattery };
@@ -422,7 +448,7 @@ void set_OLED() {
   ui.setOverlays(overlays, overlaysCount);
 
   ui.setTimePerFrame(10000);
-
+  ui.setTimePerTransition(300);
   ui.disableAutoTransition();
   ui.disableIndicator();
 

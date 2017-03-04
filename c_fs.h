@@ -236,8 +236,8 @@ bool setconfig(byte count, const char* data[2]) {
           _min.add(68.0,1);
           _max.add(86.0,1);
         } else {
-          _min.add(20.0,1);
-          _max.add(30.0,1);
+          _min.add(ULIMITMIN,1);
+          _max.add(OLIMITMIN,1);
         }
         _alarm.add(false); 
         _color.add(colors[i]);

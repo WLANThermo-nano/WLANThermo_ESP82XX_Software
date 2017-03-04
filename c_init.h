@@ -55,6 +55,10 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define LIMITUNTERGRENZE -20           // MINIMUM LIMIT
 #define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
 #define MAX1161x_ADDRESS 0x33          // MAX11615
+#define ULIMITMIN 10.0
+#define ULIMITMAX 150.0
+#define OLIMITMIN 20.0
+#define OLIMITMAX 200.0
 
 // BATTERY
 #define BATTMIN 3600                  // MINIMUM BATTERY VOLTAGE in mV
@@ -70,6 +74,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define INTERVALBATTERYMODE 1000
 #define INTERVALSENSOR 1000
 #define INTERVALCOMMUNICATION 30000
+#define FLASHINWORK 500
 
 // BUS
 #define SDA 0
@@ -193,10 +198,14 @@ byte buttonState[NUMBUTTONS];     // Aktueller Status des Buttons HIGH/LOW
 enum {NONE, FIRSTDOWN, FIRSTUP, SHORTCLICK, DOUBLECLICK, LONGCLICK};
 byte buttonResult[NUMBUTTONS];    // Aktueller Klickstatus der Buttons NONE/SHORTCLICK/LONGCLICK
 unsigned long buttonDownTime[NUMBUTTONS]; // Zeitpunkt FIRSTDOWN
-int b_counter = 0;
 byte menu_count = 0;                      // Counter for Menu
-byte inMenu = 1;
-enum {MAINMENU, TEMPSUB, TEMPKONTEXT, PITSUB, SYSTEMSUB};
+byte inMenu = 0;
+enum {TEMPSUB, PITSUB, SYSTEMSUB, MAINMENU, TEMPKONTEXT};
+bool inWork = 0;
+int framepos[3] = {0, 5, 9};
+int frameCount = 16;
+bool flashinwork = true;
+float tempor;                       // Zwischenspeichervariable
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -336,33 +345,119 @@ static inline boolean button_input() {
   return true;
 }
 
-bool isEco = false;
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Response Button Status
 static inline void button_event() {
 
   static unsigned long lastMupiTime;    // Zeitpunkt letztes schnelles Zeppen
+  int mupi = 0;
+  bool event[3] = {0, 0, 0};
+  int b_counter;
   
-  // Frage wurde mit YES bestätigt
-  if ((buttonResult[0]==SHORTCLICK) && question > 0) {
+  /*
+  // Reset der Config erwuenscht
+  if (buttonResult[1]==DOUBLECLICK && inMenu == TEMPSUB) {
+      displayblocked = true;
+      question = CONFIGRESET;
+      drawQuestion();
+      return;
+  }
+
+  // Anzeigemodus wechseln
+  if (buttonResult[0]==DOUBLECLICK && inMenu == TEMPSUB) {
+    INACTIVESHOW = !INACTIVESHOW;
+
+    #ifdef DEBUG
+      Serial.println("[INFO]\tAnzeigewechsel");
+    #endif
+    return;
+  }
+  */
+
+
+  // Button rechts Longclick: Ins Hauptmenu wechseln
+  if (buttonResult[0] == LONGCLICK) {
+
+    switch (inMenu) {
       
+      case TEMPSUB:                     // Main aufrufen
+        displayblocked = true;
+        drawMenu();
+        inMenu = MAINMENU;
+        return;
+    }
+  }
+
+  // Bei LONGCLICK rechts großer Zahlensprung jedoch gebremst
+  if (buttonResult[0] == FIRSTDOWN && (millis()-buttonDownTime[0]>400)) {
+    
+    if (inWork) {
+      mupi = 10;
+      if (millis()-lastMupiTime > 200) {
+        event[0] = 1;
+        lastMupiTime = millis();
+      }
+    }
+  }
+
+
+  
+  // Button links Longclick: Wechsel ins Submenu oder Bearbeitung aktivieren/deaktivieren
+  if (buttonResult[1] == LONGCLICK) {
+
+    if (inWork) {
+      inWork = false;                     // Bearbeitung verlassen
+      flashinwork = true;                 // Dauerhafte Symbolanzeige
+      event[0] = 1;
+      event[1] = 0;
+      event[2] = 1;                       // Zwischenwert setzen
+    } else {
+
+      switch (inMenu) {
+      
+        case TEMPSUB:                     // Temperaturkontextmenu aufgerufen
+          inMenu = TEMPKONTEXT;
+          ui.switchToFrame(framepos[0]+1);
+          return;
+
+        case TEMPKONTEXT:                 // Temperaturwerte bearbeiten
+          inWork = true;
+          break;
+
+        case PITSUB:                      // Pitmasterwerte bearbeiten
+          inWork = true;
+          break;
+
+        case SYSTEMSUB:                   // Systemeinstellungen bearbeiten
+          inWork = true;
+          break;
+
+        case MAINMENU:                    // Menu aufrufen
+          inMenu = menu_count;
+          displayblocked = false;
+          b_counter = framepos[menu_count];
+          ui.switchToFrame(b_counter);
+          return;
+      }
+      event[0] = 1;
+      event[1] = 1;
+      event[2] = 0;              // Zwischenwert setzen
+    }
+  }
+
+
+
+  // Button rechts Shortclick: Vorwärts / hochzählen / Frage mit Ja beantwortet
+  if (buttonResult[0] == SHORTCLICK) {
+
+    if (question > 0) {
+      // Frage wurde mit YES bestätigt
       switch (question) {
         case CONFIGRESET:
           setconfig(eCHANNEL,{});
           loadconfig(eCHANNEL);
           set_Channels();
-          break;
-
-        case CHANGEUNIT:
-          if (temp_unit == "C") temp_unit = "F";          // Change Unit
-          else temp_unit = "C";
-          transform_limits();                             // Transform Limits
-          modifyconfig(eCHANNEL,{});                   // Save Config
-          get_Temperature();                              // Update Temperature
-          #ifdef DEBUG
-            Serial.println("[INFO]\tEinheitenwechsel");
-          #endif
           break;
 
         case HARDWAREALARM:
@@ -373,249 +468,259 @@ static inline void button_event() {
       question = NO;
       displayblocked = false;
       return;
-  }
+    }
 
-  // Frage wurde verneint -> alles bleibt beim Alten
-  if ((buttonResult[1]==SHORTCLICK) && question > 0) {
+    if (inWork) {
+
+      // Bei SHORTCLICK kleiner Zahlensprung
+      mupi = 1;
+      event[0] = 1;
+      
+    } else {
+
+      b_counter = ui.getCurrentFrameCount();
+      int i = 0;
+    
+      switch (inMenu) {
+      
+        case MAINMENU:                     // Menu durchwandern
+          if (menu_count < 2) menu_count++;
+          else menu_count = 0;
+          drawMenu();
+          break;
+
+        case TEMPSUB:                     // Temperaturen durchwandern
+          if (INACTIVESHOW) {
+            current_ch++;
+            if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
+          }
+          else {
+            do {
+              current_ch++;
+              i++;
+              if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
+            } while ((ch[current_ch].temp==INACTIVEVALUE) && (i<CHANNELS)); 
+          }
+          ui.setFrameAnimation(SLIDE_LEFT);
+          ui.transitionToFrame(0);      // Refresh
+          break;
+
+        case TEMPKONTEXT:
+          if (b_counter < framepos[1]-1) b_counter++;
+          else {
+            b_counter = 0;
+            modifyconfig(eCHANNEL,{});             // Am Ende des Kontextmenu Config speichern
+            inMenu = TEMPSUB;
+          }
+          ui.switchToFrame(b_counter);
+          break;
+
+        case PITSUB:
+          if (b_counter < framepos[2]-1) {
+            b_counter++;
+            ui.switchToFrame(b_counter);
+          }
+          else {
+            displayblocked = true;
+            drawMenu();
+            inMenu = MAINMENU;
+          }
+          break;
+
+        case SYSTEMSUB:
+          if (b_counter < frameCount-1) {
+            b_counter++;
+            ui.switchToFrame(b_counter);
+          }
+          else {
+            displayblocked = true;
+            drawMenu();
+            inMenu = MAINMENU;
+          }
+          break;
+      }
+      return;
+    }
+  }
+  
+  
+  
+  // Button links gedrückt: Rückwärts / runterzählen / Frage mit Nein beantwortet
+  if (buttonResult[1] == SHORTCLICK) {
+
+    // Frage wurde verneint -> alles bleibt beim Alten
+    if (question > 0) {
       question = NO;
       displayblocked = false;
       return;
-  }
-
-  // Reset der Config erwuenscht
-  if (buttonResult[1]==LONGCLICK && ui.getCurrentFrameCount()==0) {
-      displayblocked = true;
-      question = CONFIGRESET;
-      drawQuestion();
-      return;
-  }
-
-  // Button 1 Doppelclick während man sich im Hauptmenu befindet
-  // -> Anzeigemodus wechseln
-  if (buttonResult[0]==DOUBLECLICK && ui.getCurrentFrameCount()==0) {
-    INACTIVESHOW = !INACTIVESHOW;
-
-    #ifdef DEBUG
-      Serial.println("[INFO]\tAnzeigewechsel");
-    #endif
-    return;
-  }
-
-  // Button 2 gedrückt während Menu -> Menupunkt bestätigen
-  if (buttonResult[1]==SHORTCLICK && inMenu == MAINMENU) {
-
-    displayblocked = false;
-    switch (menu_count) {
-      
-      case 0:
-        b_counter = 0;
-        inMenu = TEMPSUB;
-        break;
-
-      case 1:
-        b_counter = 5;
-        inMenu = PITSUB;
-        break;
-
-      case 2:
-        b_counter = 9;
-        inMenu = SYSTEMSUB;
-        break;
     }
 
-    ui.switchToFrame(b_counter);
-    return;
-  }
+    if (inWork) {
 
-  // Button 1 gedrückt während Menu -> Menupunkte durchgehen
-  if (buttonResult[0]==SHORTCLICK && inMenu == MAINMENU) {
-    if (menu_count < 2) menu_count++;
-    else menu_count = 0;
-    drawMenu();
-    return;
-  }
-  
-  // Button 1 Longclick während man sich im Hauptmenu befindet
-  if (buttonResult[0]==LONGCLICK && ui.getCurrentFrameCount()==0) {
-    // Falls Pitmaster nicht aktiv -> erstmal aktivieren
-    // Code fehlt noch
-    displayblocked = true;
-    drawMenu();
-    inMenu = MAINMENU;
-
-    /*
-    if (isEco) {
-      reconnect_wifi();
-      isEco = false;
+      mupi = -1;
+      event[0] = 1;
+    
     } else {
-      stop_wifi();
-      isEco = true;  
-    }
-    */
     
-    return;
-  }
-
-  /*
-  // Button 2 Doppelclick während man sich im Hauptmenu befindet
-  // -> Einheit wechseln
-  if (buttonResult[1]==DOUBLECLICK && ui.getCurrentFrameCount()==0) {
-    displayblocked = true;
-    question = CHANGEUNIT;
-    drawQuestion();
-    return;
-  }
-  */
-  
-  
-  // Button 1 gedrückt während man sich im Hauptmenü befindet
-  // -> Zum nächsten (aktiven) Kanal switchen
-  if (buttonResult[0]==SHORTCLICK && ui.getCurrentFrameCount()==0) {
-
-    b_counter = 0;
-    int i = 0;          // Endlosschleife verhindern
-
-    if (INACTIVESHOW) {
-      current_ch++;
-      if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-    }
-    else {
-      do {
-        current_ch++;
-        i++;
-        if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-      }
-      while ((ch[current_ch].temp==INACTIVEVALUE) && (i<CHANNELS)); 
-    }
-
-    ui.transitionToFrame(0);
-    return;
-  }
-
-  // Button 1 gedrückt während man im Kontextmenu ist
-  // -> Eingabe im Kontextmenu
-  if (ui.getCurrentFrameCount()!=0) {
-
-    float tempor;
-    int mupi;
-    bool event = false;
-
-    // Bei SHORTCLICK kleiner Zahlensprung
-    if (buttonResult[0]==SHORTCLICK) {
-      mupi = 1;
-      event = 1;
-    }
-
-    // Bei LONGCLICK großer Zahlensprung jedoch gebremst
-    if (buttonResult[0]==FIRSTDOWN && (millis()-buttonDownTime[0]>400)) {
-      mupi = 10;
-      if (millis()-lastMupiTime > 200) {
-        event = 1;
-        lastMupiTime = millis();
-      }
-    }
+      b_counter = ui.getCurrentFrameCount();
+      int j = CHANNELS;
     
-    if (event) {  
-      switch (ui.getCurrentFrameCount()) {
-        case 1:  // Upper Limit
-          tempor = ch[current_ch].max +(0.1*mupi);
-          if (tempor > 200.0) tempor = 50.0;
-          ch[current_ch].max = tempor;
+      switch (inMenu) {
+
+        case MAINMENU:                     
+          if (menu_count > 0) menu_count--;
+          else menu_count = 2;
+          drawMenu();
           break;
-        case 2:  // Lower Limit
-          tempor = ch[current_ch].min +(0.1*mupi);
-          if (tempor > 150.0) tempor = 10.0;
-          ch[current_ch].min = tempor;
+        
+        case TEMPSUB: 
+          if (INACTIVESHOW) {
+            current_ch--;
+            if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
+          }
+          else {
+            do {
+              current_ch--;
+              j--;
+              if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
+            } while ((ch[current_ch].temp==INACTIVEVALUE) && (j > 0)); 
+          }
+          ui.setFrameAnimation(SLIDE_RIGHT);
+          ui.transitionToFrame(0);      // Refresh
           break;
-        case 3:  // Typ
-          tempor = ch[current_ch].typ +1;
-          if (tempor > 5) tempor = 0;
-          ch[current_ch].typ = tempor;
+
+        case TEMPKONTEXT:
+          if (b_counter > framepos[0]+1) b_counter--;
+          else {
+            b_counter = 0;
+            modifyconfig(eCHANNEL,{});             // Am Ende des Kontextmenu Config speichern
+            inMenu = TEMPSUB;
+          }
+          ui.switchToFrame(b_counter);
           break;
-        case 4:  // Alarm
-          ch[current_ch].alarm = !ch[current_ch].alarm;
+
+        case PITSUB:
+          if (b_counter > framepos[1]) {
+            b_counter--;
+            ui.switchToFrame(b_counter);
+          }
+          else {
+            displayblocked = true;
+            drawMenu();
+            inMenu = MAINMENU;
+          }
           break;
-        case 5:  // Pitmaster Typ
-          if (pitmaster.typ < pidsize-1) pitmaster.typ++;
-          else pitmaster.typ = 0;
+
+        case SYSTEMSUB:
+          if (b_counter > framepos[2]) {
+            b_counter--;
+            ui.switchToFrame(b_counter);
+          }
+          else {
+            displayblocked = true;
+            drawMenu();
+            inMenu = MAINMENU;
+          }
           break;
-        case 6:  // Pitmaster Channel
-          if (pitmaster.channel < CHANNELS-1) pitmaster.channel++;
-          else pitmaster.channel = 0;
-          break;
-        case 7:  // Pitmaster Set
-          tempor = pitmaster.set +(0.1*mupi);
-          if (tempor > ch[pitmaster.channel].max) tempor = ch[pitmaster.channel].min;
-          pitmaster.set = tempor;
-          break;
-        case 8:  // Pitmaster Active
-          pitmaster.active = !pitmaster.active;
-          break;
-        case 12:  // Unit Change
-          if (temp_unit == "C") temp_unit = "F";          // Change Unit
-          else temp_unit = "C";
-          transform_limits();                             // Transform Limits
-          modifyconfig(eCHANNEL,{});                   // Save Config
-          get_Temperature();                              // Update Temperature
-          #ifdef DEBUG
-            Serial.println("[INFO]\tEinheitenwechsel");
-          #endif
-          break;
-        case 13:  // Hardware Alarm
-          doAlarm = !doAlarm;
-         
+      }
+      return;
+    }
+  }
+
+  
+    
+  if (event[0]) {  
+    switch (ui.getCurrentFrameCount()) {
+        
+      case 1:  // Upper Limit
+        if (event[1]) tempor = ch[current_ch].max;
+        tempor += (0.1*mupi);
+        if (tempor > OLIMITMAX) tempor = OLIMITMIN;
+        else if (tempor < OLIMITMIN) tempor = OLIMITMAX;
+        if (event[2]) ch[current_ch].max = tempor;
         break;
           
-        default:
-          break; 
-      }
+      case 2:  // Lower Limit
+        if (event[1]) tempor = ch[current_ch].min;
+        tempor += (0.1*mupi);
+        if (tempor > ULIMITMAX) tempor = ULIMITMIN;
+        else if (tempor < ULIMITMIN) tempor = ULIMITMAX;
+        if (event[2]) ch[current_ch].min = tempor;
+        break;
+          
+      case 3:  // Typ
+        if (mupi == 10) mupi = 1;
+        if (event[1]) tempor = ch[current_ch].typ;
+        tempor += mupi;
+        if (tempor > 5) tempor = 0;
+        else if (tempor < 0) tempor = 5;
+        if (event[2]) ch[current_ch].typ = tempor;
+        break;
+        
+      case 4:  // Alarm
+        if (event[1]) tempor = ch[current_ch].alarm;
+        if (mupi) tempor = !tempor; 
+        if (event[2]) ch[current_ch].alarm = tempor;
+        break;
+        
+      case 5:  // Pitmaster Typ
+        if (mupi == 10) mupi = 1;
+        if (event[1]) tempor = pitmaster.typ; 
+        tempor += mupi;
+        if (tempor > pidsize-1) tempor = 0;
+        else if (tempor < 0) tempor = pidsize-1;
+        if (event[2]) pitmaster.typ = tempor;
+        break;
+        
+      case 6:  // Pitmaster Channel
+        if (mupi == 10) mupi = 1;
+        if (event[1]) tempor = pitmaster.channel;
+        tempor += mupi;
+        if (tempor > CHANNELS-1) tempor = 0;
+        else if (tempor < 0) tempor = CHANNELS-1;
+        if (event[2]) pitmaster.channel = tempor;
+        break;
+        
+      case 7:  // Pitmaster Set
+        if (event[1]) tempor = pitmaster.set;
+        tempor += (0.1*mupi);
+        if (tempor > ch[pitmaster.channel].max) tempor = ch[pitmaster.channel].min;
+        else if (tempor < ch[pitmaster.channel].min) tempor = ch[pitmaster.channel].max;
+        if (event[2]) pitmaster.set = tempor;
+        break;
+        
+      case 8:  // Pitmaster Active
+        if (event[1]) tempor = pitmaster.active;
+        if (mupi) tempor = !tempor;
+        if (event[2]) pitmaster.active = tempor;
+        break;
+        
+      case 12:  // Unit Change
+        if (temp_unit == "C") temp_unit = "F";          // Change Unit
+        else temp_unit = "C";
+        transform_limits();                             // Transform Limits
+        modifyconfig(eCHANNEL,{});                      // Save Config
+        get_Temperature();                              // Update Temperature
+        #ifdef DEBUG
+          Serial.println("[INFO]\tEinheitenwechsel");
+        #endif
+        break;
+        
+      case 13:  // Hardware Alarm
+        if (event[1]) tempor = doAlarm;
+        if (mupi) tempor = !tempor;
+        if (event[2]) doAlarm = tempor;
+        break;
+      
+      case 15:  // Fastmode
+        if (event[1]) tempor = INACTIVESHOW;
+        if (mupi) tempor = !tempor;
+        if (event[2]) INACTIVESHOW = tempor;
+        break;
+     
     }
   }
   
-  // Button 2 gedrückt: -> Durchs Kontextmenu bewegen
-  if (buttonResult[1]==SHORTCLICK) {
-    
-    b_counter = ui.getCurrentFrameCount();
-
-    switch (inMenu) {
-
-      case TEMPSUB:
-        if (b_counter < 4) b_counter++;
-        else {
-          b_counter = 0;
-          modifyconfig(eCHANNEL,{});             // Am Ende des Kontextmenu Config speichern
-        }
-        ui.switchToFrame(b_counter);
-        break;
-
-      case PITSUB:
-        if (b_counter < 8) {
-          b_counter++;
-          ui.switchToFrame(b_counter);
-        }
-        else {
-          displayblocked = true;
-          drawMenu();
-          inMenu = MAINMENU;
-        }
-        break;
-
-      case SYSTEMSUB:
-        if (b_counter < 14) {
-          b_counter++;
-          ui.switchToFrame(b_counter);
-        }
-        else {
-          displayblocked = true;
-          drawMenu();
-          inMenu = MAINMENU;
-        }
-        break;
-    
-    }
-    
-  }
-
 }
 
 

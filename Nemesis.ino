@@ -29,6 +29,7 @@
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
 #define THINGSPEAK
 //#define KTYPE
+bool isEco = false;
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -53,6 +54,7 @@ unsigned long lastUpdateBatteryMode;
 unsigned long lastUpdateSensor;
 unsigned long lastUpdateCommunication;
 unsigned long lastUpdateDatalog;
+unsigned long lastFlashInWork;
 
 void setup() {  
 
@@ -249,6 +251,13 @@ void loop() {
       //ulMeasCount++;
 
       lastUpdateDatalog = millis();
+    }
+
+    if (inWork) {
+      if (millis() - lastFlashInWork > FLASHINWORK) {
+        flashinwork = !flashinwork;
+        lastFlashInWork = millis();
+      }
     }
     
     //delay(remainingTimeBudget);
