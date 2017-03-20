@@ -237,7 +237,7 @@ bool setconfig(byte count, const char* data[2]) {
           _max.add(86.0,1);
         } else {
           _min.add(ULIMITMIN,1);
-          _max.add(OLIMITMIN,1);
+          _max.add(OLIMITMAX,1);
         }
         _alarm.add(false); 
         _color.add(colors[i]);
@@ -643,6 +643,18 @@ void read_serial(char *buffer) {
     Serial.println(sendbuffer);
     return;
   }
+  else if (strcmp(buffer, "activ")==0) {
+    pitmaster.active = true;
+    pitmaster.manuel = 90;
+    return;
+  }
+  
+  else if (strcmp(buffer, "configreset")==0) {
+    setconfig(eCHANNEL,{});
+    loadconfig(eCHANNEL);
+    set_Channels();
+    return;
+  }
 
   Serial.print("You entered: >");
   Serial.print(buffer);
@@ -777,6 +789,14 @@ void read_serial(char *buffer) {
         Serial.println("[INFO]\tReset pitmaster config");
       #endif
     } 
+  }
+
+  // SET PITMASTER MANUEL
+  else if (strcmp(command, "setManuel")==0) {
+    pitmaster.active = true;
+    pitmaster.typ = 1;
+    pitmaster.manuel = json["data"][0];
+    
   }
 
   else Serial.println("Unkwown command");     // Befehl nicht erkannt
