@@ -135,7 +135,7 @@ void pitmaster_control() {
       pitmaster.value = y;
 
       if (pid[pitmaster.typ].freq)
-        analogWrite(PITMASTER1,map(y,0,100,0,4096));
+        analogWrite(PITMASTER1,map(y,0,100,0,1024));
       else {
         pitmaster.msec = map(y,0,100,0,pid[pitmaster.typ].pause); 
         if (pitmaster.msec > 0) digitalWrite(PITMASTER1, HIGH);
