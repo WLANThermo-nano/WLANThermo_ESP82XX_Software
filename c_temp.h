@@ -74,14 +74,14 @@ void get_Temperature() {
 
     float value;
   
-    if (CHANNELS > 3 && i == CHANNELS-1) {
+    //if (CHANNELS > 3 && i == CHANNELS-1) {
       // Letzter Kanal ist immer Umgebungstemperatur und der ist Kanal 7
-      value = calcT(get_adc_average(6),ch[i].typ);
-    }
+      //value = calcT(get_adc_average(6),ch[i].typ);
+    //}
     // NTC der Reihe nach auslesen
-    else  {
+    //else  {
       value = calcT(get_adc_average(i),ch[i].typ);
-    }
+    //}
  
     // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
     // KTYPE wandert dann auf Kanal 5
@@ -127,7 +127,7 @@ void set_Channels() {
   }
 
   // Wenn KTYPE muss Kanal 5 auch KTYPE sein
-  #if KTYPE
+  #ifdef KTYPE
   ch[4].typ = 6;
   #endif
 
