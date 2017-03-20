@@ -80,7 +80,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // BUS
 #define SDA 0
 #define SCL 2
-#define THERMOCOUPLE_CS 16
+#define THERMOCOUPLE_CS 12          // 12
 
 // BUTTONS
 #define btn_r  4                    // Pullup vorhanden
@@ -102,6 +102,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // PITMASTER
 #define PITMASTER1 15               // PITMASTER PIN
+//#define PITMASTER2 14             // ab Platine V7.2
 #define PITMIN 0                    // LOWER LIMIT SET
 #define PITMAX 100                  // UPPER LIMIT SET
 #define PITMASTERSIZE 5             // PITMASTER SETTINGS LIMIT
