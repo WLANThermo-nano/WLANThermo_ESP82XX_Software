@@ -37,6 +37,7 @@
 extern "C" {
 #include "user_interface.h"
 #include "spi_flash.h"
+#include "core_esp8266_si2c.c"
 }
 
 extern "C" uint32_t _SPIFFS_start;      // START ADRESS FS
@@ -79,6 +80,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // BUS
 #define SDA 0
 #define SCL 2
+#define THERMOCOUPLE_CS 16
 
 // BUTTONS
 #define btn_r  4                    // Pullup vorhanden
