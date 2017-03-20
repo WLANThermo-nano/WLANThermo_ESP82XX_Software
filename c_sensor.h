@@ -36,8 +36,9 @@ byte set_sensor() {
 
   // THERMOCOUPLE
   #ifdef KTYPE
-    // Kein CS, da nur ein SPI Teilnehmer
-    SPI.begin();  // Umprogrammieren, da so ja MOSI aktiviert wird
+    // CS notwendig, da nur bei CS HIGH neue Werte im Chip gelesen werden
+    pinMode(THERMOCOUPLE_CS, OUTPUT);
+    digitalWrite(THERMOCOUPLE_CS, HIGH);
   #endif
 
   // Piepser
@@ -92,21 +93,17 @@ int get_adc_average (byte ch) {
 // Reading Temperature KTYPE
 double get_thermocouple(void) {
 
-  int32_t dd = 0;
+  long dd = 0;
+  
+  // Communication per I2C Pins but with CS
+  digitalWrite(THERMOCOUPLE_CS, LOW);                    // START
+  for (uint8_t i=32; i; i--){
+    dd = dd <<1;
+    if (twi_read_bit())  dd |= 0x01;
+  }
+  digitalWrite(THERMOCOUPLE_CS, HIGH);                   // END
 
-  // Ersetzen durch eigenen SPI
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
-
-  dd = SPI.transfer(0);
-  dd <<= 8;
-  dd |= SPI.transfer(0);
-  dd <<= 8;
-  dd |= SPI.transfer(0);
-  dd <<= 8;
-  dd |= SPI.transfer(0);
-
-  SPI.endTransaction();
-
+  // Invalid Measurement
   if (dd & 0x7) {
     #ifdef DEBUG
     //Serial.println("No thermocouple!");
@@ -122,10 +119,9 @@ double get_thermocouple(void) {
     // Positive value, just drop the lower 18 bits.
     dd >>= 18;
   }
-  
-  double vv = dd;
 
   // Temperature in Celsius
+  double vv = dd;
   vv *= 0.25;
   return vv;
 }
@@ -215,6 +211,7 @@ void set_piepser() {
   // Hardware-Alarm bereit machen
   pinMode(MOSI, OUTPUT);
   analogWriteFreq(4000);
+  //analogWriteFreq(500);
   doAlarm = false;
   
 }
