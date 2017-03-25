@@ -263,6 +263,33 @@ bool handleSetChannels() {
   return 1;
 }
 
+void buildWifiScanjson(char *buffer, int len) {
+  
+  int n = scan_wifi();
+
+  DynamicJsonBuffer jsonBuffer;
+  JsonArray& json = jsonBuffer.createArray();
+  
+  for (int i = 0; i < n; i++) {
+    JsonObject& _wifi = json.createNestedObject();
+    _wifi["SSID"] = WiFi.SSID(i);
+    _wifi["RSSI"] = WiFi.RSSI(i);
+  }
+
+  size_t size = json.measureLength() + 1;
+  
+  if (size < len) {
+    json.printTo(buffer, size);
+  } else Serial.println("Buffer zu klein");
+}
+
+void handleWifiScan() {
+
+  static char sendbuffer[1200];
+  buildWifiScanjson(sendbuffer, 1200);
+  server.send(200, "text/json", sendbuffer);
+}
+
 void server_setup() {
 
     String host = HOSTNAME;
@@ -327,6 +354,9 @@ void server_setup() {
     
     //list Setting Data
     server.on("/settings", HTTP_GET, handleSettings);
+    
+    //list Wifi Scan
+    server.on("/wifiscan", HTTP_GET, handleWifiScan);
     
     //list Set Setting Data
     server.on("/setsettings", [](){

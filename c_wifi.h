@@ -270,3 +270,21 @@ void check_wifi() {
 
 }
 
+
+int scan_wifi() {
+
+  #ifdef DEBUG
+    Serial.print("[INFO]\tWifi Scan: ");
+  #endif
+  
+  int n = WiFi.scanNetworks();
+
+  #ifdef DEBUG
+    Serial.print(n);
+    Serial.println(" network(s) found");
+  #endif
+  
+  return n;
+  
+}
+
