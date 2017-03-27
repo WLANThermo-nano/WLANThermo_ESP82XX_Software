@@ -268,14 +268,30 @@ void buildWifiScanjson(char *buffer, int len) {
   int n = scan_wifi();
 
   DynamicJsonBuffer jsonBuffer;
-  JsonArray& json = jsonBuffer.createArray();
+  JsonObject& json = jsonBuffer.createObject();
+
+  if (WiFi.status() == WL_CONNECTED)  {
+    json["Connect"] = true;
+    json["SSID"] = WiFi.SSID();
+    json["IP"] = WiFi.localIP().toString();
+    json["Mask"] = WiFi.subnetMask().toString();  
+    json["Gate"] = WiFi.gatewayIP().toString();
+  }
+  else {
+    json["Connect"] = false;
+    json["SSID"] = APNAME;
+    json["IP"] = WiFi.softAPIP().toString();
+  }
   
+  JsonArray& _scan = json.createNestedArray("Scan");
   for (int i = 0; i < n; i++) {
-    JsonObject& _wifi = json.createNestedObject();
+    JsonObject& _wifi = _scan.createNestedObject();
     _wifi["SSID"] = WiFi.SSID(i);
     _wifi["RSSI"] = WiFi.RSSI(i);
+    _wifi["Enc"] = WiFi.encryptionType(i);
+    //_wifi["Hid"] = WiFi.isHidden(i);
   }
-
+  
   size_t size = json.measureLength() + 1;
   
   if (size < len) {
@@ -284,11 +300,60 @@ void buildWifiScanjson(char *buffer, int len) {
 }
 
 void handleWifiScan() {
-
   static char sendbuffer[1200];
-  buildWifiScanjson(sendbuffer, 1200);
+  buildWifiScanjson(sendbuffer, 1200);  
   server.send(200, "text/json", sendbuffer);
 }
+
+void handleTest() {
+
+  // https://github.com/me-no-dev/ESPAsyncWebServer/issues/85
+  
+  static char sendbuffer[1200];
+  int len = 1200;
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.createObject();
+  
+  int n = WiFi.scanComplete();
+  
+  if (n == -2)  WiFi.scanNetworks(true);
+  else if (n > 0) {
+    Serial.println(n);
+    if (WiFi.status() == WL_CONNECTED)  {
+      json["Connect"] = true;
+      json["SSID"] = WiFi.SSID();
+      json["IP"] = WiFi.localIP().toString();
+      json["Mask"] = WiFi.subnetMask().toString();  
+      json["Gate"] = WiFi.gatewayIP().toString();
+    }
+    else {
+      json["Connect"] = false;
+      json["SSID"] = APNAME;
+      json["IP"] = WiFi.softAPIP().toString();
+    }
+  
+    JsonArray& _scan = json.createNestedArray("Scan");
+    for (int i = 0; i < n; i++) {
+      JsonObject& _wifi = _scan.createNestedObject();
+      _wifi["SSID"] = WiFi.SSID(i);
+      _wifi["RSSI"] = WiFi.RSSI(i);
+      _wifi["Enc"] = WiFi.encryptionType(i);
+      //_wifi["Hid"] = WiFi.isHidden(i);
+    }
+  
+    WiFi.scanDelete();
+    if(WiFi.scanComplete() == -2){
+      WiFi.scanNetworks(true);
+    }
+  }
+  size_t size = json.measureLength() + 1;
+  if (size < len) {
+  json.printTo(sendbuffer, size);
+  } else Serial.println("Buffer zu klein");
+   
+  server.send(200, "text/json", sendbuffer);
+}
+
 
 void server_setup() {
 
@@ -357,6 +422,8 @@ void server_setup() {
     
     //list Wifi Scan
     server.on("/wifiscan", HTTP_GET, handleWifiScan);
+
+    server.on("/scan", HTTP_GET, handleTest);
     
     //list Set Setting Data
     server.on("/setsettings", [](){

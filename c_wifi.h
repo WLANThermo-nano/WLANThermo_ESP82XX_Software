@@ -35,7 +35,6 @@ const int timeZone = 1;     // Central European Time
 
 #define HOSTNAME "NANO-" ///< Hostename. The setup function adds the Chip ID at the end.
 
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Connect WiFi
 
@@ -77,9 +76,6 @@ void set_wifi() {
     counter++;
   }
 
-  #ifdef DEBUG
-    Serial.println();
-  #endif
   
   if (WiFi.status() == WL_CONNECTED) {
 
@@ -276,9 +272,14 @@ int scan_wifi() {
   #ifdef DEBUG
     Serial.print("[INFO]\tWifi Scan: ");
   #endif
-  
-  int n = WiFi.scanNetworks();
 
+  
+  
+  int n = WiFi.scanNetworks(false, false);
+  // Keine HIDDEN NETWORKS SCANNEN
+
+  // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/scan-class.md#scannetworks
+  // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/station-class.md#setautoreconnect
   #ifdef DEBUG
     Serial.print(n);
     Serial.println(" network(s) found");
