@@ -15,7 +15,7 @@ If the compiler exits with an error similar to "WebHandlers.cpp:67:64: error: 's
 
 * Locate  folder `/Library/Arduino15/packages/esp8266/tools/xtensa-lx106-elf-gcc/1.20.0-26-gb404fb9-2/xtensa-lx106-elf/include` 
 * make a copy of `time.h` and name it  `_time.h`
-* Locate and open `ESPAsyncWebServer\src\WebHandlerImpl.h`
+* Locate and open `libaries\ESPAsyncWebServer\src\WebHandlerImpl.h`
 * Replace `#include <time.h>` to `#include <_time.h>`
 
 see https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
