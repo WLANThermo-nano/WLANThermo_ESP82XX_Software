@@ -65,7 +65,7 @@ void setup() {
   set_OLED();
 
   // Current Battery Voltage
-  set_batdetect(); get_Vbat();
+  set_batdetect(false); get_Vbat();
   
   if (!stby) {
 
@@ -80,8 +80,14 @@ void setup() {
     if (!isAP)  setTime(getNtpTime()); //setSyncProvider(getNtpTime);
 
     #ifdef DEBUG
-    digitalClockDisplay();
+      Serial.print("[INFO]\t");
+      Serial.println(digitalClockDisplay());
     #endif
+
+    // Scan Network
+    WiFi.scanNetworks(true);
+    scantime = millis();
+    //scantime = String(now());
 
     // Initialize Server
     server_setup();
@@ -124,6 +130,7 @@ void loop() {
       LADENSHOW = true;
       //wifi_station_disconnect();
       //WiFi.mode(WIFI_OFF);
+      pitmaster.active = false;
       // set_pitmaster();
     }
     
@@ -149,7 +156,7 @@ void loop() {
   #endif
 
   // Server
-  server.handleClient();
+  //server.handleClient();
 
   pitmaster_control();
   
@@ -162,6 +169,7 @@ void loop() {
     check_wifi();
     //monitorWiFi();
   }
+
   
   // Update Display
   int remainingTimeBudget;

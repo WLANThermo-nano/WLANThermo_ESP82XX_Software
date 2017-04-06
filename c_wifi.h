@@ -76,6 +76,9 @@ void set_wifi() {
     counter++;
   }
 
+  #ifdef DEBUG
+    Serial.println();
+  #endif
   
   if (WiFi.status() == WL_CONNECTED) {
 
@@ -168,7 +171,7 @@ time_t getNtpTime() {
   
   sendNTPpacket(timeServerIP);
   uint32_t beginWait = millis();
-  while (millis() - beginWait < 2500) {
+  while (millis() - beginWait < 4000) {
     int size = udp.parsePacket();
     if (size >= NTP_PACKET_SIZE) {
       #ifdef DEBUG
@@ -194,27 +197,23 @@ time_t getNtpTime() {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Show time
 
-void printDigits(int digits){
-  // utility for digital clock display: prints preceding colon and leading 0
-  Serial.print(":");
-  if(digits < 10)
-    Serial.print('0');
-  Serial.print(digits);
+String printDigits(int digits){
+  String com;
+  if(digits < 10) com = "0";
+  com += String(digits);
+  return com;
 }
 
-void digitalClockDisplay(){
+String digitalClockDisplay(){
 
-  Serial.print("[INFO]\t");
-  Serial.print(hour());
-  printDigits(minute());
-  printDigits(second());
-  Serial.print(" ");
-  Serial.print(day());
-  Serial.print(".");
-  Serial.print(month());
-  Serial.print(".");
-  Serial.print(year()); 
-  Serial.println(); 
+  String zeit;
+  zeit += printDigits(hour())+":";
+  zeit += printDigits(minute())+":";
+  zeit += printDigits(second())+" ";
+  zeit += String(day())+".";
+  zeit += String(month())+".";
+  zeit += String(year());
+  return zeit;
 }
 
 
@@ -272,8 +271,6 @@ int scan_wifi() {
   #ifdef DEBUG
     Serial.print("[INFO]\tWifi Scan: ");
   #endif
-
-  
   
   int n = WiFi.scanNetworks(false, false);
   // Keine HIDDEN NETWORKS SCANNEN
@@ -287,5 +284,29 @@ int scan_wifi() {
   
   return n;
   
+}
+
+
+struct station_info *stat_info;
+struct ip_addr *IPaddress;
+IPAddress address;
+
+void dumpClients()
+{
+  // https://github.com/esp8266/Arduino/issues/2681
+  //http://www.esp8266.com/viewtopic.php?f=32&t=5669&sid=a9f40b382551435102f1b5ea3b6ef37c&start=8
+  
+  Serial.print(" Clients:\r\n");
+  stat_info = wifi_softap_get_station_info();
+  //uint8_t client_count = wifi_softap_get_station_num()
+  while (stat_info != NULL)
+  {
+    IPaddress = &stat_info->ip;
+    address = IPaddress->addr;
+    Serial.print("\t");
+    Serial.print(address);
+    Serial.print("\r\n");
+    stat_info = STAILQ_NEXT(stat_info, next);
+  } 
 }
 

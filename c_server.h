@@ -19,126 +19,54 @@
     
  ****************************************************/
 
-#include <ESP8266WebServer.h>   // https://github.com/esp8266/Arduino
-#include <ESP8266mDNS.h>        
+//#include <ESP8266WebServer.h>   // https://github.com/esp8266/Arduino
+//ESP8266WebServer server(80);    // declare webserver to listen on port 80
+//File fsUploadFile;              // holds the current upload
 
-ESP8266WebServer server(80);    // declare webserver to listen on port 80
-File fsUploadFile;              // holds the current upload
+#include <ESP8266mDNS.h>        
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
+AsyncWebServer server(80);        // https://github.com/me-no-dev/ESPAsyncWebServer
+
 
 const char* www_username = "admin";
 const char* www_password = "esp8266";
 
-void buildlist();
-
-String getContentType(String filename){
-  if(server.hasArg("download")) return "application/octet-stream";
-  else if(filename.endsWith(".htm")) return "text/html";
-  else if(filename.endsWith(".html")) return "text/html";
-  else if(filename.endsWith(".css")) return "text/css";
-  else if(filename.endsWith(".js")) return "application/javascript";
-  else if(filename.endsWith(".png")) return "image/png";
-  else if(filename.endsWith(".gif")) return "image/gif";
-  else if(filename.endsWith(".jpg")) return "image/jpeg";
-  else if(filename.endsWith(".ico")) return "image/x-icon";
-  else if(filename.endsWith(".xml")) return "text/xml";
-  else if(filename.endsWith(".pdf")) return "application/x-pdf";
-  else if(filename.endsWith(".zip")) return "application/x-zip";
-  else if(filename.endsWith(".gz")) return "application/x-gzip";
+String getContentType(String filename, AsyncWebServerRequest *request) {
+  if (request->hasArg("download")) return "application/octet-stream";
+  else if (filename.endsWith(".htm")) return "text/html";
+  else if (filename.endsWith(".html")) return "text/html";
+  else if (filename.endsWith(".css")) return "text/css";
+  else if (filename.endsWith(".js")) return "application/javascript";
+  else if (filename.endsWith(".json")) return "application/json";
+  else if (filename.endsWith(".png")) return "image/png";
+  else if (filename.endsWith(".gif")) return "image/gif";
+  else if (filename.endsWith(".jpg")) return "image/jpeg";
+  else if (filename.endsWith(".ico")) return "image/x-icon";
+  else if (filename.endsWith(".xml")) return "text/xml";
+  else if (filename.endsWith(".pdf")) return "application/x-pdf";
+  else if (filename.endsWith(".zip")) return "application/x-zip";
+  else if (filename.endsWith(".gz")) return "application/x-gzip";
   return "text/plain";
 }
 
-bool handleFileRead(String path){
-  Serial.println("handleFileRead: " + path);
-  if(path.endsWith("/")) path += "index.htm";
-  String contentType = getContentType(path);
+bool handleFileRead(String path, AsyncWebServerRequest *request){
+  
+  if(path.endsWith("/")) path += "index.html";
+  String contentType = getContentType(path, request);
   String pathWithGz = path + ".gz";
   if(SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)){
     if(SPIFFS.exists(pathWithGz))
       path += ".gz";
-    File file = SPIFFS.open(path, "r");
-    size_t sent = server.streamFile(file, contentType);
-    file.close();
+      Serial.println(path);
+      AsyncWebServerResponse *response = request->beginResponse(SPIFFS, path, contentType);
+      if (path.endsWith(".gz"))
+        response->addHeader("Content-Encoding", "gzip");
+      request->send(response);
+    
     return true;
   }
   return false;
-}
-
-void handleFileUpload(){
-  if(server.uri() != "/edit") return;
-  HTTPUpload& upload = server.upload();
-  if(upload.status == UPLOAD_FILE_START){
-    String filename = upload.filename;
-    if(!filename.startsWith("/")) filename = "/"+filename;
-    Serial.print("handleFileUpload Name: "); Serial.println(filename);
-    fsUploadFile = SPIFFS.open(filename, "w");
-    filename = String();
-  } else if(upload.status == UPLOAD_FILE_WRITE){
-    //Serial.print("handleFileUpload Data: "); Serial.println(upload.currentSize);
-    if(fsUploadFile)
-      fsUploadFile.write(upload.buf, upload.currentSize);
-  } else if(upload.status == UPLOAD_FILE_END){
-    if(fsUploadFile)
-      fsUploadFile.close();
-    Serial.print("handleFileUpload Size: "); Serial.println(upload.totalSize);
-  }
-}
-
-// Delete File in FS
-void handleFileDelete(){
-  if(server.args() == 0) return server.send(500, "text/plain", "BAD ARGS");
-  String path = server.arg(0);
-  Serial.println("handleFileDelete: " + path);
-  if(path == "/")
-    return server.send(500, "text/plain", "BAD PATH");
-  if(!SPIFFS.exists(path))
-    return server.send(404, "text/plain", "FileNotFound");
-  SPIFFS.remove(path);
-  server.send(200, "text/plain", "");
-  path = String();
-}
-
-// Create File in FS
-void handleFileCreate(){
-  if(server.args() == 0)
-    return server.send(500, "text/plain", "BAD ARGS");
-  String path = server.arg(0);
-  Serial.println("handleFileCreate: " + path);
-  if(path == "/")
-    return server.send(500, "text/plain", "BAD PATH");
-  if(SPIFFS.exists(path))
-    return server.send(500, "text/plain", "FILE EXISTS");
-  File file = SPIFFS.open(path, "w");
-  if(file)
-    file.close();
-  else
-    return server.send(500, "text/plain", "CREATE FAILED");
-  server.send(200, "text/plain", "");
-  path = String();
-}
-
-void handleFileList() {
-  if(!server.hasArg("dir")) {server.send(500, "text/plain", "BAD ARGS"); return;}
-
-  String path = server.arg("dir");
-  Serial.println("handleFileList: " + path);
-  Dir dir = SPIFFS.openDir(path);
-  path = String();
-
-  String output = "[";
-  while(dir.next()){
-    File entry = dir.openFile("r");
-    if (output != "[") output += ',';
-    bool isDir = false;
-    output += "{\"type\":\"";
-    output += (isDir)?"dir":"file";
-    output += "\",\"name\":\"";
-    output += String(entry.name()).substring(1);
-    output += "\"}";
-    entry.close();
-  }
-
-  output += "]";
-  server.send(200, "text/json", output);
 }
 
 void buildDatajson(char *buffer, int len) {
@@ -194,18 +122,28 @@ void buildSettingjson(char *buffer, int len) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
-  JsonObject& system = root.createNestedObject("system");
+  JsonObject& _system = root.createNestedObject("system");
 
-  system["time"] = String(now());
-  system["utc"] = timeZone;
-  system["ap"] = APNAME;
-  system["host"] = host;
-  system["version"] = FIRMWAREVERSION;
+  _system["time"] = String(now());
+  _system["utc"] = timeZone;
+  _system["ap"] = APNAME;
+  _system["host"] = host;
+  _system["language"] = "de";
+  _system["unit"] = temp_unit;
+  _system["version"] = FIRMWAREVERSION;
   
-  JsonArray& typ = root.createNestedArray("sensors");
+  JsonArray& _typ = root.createNestedArray("sensors");
   for (int i = 0; i < SENSORTYPEN; i++) {
-    typ.add(ttypname[i]);
+    _typ.add(ttypname[i]);
   }
+
+  JsonArray& _pit = root.createNestedArray("pitmaster");
+  for (int j = 0; j < pidsize; j++) {
+    _pit.add(pid[j].name);
+  }
+
+  JsonObject& _chart = root.createNestedObject("charts");
+  _chart["thingspeak"] = THINGSPEAK_KEY;
     
   size_t size = root.measureLength() + 1;
   //Serial.println(size);
@@ -216,111 +154,109 @@ void buildSettingjson(char *buffer, int len) {
   
 }
 
-void handleData() {
+void handleData(AsyncWebServerRequest *request) {
   
   static char sendbuffer[1200];
   buildDatajson(sendbuffer, 1200);
-  server.send(200, "text/json", sendbuffer);
+  request->send(200, "application/json", sendbuffer);
 }
 
 
-void handleSettings() {
+void handleSettings(AsyncWebServerRequest *request) {
 
-  static char sendbuffer[200];
-  buildSettingjson(sendbuffer, 200);
-  server.send(200, "text/json", sendbuffer);
+  static char sendbuffer[300];
+  buildSettingjson(sendbuffer, 300);
+  request->send(200, "application/json", sendbuffer);
 }
 
 
-bool handleSetChannels() {
+bool handleSetChannels(AsyncWebServerRequest *request) {
   
   DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
+  JsonObject& json = jsonBuffer.parseObject(request->arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
   if (!json.success()) return 0;
 
   for (int i = 0; i < CHANNELS; i++) {
     JsonObject& _cha = json["channel"][i];
-    String _name = _cha["name"].asString(); 
+    String _name = _cha["name"].asString();                       // KANALNAME
     if (_name.length() < 11)  ch[i].name = _name;
-    byte _typ = _cha["typ"];
-    if (_typ > -1 && _typ < SENSORTYPEN) ch[i].typ = _typ; 
-    float _limit = _cha["min"];
+    byte _typ = _cha["typ"];                                      // FÜHLERTYP
+    if (_typ > -1 && _typ < SENSORTYPEN) ch[i].typ = _typ;  
+    float _limit = _cha["min"];                                   // LIMITS
     if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[i].min = _limit;
     _limit = _cha["max"];
     if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[i].max = _limit;
-    ch[i].alarm = _cha["alarm"]; 
-    ch[i].color = _cha["color"].asString();
+    ch[i].alarm = _cha["alarm"];                                  // ALARM
+    ch[i].color = _cha["color"].asString();                       // COLOR
   }
 
-  JsonObject& _pitmaster = json["pitmaster"];
+  modifyconfig(eCHANNEL,{});                                      // SPEICHERN
+  return 1;
+}
+
+bool handleSetPitmaster(AsyncWebServerRequest *request) {
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& _pitmaster = jsonBuffer.parseObject(request->arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_pitmaster.success()) return 0;
+  
   pitmaster.channel = _pitmaster["channel"]; // 0
   pitmaster.typ = _pitmaster["typ"]; // ""
   pitmaster.set = _pitmaster["value"]; // 100
-  //pitmaster.active = _pitmaster["active"];
+  pitmaster.active = _pitmaster["active"];
+  return 1;
+}
 
-  Serial.println("[POST]\tMessage from Client");
-  modifyconfig(eCHANNEL,{});
+bool handleSetNetwork(AsyncWebServerRequest *request) {
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& _network = jsonBuffer.parseObject(request->arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_network.success()) return 0;
+  
+  const char* data[2];
+  data[0] = _network["ssid"];
+  data[1] = _network["password"];
+
+  if (!modifyconfig(eWIFI,data)) {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tFailed to save wifi config");
+    #endif
+    return 0;
+  } else {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tWifi config saved");
+    #endif
+    return 1;
+  }
+}
+
+bool handleSetSystem(AsyncWebServerRequest *request) {
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& _system = jsonBuffer.parseObject(request->arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_system.success()) return 0;
+  
+  // = _system["hwalarm"];
+  // = _system["host"];
+  // = _system["utc"];
+  // = _system["language"];
+  // = _system["unit"];
+  
   return 1;
 }
 
 void buildWifiScanjson(char *buffer, int len) {
-  
-  int n = scan_wifi();
-
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
-
-  if (WiFi.status() == WL_CONNECTED)  {
-    json["Connect"] = true;
-    json["SSID"] = WiFi.SSID();
-    json["IP"] = WiFi.localIP().toString();
-    json["Mask"] = WiFi.subnetMask().toString();  
-    json["Gate"] = WiFi.gatewayIP().toString();
-  }
-  else {
-    json["Connect"] = false;
-    json["SSID"] = APNAME;
-    json["IP"] = WiFi.softAPIP().toString();
-  }
-  
-  JsonArray& _scan = json.createNestedArray("Scan");
-  for (int i = 0; i < n; i++) {
-    JsonObject& _wifi = _scan.createNestedObject();
-    _wifi["SSID"] = WiFi.SSID(i);
-    _wifi["RSSI"] = WiFi.RSSI(i);
-    _wifi["Enc"] = WiFi.encryptionType(i);
-    //_wifi["Hid"] = WiFi.isHidden(i);
-  }
-  
-  size_t size = json.measureLength() + 1;
-  
-  if (size < len) {
-    json.printTo(buffer, size);
-  } else Serial.println("Buffer zu klein");
-}
-
-void handleWifiScan() {
-  static char sendbuffer[1200];
-  buildWifiScanjson(sendbuffer, 1200);  
-  server.send(200, "text/json", sendbuffer);
-}
-
-void handleTest() {
 
   // https://github.com/me-no-dev/ESPAsyncWebServer/issues/85
-  
-  static char sendbuffer[1200];
-  int len = 1200;
+  int n = WiFi.scanComplete();
   DynamicJsonBuffer jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
+
+  if (n > 0) {
   
-  int n = WiFi.scanComplete();
-  
-  if (n == -2)  WiFi.scanNetworks(true);
-  else if (n > 0) {
-    Serial.println(n);
     if (WiFi.status() == WL_CONNECTED)  {
       json["Connect"] = true;
+      json["Scantime"] = millis()-scantime;
       json["SSID"] = WiFi.SSID();
       json["IP"] = WiFi.localIP().toString();
       json["Mask"] = WiFi.subnetMask().toString();  
@@ -340,104 +276,87 @@ void handleTest() {
       _wifi["Enc"] = WiFi.encryptionType(i);
       //_wifi["Hid"] = WiFi.isHidden(i);
     }
-  
-    WiFi.scanDelete();
-    if(WiFi.scanComplete() == -2){
-      WiFi.scanNetworks(true);
-    }
   }
+  
   size_t size = json.measureLength() + 1;
+  
   if (size < len) {
-  json.printTo(sendbuffer, size);
+    json.printTo(buffer, size);
   } else Serial.println("Buffer zu klein");
-   
-  server.send(200, "text/json", sendbuffer);
 }
+
+void handleWifiResult(AsyncWebServerRequest *request) {
+  static char sendbuffer[1200];
+  buildWifiScanjson(sendbuffer, 1200);  
+  request->send(200, "application/json", sendbuffer);
+}
+
+void handleWifiScan(AsyncWebServerRequest *request) {
+
+  //dumpClients();
+
+  WiFi.scanDelete();
+  if(WiFi.scanComplete() == -2){
+    WiFi.scanNetworks(true);
+    scantime = millis();
+    request->send(200, "text/json", "OK");
+  }   
+}
+
+String getMacAddress()  {
+  uint8_t mac[6];
+  char macStr[18] = { 0 };
+  WiFi.macAddress(mac);
+  sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  return  String(macStr);
+}
+
 
 
 void server_setup() {
 
     String host = HOSTNAME;
     host += String(ESP.getChipId(), HEX);
-    MDNS.begin(host.c_str());
+    MDNS.begin(host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);
     Serial.print("[INFO]\tOpen http://");
     Serial.print(host);
     Serial.println("/data to see the current temperature");
   
 
-    //SERVER INIT
-    //list directory
-    server.on("/list", HTTP_GET, handleFileList);
-
-    //load editor
-    server.on("/edit", HTTP_GET, [](){
-        if(!handleFileRead("/edit.htm")) server.send(404, "text/plain", "FileNotFound");
-    });
-
-    //create file
-    server.on("/edit", HTTP_PUT, handleFileCreate);
-
-    //delete file
-    server.on("/edit", HTTP_DELETE, handleFileDelete);
-
-    //first callback is called after the request has ended with all parsed arguments
-    //second callback handles file uploads at that location
-    server.on("/edit", HTTP_POST, [](){ server.send(200, "text/plain", ""); }, handleFileUpload);
-
-    server.on("/config", HTTP_GET, []() {
-        server.send(200, "text/json", "config");
-    });
-
-    //called when the url is not defined here
-    //use it to load content from SPIFFS
-    server.onNotFound([](){
-        if(!handleFileRead(server.uri()))
-            server.send(404, "text/plain", "FileNotFound");
-    });
-
-    //get heap status, analog input value and all GPIO statuses in one json call
-    server.on("/all", HTTP_GET, [](){
-        DynamicJsonBuffer jsonBuffer;
-        JsonObject& root = jsonBuffer.createObject();
-
-        root["heap"] = ESP.getFreeHeap();
-        root["analog"] = ch[0].temp;
-        root["gpio"] = (uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16));
-
-        size_t size = root.measureLength() + 1;
-        char json[size];
-        root.printTo(json, size);
-
-        server.send(200, "text/json", json);
-    });
-
     //list Temperature Data
     server.on("/data", HTTP_GET, handleData);
-
-    //list Temperature Data
-    //server.on("/grafik", HTTP_GET, buildlist);
     
     //list Setting Data
     server.on("/settings", HTTP_GET, handleSettings);
     
     //list Wifi Scan
-    server.on("/wifiscan", HTTP_GET, handleWifiScan);
+    server.on("/networkscan", HTTP_GET, handleWifiScan);
 
-    server.on("/scan", HTTP_GET, handleTest);
-    
-    //list Set Setting Data
-    server.on("/setsettings", [](){
-      if(!server.authenticate(www_username, www_password))
-        return server.requestAuthentication();
-      if(!handleSetChannels()) server.send(200, "text/plain", "0");
-      server.send(200, "text/plain", "1");
-    });
+    server.on("/networklist", HTTP_GET, handleWifiResult);
 
-    
-    // Auth
-    server.on("/", [](){
-      if(!handleFileRead("/")) server.send(404, "text/plain", "FileNotFound");
+    /*
+    server.on("/index.html",HTTP_GET, [](AsyncWebServerRequest *request) {
+      if (!handleFileRead("/index.html", request))
+        request->send(404, "text/plain", "FileNotFound");
     });
+    */
+
+    // to avoid multiple requests to ESP
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html"); // gibt alles im Ordner frei
+    
+    // serves all SPIFFS Web file with 24hr max-age control
+    //server.serveStatic("/font", SPIFFS, "/font","max-age=86400");
+    //server.serveStatic("/js",   SPIFFS, "/js"  ,"max-age=86400");
+    //server.serveStatic("/css",  SPIFFS, "/css" ,"max-age=86400");
+    //server.serveStatic("/png",  SPIFFS, "/png" ,"max-age=86400");
+
+    /*
+    server.on("/", [](AsyncWebServerRequest *request){
+      if(!handleFileRead("/", request))
+        request->send(404, "text/plain", "FileNotFound");
+    });
+    */
+    
 
     server.begin();
     #ifdef DEBUG
