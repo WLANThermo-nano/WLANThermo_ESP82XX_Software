@@ -131,8 +131,10 @@ double get_thermocouple(void) {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Charge Detection
-void set_batdetect() {
-  pinMode(CHARGEDETECTION, INPUT);
+void set_batdetect(boolean stat) {
+
+  if (stat)  pinMode(CHARGEDETECTION, INPUT_PULLDOWN_16);
+  else pinMode(CHARGEDETECTION, INPUT);
 }
 
 uint32_t vol_sum = 0;
@@ -144,7 +146,28 @@ void get_Vbat() {
   
   // Digitalwert transformiert in Batteriespannung in mV
   int voltage = analogRead(ANALOGREADBATTPIN);
-  charge = digitalRead(CHARGEDETECTION);
+  //charge = digitalRead(CHARGEDETECTION);
+
+  String stat;
+  byte curStateNone = digitalRead(CHARGEDETECTION);
+  set_batdetect(HIGH);
+  stat += String(curStateNone);
+  byte curStatePull = digitalRead(CHARGEDETECTION);
+  set_batdetect(LOW);
+  stat += String(curStatePull);
+  //ch[0].name = stat;
+  /*
+  if (curStateNone != curStatePull) {
+    Serial.println("ungleich");
+    ch[0].name = "UN";
+    charge = HIGH;
+  } else {
+    if (curStateNone)
+    
+    ch[0].name = "Kanal 1";
+  }*/
+  
+  charge = curStateNone;
   
   // Standby erkennen
   if (voltage < 10) {

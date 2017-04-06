@@ -193,6 +193,7 @@ String wifipass[5];
 int lenwifi = 0;
 long rssi = 0;                   // Buffer rssi
 String THINGSPEAK_KEY;
+long scantime;
 
 // BUTTONS
 byte buttonPins[]={btn_r,btn_l};          // Pins
