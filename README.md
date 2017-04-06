@@ -7,7 +7,7 @@ https://github.com/esp8266/Arduino and the Arduino Time Library https://github.c
 
 In addition, the SSD1306 library must be embedded in the Arduino IDE libaries folder. A modification of squix78's library https://github.com/squix78/esp8266-oled-ssd1306 is used.
 
-In addition, the ESPAsynchWebserver library must be embedded in the Arduino IDE libaries folder. Link: https://github.com/me-no-dev/ESPAsyncWebServer
+In addition, the ESPAsynchWebserver library must be embedded in the Arduino IDE libaries folder. The original version of me-no-dev's library https://github.com/me-no-dev/ESPAsyncWebServer is used.
 
 ##Troubleshooting
 
