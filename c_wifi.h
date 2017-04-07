@@ -89,7 +89,7 @@ void set_wifi() {
       Serial.println(WiFi.localIP());
     #endif
     
-    isAP = false;
+    isAP = 0;
 
     WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
  
@@ -119,7 +119,8 @@ void set_wifi() {
       Serial.println(WiFi.softAPIP());
     #endif
     
-    isAP = true;
+    isAP = 1;
+    disconnectAP = false;
     
   }
 }
@@ -234,7 +235,7 @@ void stop_wifi() {
   wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
   delay(100); // leider notwendig
 
-  isAP = true;
+  isAP = 2;
 }
 
 void reconnect_wifi() {
@@ -252,21 +253,6 @@ void reconnect_wifi() {
     awaking = true;
   }
 }
-
-void check_wifi() {
-
-  if (wifiMulti.run() == WL_CONNECTED) {
-    isAP = false;
-    awaking = false;
-    Serial.printf(" connected to %s\n", WiFi.SSID().c_str());
-  }
-  else { 
-    yield();
-    //isAP = true;
-  }
-
-}
-
 
 int scan_wifi() {
 
@@ -314,6 +300,8 @@ void dumpClients()
 
 
 void WIFI_Connect(const char* data[2]) {
+
+  // http://www.esp8266.com/viewtopic.php?f=32&t=8286
   
   //WiFi.disconnect();
   Serial.println("Verbinden mit neuer SSID");

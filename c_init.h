@@ -191,13 +191,14 @@ int question = NO;                               // Which Question;
 enum {eCHANNEL, eWIFI, eTHING, ePIT, ePRESET};
 
 // WIFI
-byte isAP = 0;                    // WIFI MODE
+byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO)
 String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;
 long rssi = 0;                   // Buffer rssi
 String THINGSPEAK_KEY;
 long scantime;
+bool disconnectAP;
 
 // BUTTONS
 byte buttonPins[]={btn_r,btn_l};          // Pins

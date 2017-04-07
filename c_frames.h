@@ -159,8 +159,9 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
   else  display->drawString(24,0,String(BatteryPercentage)); 
   
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  if (isAP)  display->drawString(128,0,"AP");
-  else  {
+  if (isAP == 1)  display->drawString(128,0,"AP");
+  else if (isAP == 2) display->drawString(128,0,"NO");
+  else if (isAP == 0)  {
     //display->drawString(128,0,String(rssi)+" dBm");
     display->fillRect(116,8,2,1); //Draw ground line
     display->fillRect(120,8,2,1); //Draw ground line
@@ -324,13 +325,17 @@ void drawsys1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   
-  if (isAP) {
+  if (isAP == 1) {
     display->drawString(120, 20, "AP-SSID:");
     display->drawString(120, 36, APNAME);
   }
-  else {
+  else if (isAP == 0) {
     display->drawString(120, 20, "SSID:");
     display->drawString(120, 36, WiFi.SSID());
+  }
+  else if (isAP == 2) {
+    display->drawString(120, 20, "SSID:");
+    display->drawString(120, 36, "");
   }
 }
 
@@ -341,8 +346,9 @@ void drawsys2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setFont(ArialMT_Plain_10);
   display->drawString(120, 20, "IP:");
   
-  if (isAP) display->drawString(120, 36, WiFi.softAPIP().toString());
-  else  display->drawString(120, 36, WiFi.localIP().toString());
+  if (isAP == 1) display->drawString(120, 36, WiFi.softAPIP().toString());
+  else if (isAP == 0) display->drawString(120, 36, WiFi.localIP().toString());
+  else if (isAP == 2) display->drawString(120, 36, "");
 }
 
 void drawsys3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {

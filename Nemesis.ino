@@ -145,16 +145,30 @@ void loop() {
   }
 
   if (WiFi.status() == WL_CONNECTED & isAP) {
-    // Verbindung neu hergestellt
-    isAP = false;
+    // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
+    isAP = 0;
     #ifdef DEBUG
       Serial.print("[INFO]\tWiFi connected to: ");
       Serial.println(WiFi.SSID());
       Serial.print("[INFO]\tIP address: ");
       Serial.println(WiFi.localIP());
     #endif
-  } else if (WiFi.status() != WL_CONNECTED) {
-    isAP = true;
+    
+    WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
+    disconnectAP = true;
+    
+  } else if (WiFi.status() != WL_CONNECTED & isAP != 1) {
+    // Nicht verbunden
+    isAP = 2;
+  } else if (isAP == 0 & disconnectAP) {
+      uint8_t client_count = wifi_softap_get_station_num();
+      if (!client_count) {
+        disconnectAP = false;
+        WiFi.mode(WIFI_STA);
+        #ifdef DEBUG
+        Serial.println("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
+        #endif
+      }
   }
 
   //if (beginRequest > 0 & millis()-beginRequest > 4000) {
