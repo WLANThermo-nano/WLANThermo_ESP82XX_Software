@@ -168,7 +168,6 @@ void handleWifiResult(AsyncWebServerRequest *request, bool www) {
       json["Connect"]   = true;
       json["Scantime"]  = millis()-scantime;
       json["SSID"]      = WiFi.SSID();
-      json["RSSI"]      = WiFi.RSSI();
       json["IP"]        = WiFi.localIP().toString();
       json["Mask"]      = WiFi.subnetMask().toString();  
       json["Gate"]      = WiFi.gatewayIP().toString();
@@ -186,8 +185,10 @@ void handleWifiResult(AsyncWebServerRequest *request, bool www) {
       _wifi["RSSI"]   = WiFi.RSSI(i);
       _wifi["Enc"]    = WiFi.encryptionType(i);
       //_wifi["Hid"]  = WiFi.isHidden(i);
-      if (WiFi.status() == WL_CONNECTED & WiFi.SSID(i) == WiFi.SSID())
+      if (WiFi.status() == WL_CONNECTED & WiFi.SSID(i) == WiFi.SSID()) {
         json["Enc"]       = WiFi.encryptionType(i);
+        json["RSSI"]      = WiFi.RSSI(i);
+      }
     }
   }
   
@@ -365,6 +366,18 @@ void server_setup() {
     server.on("/networklist", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handleWifiResult(request, true);
     });
+
+    // REQUEST: /deletenetworkstore
+    server.on("/deletenetworkstore", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      if (setconfig(eWIFI,{})) {  
+        #ifdef DEBUG
+          Serial.println("[INFO]\tReset wifi config");
+        #endif
+        request->send(200, "text/plain", "1");
+      } 
+      request->send(200, "text/plain", "0");
+    });
+    
 
     /*  
     // REQUEST: /setnetwork
