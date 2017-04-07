@@ -224,9 +224,39 @@ String digitalClockDisplay(){
 bool awaking = false;
 
 
+void WIFI_Connect(const char* data[2]) {
+
+  // http://www.esp8266.com/viewtopic.php?f=32&t=8286
+  
+  //WiFi.disconnect();
+  Serial.println("Verbinden mit neuer SSID");
+  //WiFi.mode(WIFI_AP_STA);
+  WiFi.begin(data[0], data[1]);
+
+
+  /*
+  // führt zu einem SOFT WDT RESET, wenn die Zeit > 4000
+  uint32_t beginWait = millis();
+  while (millis() - beginWait < 2000) {
+    if (WiFi.isConnected()) return 1;  
+  }
+  return 0;
+  */
+
+  /*
+  // Funktioniert leider nicht im Request, führt zu Exception
+  if (WiFi.waitForConnectResult() != WL_CONNECTED) return false;
+  return true;
+  */
+    
+}
+
+
 void stop_wifi() {
   
-  Serial.println("diconnecting wifi");
+  #ifdef DEBUG
+    Serial.println("[INFO]\tStop Wifi");
+  #endif
   
   wifi_station_disconnect();
   wifi_set_opmode(NULL_MODE);
@@ -245,13 +275,6 @@ void reconnect_wifi() {
   wifi_fpm_close();
   wifi_set_opmode(STATION_MODE);
   wifi_station_connect();
-
-  if (WiFi.status() != WL_CONNECTED) {
-    
-    WiFi.mode(WIFI_STA);
-    Serial.println("Reconnecting");
-    awaking = true;
-  }
 }
 
 int scan_wifi() {
@@ -298,30 +321,4 @@ void dumpClients()
   } 
 }
 
-
-void WIFI_Connect(const char* data[2]) {
-
-  // http://www.esp8266.com/viewtopic.php?f=32&t=8286
-  
-  //WiFi.disconnect();
-  Serial.println("Verbinden mit neuer SSID");
-  //WiFi.mode(WIFI_AP_STA);
-  WiFi.begin(data[0], data[1]);
-
-
-  /*
-  // führt zu einem SOFT WDT RESET, wenn die Zeit > 4000
-  uint32_t beginWait = millis();
-  while (millis() - beginWait < 2000) {
-    if (WiFi.isConnected()) return 1;  
-  }
-  return 0;
-  */
-
-  
-  // Funktioniert leider nicht im Request, führt zu Exception
-  //if (WiFi.waitForConnectResult() != WL_CONNECTED) return false;
-  //return true;
-    
-}
 

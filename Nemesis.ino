@@ -128,8 +128,10 @@ void loop() {
     if (!LADENSHOW) {
       drawLoading();
       LADENSHOW = true;
-      //wifi_station_disconnect();
-      //WiFi.mode(WIFI_OFF);
+      #ifdef DEBUG
+        Serial.println("[INFO]\tChange to Standby");
+      #endif
+      stop_wifi();
       pitmaster.active = false;
       // set_pitmaster();
     }
@@ -144,8 +146,10 @@ void loop() {
     return;
   }
 
-  if (WiFi.status() == WL_CONNECTED & isAP) {
+  // WiFi Monitoring
+  if (WiFi.status() == WL_CONNECTED & isAP > 0) {
     // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
+    if (isAP == 1) disconnectAP = true;
     isAP = 0;
     #ifdef DEBUG
       Serial.print("[INFO]\tWiFi connected to: ");
@@ -155,10 +159,10 @@ void loop() {
     #endif
     
     WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
-    disconnectAP = true;
     
-  } else if (WiFi.status() != WL_CONNECTED & isAP != 1) {
+  } else if (WiFi.status() != WL_CONNECTED & isAP == 0) {
     // Nicht verbunden
+    Serial.println("[INFO]\tWLAN-Verbindung verloren!");
     isAP = 2;
   } else if (isAP == 0 & disconnectAP) {
       uint8_t client_count = wifi_softap_get_station_num();
