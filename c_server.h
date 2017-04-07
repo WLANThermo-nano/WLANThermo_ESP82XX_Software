@@ -23,11 +23,11 @@
 //ESP8266WebServer server(80);    // declare webserver to listen on port 80
 //File fsUploadFile;              // holds the current upload
 
-#include <ESP8266mDNS.h>        
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebServer.h>    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
+
 AsyncWebServer server(80);        // https://github.com/me-no-dev/ESPAsyncWebServer
 
+//AsyncWebServerRequest *holdRequest;
+//unsigned long beginRequest;
 
 const char* www_username = "admin";
 const char* www_password = "esp8266";
@@ -69,11 +69,51 @@ bool handleFileRead(String path, AsyncWebServerRequest *request){
   return false;
 }
 
-void buildDatajson(char *buffer, int len) {
-  
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
+void handleSettings(AsyncWebServerRequest *request, bool www) {
 
+  AsyncJsonResponse * response = new AsyncJsonResponse();
+  response->addHeader("Server","ESP Async Web Server");
+  
+  String host = HOSTNAME;
+  host += String(ESP.getChipId(), HEX);
+
+  JsonObject& root = response->getRoot();
+  JsonObject& _system = root.createNestedObject("system");
+
+  _system["time"] = String(now());
+  _system["utc"] = timeZone;
+  _system["ap"] = APNAME;
+  _system["host"] = host;
+  _system["language"] = "de";
+  _system["unit"] = temp_unit;
+  _system["version"] = FIRMWAREVERSION;
+  
+  JsonArray& _typ = root.createNestedArray("sensors");
+  for (int i = 0; i < SENSORTYPEN; i++) {
+    _typ.add(ttypname[i]);
+  }
+
+  JsonArray& _pit = root.createNestedArray("pitmaster");
+  for (int j = 0; j < pidsize; j++) {
+    _pit.add(pid[j].name);
+  }
+
+  JsonObject& _chart = root.createNestedObject("charts");
+  _chart["thingspeak"] = THINGSPEAK_KEY;
+    
+  if (www) {
+    response->setLength();
+    request->send(response);
+  } else root.printTo(Serial);
+}
+
+
+void handleData(AsyncWebServerRequest *request, bool www) {
+
+  AsyncJsonResponse * response = new AsyncJsonResponse();
+  response->addHeader("Server","ESP Async Web Server");
+  
+  JsonObject& root = response->getRoot();
   JsonObject& system = root.createNestedObject("system");
 
   system["time"] = String(now());
@@ -104,77 +144,86 @@ void buildDatajson(char *buffer, int len) {
   master["value"] = pitmaster.value;
   master["set"] = pitmaster.set;
   master["active"] = pitmaster.active;
-
-  size_t size = root.measureLength() + 1;
-  //Serial.println(size);
   
-  if (size < len) {
-    root.printTo(buffer, size);
-  } else Serial.println("Buffer zu klein");
-  
+  if (www) {
+    response->setLength();
+    request->send(response);
+  } else root.printTo(Serial);
 }
 
-void buildSettingjson(char *buffer, int len) {
+void handleWifiResult(AsyncWebServerRequest *request, bool www) {
 
-  String host = HOSTNAME;
-  host += String(ESP.getChipId(), HEX);
+  // https://github.com/me-no-dev/ESPAsyncWebServer/issues/85
+ 
+  AsyncJsonResponse * response = new AsyncJsonResponse();
+  response->addHeader("Server","ESP Async Web Server");
+
+  JsonObject& json = response->getRoot();
+  
+  int n = WiFi.scanComplete();
+
+  if (n > 0) {
+  
+    if (WiFi.status() == WL_CONNECTED)  {
+      json["Connect"]   = true;
+      json["Scantime"]  = millis()-scantime;
+      json["SSID"]      = WiFi.SSID();
+      json["RSSI"]      = WiFi.RSSI();
+      json["IP"]        = WiFi.localIP().toString();
+      json["Mask"]      = WiFi.subnetMask().toString();  
+      json["Gate"]      = WiFi.gatewayIP().toString();
+    }
+    else {
+      json["Connect"]   = false;
+      json["SSID"]      = APNAME;
+      json["IP"]        = WiFi.softAPIP().toString();
+    }
+  
+    JsonArray& _scan = json.createNestedArray("Scan");
+    for (int i = 0; i < n; i++) {
+      JsonObject& _wifi = _scan.createNestedObject();
+      _wifi["SSID"]   = WiFi.SSID(i);
+      _wifi["RSSI"]   = WiFi.RSSI(i);
+      _wifi["Enc"]    = WiFi.encryptionType(i);
+      //_wifi["Hid"]  = WiFi.isHidden(i);
+      if (WiFi.status() == WL_CONNECTED & WiFi.SSID(i) == WiFi.SSID())
+        json["Enc"]       = WiFi.encryptionType(i);
+    }
+  }
+  
+  if (www) {
+    response->setLength();
+    request->send(response);
+  } else json.printTo(Serial);
+}
+
+void handleWifiScan(AsyncWebServerRequest *request, bool www) {
+
+  //dumpClients();
+
+  WiFi.scanDelete();
+  if(WiFi.scanComplete() == -2){
+    WiFi.scanNetworks(true);
+    scantime = millis();
+
+    if (www) request->send(200, "text/json", "OK");
+    else Serial.println("OK");
+  }   
+}
+
+
+bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  //  https://github.com/me-no-dev/ESPAsyncWebServer/issues/123
+  Serial.print("[REQUEST]\t");
+  Serial.printf("%s", (const char*)datas);
+  Serial.println();
 
   DynamicJsonBuffer jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-
-  JsonObject& _system = root.createNestedObject("system");
-
-  _system["time"] = String(now());
-  _system["utc"] = timeZone;
-  _system["ap"] = APNAME;
-  _system["host"] = host;
-  _system["language"] = "de";
-  _system["unit"] = temp_unit;
-  _system["version"] = FIRMWAREVERSION;
-  
-  JsonArray& _typ = root.createNestedArray("sensors");
-  for (int i = 0; i < SENSORTYPEN; i++) {
-    _typ.add(ttypname[i]);
+  JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!json.success()) {
+    return 0;
   }
-
-  JsonArray& _pit = root.createNestedArray("pitmaster");
-  for (int j = 0; j < pidsize; j++) {
-    _pit.add(pid[j].name);
-  }
-
-  JsonObject& _chart = root.createNestedObject("charts");
-  _chart["thingspeak"] = THINGSPEAK_KEY;
-    
-  size_t size = root.measureLength() + 1;
-  //Serial.println(size);
-  
-  if (size < len) {
-    root.printTo(buffer, size);
-  } else Serial.println("Buffer zu klein");
-  
-}
-
-void handleData(AsyncWebServerRequest *request) {
-  
-  static char sendbuffer[1200];
-  buildDatajson(sendbuffer, 1200);
-  request->send(200, "application/json", sendbuffer);
-}
-
-
-void handleSettings(AsyncWebServerRequest *request) {
-
-  static char sendbuffer[300];
-  buildSettingjson(sendbuffer, 300);
-  request->send(200, "application/json", sendbuffer);
-}
-
-
-bool handleSetChannels(AsyncWebServerRequest *request) {
-  
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(request->arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
-  if (!json.success()) return 0;
 
   for (int i = 0; i < CHANNELS; i++) {
     JsonObject& _cha = json["channel"][i];
@@ -194,10 +243,14 @@ bool handleSetChannels(AsyncWebServerRequest *request) {
   return 1;
 }
 
-bool handleSetPitmaster(AsyncWebServerRequest *request) {
+bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  Serial.print("[REQUEST]\t");
+  Serial.printf("%s", (const char*)datas);
+  Serial.println();
   
   DynamicJsonBuffer jsonBuffer;
-  JsonObject& _pitmaster = jsonBuffer.parseObject(request->arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
+  JsonObject& _pitmaster = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_pitmaster.success()) return 0;
   
   pitmaster.channel = _pitmaster["channel"]; // 0
@@ -207,33 +260,43 @@ bool handleSetPitmaster(AsyncWebServerRequest *request) {
   return 1;
 }
 
-bool handleSetNetwork(AsyncWebServerRequest *request) {
+bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  Serial.print("[REQUEST]\t");
+  Serial.printf("%s", (const char*)datas);
+  Serial.println();
   
   DynamicJsonBuffer jsonBuffer;
-  JsonObject& _network = jsonBuffer.parseObject(request->arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
+  JsonObject& _network = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_network.success()) return 0;
   
   const char* data[2];
   data[0] = _network["ssid"];
   data[1] = _network["password"];
 
-  if (!modifyconfig(eWIFI,data)) {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tFailed to save wifi config");
-    #endif
-    return 0;
-  } else {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tWifi config saved");
-    #endif
-    return 1;
-  }
+  WIFI_Connect(data);
+
+    if (!modifyconfig(eWIFI,data)) {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tFailed to save wifi config");
+      #endif
+      return 0;
+    } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tWifi config saved");
+      #endif
+      return 1;
+    }
 }
 
-bool handleSetSystem(AsyncWebServerRequest *request) {
+bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  Serial.print("[REQUEST]\t");
+  Serial.printf("%s", (const char*)datas);
+  Serial.println();
   
   DynamicJsonBuffer jsonBuffer;
-  JsonObject& _system = jsonBuffer.parseObject(request->arg("plain"));   //https://github.com/esp8266/Arduino/issues/1321
+  JsonObject& _system = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_system.success()) return 0;
   
   // = _system["hwalarm"];
@@ -245,63 +308,7 @@ bool handleSetSystem(AsyncWebServerRequest *request) {
   return 1;
 }
 
-void buildWifiScanjson(char *buffer, int len) {
 
-  // https://github.com/me-no-dev/ESPAsyncWebServer/issues/85
-  int n = WiFi.scanComplete();
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
-
-  if (n > 0) {
-  
-    if (WiFi.status() == WL_CONNECTED)  {
-      json["Connect"] = true;
-      json["Scantime"] = millis()-scantime;
-      json["SSID"] = WiFi.SSID();
-      json["IP"] = WiFi.localIP().toString();
-      json["Mask"] = WiFi.subnetMask().toString();  
-      json["Gate"] = WiFi.gatewayIP().toString();
-    }
-    else {
-      json["Connect"] = false;
-      json["SSID"] = APNAME;
-      json["IP"] = WiFi.softAPIP().toString();
-    }
-  
-    JsonArray& _scan = json.createNestedArray("Scan");
-    for (int i = 0; i < n; i++) {
-      JsonObject& _wifi = _scan.createNestedObject();
-      _wifi["SSID"] = WiFi.SSID(i);
-      _wifi["RSSI"] = WiFi.RSSI(i);
-      _wifi["Enc"] = WiFi.encryptionType(i);
-      //_wifi["Hid"] = WiFi.isHidden(i);
-    }
-  }
-  
-  size_t size = json.measureLength() + 1;
-  
-  if (size < len) {
-    json.printTo(buffer, size);
-  } else Serial.println("Buffer zu klein");
-}
-
-void handleWifiResult(AsyncWebServerRequest *request) {
-  static char sendbuffer[1200];
-  buildWifiScanjson(sendbuffer, 1200);  
-  request->send(200, "application/json", sendbuffer);
-}
-
-void handleWifiScan(AsyncWebServerRequest *request) {
-
-  //dumpClients();
-
-  WiFi.scanDelete();
-  if(WiFi.scanComplete() == -2){
-    WiFi.scanNetworks(true);
-    scantime = millis();
-    request->send(200, "text/json", "OK");
-  }   
-}
 
 String getMacAddress()  {
   uint8_t mac[6];
@@ -313,6 +320,8 @@ String getMacAddress()  {
 
 
 
+
+
 void server_setup() {
 
     String host = HOSTNAME;
@@ -321,20 +330,81 @@ void server_setup() {
     Serial.print("[INFO]\tOpen http://");
     Serial.print(host);
     Serial.println("/data to see the current temperature");
+
+    server.on("/help",HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->redirect("https://github.com/Phantomias2006/Nemesis/blob/develop/README.md");
+    }).setFilter(ON_STA_FILTER);
+    
+
+    // REQUEST: /data
+    server.on("/data", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      handleData(request, true);
+    });
+
+    // REQUEST: /data
+    server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      handleData(request, true);
+    });
+    
+    // REQUEST: /settings
+    server.on("/settings", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      handleSettings(request, true);
+    });
+    
+    // REQUEST: /networkscan
+    server.on("/networkscan", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      handleWifiScan(request, true);
+    });
+
+    // REQUEST: /networklist
+    server.on("/networklist", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      handleWifiResult(request, true);
+    });
+
+    // REQUEST: /networklist
+    server.on("/networklist", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      handleWifiResult(request, true);
+    });
+
+    /*  
+    // REQUEST: /setnetwork
+    server.on("/setnetwork", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      
+      Serial.println("SSID übermittelt");
+      Serial.println(request->method());
+      Serial.println(request->contentType());
+      Serial.println(request->url());
+      Serial.println(request->host());
+      int params = request->params();
+      Serial.println(params);
+      
+      request->send(200, "text/plain", "OK");
+    });
+
+
+
+    server.on("/setchannels", HTTP_POST, handleSetChannels);
+
+ 
+    // REQUEST: /setchannels
+    server.on("/setchannels", [](AsyncWebServerRequest *request) { 
+           
+      if(!handleSetChannels) request->send(200, "text/plain", "0");
+        request->send(200, "text/plain", "1");
+      
+    });
   
-
-    //list Temperature Data
-    server.on("/data", HTTP_GET, handleData);
     
-    //list Setting Data
-    server.on("/settings", HTTP_GET, handleSettings);
-    
-    //list Wifi Scan
-    server.on("/networkscan", HTTP_GET, handleWifiScan);
 
-    server.on("/networklist", HTTP_GET, handleWifiResult);
-
-    /*
+    // REQUEST: /setchannels
+    server.on("/setchannels", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      if(!request->authenticate(www_username, www_password))
+        return request->requestAuthentication();
+              
+        if(!handleSetChannels(request)) request->send(200, "text/plain", "0");
+          request->send(200, "text/plain", "1");
+      
+    });
     server.on("/index.html",HTTP_GET, [](AsyncWebServerRequest *request) {
       if (!handleFileRead("/index.html", request))
         request->send(404, "text/plain", "FileNotFound");
@@ -356,7 +426,82 @@ void server_setup() {
         request->send(404, "text/plain", "FileNotFound");
     });
     */
-    
+
+    server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+      if (request->url() == "/setnetwork") {
+        //holdRequest = request;
+        //beginRequest = millis();
+        if (handleSetNetwork(request, data)) {
+          //request->send(200, "text/plain", "Save");
+        } //else  request->send(200, "text/plain", "Fehler");
+      }
+      else if (request->url() =="/setchannels") { 
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();    
+        if(!handleSetChannels(request, data)) request->send(200, "text/plain", "0");
+          request->send(200, "text/plain", "1");
+      }
+      else if (request->url() =="/setsystem") { 
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();    
+        if(!handleSetSystem(request, data)) request->send(200, "text/plain", "0");
+          request->send(200, "text/plain", "1");
+      }
+      else if (request->url() =="/setpitmaster") { 
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();    
+        if(!handleSetPitmaster(request, data)) request->send(200, "text/plain", "0");
+          request->send(200, "text/plain", "1");
+      } else {
+        if(!index)  Serial.printf("BodyStart: %u\n", total);
+        Serial.printf("%s", (const char*)data);
+        if(index + len == total) Serial.printf("BodyEnd: %u\n", total);
+      }
+      
+    });
+
+    server.onNotFound([](AsyncWebServerRequest *request){
+
+      #ifdef DEBUG
+      Serial.printf("NOT_FOUND: ");
+      if(request->method() == HTTP_GET) Serial.printf("GET");
+      else if(request->method() == HTTP_POST) Serial.printf("POST");
+      else if(request->method() == HTTP_DELETE) Serial.printf("DELETE");
+      else if(request->method() == HTTP_PUT)  Serial.printf("PUT");
+      else if(request->method() == HTTP_PATCH)  Serial.printf("PATCH");
+      else if(request->method() == HTTP_HEAD) Serial.printf("HEAD");
+      else if(request->method() == HTTP_OPTIONS)  Serial.printf("OPTIONS");
+      else  Serial.printf("UNKNOWN");
+      Serial.printf(" http://%s%s\n", request->host().c_str(), request->url().c_str());
+
+      if(request->contentLength()){
+        Serial.printf("_CONTENT_TYPE: %s\n", request->contentType().c_str());
+        Serial.printf("_CONTENT_LENGTH: %u\n", request->contentLength());
+      }
+
+      int headers = request->headers();
+      int i;
+      for(i=0;i<headers;i++){
+        AsyncWebHeader* h = request->getHeader(i);
+        Serial.printf("_HEADER[%s]: %s\n", h->name().c_str(), h->value().c_str());
+      }
+
+      int params = request->params();
+      for(i=0;i<params;i++){
+        AsyncWebParameter* p = request->getParam(i);
+        if(p->isFile()){
+          Serial.printf("_FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
+        } else if(p->isPost()){
+          Serial.printf("_POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+        } else {
+          Serial.printf("_GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
+        }
+      }
+      
+      #endif
+      request->send(404);
+      
+    });
 
     server.begin();
     #ifdef DEBUG

@@ -59,7 +59,7 @@ unsigned long lastFlashInWork;
 void setup() {  
 
   // Initialize Serial 
-  set_serial();
+  set_serial(); //Serial.setDebugOutput(true);
   
   // Initialize OLED
   set_OLED();
@@ -144,6 +144,24 @@ void loop() {
     return;
   }
 
+  if (WiFi.status() == WL_CONNECTED & isAP) {
+    // Verbindung neu hergestellt
+    isAP = false;
+    #ifdef DEBUG
+      Serial.print("[INFO]\tWiFi connected to: ");
+      Serial.println(WiFi.SSID());
+      Serial.print("[INFO]\tIP address: ");
+      Serial.println(WiFi.localIP());
+    #endif
+  } else if (WiFi.status() != WL_CONNECTED) {
+    isAP = true;
+  }
+
+  //if (beginRequest > 0 & millis()-beginRequest > 4000) {
+  //  Serial.println("Senden");
+  //  holdRequest->send(200, "text/plain", "Save");
+  //}
+
   // Detect Serial
   static char serialbuffer[110];
   if (readline(Serial.read(), serialbuffer, 110) > 0) {
@@ -164,12 +182,6 @@ void loop() {
   if (button_input()) {
     button_event();
   }
-
-  if (awaking) {
-    check_wifi();
-    //monitorWiFi();
-  }
-
   
   // Update Display
   int remainingTimeBudget;
@@ -199,11 +211,12 @@ void loop() {
       
       // Erst aufwachen falls im EcoModus
       // UpdateCommunication wird so lange wiederholt bis ESP wieder wach
-      if (isEco && !awaking && (WiFi.status() != WL_CONNECTED)) {
-        reconnect_wifi();
-      }
-      else if (!awaking) {
 
+      //const char* neuedata[2];
+      //neuedata[0] = "WLAN-DDC234";
+      //neuedata[1] = "FTZuh5842OBU8753pip";     
+      //if (WiFi.status() != WL_CONNECTED) Serial.println(WIFI_Connect(neuedata));
+ 
         // falls wach und nicht AP
         if (!isAP) {
 
@@ -215,17 +228,9 @@ void loop() {
             UserData userData;
             getUpdates(id, &userData);
           #endif
-        
-        }
-
-        // Wieder einschlafen
-        if (isEco) {
-          stop_wifi();
         }
       
         lastUpdateCommunication = millis();
-      }
-      
     }
 
     if (millis() - lastUpdateDatalog > 5000) {

@@ -90,8 +90,10 @@ void set_wifi() {
     #endif
     
     isAP = false;
+
+    WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
  
-     udp.begin(2390);  // localPort = 2390;
+    udp.begin(2390);  // localPort = 2390;
 
     #ifdef DEBUG
       Serial.print("[INFO]\tStarting UDP: Local port ");
@@ -101,7 +103,7 @@ void set_wifi() {
   }
   else {
 
-    WiFi.mode(WIFI_AP);
+    WiFi.mode(WIFI_AP_STA);
 
     #ifdef DEBUG
       Serial.print("[INFO]\tConfiguring access point: ");
@@ -308,5 +310,30 @@ void dumpClients()
     Serial.print("\r\n");
     stat_info = STAILQ_NEXT(stat_info, next);
   } 
+}
+
+
+void WIFI_Connect(const char* data[2]) {
+  
+  //WiFi.disconnect();
+  Serial.println("Verbinden mit neuer SSID");
+  //WiFi.mode(WIFI_AP_STA);
+  WiFi.begin(data[0], data[1]);
+
+
+  /*
+  // führt zu einem SOFT WDT RESET, wenn die Zeit > 4000
+  uint32_t beginWait = millis();
+  while (millis() - beginWait < 2000) {
+    if (WiFi.isConnected()) return 1;  
+  }
+  return 0;
+  */
+
+  
+  // Funktioniert leider nicht im Request, führt zu Exception
+  //if (WiFi.waitForConnectResult() != WL_CONNECTED) return false;
+  //return true;
+    
 }
 

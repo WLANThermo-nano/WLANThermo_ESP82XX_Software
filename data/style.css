@@ -1514,10 +1514,9 @@ width:100%
 }
 
 .headmenu {
-background-color:#FFF;
-color:#000;
+background-color:#404040;
+color:#ccc;
 height:44px;
-border:2px solid #000
 }
 
 .loginname {
@@ -1529,7 +1528,7 @@ float:left
 text-align:center;
 padding:14px 5px;
 float:right;
-border-left:2px solid #000
+border-left:2px solid #333
 }
 
 .battery {
@@ -1539,10 +1538,18 @@ float:right
 }
 
 .channel {
-background-color:#888;
+background-color:#4a4a4a;
 border-left:10px solid #FFF;
-color:#FFF;
+color:#ccc;
 padding:5px 10px;
+margin:5px;
+position:relative
+}
+
+.channel_conf {
+background-color:#4a4a4a;
+color:#ccc;
+padding:5px 20px;
 margin:5px;
 position:relative
 }
@@ -1621,7 +1628,6 @@ left:150px
 
 .content {
 margin:0 auto;
-padding:0 .1em;
 max-width:1024px;
 margin-bottom:50px;
 line-height:1.6em
@@ -1638,14 +1644,23 @@ display:none
 .header h1 {
 margin:.2em 0;
 font-size:3em;
-font-weight:300
+font-weight:300;
 }
 
 .header h2 {
 font-weight:300;
 color:#ccc;
 padding:0;
-margin-top:0
+margin-top:0;
+}
+
+.headtitle {
+padding:0;
+margin:0 5px;
+}
+
+.footer_buttons {
+margin:5px;
 }
 
 .content-subhead {
@@ -1733,8 +1748,6 @@ margin-top:.6em
 
 @media (min-width: 48em) {
 .header,.content {
-padding-left:.5em;
-padding-right:.5em
 }
 
 #layout {

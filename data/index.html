@@ -27,8 +27,11 @@
             <ul class="pure-menu-list">
                 <li class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
 				<li class="pure-menu-item"><a href="javascript:showPlot()" class="pure-menu-link">Plot</a></li>
-                <li class="pure-menu-item"><a href="javascript:showConfig()" class="pure-menu-link">Einstellungen</a></li>
+                <li class="pure-menu-item"><a href="javascript:showChannel()" class="pure-menu-link">Kanal</a></li>
 				<li class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
+				<li class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
+				<li class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li>
+				<li class="pure-menu-item"><a href="javascript:showChart()" class="pure-menu-link">Chart Dienste</a></li>
                 <li class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>
         </div>
@@ -41,7 +44,7 @@
 		<!-- ################################################### -->
         <div id="index" class="content" class="hidden" style="display:none">
             <div class="pure-g">
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -53,7 +56,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -65,7 +68,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -77,7 +80,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -89,7 +92,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -101,7 +104,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -113,7 +116,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -125,7 +128,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -140,7 +143,10 @@
             </div>
         </div>
 		<!-- ################################################### -->
-		<div id="wlan" class="content" style="display:none">
+		<div id="wlan_config" class="content" style="display:none">
+			<div class="pure-button-group" role="group">
+				<button class="pure-button" onclick="showIndex()"><b><</b>Back</button>
+			</div>
 			<div class=".pure-g">
 				<div class="pure-u-1-1">
 						<table id="networkconnect" class="wlantable" width="100%">
@@ -152,65 +158,326 @@
 					<table id="networklist" class="wlantable" width="100%">
 							<!--Netzwerkliste -->
 					</table> 
-					<div class="pure-button-group" role="group">
-						<button class="pure-button">Suche</button>
-						<button class="pure-button">Konfigurieren</button>
-						<button class="pure-button">Mehr</button>
-					</div>
 				</div>
 			</div>
         </div>
 		<!-- ################################################### -->
-		<div id="config" class="content" style="display:none">
-            <div class="pure-g">
-				<div class="pure-u-1-1 pure-u-lg-1-2"
-					<h3>Kanal 1</h3>
-						<form class="pure-form pure-form-stacked">
-							<fieldset>
-
-							<label for="CH1TMax">Temp.Max</label>
-							<input id="CH1TMax" type="CH1TMax" placeholder="Temp.Max">
-
-							<label for="CH1TMin">Temp.Min</label>
-							<input id="CH1TMin" type="CH1TMin" placeholder="Temp.Min">
-							
-							<label for="color">Farbe</label>
-							<select id="color">
-								<option>rot</option>
-								<option>blau</option>
-								<option>gelb</option>
-							</select>
-							
-							</fieldset>
-						</form>
-				</div>
-				
-				<div class="pure-u-1-1 pure-u-lg-1-2"
-					<h3>Kanal 2</h3>
-						<form class="pure-form pure-form-stacked">
-							<fieldset>
-
-							<label for="CH2TMax">Temp.Max</label>
-							<input id="CH2TMax" type="CH2TMax" placeholder="Temp.Max">
-
-							<label for="CH2TMin">Temp.Min</label>
-							<input id="CH2TMin" type="CH2TMin" placeholder="Temp.Min">
-							
-							<label for="color">Farbe</label>
-							<select id="color">
-								<option>rot</option>
-								<option>blau</option>
-								<option>gelb</option>
-							</select>
-							
-							</fieldset>
-						</form>
+		<div id="wlan_set" class="content" style="display:none">
+			<div class="pure-button-group" role="group">
+				<button class="pure-button" onclick="showWLAN()"><b><</b>Back</button>
+				<button class="pure-button" onclick="setWLAN(document.getElementsByName('ssidInput')[0].value, document.getElementsByName('ssidPasswordInput')[0].value)">Verbinden<b>></b></button>
+			</div>
+			<div class=".pure-g">
+				<div class="pure-u-1-1">					
+					<h3>Netzwerk Verbinden</h3>
+					<input name="ssidInput" type="text" placeholder="SSID" readonly>
+					<input name="ssidPasswordInput" type="password" placeholder="Passwort" required /> 
 				</div>
 			</div>
-			<div>
+        </div>
+		<!-- ################################################### -->
+		<div id="channel_config" class="content" style="display:none">
+			<h3 class="headtitle">Kanal Einstellungen</h3>
+            <div class="pure-g">
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+						<h3>Kanal 1</h3>
+							<form class="pure-form pure-form-stacked">
+								<fieldset>
+
+									<label for="CH1TMax">Temp.Max</label>
+									<input id="CH1TMax" type="CH1TMax" placeholder="Temp.Max">
+
+									<label for="CH1TMin">Temp.Min</label>
+									<input id="CH1TMin" type="CH1TMin" placeholder="Temp.Min">
+									
+									<label for="sensor">F&uuml;hler</label>
+									<select id="sensor">
+										<option>Fantast</option>
+										<option>Maverick</option>
+										<option>WlanThermo</option>
+									</select>
+									
+									<label for="color">Farbe</label>
+									<select id="color">
+										<option>rot</option>
+										<option>blau</option>
+										<option>gelb</option>
+									</select>
+									
+									<label for="websound">
+										<input id="websound" type="checkbox"> WebSound Alarm
+									</label>
+								
+								</fieldset>
+							</form>
+					</div>
+				</div>
+				
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+						<h3>Kanal 2</h3>
+							<form class="pure-form pure-form-stacked">
+								<fieldset>
+
+									<label for="CH2TMax">Temp.Max</label>
+									<input id="CH2TMax" type="CH2TMax" placeholder="Temp.Max">
+
+									<label for="CH2TMin">Temp.Min</label>
+									<input id="CH2TMin" type="CH2TMin" placeholder="Temp.Min">
+									
+									<label for="sensor">F&uuml;hler</label>
+									<select id="sensor">
+										<option>Fantast</option>
+										<option>Maverick</option>
+										<option>WlanThermo</option>
+									</select>
+									
+									<label for="color">Farbe</label>
+									<select id="color">
+										<option>rot</option>
+										<option>blau</option>
+										<option>gelb</option>
+									</select>
+									
+									<label for="websound">
+										<input id="websound" type="checkbox"> WebSound Alarm
+									</label>
+								
+								</fieldset>
+							</form>
+					</div>
+				</div>
+				
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+						<h3>Kanal 3</h3>
+							<form class="pure-form pure-form-stacked">
+								<fieldset>
+
+									<label for="CH3TMax">Temp.Max</label>
+									<input id="CH3TMax" type="CH3TMax" placeholder="Temp.Max">
+
+									<label for="CH3TMin">Temp.Min</label>
+									<input id="CH3TMin" type="CH3TMin" placeholder="Temp.Min">
+									
+									<label for="sensor">F&uuml;hler</label>
+									<select id="sensor">
+										<option>Fantast</option>
+										<option>Maverick</option>
+										<option>WlanThermo</option>
+									</select>
+									
+									<label for="color">Farbe</label>
+									<select id="color">
+										<option>rot</option>
+										<option>blau</option>
+										<option>gelb</option>
+									</select>
+									
+									<label for="websound">
+										<input id="websound" type="checkbox"> WebSound Alarm
+									</label>
+								
+								</fieldset>
+							</form>
+					</div>
+				</div>
+				
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+						<h3>Kanal 4</h3>
+							<form class="pure-form pure-form-stacked">
+								<fieldset>
+
+									<label for="CH4TMax">Temp.Max</label>
+									<input id="CH4TMax" type="CH4TMax" placeholder="Temp.Max">
+
+									<label for="CH4TMin">Temp.Min</label>
+									<input id="CH4TMin" type="CH4TMin" placeholder="Temp.Min">
+									
+									<label for="sensor">F&uuml;hler</label>
+									<select id="sensor">
+										<option>Fantast</option>
+										<option>Maverick</option>
+										<option>WlanThermo</option>
+									</select>
+									
+									<label for="color">Farbe</label>
+									<select id="color">
+										<option>rot</option>
+										<option>blau</option>
+										<option>gelb</option>
+									</select>
+									
+									<label for="websound">
+										<input id="websound" type="checkbox"> WebSound Alarm
+									</label>
+								
+								</fieldset>
+							</form>
+					</div>
+				</div>
+				
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+						<h3>Kanal 5</h3>
+							<form class="pure-form pure-form-stacked">
+								<fieldset>
+
+									<label for="CH5TMax">Temp.Max</label>
+									<input id="CH5TMax" type="CH5TMax" placeholder="Temp.Max">
+
+									<label for="CH5TMin">Temp.Min</label>
+									<input id="CH5TMin" type="CH5TMin" placeholder="Temp.Min">
+									
+									<label for="sensor">F&uuml;hler</label>
+									<select id="sensor">
+										<option>Fantast</option>
+										<option>Maverick</option>
+										<option>WlanThermo</option>
+									</select>
+									
+									<label for="color">Farbe</label>
+									<select id="color">
+										<option>rot</option>
+										<option>blau</option>
+										<option>gelb</option>
+									</select>
+									
+									<label for="websound">
+										<input id="websound" type="checkbox"> WebSound Alarm
+									</label>
+								
+								</fieldset>
+							</form>
+					</div>
+				</div>
+				
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+						<h3>Kanal 6</h3>
+							<form class="pure-form pure-form-stacked">
+								<fieldset>
+
+									<label for="CH6TMax">Temp.Max</label>
+									<input id="CH6TMax" type="CH6TMax" placeholder="Temp.Max">
+
+									<label for="CH6TMin">Temp.Min</label>
+									<input id="CH6TMin" type="CH6TMin" placeholder="Temp.Min">
+									
+									<label for="sensor">F&uuml;hler</label>
+									<select id="sensor">
+										<option>Fantast</option>
+										<option>Maverick</option>
+										<option>WlanThermo</option>
+									</select>
+									
+									<label for="color">Farbe</label>
+									<select id="color">
+										<option>rot</option>
+										<option>blau</option>
+										<option>gelb</option>
+									</select>
+									
+									<label for="websound">
+										<input id="websound" type="checkbox"> WebSound Alarm
+									</label>
+								
+								</fieldset>
+							</form>
+					</div>
+				</div>
+				
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+						<h3>Kanal 7</h3>
+							<form class="pure-form pure-form-stacked">
+								<fieldset>
+
+									<label for="CH7TMax">Temp.Max</label>
+									<input id="CH7TMax" type="CH7TMax" placeholder="Temp.Max">
+
+									<label for="CH7TMin">Temp.Min</label>
+									<input id="CH7TMin" type="CH7TMin" placeholder="Temp.Min">
+									
+									<label for="sensor">F&uuml;hler</label>
+									<select id="sensor">
+										<option>Fantast</option>
+										<option>Maverick</option>
+										<option>WlanThermo</option>
+									</select>
+									
+									<label for="color">Farbe</label>
+									<select id="color">
+										<option>rot</option>
+										<option>blau</option>
+										<option>gelb</option>
+									</select>
+									
+									<label for="websound">
+										<input id="websound" type="checkbox"> WebSound Alarm
+									</label>
+								
+								</fieldset>
+							</form>
+					</div>
+				</div>
+				
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+						<h3>Kanal 8</h3>
+							<form class="pure-form pure-form-stacked">
+								<fieldset>
+
+									<label for="CH8TMax">Temp.Max</label>
+									<input id="CH8TMax" type="CH8TMax" placeholder="Temp.Max">
+
+									<label for="CH8TMin">Temp.Min</label>
+									<input id="CH8TMin" type="CH8TMin" placeholder="Temp.Min">
+									
+									<label for="sensor">F&uuml;hler</label>
+									<select id="sensor">
+										<option>Fantast</option>
+										<option>Maverick</option>
+										<option>WlanThermo</option>
+									</select>
+									
+									<label for="color">Farbe</label>
+									<select id="color">
+										<option>rot</option>
+										<option>blau</option>
+										<option>gelb</option>
+									</select>
+									
+									<label for="websound">
+										<input id="websound" type="checkbox"> WebSound Alarm
+									</label>
+								
+								</fieldset>
+							</form>
+					</div>
+				</div>
+			</div>
+			<div class="footer_buttons">
 				<button class="button-success pure-button">Speichern</button>
 				<button class="button-error pure-button">Abbrechen</button>
 			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="system_config" class="content" style="display:none">
+			<!-- html for about-Site -->
+			<h1>WLANThermo - system config</h1>
+        </div>
+		<!-- ################################################### -->
+		<div id="pitmaster_config" class="content" style="display:none">
+			<!-- html for about-Site -->
+			<h1>WLANThermo - pitmaster config</h1>
+        </div>
+		<!-- ################################################### -->
+		<div id="chart_config" class="content" style="display:none">
+			<!-- html for about-Site -->
+			<h1>WLANThermo - chart config</h1>
         </div>
 		<!-- ################################################### -->
 		<div id="plot" class="content" style="display:none">
@@ -234,7 +501,8 @@
 	
 	function showWLAN(){
 		hideAll();
-		document.getElementById("wlan").style.display = "inline";
+		document.getElementById("wlan_config").style.display = "inline";
+		networklist();
 		networkscan();
 	}
 	
@@ -243,9 +511,38 @@
 		document.getElementById("plot").style.display = "inline";
 	}	
 
-	function showConfig(){
+	function showSetWLAN(){
 		hideAll();
-		document.getElementById("config").style.display = "inline";
+		document.getElementById("wlan_set").style.display = "inline";
+	}	
+	
+	function setWLAN(ssid, passwd){
+		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
+		//alert(data);
+		loadJSON('setnetwork', data, function (response) {
+			alert(data + response);
+			showWLAN();
+		})
+	}
+
+	function showChannel(){
+		hideAll();
+		document.getElementById("channel_config").style.display = "inline";
+	}	
+	
+	function showSystem(){
+		hideAll();
+		document.getElementById("system_config").style.display = "inline";
+	}	
+	
+	function showPitmaster(){
+		hideAll();
+		document.getElementById("pitmaster_config").style.display = "inline";
+	}	
+	
+	function showChart(){
+		hideAll();
+		document.getElementById("chart_config").style.display = "inline";
 	}	
 	
 	function showIndex(){
@@ -256,31 +553,40 @@
 		hideAll();
 		document.getElementById("about").style.display = "inline";
 	}	
+
 	function hideAll(){
 		document.getElementById("index").style.display = "none";
-		document.getElementById("wlan").style.display = "none";
-		document.getElementById("config").style.display = "none";
+		document.getElementById("wlan_config").style.display = "none";
+		document.getElementById("channel_config").style.display = "none";
+		document.getElementById("system_config").style.display = "none";
+		document.getElementById("pitmaster_config").style.display = "none";
+		document.getElementById("chart_config").style.display = "none";
 		document.getElementById("plot").style.display = "none";
 		document.getElementById("about").style.display = "none";
-	}
-	function loadJSON(url, callback) { 
-		var xobj = new XMLHttpRequest();
-		xobj.overrideMimeType("application/json");
-		xobj.open('GET', url, true);
-		xobj.onreadystatechange = function () {
-			if (xobj.readyState == 4 && xobj.status == "200") {
-				// .open will NOT return a value but simply returns undefined in async mode so use a callback
-				callback(xobj.responseText);
-			}
-		}
-		xobj.send(null);
+		document.getElementById("wlan_set").style.display = "none";
 	}
 	
+	function loadJSON(url, data, callback) {
+        var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+        xobj.open('POST', url, true);
+        xobj.setRequestHeader("Content-Type", "application/json");
+        xobj.onreadystatechange = function () {
+            if (xobj.readyState == 4 && xobj.status == "200") {
+                // .open will NOT return a value but simply returns undefined in async mode so use a callback
+                callback(xobj.responseText);
+            }
+        }
+        xobj.send(data);
+    }
+	
 	function readTemp(){
-		loadJSON('data', function (response) {
+		loadJSON('data', '', function (response) {
 		//loadJSON(function(response) {	
 			jsonresponse = JSON.parse(response);
-			var x = document.getElementsByClassName("pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4");
+			document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%";
+			document.getElementsByClassName("wifi")[0].innerHTML = jsonresponse.system.rssi + "dBm";
+			var x = document.getElementsByClassName("pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index");
 			var i;
 			for (i = 0; i < x.length; i++) {
 				x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jsonresponse.channel[i].color;
@@ -290,15 +596,13 @@
 				x[i].getElementsByClassName('tempmax')[0].innerHTML = jsonresponse.channel[i].max + "°";
 				x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;					
 			}
-			document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%";
-			document.getElementsByClassName("wifi")[0].innerHTML = jsonresponse.system.rssi + "dBm";
+
 		})
 	}
 	
 	function readSettings(){
-		loadJSON('settings', function (response) {
+		loadJSON('settings', '', function (response) {
 			jsonresponse = JSON.parse(response);
-
 		})
 	}
 	
@@ -318,9 +622,15 @@
                 if (typeof fileref != "undefined")
                     document.getElementsByTagName("head")[0].appendChild(fileref)
     }
-
-		function networkscan(){
-		loadJSON('networklist', function (response) {
+	function networkscan(){
+		loadJSON('networkscan', '', function (response) {
+			if (response == "OK"){
+				setTimeout("networklist();", 3000);
+			}
+		})
+	}
+	function networklist(){
+		loadJSON('networklist', '', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById("networklist").innerHTML = '';
 			document.getElementById("networkconnect").innerHTML = '';
@@ -369,7 +679,11 @@
 			rows[i].onclick = (function() { // closure
 				var cnt = i; // save the counter to use in the function
 				return function() {
-				  alert("row"+cnt+" data="+this.cells[1].innerHTML);
+					showSetWLAN();
+					//alert("row"+cnt+" data="+this.cells[1].innerHTML);
+					//document.getElementsByName('ssidInput')[0].placeholder=this.cells[1].innerHTML;
+					document.getElementsByName('ssidInput')[0].value = this.cells[1].innerHTML;
+					document.getElementsByName('ssidPasswordInput')[0].value = null;
 				}    
 			})(i);
 		}

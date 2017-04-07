@@ -632,15 +632,23 @@ void read_serial(char *buffer) {
     return;
   }
   else if (strcmp(buffer, "data")==0) {
-    static char sendbuffer[1200];
-    buildDatajson(sendbuffer, 1200);
-    Serial.println(sendbuffer);
+    AsyncWebServerRequest *request;
+    handleData(request, false);
     return;
   }
   else if (strcmp(buffer, "settings")==0) {
-    static char sendbuffer[200];
-    buildSettingjson(sendbuffer, 200);
-    Serial.println(sendbuffer);
+    AsyncWebServerRequest *request;
+    handleSettings(request, false);
+    return;
+  }
+  else if (strcmp(buffer, "networklist")==0) {
+    AsyncWebServerRequest *request;
+    handleWifiResult(request, false);
+    return;
+  }
+  else if (strcmp(buffer, "networkscan")==0) {
+    AsyncWebServerRequest *request;
+    handleWifiScan(request, false);
     return;
   }
   else if (strcmp(buffer, "activ")==0) {

@@ -33,6 +33,10 @@
 #include <EEPROM.h>               // EEPROM
 #include <FS.h>                   // FILESYSTEM
 #include <ArduinoJson.h>          // JSON
+#include <ESP8266mDNS.h>        
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
+#include "AsyncJson.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -278,8 +282,10 @@ void stop_wifi();
 void check_wifi();
 
 // SERVER
-void buildDatajson(char *buffer, int len);
-void buildSettingjson(char *buffer, int len);
+void handleSettings(AsyncWebServerRequest *request, bool www);
+void handleData(AsyncWebServerRequest *request, bool www);
+void handleWifiResult(AsyncWebServerRequest *request, bool www);
+void handleWifiScan(AsyncWebServerRequest *request, bool www);
 
 // EEPROM
 void setEE();

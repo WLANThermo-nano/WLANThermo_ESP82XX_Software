@@ -1,6 +1,0 @@
-{
-"system":{"time":"1491300430","utc":1,"ap":"NANO-AP","host":"NANO-825b5a","language":"de","unit":"C","version":"V0.3"},
-"sensors":["Maverick","Fantast-Neu","100K6A1B","100K","SMD NTC","5K3A1B","Typ K"],
-"pitmaster":["SSR","FAN"],
-"charts":{thingspeak":"xxx"}
-}
