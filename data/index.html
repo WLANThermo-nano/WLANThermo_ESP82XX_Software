@@ -578,8 +578,8 @@
 		//alert(data);
 		loadJSON('setnetwork', data, function (response) {
 			alert(data + response);
-			showWLAN();
 		})
+		showWLAN();
 	}
 
 	function showChannel(){
@@ -602,9 +602,8 @@
 		alert(data);
 		loadJSON('setsystem', data, function (response) {
 			alert(data + response);
-			showIndex();
 		})
-	
+		showIndex();
 	}
 	function showPitmaster(){
 		hideAll();
