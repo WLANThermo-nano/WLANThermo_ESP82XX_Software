@@ -86,6 +86,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   _system["host"] = host;
   _system["language"] = "de";
   _system["unit"] = temp_unit;
+  _system["hwalarm"] = doAlarm;
   _system["version"] = FIRMWAREVERSION;
   
   JsonArray& _typ = root.createNestedArray("sensors");
@@ -351,6 +352,11 @@ void server_setup() {
     server.on("/settings", HTTP_POST, [](AsyncWebServerRequest *request) { 
       handleSettings(request, true);
     });
+
+    // REQUEST: /settings
+    server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      handleSettings(request, true);
+    });
     
     // REQUEST: /networkscan
     server.on("/networkscan", HTTP_POST, [](AsyncWebServerRequest *request) { 
@@ -366,8 +372,14 @@ void server_setup() {
     server.on("/networklist", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handleWifiResult(request, true);
     });
-    
 
+    // REQUEST: /configreset
+    server.on("/configreset", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      setconfig(eCHANNEL,{});
+      loadconfig(eCHANNEL);
+      set_Channels();
+    });
+    
     // REQUEST: /deletenetworkstore
     server.on("/deletenetworkstore", HTTP_POST, [](AsyncWebServerRequest *request) { 
       if (setconfig(eWIFI,{})) {  
