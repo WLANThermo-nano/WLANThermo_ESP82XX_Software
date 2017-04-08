@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A layout example with a side menu that hides on mobile, just like the Pure website.">
+    <meta name="description" content="">
     <title>WLANThermo - Nano</title>
 </head>
 <body>
@@ -471,6 +471,10 @@
 		<div id="system_config" class="content" style="display:none">
 			<!-- html for about-Site -->
 			<h3 class="headtitle">System Einstellungen</h3>
+			<div class="pure-button-group" role="group">
+				<button class="pure-button" onclick="showIndex()"><b><</b>Zurück</button>
+				<button class="pure-button" onclick="setSystem('false',document.getElementById('hostname').value, document.getElementById('timezone').value, document.getElementById('language').value, 'C')">Speichern<b>></b></button>
+			</div>
 			<div class="pure-g">
 				<div class="pure-u-1-1">
 					<div class="1-box channel_conf">
@@ -481,16 +485,16 @@
 								
 								<label for="timezone">Zeitzone</label>
 								<select id="timezone">
-									<option>MEZ</option>
-									<option>MEZ+1</option>
-									<option>MEZ-1</option>
+									<option value="0">MEZ</option>
+									<option value="1">MEZ+1</option>
+									<option value="-1">MEZ-1</option>
 								</select>
 								
 								<label for="language">Sprache</label>
 								<select id="language">
-									<option>deutsch</option>
-									<option>englisch</option>
-									<option>französisch</option>
+									<option value="de">Deutsch</option>
+									<option value="en">Englisch</option>
+									<option value="fr">Französisch</option>
 								</select>
 								
 								<label for="unit">Einheit</label>
@@ -500,7 +504,7 @@
 								</select>
 								
 								<label class="switch">
-									<input type="checkbox">
+									<input id="" type="checkbox">
 									<div class="slider round"></div>
 									<div class="checkbox_title">Hardwarealarm</div>
 								</label>
@@ -585,9 +589,23 @@
 	
 	function showSystem(){
 		hideAll();
+		loadJSON('settings', '', function (response) {
+			jsonresponse = JSON.parse(response);
+			document.getElementById('timezone').value = jsonresponse.system.utc;
+			document.getElementById('language').value = jsonresponse.system.language;
+			document.getElementById('hostname').value = jsonresponse.system.host;
+		})
 		document.getElementById("system_config").style.display = "inline";
 	}	
+	function setSystem(hwalarm, host, utc, language, unit){
+		var data='{"hwalarm":"' + hwalarm + '","host":"' + host + '","utc":' + utc + ',"language":"' + language + '","unit":"' + unit + '"}';
+		alert(data);
+		loadJSON('setsystem', data, function (response) {
+			alert(data + response);
+			showIndex();
+		})
 	
+	}
 	function showPitmaster(){
 		hideAll();
 		document.getElementById("pitmaster_config").style.display = "inline";
