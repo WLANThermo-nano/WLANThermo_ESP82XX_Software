@@ -199,6 +199,12 @@ long rssi = 0;                   // Buffer rssi
 String THINGSPEAK_KEY;
 long scantime;
 bool disconnectAP;
+struct HoldSSID {
+   bool hold;             
+   String ssid;
+   String pass;
+};
+HoldSSID holdssid;
 
 // BUTTONS
 byte buttonPins[]={btn_r,btn_l};          // Pins

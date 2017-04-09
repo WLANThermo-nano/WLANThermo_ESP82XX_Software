@@ -30,7 +30,7 @@ AsyncWebServer server(80);        // https://github.com/me-no-dev/ESPAsyncWebSer
 //unsigned long beginRequest;
 
 const char* www_username = "admin";
-const char* www_password = "esp8266";
+const char* www_password = "admin";
 
 String getContentType(String filename, AsyncWebServerRequest *request) {
   if (request->hasArg("download")) return "application/octet-stream";
@@ -278,17 +278,24 @@ bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
 
   WIFI_Connect(data);
 
-    if (!modifyconfig(eWIFI,data)) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save wifi config");
-      #endif
-      return 0;
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config saved");
-      #endif
-      return 1;
-    }
+  holdssid.hold = true;
+  holdssid.ssid = _network["ssid"].asString();
+  holdssid.pass = _network["password"].asString();
+
+/*
+  if (!modifyconfig(eWIFI,data)) {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tFailed to save wifi config");
+        #endif
+        //return 0;
+      } else {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tWifi config saved");
+        #endif
+        //return 1;
+      }
+*/
+  return 1;
 }
 
 bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
@@ -301,11 +308,11 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
   JsonObject& _system = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_system.success()) return 0;
   
-  // = _system["hwalarm"];
+  doAlarm = _system["hwalarm"];
   // = _system["host"];
-  // = _system["utc"];
+  timeZone = _system["utc"];
   // = _system["language"];
-  // = _system["unit"];
+  temp_unit = _system["unit"].asString();
   
   return 1;
 }

@@ -157,6 +157,24 @@ void loop() {
       Serial.print("[INFO]\tIP address: ");
       Serial.println(WiFi.localIP());
     #endif
+
+    if (holdssid.hold) {
+      holdssid.hold = false;
+      const char* data[2];
+      data[0] = holdssid.ssid.c_str();
+      data[1] = holdssid.pass.c_str();
+      if (!modifyconfig(eWIFI,data)) {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tFailed to save wifi config");
+        #endif
+        //return 0;
+      } else {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tWifi config saved");
+        #endif
+        //return 1;
+      }
+    }
     
     WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
     
@@ -173,7 +191,7 @@ void loop() {
         Serial.println("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
         #endif
       }
-  }
+  } //else if (isAP == 1)
 
   //if (beginRequest > 0 & millis()-beginRequest > 4000) {
   //  Serial.println("Senden");
