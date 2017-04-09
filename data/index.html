@@ -473,7 +473,7 @@
 			<h3 class="headtitle">System Einstellungen</h3>
 			<div class="pure-button-group" role="group">
 				<button class="pure-button" onclick="showIndex()"><b><</b>Zurück</button>
-				<button class="pure-button" onclick="setSystem('false',document.getElementById('hostname').value, document.getElementById('timezone').value, document.getElementById('language').value, 'C')">Speichern<b>></b></button>
+				<button class="pure-button" onclick="setSystem('false',document.getElementById('hostname').value, document.getElementById('timezone').value, document.getElementById('language').value, document.getElementById('unit').value)">Speichern<b>></b></button>
 			</div>
 			<div class="pure-g">
 				<div class="pure-u-1-1">
@@ -499,8 +499,8 @@
 								
 								<label for="unit">Einheit</label>
 								<select id="unit">
-									<option>C</option>
-									<option>F</option>
+									<option value="C">Celsius</option>
+									<option value="F">Fahrenheit</option>
 								</select>
 								
 								<label class="switch">
@@ -577,7 +577,7 @@
 		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
 		//alert(data);
 		loadJSON('setnetwork', data, function (response) {
-			alert(data + response);
+			//alert(data + response);
 		})
 		showWLAN();
 	}
@@ -594,12 +594,14 @@
 			document.getElementById('timezone').value = jsonresponse.system.utc;
 			document.getElementById('language').value = jsonresponse.system.language;
 			document.getElementById('hostname').value = jsonresponse.system.host;
+			document.getElementById('unit').value = jsonresponse.system.unit;
+
 		})
 		document.getElementById("system_config").style.display = "inline";
 	}	
 	function setSystem(hwalarm, host, utc, language, unit){
 		var data='{"hwalarm":"' + hwalarm + '","host":"' + host + '","utc":' + utc + ',"language":"' + language + '","unit":"' + unit + '"}';
-		alert(data);
+		//alert(data);
 		loadJSON('setsystem', data, function (response) {
 			alert(data + response);
 		})
