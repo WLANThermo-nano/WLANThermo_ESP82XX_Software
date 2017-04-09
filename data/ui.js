@@ -45,41 +45,49 @@
     menuHome.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
+			showIndex();
         }
     };
     menuPlot.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
+			showPlot();
         }
     };
     menuWlan.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
+			showWLAN();
         }
     };
     menuSystem.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
+			showSystem();
         }
     };
     menuPitmaster.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
+			showPitmaster();
         }
     };
     menuChart.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
+			showChart();
         }
     };
     menuChannel.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
+			showChannel();
         }
     };
     menuAbout.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
+			showAbout();
         }
     };
  
