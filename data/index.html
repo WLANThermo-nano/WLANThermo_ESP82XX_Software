@@ -44,7 +44,7 @@
 		<!-- ################################################### -->
         <div id="index" class="content" class="hidden" style="display:none">
             <div class="pure-g">
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('1')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -56,7 +56,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('2')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -68,7 +68,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('3')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -80,7 +80,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('4')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -92,7 +92,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('5')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -104,7 +104,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('6')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -116,7 +116,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('7')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -128,7 +128,7 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('8')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
@@ -179,14 +179,51 @@
 			</div>
         </div>
 		<!-- ################################################### -->
+		<div id="channel_settings" class="content" style="display:none">
+			<div class="pure-button-group" role="group">
+				<button class="pure-button" onclick="showIndex()"><b><</b>Back</button>
+				<button class="pure-button" onclick="">Speichern<b>></b></button>
+			</div>
+			<div class=".pure-g">
+				<div class="pure-u-1-1">
+					<fieldset>
+
+						<label for="CH1TMax">Temp.Max</label>
+						<input id="CH1TMax" type="CH1TMax" placeholder="Temp.Max">
+
+						<label for="CH1TMin">Temp.Min</label>
+						<input id="CH1TMin" type="CH1TMin" placeholder="Temp.Min">
+								
+						<label for="sensor">F&uuml;hler</label>
+						<select id="sensor">
+							<option>Fantast</option>
+							<option>Maverick</option>
+							<option>WlanThermo</option>
+						</select>
+								
+						<label for="color">Farbe</label>
+						<select id="color">
+							<option>rot</option>
+							<option>blau</option>
+							<option>gelb</option>
+						</select>
+								
+						<label for="websound">
+							<input id="websound" type="checkbox"> WebSound Alarm
+						</label>
+					</fieldset>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
 		<div id="channel_config" class="content" style="display:none">
 			<h3 class="headtitle">Kanal Einstellungen</h3>
             <div class="pure-g">
 				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
 					<div class="1-box channel_conf">
 						<h3>Kanal 1</h3>
-							<form class="pure-form pure-form-stacked">
-								<fieldset>
+						<form class="pure-form pure-form-stacked">
+							<fieldset>
 
 								<label for="CH1TMax">Temp.Max</label>
 								<input id="CH1TMax" type="CH1TMax" placeholder="Temp.Max">
@@ -211,9 +248,8 @@
 								<label for="websound">
 								<input id="websound" type="checkbox"> WebSound Alarm
 								</label>
-								
-								</fieldset>
-							</form>
+							</fieldset>
+						</form>
 					</div>
 				</div>
 				
@@ -572,6 +608,11 @@
 		hideAll();
 		document.getElementById("wlan_set").style.display = "inline";
 	}	
+
+	function showSetChannel(){
+		hideAll();
+		document.getElementById("channel_settings").style.display = "inline";
+	}	
 	
 	function setWLAN(ssid, passwd){
 		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
@@ -634,6 +675,7 @@
 		document.getElementById("plot").style.display = "none";
 		document.getElementById("about").style.display = "none";
 		document.getElementById("wlan_set").style.display = "none";
+		document.getElementById("channel_settings").style.display = "none";
 	}
     function loadJSON(url, data, callback) {
         var xobj = new XMLHttpRequest();
