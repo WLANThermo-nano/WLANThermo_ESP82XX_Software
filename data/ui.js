@@ -43,28 +43,44 @@
         toggleAll(e);
     };
     menuHome.onclick = function (e) {
-        toggleAll(e);
+        if (menu.className.indexOf('active') !== -1) {
+            toggleAll(e);
+        }
     };
     menuPlot.onclick = function (e) {
-        toggleAll(e);
+        if (menu.className.indexOf('active') !== -1) {
+            toggleAll(e);
+        }
     };
     menuWlan.onclick = function (e) {
-        toggleAll(e);
+        if (menu.className.indexOf('active') !== -1) {
+            toggleAll(e);
+        }
     };
     menuSystem.onclick = function (e) {
-        toggleAll(e);
+        if (menu.className.indexOf('active') !== -1) {
+            toggleAll(e);
+        }
     };
     menuPitmaster.onclick = function (e) {
-        toggleAll(e);
+        if (menu.className.indexOf('active') !== -1) {
+            toggleAll(e);
+        }
     };
     menuChart.onclick = function (e) {
-        toggleAll(e);
+        if (menu.className.indexOf('active') !== -1) {
+            toggleAll(e);
+        }
     };
     menuChannel.onclick = function (e) {
-        toggleAll(e);
+        if (menu.className.indexOf('active') !== -1) {
+            toggleAll(e);
+        }
     };
     menuAbout.onclick = function (e) {
-        toggleAll(e);
+        if (menu.className.indexOf('active') !== -1) {
+            toggleAll(e);
+        }
     };
  
     content.onclick = function(e) {
