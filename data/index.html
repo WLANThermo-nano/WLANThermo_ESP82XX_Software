@@ -473,7 +473,7 @@
 			<h3 class="headtitle">System Einstellungen</h3>
 			<div class="pure-button-group" role="group">
 				<button class="pure-button" onclick="showIndex()"><b><</b>Zurück</button>
-				<button class="pure-button" onclick="setSystem('false',document.getElementById('hostname').value, document.getElementById('timezone').value, document.getElementById('language').value, document.getElementById('unit').value)">Speichern<b>></b></button>
+				<button class="pure-button" onclick="setSystem(document.getElementById('hwalarm').value, document.getElementById('hostname').value, document.getElementById('timezone').value, document.getElementById('language').value, document.getElementById('unit').value)">Speichern<b>></b></button>
 			</div>
 			<div class="pure-g">
 				<div class="pure-u-1-1">
@@ -504,7 +504,7 @@
 								</select>
 								
 								<label class="switch">
-									<input id="" type="checkbox">
+									<input id="hwalarm" type="checkbox">
 									<div class="slider round"></div>
 									<div class="checkbox_title">Hardwarealarm</div>
 								</label>
@@ -575,11 +575,10 @@
 	
 	function setWLAN(ssid, passwd){
 		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
-		//alert(data);
 		loadJSON('setnetwork', data, function (response) {
-			//alert(data + response);
+			showWLAN();
 		})
-		showWLAN();
+		
 	}
 
 	function showChannel(){
@@ -595,17 +594,16 @@
 			document.getElementById('language').value = jsonresponse.system.language;
 			document.getElementById('hostname').value = jsonresponse.system.host;
 			document.getElementById('unit').value = jsonresponse.system.unit;
-
+			document.getElementById('hwalarm').value = jsonresponse.system.hwalarm;
 		})
 		document.getElementById("system_config").style.display = "inline";
 	}	
 	function setSystem(hwalarm, host, utc, language, unit){
 		var data='{"hwalarm":"' + hwalarm + '","host":"' + host + '","utc":' + utc + ',"language":"' + language + '","unit":"' + unit + '"}';
-		//alert(data);
 		loadJSON('setsystem', data, function (response) {
-			alert(data + response);
+			showIndex();
 		})
-		showIndex();
+		
 	}
 	function showPitmaster(){
 		hideAll();
