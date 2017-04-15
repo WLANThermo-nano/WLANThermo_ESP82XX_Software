@@ -161,9 +161,9 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 }
 
 fieldset {
-border:1px solid silver;
+border:none;
 margin:0 2px;
-padding:.35em .625em .75em
+padding:0
 }
 
 legend,td,th {
@@ -1554,6 +1554,14 @@ margin:5px;
 position:relative
 }
 
+.wlan_conf {
+background-color:#4a4a4a;
+color:#ccc;
+padding:5px 20px;
+margin:5px;
+position:relative
+}
+
 .chtitle {
 font-size:1em;
 text-align:left
@@ -1571,6 +1579,10 @@ padding-top:.4em;
 text-align:right;
 float:left;
 width:75%
+}
+
+.temp_input {
+width:8.2em
 }
 
 .tempadjust {
@@ -1591,6 +1603,21 @@ clear:both
 
 .clear {
 clear:both
+}
+
+.wlantable td {
+max-width: 0;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
+.row-Check{
+min-width: 6%;
+}
+
+.row-SSID{
+min-width: 45%;
 }
 
 body {
@@ -1656,7 +1683,7 @@ margin-top:0;
 
 .headtitle {
 padding:0;
-margin:0 5px;
+margin:5px 0 0 5px;
 }
 
 .footer_buttons {
@@ -1768,6 +1795,16 @@ color:#fff
 font-size:110%;
 color:#fff;
 margin:0
+}
+
+.umenu  {
+list-style-type:disc;
+margin:4px;
+}
+
+.umenu a {
+padding:4px !important;
+text-decoration:none;
 }
 
 .menu-link {
