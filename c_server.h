@@ -227,20 +227,26 @@ bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
     return 0;
   }
 
-  for (int i = 0; i < CHANNELS; i++) {
-    JsonObject& _cha = json["channel"][i];
-    String _name = _cha["name"].asString();                       // KANALNAME
-    if (_name.length() < 11)  ch[i].name = _name;
-    byte _typ = _cha["typ"];                                      // FÜHLERTYP
-    if (_typ > -1 && _typ < SENSORTYPEN) ch[i].typ = _typ;  
-    float _limit = _cha["min"];                                   // LIMITS
-    if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[i].min = _limit;
-    _limit = _cha["max"];
-    if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[i].max = _limit;
-    ch[i].alarm = _cha["alarm"];                                  // ALARM
-    ch[i].color = _cha["color"].asString();                       // COLOR
+  int i = 0;
+  JsonArray& _cha = json["channel"];
+  for (JsonArray::iterator it=_cha.begin(); it!=_cha.end(); ++it) {
+    int num = _cha[i]["number"];
+    if (num > 0) {
+      num--;          // Intern beginnt die Zählung bei 0
+      String _name = _cha[i]["name"].asString();                  // KANALNAME
+      if (_name.length() < 11)  ch[num].name = _name;
+      byte _typ = _cha[i]["typ"];                                 // FÜHLERTYP
+      if (_typ > -1 && _typ < SENSORTYPEN) ch[num].typ = _typ;  
+      float _limit = _cha[i]["min"];                              // LIMITS
+      if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[num].min = _limit;
+      _limit = _cha[i]["max"];
+      if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[num].max = _limit;
+      ch[num].alarm = _cha[i]["alarm"];                           // ALARM
+      ch[num].color = _cha[i]["color"].asString();                // COLOR
+    }
+    i++;
   }
-
+  
   modifyconfig(eCHANNEL,{});                                      // SPEICHERN
   return 1;
 }
@@ -470,6 +476,10 @@ void server_setup() {
     });
     */
 
+    // Eventuell andere Lösung zum Auslesen des Body-Inhalts
+    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/123
+    // https://github.com/me-no-dev/ESPAsyncWebServer#request-variables
+    
     server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
       if (request->url() == "/setnetwork") {
         //holdRequest = request;
