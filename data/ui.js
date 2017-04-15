@@ -9,6 +9,7 @@
 		menuSystem = document.getElementById('menuSystem'),
 		menuPitmaster = document.getElementById('menuPitmaster'),
 		menuChart = document.getElementById('menuChart'),
+		menuChannel0 = document.getElementById('menuChannel0'),
 		menuChannel1 = document.getElementById('menuChannel1'),
 		menuChannel2 = document.getElementById('menuChannel2'),
 		menuChannel3 = document.getElementById('menuChannel3'),
@@ -16,7 +17,6 @@
 		menuChannel5 = document.getElementById('menuChannel5'),
 		menuChannel6 = document.getElementById('menuChannel6'),
 		menuChannel7 = document.getElementById('menuChannel7'),
-		menuChannel8 = document.getElementById('menuChannel8'),
 		menuAbout = document.getElementById('menuAbout'),
         content  = document.getElementById('main');
     function toggleClass(element, className) {
@@ -85,7 +85,13 @@
 			showChart();
         }
     };
-    menuChannel1.onclick = function (e) {
+    menuChannel0.onclick = function (e) {
+        if (menu.className.indexOf('active') !== -1) {
+            toggleAll(e);
+			showSetChannel('0');
+        }
+    };
+	menuChannel1.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
 			showSetChannel('1');
@@ -94,7 +100,7 @@
 	menuChannel2.onclick = function (e) {
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
-			showSetChannel('1');
+			showSetChannel('2');
         }
     };
 	menuChannel3.onclick = function (e) {
@@ -125,12 +131,6 @@
         if (menu.className.indexOf('active') !== -1) {
             toggleAll(e);
 			showSetChannel('7');
-        }
-    };
-	menuChannel7.onclick = function (e) {
-        if (menu.className.indexOf('active') !== -1) {
-            toggleAll(e);
-			showSetChannel('8');
         }
     };
     menuAbout.onclick = function (e) {

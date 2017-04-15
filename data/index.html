@@ -29,14 +29,14 @@
                 <li class="pure-menu-item pure-menu-has-children">
 					<a href="#" id="menuChannel" class="pure-menu-link">Kanal</a>
 					<ul class="pure-menu-children">
-						<li class="pure-menu-item" id="menuChannel1"><a class="pure-menu-link" href="javascript:showSetChannel('1')">Kanal 1</a></li>
-						<li class="pure-menu-item" id="menuChannel2"><a class="pure-menu-link" href="javascript:showSetChannel('2')">Kanal 2</a></li>
-						<li class="pure-menu-item" id="menuChannel3"><a class="pure-menu-link" href="javascript:showSetChannel('3')">Kanal 3</a></li>
-						<li class="pure-menu-item" id="menuChannel4"><a class="pure-menu-link" href="javascript:showSetChannel('4')">Kanal 4</a></li>
-						<li class="pure-menu-item" id="menuChannel5"><a class="pure-menu-link" href="javascript:showSetChannel('5')">Kanal 5</a></li>
-						<li class="pure-menu-item" id="menuChannel6"><a class="pure-menu-link" href="javascript:showSetChannel('6')">Kanal 6</a></li>
-						<li class="pure-menu-item" id="menuChannel7"><a class="pure-menu-link" href="javascript:showSetChannel('7')">Kanal 7</a></li>
-						<li class="pure-menu-item" id="menuChannel8"><a class="pure-menu-link" href="javascript:showSetChannel('8')">Kanal 8</a></li>
+						<li class="pure-menu-item" id="menuChannel0"><a class="pure-menu-link" href="javascript:showSetChannel('0')">Kanal 1</a></li>
+						<li class="pure-menu-item" id="menuChannel1"><a class="pure-menu-link" href="javascript:showSetChannel('1')">Kanal 2</a></li>
+						<li class="pure-menu-item" id="menuChannel2"><a class="pure-menu-link" href="javascript:showSetChannel('2')">Kanal 3</a></li>
+						<li class="pure-menu-item" id="menuChannel3"><a class="pure-menu-link" href="javascript:showSetChannel('3')">Kanal 4</a></li>
+						<li class="pure-menu-item" id="menuChannel4"><a class="pure-menu-link" href="javascript:showSetChannel('4')">Kanal 5</a></li>
+						<li class="pure-menu-item" id="menuChannel5"><a class="pure-menu-link" href="javascript:showSetChannel('5')">Kanal 6</a></li>
+						<li class="pure-menu-item" id="menuChannel6"><a class="pure-menu-link" href="javascript:showSetChannel('6')">Kanal 7</a></li>
+						<li class="pure-menu-item" id="menuChannel7"><a class="pure-menu-link" href="javascript:showSetChannel('7')">Kanal 8</a></li>
 					</ul>
 				</li>
 				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
@@ -55,6 +55,18 @@
 		<!-- ################################################### -->
         <div id="index" class="content" class="hidden" style="display:none">
             <div class="pure-g">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('0')">
+					<div class="1-box channel">
+						<div class="chtitle">N.C.</div>
+						<div class="chnumber">N.C.</div>
+							<div class="tempadjust">
+								<div class="tempmin">N.C.</div>
+								<div class="tempmax">N.C.</div>
+							</div>
+							<div class="temp">N.C.</div>
+							<div class="clear"></div>
+					</div>
+                </div>
                 <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('1')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
@@ -139,18 +151,6 @@
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('8')">
-					<div class="1-box channel">
-						<div class="chtitle">N.C.</div>
-						<div class="chnumber">N.C.</div>
-							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
-								<div class="tempmax">N.C.</div>
-							</div>
-							<div class="temp">N.C.</div>
-							<div class="clear"></div>
-					</div>
-                </div>
             </div>
         </div>
 		<!-- ################################################### -->
@@ -207,7 +207,7 @@
 				<button class="pure-button pure-button-disabled">Kanal $</button>
 				<button class="pure-button" onclick="">Speichern</button>
 			</div>
-			<h3 class="headtitle">Kanal $</h3>
+			<h3 id="channel_settings_headtitle" class="headtitle">N.C.</h3>
             <div class="pure-g">
 				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-5">
 					<div class="1-box channel_conf">
@@ -215,25 +215,19 @@
 						<fieldset>
 							<table>
 								<tr>
-								<td>
-									<label for="CH1TMax">Temp.Max</label>
-								</td>
-								<td>
-									<input class="temp_input" id="CH1TMax" type="CH1TMax" placeholder="Temp.Max">
-								</td>
+									<td><label for="ChannelName">Kanal Name:&nbsp;&nbsp;</label></td>
+									<td><input class="temp_input" id="channel_name" type="text" placeholder="Kanal Name"></td>
 								</tr>
 								<tr>
-									<td>
-										<label for="CH1TMin">Temp.Min</label>
-									</td>
-									<td>
-										<input class="temp_input" id="CH1TMin" type="CH1TMin" placeholder="Temp.Min">
-									</td>
+									<td><label for="CH1TMax">Temp Max</label></td>
+									<td><input class="temp_input" id="temp_max" type="text" onkeyup="this.value=this.value.replace(/[^0-9-]/g,'');" placeholder="Temp Max"></td>
 								</tr>
 								<tr>
-									<td>
-										<label for="sensor">F&uuml;hler</label>
-									</td>
+									<td><label for="CH1TMin">Temp Min</label></td>
+									<td><input class="temp_input" id="temp_min" type="text" onkeyup="this.value=this.value.replace(/[^0-9-]/g,'');" placeholder="Temp Min"></td>
+								</tr>
+								<tr>
+									<td><label for="sensor">Fühler</label></td>
 									<td>
 										<select id="sensor">
 											<option>Fantast</option>
@@ -243,9 +237,7 @@
 									</td>
 								</tr>
 								<tr>
-									<td>
-										<label for="color">Farbe</label>
-									</td>
+									<td><label for="color">Farbe</label></td>
 									<td>
 										<select style="width:8.6em" id="color">
 											<option>rot</option>
@@ -255,9 +247,7 @@
 									</td>
 								</tr>
 								<tr>
-									<td>
-										Webalarm&nbsp;&nbsp;
-									</td>
+									<td>Webalarm&nbsp;&nbsp;</td>
 									<td>
 										<label class="switch">
 											<input type="checkbox">
@@ -288,17 +278,11 @@
 							<fieldset>
 								<table>
 									<tr>
-										<td>
-											<label for="hostname">Hostname</label>
-										</td>
-										<td>
-											<input style="width:8em" id="hostname" type="hostname" placeholder="Hostname">
-										</td>
+										<td><label for="hostname">Hostname</label></td>
+										<td><input style="width:8em" id="hostname" type="hostname" placeholder="Hostname"></td>
 									</tr>
 									<tr>
-										<td>
-											<label for="timezone">Zeitzone</label>
-										</td>
+										<td><label for="timezone">Zeitzone</label></td>
 										<td>
 											<select style="width:8.4em" id="timezone">
 												<option value="0">MEZ</option>
@@ -308,9 +292,7 @@
 										</td>
 									</tr>
 									<tr>
-										<td>
-											<label for="language">Sprache</label>
-										</td>
+										<td><label for="language">Sprache</label></td>
 										<td>
 											<select style="width:8.4em" id="language">
 												<option value="de">Deutsch</option>
@@ -320,9 +302,7 @@
 										</td>
 									</tr>
 									<tr>
-										<td>
-											<label for="unit">Einheit</label>
-										</td>
+										<td><label for="unit">Einheit</label></td>
 										<td>
 											<select style="width:8.4em" id="unit">
 												<option value="C">Celsius</option>
@@ -331,9 +311,7 @@
 										</td>
 									</tr>
 									<tr>
-										<td>
-											Hardwarealarm&nbsp;&nbsp;
-										</td>
+										<td><label for="hardwarealert">Hardwarealarm</label></td>
 										<td>
 											<label class="switch">
 												<input id="hwalarm" type="checkbox">
@@ -447,10 +425,33 @@
 		document.getElementById("wlan_set").style.display = "inline";
 	}	
 
-	function showSetChannel(){
+	function showSetChannel(channel){
 		hideAll();
 		document.getElementById("channel_settings").style.display = "inline";
+		loadJSON('settings', '', function (response) {
+			jsonresponse = JSON.parse(response);
+			clearOption('sensor');
+			for (var i = 0; i < jsonresponse.sensors.length; i++) {
+				document.getElementById('sensor').options[document.getElementById('sensor').options.length] = new Option(jsonresponse.sensors[i], i);
+			}
+		})
+		loadJSON('data', '', function (response) {
+			jsonresponse = JSON.parse(response);
+			document.getElementById('channel_settings_headtitle').innerHTML  = jsonresponse.channel[channel].name;
+			document.getElementById('channel_name').value  = jsonresponse.channel[channel].name;
+			document.getElementById('temp_max').value  = jsonresponse.channel[channel].max;
+			document.getElementById('temp_min').value  = jsonresponse.channel[channel].min;
+			document.getElementById('sensor').value = jsonresponse.channel[channel].typ;
+		})
 	}	
+	function clearOption(id){
+		var selectbox = document.getElementById(id);
+		var i;
+		for(i = selectbox.options.length - 1 ; i >= 0 ; i--)
+		{
+			selectbox.remove(i);
+		}
+	}
 	
 	function setWLAN(ssid, passwd){
 		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
