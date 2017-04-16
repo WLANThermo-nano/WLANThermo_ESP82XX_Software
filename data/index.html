@@ -220,19 +220,17 @@
 								</tr>
 								<tr>
 									<td><label for="CH1TMin">Temp Min:</label></td>
-									<td><input class="temp_input" id="temp_min" type="text" onkeyup="this.value=this.value.replace(/[^0-9-]/g,'');" placeholder="Temp Min"></td>
+									<td><input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this);" placeholder="Temp Min"></td>
 								</tr>
 								<tr>
 									<td><label for="CH1TMax">Temp Max:</label></td>
-									<td><input class="temp_input" id="temp_max" type="text" onkeyup="this.value=this.value.replace(/[^0-9-]/g,'');" placeholder="Temp Max"></td>
+									<td><input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this);" placeholder="Temp Max"></td>
 								</tr>
 								<tr>
 									<td><label for="sensor">Fühler:</label></td>
 									<td>
 										<select id="sensor">
-											<option>Fantast</option>
-											<option>Maverick</option>
-											<option>WlanThermo</option>
+											<!-- Placeholder -->
 										</select>
 									</td>
 								</tr>
@@ -662,6 +660,17 @@
 				}    
 			})(i);
 		}
+	}
+	
+	function validateNumber(number) {
+		var val = number.value.replace(/[^\.^,\d]/g, '') ; //Nur Zahlen und Dez-Zeichen
+		val = val.replace(/[,]/g, '.') ; // "," ersetzen zu "."
+		// Nur ein Dez-Zeichen erlauben
+		if(val.split('.').length>2)
+			val = val.replace(/\.+$/,"");
+			
+		number.value = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0] ;
+
 	}
 	readTemp();
 </script>
