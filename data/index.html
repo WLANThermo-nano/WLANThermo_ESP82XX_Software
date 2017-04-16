@@ -216,7 +216,7 @@
 							<table>
 								<tr>
 									<td><label for="ChannelName">Kanal Name:&nbsp;&nbsp;</label></td>
-									<td><input class="temp_input" id="channel_name" type="text" placeholder="Kanal Name"></td>
+									<td><input class="temp_input" id="channel_name" type="text" maxlength="10" placeholder="Kanal Name"></td>
 								</tr>
 								<tr>
 									<td><label for="CH1TMin">Temp Min:</label></td>
@@ -663,14 +663,17 @@
 	}
 	
 	function validateNumber(number) {
-		var val = number.value.replace(/[^\.^,\d]/g, '') ; //Nur Zahlen und Dez-Zeichen
-		val = val.replace(/[,]/g, '.') ; // "," ersetzen zu "."
+	
+		val = number.value.replace(/[^0-9.,]/g,'');
+		val = val.replace(/[,]/g, '.'); // "," ersetzen zu "."
+		if(val){
+			val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];
+		}
 		// Nur ein Dez-Zeichen erlauben
-		if(val.split('.').length>2)
+		if(val.split('.').length>2){
 			val = val.replace(/\.+$/,"");
-			
-		number.value = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0] ;
-
+		}		
+		number.value = val;
 	}
 	readTemp();
 </script>
