@@ -21,6 +21,8 @@
     
  ****************************************************/
 
+// EXECPTION LIST
+// https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
 
 // CHOOSE CONFIGURATION (user input)
 
@@ -52,6 +54,7 @@ bool isEco = false;
 
 unsigned long lastUpdateBatteryMode;
 unsigned long lastUpdateSensor;
+unsigned long lastUpdatePiepser;
 unsigned long lastUpdateCommunication;
 unsigned long lastUpdateDatalog;
 unsigned long lastFlashInWork;
@@ -131,8 +134,9 @@ void loop() {
       #ifdef DEBUG
         Serial.println("[INFO]\tChange to Standby");
       #endif
-      stop_wifi();
+      //stop_wifi();
       pitmaster.active = false;
+      piepserOFF();
       // set_pitmaster();
     }
     
@@ -234,10 +238,14 @@ void loop() {
       
       get_Temperature();
       get_Vbat();
-
-      controlAlarm(0);
       lastUpdateSensor = millis();
-    
+    }
+
+    if (millis() - lastUpdatePiepser > INTERVALSENSOR/4) {
+
+      controlAlarm(pulsalarm);
+      pulsalarm = !pulsalarm;
+      lastUpdatePiepser = millis();
     }
 
     if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {

@@ -664,6 +664,12 @@ void read_serial(char *buffer) {
     return;
   }
 
+  else if (strcmp(buffer, "piepsertest")==0) {
+    Serial.println("Piepsertest");
+    piepserON();
+    return;
+  }
+  
   Serial.print("You entered: >");
   Serial.print(buffer);
   Serial.println("<");

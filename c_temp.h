@@ -31,7 +31,10 @@ float calcT(int r, byte typ){
   float Rmess = 47;
   float a, b, c, Rn;
 
-  if (r < 3) return INACTIVEVALUE;        // Kanal ist mit GND gebrückt
+  // kleine Abweichungen an GND verursachen Messfehler von wenigen Digitalwerten
+  // daher werden nur Messungen mit einem Digitalwert von mind. 10 ausgewertet,
+  // das entspricht 5 mV
+  if (r < 10) return INACTIVEVALUE;        // Kanal ist mit GND gebrückt
 
   switch (typ) {
   case 0:  // Maverik
@@ -107,9 +110,6 @@ void get_Temperature() {
     }
     else ch[i].match = 0;
 
-    // Check limit exceeded
-    if ((value > max || value < min) && value!=INACTIVEVALUE) ch[i].isalarm = true;
-    else ch[i].isalarm = false;
   }
 }
 
@@ -124,6 +124,8 @@ void set_Channels() {
     ch[i].temp = INACTIVEVALUE;
     ch[i].match = 0;
     ch[i].isalarm = false;
+    ch[i].showalarm = false;
+    ch[i].show = false;
   }
 
   // Wenn KTYPE muss Kanal 5 auch KTYPE sein

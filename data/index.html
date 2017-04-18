@@ -452,7 +452,7 @@
 			jsonresponse.channel[channel].name = document.getElementById('channel_name').value;
 			jsonresponse.channel[channel].typ = document.getElementById('sensor').value;
 			//alert(jsonresponse.channel[channel].min);
-			var data = JSON.stringify(jsonresponse);
+			var data = JSON.stringify(jsonresponse.channel[channel]);
 				//alert(data);
 				loadJSON('setchannels', data, function (response) {
 				showIndex();

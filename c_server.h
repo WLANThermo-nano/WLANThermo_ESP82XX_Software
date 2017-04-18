@@ -222,29 +222,24 @@ bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
   Serial.println();
 
   DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
-  if (!json.success()) {
+  JsonObject& _cha = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_cha.success()) {
     return 0;
   }
-
-  int i = 0;
-  JsonArray& _cha = json["channel"];
-  for (JsonArray::iterator it=_cha.begin(); it!=_cha.end(); ++it) {
-    int num = _cha[i]["number"];
-    if (num > 0) {
-      num--;          // Intern beginnt die Zählung bei 0
-      String _name = _cha[i]["name"].asString();                  // KANALNAME
-      if (_name.length() < 11)  ch[num].name = _name;
-      byte _typ = _cha[i]["typ"];                                 // FÜHLERTYP
-      if (_typ > -1 && _typ < SENSORTYPEN) ch[num].typ = _typ;  
-      float _limit = _cha[i]["min"];                              // LIMITS
-      if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[num].min = _limit;
-      _limit = _cha[i]["max"];
-      if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[num].max = _limit;
-      ch[num].alarm = _cha[i]["alarm"];                           // ALARM
-      ch[num].color = _cha[i]["color"].asString();                // COLOR
-    }
-    i++;
+    
+  int num = _cha["number"];
+  if (num > 0) {
+    num--;          // Intern beginnt die Zählung bei 0
+    String _name = _cha["name"].asString();                  // KANALNAME
+    if (_name.length() < 11)  ch[num].name = _name;
+    byte _typ = _cha["typ"];                                 // FÜHLERTYP
+    if (_typ > -1 && _typ < SENSORTYPEN) ch[num].typ = _typ;  
+    float _limit = _cha["min"];                              // LIMITS
+    if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[num].min = _limit;
+    _limit = _cha["max"];
+    if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[num].max = _limit;
+    ch[num].alarm = _cha["alarm"];                           // ALARM
+    ch[num].color = _cha["color"].asString();                // COLOR
   }
   
   modifyconfig(eCHANNEL,{});                                      // SPEICHERN

@@ -119,15 +119,17 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // CHANNELS
 struct ChannelData {
-   String name;           // CHANNEL NAME
-   float temp;            // TEMPERATURE
-   int   match;           // Anzeige im Temperatursymbol
-   float max;             // MAXIMUM TEMPERATURE
-   float min;             // MINIMUM TEMPERATURE
-   byte  typ;             // TEMPERATURE SENSOR
-   bool  alarm;           // CHANNEL ALARM
-   bool  isalarm;         // CURRENT ALARM
-   String color;          // COLOR
+   String name;             // CHANNEL NAME
+   float temp;              // TEMPERATURE
+   int   match;             // Anzeige im Temperatursymbol
+   float max;               // MAXIMUM TEMPERATURE
+   float min;               // MINIMUM TEMPERATURE
+   byte  typ;               // TEMPERATURE SENSOR
+   bool  alarm;             // SET CHANNEL ALARM
+   bool  isalarm;           // Limits überschritten
+   bool  show;              // Anzeigen am OLED       
+   bool  showalarm;         // Alarm nicht weiter anzeigen
+   String color;            // COLOR
 };
 
 ChannelData ch[CHANNELS];
@@ -177,6 +179,7 @@ uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 bool stby = false;                // USB POWER SUPPLY?
 bool doAlarm = false;             // HARDWARE ALARM
 bool charge = false;              // CHARGE DETECTION
+byte pulsalarm = 1;
 
 // OLED
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL
@@ -185,7 +188,13 @@ bool LADENSHOW = false;           // LOADING INFORMATION?
 bool INACTIVESHOW = true;         // SHOW INACTIVE CHANNELS
 bool displayblocked = false;                     // No OLED Update
 enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM};
-int question = NO;                               // Which Question;
+
+struct MyQuestion {
+   int typ;    
+   int con;            
+};
+
+MyQuestion question;
 
 // FILESYSTEM
 enum {eCHANNEL, eWIFI, eTHING, ePIT, ePRESET};
@@ -234,7 +243,10 @@ void set_serial();                                // Initialize Serial
 void set_button();                                // Initialize Buttons
 static inline boolean button_input();             // Dectect Button Input
 static inline void button_event();                // Response Button Status
-void controlAlarm(bool action);                              // Control Hardware Alarm      
+void controlAlarm(bool action);                              // Control Hardware Alarm
+void set_piepser();
+void piepserOFF();
+void piepserON();      
 
 // SENSORS
 byte set_sensor();                                // Initialize Sensors
@@ -258,7 +270,7 @@ OLEDDisplayUi ui     ( &display );
 // FRAMES
 void drawConnect();                       // Frane while System Start
 void drawLoading();                               // Frame while Loading
-void drawQuestion();                    // Frame while Question
+void drawQuestion(int counter);                    // Frame while Question
 void drawMenu();
 void set_OLED();                                  // Configuration OLEDDisplay
 
@@ -468,9 +480,9 @@ static inline void button_event() {
   // Button rechts Shortclick: Vorwärts / hochzählen / Frage mit Ja beantwortet
   if (buttonResult[0] == SHORTCLICK) {
 
-    if (question > 0) {
+    if (question.typ > 0) {
       // Frage wurde mit YES bestätigt
-      switch (question) {
+      switch (question.typ) {
         case CONFIGRESET:
           setconfig(eCHANNEL,{});
           loadconfig(eCHANNEL);
@@ -478,11 +490,11 @@ static inline void button_event() {
           break;
 
         case HARDWAREALARM:
-          controlAlarm(0);
+          ch[question.con].showalarm = false;
           break;
 
       }
-      question = NO;
+      question.typ = NO;
       displayblocked = false;
       return;
     }
@@ -566,8 +578,16 @@ static inline void button_event() {
   if (buttonResult[1] == SHORTCLICK) {
 
     // Frage wurde verneint -> alles bleibt beim Alten
-    if (question > 0) {
-      question = NO;
+    if (question.typ > 0) {
+
+      switch (question.typ) {
+
+        case HARDWAREALARM:
+          return;
+
+      }
+      
+      question.typ = NO;
       displayblocked = false;
       return;
     }

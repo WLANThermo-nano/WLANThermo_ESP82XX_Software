@@ -239,36 +239,72 @@ void set_piepser() {
   
 }
 
+void piepserON() {
+  analogWrite(MOSI,512);
+}
+
+void piepserOFF() {
+  analogWrite(MOSI,0);
+}
+
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //Control Hardware Alarm
 void controlAlarm(bool action){
+  // action dient zur Pulsung des Signals
 
   
   bool setalarm = false;
 
   for (int i=0; i < CHANNELS; i++) {
-    if (ch[i].alarm && ch[i].isalarm) {
-      setalarm = true;
-      if (!isAP) {
+    if (ch[i].alarm) {
+          
+      // Check limits
+      if ((ch[i].temp <= ch[i].max && ch[i].temp >= ch[i].min) || ch[i].temp == INACTIVEVALUE) {
+        // everything is ok
+        ch[i].isalarm = false;
+        ch[i].showalarm = false;
+
+      // Alarm anzeigen
+      } else if (ch[i].isalarm && ch[i].showalarm) {
+        // do alarm
+        setalarm = true;
+
+        // Show Alarm
+        if (ch[i].show && !displayblocked) {
+          displayblocked = true;
+          ch[i].show = false;
+          question.typ = HARDWAREALARM;
+          question.con = i;
+          drawQuestion(i);
+        }
+      
+      } else if (!ch[i].isalarm && ch[i].temp != INACTIVEVALUE) {
+        // first rising limits
+        ch[i].isalarm = true;
+        ch[i].showalarm = true;
+        ch[i].show = true;
+        setalarm = true;
+
+        if (!isAP) {
         #ifdef THINGSPEAK
           //if (ch[i].temp > ch[i].max) sendMessage(i+1,1);
           //else if (ch[i].temp < ch[i].min) sendMessage(i+1,0);
         #endif
+        }
       }
     }
   }
 
-  if (doAlarm && setalarm) {
-    analogWrite(MOSI,512);
-    displayblocked = true;
-    question = HARDWAREALARM;
-    drawQuestion();
+  // Hardware-Alarm-Variable: doAlarm
+  if (doAlarm && setalarm && action) {
+    piepserON();
   }
   else {
-    analogWrite(MOSI,0);
+    piepserOFF();
   }  
-  
 }
+
 
 
 

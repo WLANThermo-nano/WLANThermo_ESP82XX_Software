@@ -72,7 +72,7 @@ void drawLoading() {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Frame while Question
-void drawQuestion() {
+void drawQuestion(int counter) {
     
     display.clear();
     display.setColor(WHITE);
@@ -83,14 +83,17 @@ void drawQuestion() {
     bool b0 = true;
     bool b1 = true;
     
-    switch (question) {                   // Which Question?
+    switch (question.typ) {                   // Which Question?
 
       case CONFIGRESET:
         display.drawString(32,3,"Reset Config?");
         break;
 
       case HARDWAREALARM:
-        display.drawString(35,3,"ALARM! Stop?");
+        String text = "ALARM! Kanal ";
+        text += String(counter+1);
+        display.drawString(25,3,text);
+        display.drawString(40,18,"Stoppen?");
         b1 = false;
         break;
     }
@@ -104,7 +107,7 @@ void drawQuestion() {
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Frame while Question
+// Frame while Menu
 void drawMenu() {
     
     display.clear();
@@ -206,9 +209,15 @@ void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->drawString(19+x, 20+y, String(current_ch+1));                // Channel
   display->drawString(114+x, 20+y, ch[current_ch].name);    // Channel Name
   display->setFont(ArialMT_Plain_16);
-  if (ch[current_ch].temp!=INACTIVEVALUE) {
-    display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ " °" + temp_unit); // Channel Temp
-  } else display->drawString(114+x, 36+y, "OFF");
+  if (ch[current_ch].isalarm && !pulsalarm) {
+    if (ch[current_ch].temp!=INACTIVEVALUE) {
+      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ " °" + temp_unit); // Channel Temp
+    } else display->drawString(114+x, 36+y, "OFF");
+  } else if (!ch[current_ch].isalarm) {
+    if (ch[current_ch].temp!=INACTIVEVALUE) {
+      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ " °" + temp_unit); // Channel Temp
+    } else display->drawString(114+x, 36+y, "OFF");
+  }
 
   if (pitmaster.active) {
     if (current_ch == pitmaster.channel) {
@@ -460,6 +469,9 @@ void set_OLED() {
 
   // Initialising the UI will init the display too.
   ui.init();
+
+  question.typ = NO;
+  question.con = 0;
 
   display.flipScreenVertically();
 
