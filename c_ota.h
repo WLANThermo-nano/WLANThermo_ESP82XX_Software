@@ -29,9 +29,7 @@
 // Configuration OTA
 void set_ota(){
 
-  String hostname = HOSTNAME;
-  hostname += String(ESP.getChipId(), HEX);
-  ArduinoOTA.setHostname((const char *)hostname.c_str());
+  ArduinoOTA.setHostname((const char *)host.c_str());
 
   ArduinoOTA.onStart([]() {
     display.clear();

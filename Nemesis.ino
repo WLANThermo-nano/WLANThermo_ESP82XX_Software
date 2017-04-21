@@ -68,7 +68,8 @@ void setup() {
   set_OLED();
 
   // Current Battery Voltage
-  set_batdetect(false); get_Vbat();
+  battery.min = BATTMIN; battery.max = BATTMAX;
+  get_Vbat();
   
   if (!stby) {
 
@@ -128,13 +129,14 @@ void loop() {
   // Standby oder Mess-Betrieb
   if (stby) {
 
+    drawLoading();
     if (!LADENSHOW) {
-      drawLoading();
+      //drawLoading();
       LADENSHOW = true;
       #ifdef DEBUG
         Serial.println("[INFO]\tChange to Standby");
       #endif
-      //stop_wifi();
+      //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
       pitmaster.active = false;
       piepserOFF();
       // set_pitmaster();
@@ -203,8 +205,8 @@ void loop() {
   //}
 
   // Detect Serial
-  static char serialbuffer[110];
-  if (readline(Serial.read(), serialbuffer, 110) > 0) {
+  static char serialbuffer[150];
+  if (readline(Serial.read(), serialbuffer, 150) > 0) {
     read_serial(serialbuffer);
   }
   

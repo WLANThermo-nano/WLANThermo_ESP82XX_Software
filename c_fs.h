@@ -29,6 +29,7 @@
 #define WIFI_FILE "/wifi.json"
 #define THING_FILE "/thing.json"
 #define PIT_FILE "/pit.json"
+#define SYSTEM_FILE "/system.json"
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -79,8 +80,8 @@ bool checkjson(JsonVariant json, const char* filename) {
   
   if (!json.success()) {
     #ifdef DEBUG
-    Serial.print("Failed to parse: ");
-    Serial.println(filename);
+      Serial.print("Failed to parse: ");
+      Serial.println(filename);
     #endif
     return false;
   }
@@ -185,8 +186,27 @@ bool loadconfig(byte count) {
       }
     }
     break;
+
+    case 4:     // SYSTEM
+    {
+      std::unique_ptr<char[]> buf(new char[250]);
+      readEE(buf.get(),250, 1500);
+      
+      JsonObject& json = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(json,SYSTEM_FILE)) return false;
+  
+      const char* author = json["AUTHOR"];
+      host = json["host"].asString();
+      doAlarm = json["hwalarm"];
+      //json["ap"];
+      language = json["lang"].asString();
+      timeZone = json["utc"];
+      battery.max = json["batmax"];
+      battery.min = json["batmin"];
+    }
+    break;
     
-    //case 4:     // PRESETS
+    //case 5:     // PRESETS
     //break;
   
     default:
@@ -323,7 +343,31 @@ bool setconfig(byte count, const char* data[2]) {
     }
     break;
 
-    case 4:         //PRESETS
+    case 4:         // SYSTEM
+    {
+      String host = HOSTNAME;
+      host += String(ESP.getChipId(), HEX);
+      
+      JsonObject& json = jsonBuffer.createObject();
+  
+      json["AUTHOR"] = "s.ochs";
+      json["host"] = host;
+      json["hwalarm"] = false;    // doAlarm
+      json["ap"] = APNAME;
+      json["language"] = "de";
+      json["utc"] = 1;
+      json["batmax"] = BATTMAX;
+      json["batmin"] = BATTMIN;
+    
+      size_t size = json.measureLength() + 1;
+      clearEE(250,1500);  // Bereich reinigen
+      static char buffer[250];
+      json.printTo(buffer, size);
+      writeEE(buffer, size, 1500);
+    }
+    break;
+
+    case 5:         //PRESETS
     {
       
     }
@@ -481,6 +525,39 @@ bool modifyconfig(byte count, const char* data[12]) {
     }
     break;
 
+    case 4:           // SYSTEM
+    {
+      // Alte Daten auslesen
+      std::unique_ptr<char[]> buf(new char[250]);
+      readEE(buf.get(),250, 1500);
+      
+      JsonObject& alt = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(alt,SYSTEM_FILE)) return false;
+      
+      // Neue Daten erzeugen
+      JsonObject& json = jsonBuffer.createObject();
+
+      json["AUTHOR"] = alt["AUTHOR"];
+      //json["VERSION"] = CHANNELJSONVERSION;
+      
+      json["host"] = host;
+      json["hwalarm"] = doAlarm;
+      json["ap"] = APNAME;
+      json["language"] = language;
+      json["utc"] = timeZone;
+      json["batmax"] = battery.max;
+      json["batmin"] = battery.min;
+
+      // Speichern
+      size_t size = json.measureLength() + 1;
+      clearEE(250,1500);  // Bereich reinigen
+      static char buffer[250];
+      json.printTo(buffer, size);
+      writeEE(buffer, size, 1500);
+      
+    }
+    break;
+
     default:
     return false;
   }
@@ -606,6 +683,19 @@ void start_fs() {
       Serial.println("[INFO]\tPitmaster config loaded");
     #endif
   }
+
+  // SYSTEM
+  if (!loadconfig(eSYSTEM)) {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tFailed to load system config");
+    #endif
+    setconfig(eSYSTEM,{});  // Speicherplatz vorbereiten
+    ESP.restart();
+  } else {
+    #ifdef DEBUG
+      Serial.println("[INFO]\tSystem config loaded");
+    #endif
+  }
 }
 
 
@@ -661,12 +751,17 @@ void read_serial(char *buffer) {
     setconfig(eCHANNEL,{});
     loadconfig(eCHANNEL);
     set_Channels();
+
+    setconfig(eSYSTEM,{});
+    loadconfig(eSYSTEM);
     return;
   }
 
   else if (strcmp(buffer, "piepsertest")==0) {
     Serial.println("Piepsertest");
     piepserON();
+    delay(1000);
+    piepserOFF();
     return;
   }
   
@@ -861,6 +956,13 @@ void setEE() {
   #endif
   
   EEPROM.begin(EEPROM_SIZE);
+
+  // WIFI SETTINGS:         0    - 300
+  // THINGSPEAK SETTINGS:   300  - 400
+  // CHANNEL SETTINGS:      400  - 900
+  // PITMASTER SETTINGS:    900  - 1500
+  // SYSTEM SETTINGS:       1500 - 1750
+  
 }
 
 void writeEE(const char* json, int len, int startP) {

@@ -99,10 +99,11 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // WIFI
 #define APNAME "NANO-AP"
 #define APPASSWORD "12345678"
+#define HOSTNAME "NANO-"
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
-#define EEPROM_SIZE 1536            // EEPROM SIZE
+#define EEPROM_SIZE 1792            // EEPROM SIZE
 
 // PITMASTER
 #define PITMASTER1 15               // PITMASTER PIN
@@ -177,13 +178,23 @@ uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
 // SYSTEM
 bool stby = false;                // USB POWER SUPPLY?
-bool doAlarm = false;             // HARDWARE ALARM
-bool charge = false;              // CHARGE DETECTION
+bool doAlarm = false;             // HARDWARE ALARM           
 byte pulsalarm = 1;
+String language;
+
+struct Battery {
+  int voltage;                    // CURRENT VOLTAGE
+  bool charge;                    // CHARGE DETECTION
+  int percentage;                 // BATTERY CHARGE STATE in %
+  bool setreference;              // LOAD COMPLETE SAVE VOLTAGE
+  int max;                        // MAX VOLTAGE
+  int min;
+};
+
+Battery battery;
 
 // OLED
-int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL
-int BatteryPercentage = 0;        // BATTERY CHARGE STATE in %
+int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL       
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool INACTIVESHOW = true;         // SHOW INACTIVE CHANNELS
 bool displayblocked = false;                     // No OLED Update
@@ -197,7 +208,7 @@ struct MyQuestion {
 MyQuestion question;
 
 // FILESYSTEM
-enum {eCHANNEL, eWIFI, eTHING, ePIT, ePRESET};
+enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
 // WIFI
 byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO)
@@ -208,6 +219,8 @@ long rssi = 0;                   // Buffer rssi
 String THINGSPEAK_KEY;
 long scantime;
 bool disconnectAP;
+int timeZone;                     // Central European Time
+String host;
 struct HoldSSID {
    bool hold;             
    String ssid;

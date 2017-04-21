@@ -47,7 +47,7 @@ void sendData() {
       }
     }
     postStr +="&8=";                        // Kanal 8 ist Batterie-Status
-    postStr += String(BatteryPercentage);
+    postStr += String(battery.percentage);
 
     THINGclient.print("POST /update HTTP/1.1\nHost: api.thingspeak.com\nConnection: close\nX-THINGSPEAKAPIKEY: "
                       +apiKey+"\nContent-Type: application/x-www-form-urlencoded\nContent-Length: "

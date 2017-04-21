@@ -74,9 +74,6 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   AsyncJsonResponse * response = new AsyncJsonResponse();
   response->addHeader("Server","ESP Async Web Server");
   
-  String host = HOSTNAME;
-  host += String(ESP.getChipId(), HEX);
-
   JsonObject& root = response->getRoot();
   JsonObject& _system = root.createNestedObject("system");
 
@@ -84,7 +81,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   _system["utc"] = timeZone;
   _system["ap"] = APNAME;
   _system["host"] = host;
-  _system["language"] = "de";
+  _system["language"] = language;
   _system["unit"] = temp_unit;
   _system["hwalarm"] = doAlarm;
   _system["version"] = FIRMWAREVERSION;
@@ -119,8 +116,8 @@ void handleData(AsyncWebServerRequest *request, bool www) {
 
   system["time"] = String(now());
   system["utc"] = timeZone;
-  system["soc"] = BatteryPercentage;
-  system["charge"] = false;
+  system["soc"] = battery.percentage;
+  system["charge"] = !battery.charge;
   system["rssi"] = rssi;
   system["unit"] = temp_unit;
 
@@ -310,10 +307,12 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
   if (!_system.success()) return 0;
   
   doAlarm = _system["hwalarm"];
-  // = _system["host"];
+  host = _system["host"].asString();
   timeZone = _system["utc"];
-  // = _system["language"];
+  language = _system["language"].asString();
   temp_unit = _system["unit"].asString();
+
+  modifyconfig(eSYSTEM,{});                                      // SPEICHERN
   
   return 1;
 }
@@ -334,8 +333,6 @@ String getMacAddress()  {
 
 void server_setup() {
 
-    String host = HOSTNAME;
-    host += String(ESP.getChipId(), HEX);
     MDNS.begin(host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);
     Serial.print("[INFO]\tOpen http://");
     Serial.print(host);

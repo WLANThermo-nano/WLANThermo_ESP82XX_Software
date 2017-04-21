@@ -31,9 +31,7 @@ IPAddress timeServerIP; // time.nist.gov NTP server address
 const char* ntpServerName = "time.nist.gov";
 const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message
 byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
-int timeZone = 1;     // Central European Time
 
-#define HOSTNAME "NANO-" ///< Hostename. The setup function adds the Chip ID at the end.
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Connect WiFi
@@ -47,12 +45,10 @@ void set_wifi() {
   IPAddress gateway(192,168,66,1);
   IPAddress subnet(255,255,255,0);
 
-  String hostname = HOSTNAME;
-  hostname += String(ESP.getChipId(), HEX);
-  WiFi.hostname(hostname);
+  WiFi.hostname(host);
 
   #ifdef DEBUG
-    Serial.println("[INFO]\tHostname: " + hostname);
+    Serial.println("[INFO]\tHostname: " + host);
   #endif
 
   WiFi.mode(WIFI_STA);

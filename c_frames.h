@@ -42,6 +42,41 @@ void drawConnect() {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Frame while Loading
 void drawLoading() {
+
+  display.clear();
+  display.setColor(WHITE); 
+  
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.setFont(ArialMT_Plain_10);
+  
+  if (!battery.charge) {
+    display.fillRect(18,3,2,4); //Draw battery end button
+    display.fillRect(16,8,1,1); //Untere Ecke
+    display.drawRect(0,1,16,7); //Draw Outline
+    display.setColor(BLACK);
+    display.fillRect(4,0,8,10); //Untere Ecke
+    display.setColor(WHITE);
+    display.drawXbm(4, 0, 8, 10, xbmcharge);
+    display.fillRect(2,3,6,4);  // Draw Battery Status
+    display.drawString(64, 30, "WIRD GELADEN...");
+    
+  } else {
+    display.fillRect(18,3,2,4); //Draw battery end button
+    display.fillRect(16,8,1,1); //Untere Ecke
+    display.drawRect(0,1,16,7); //Draw Outline
+    display.fillRect(2,3,MAXBATTERYBAR,4);  // Draw Battery Status
+    display.drawString(64, 30, "LADEN BEENDET");
+    
+  }
+
+  //display.setFont(ArialMT_Plain_16);
+  //display.drawString(64, 49, String(battery.percentage));
+
+  display.display();
+
+}
+
+void drawLoading2() {
   
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
@@ -68,7 +103,6 @@ void drawLoading() {
 
     display.display();
 }
-
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Frame while Question
@@ -151,7 +185,7 @@ void drawMenu() {
 
 void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
 
-  int battPixel = (BatteryPercentage*MAXBATTERYBAR)/100;  
+  int battPixel = (battery.percentage*MAXBATTERYBAR)/100;  
   flash = !flash; //Toggle flash flag for icon blinking later
   
   display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -159,7 +193,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
   
   if (pitmaster.active)
     display->drawString(33,0, "P  " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
-  else  display->drawString(24,0,String(BatteryPercentage)); 
+  else  display->drawString(24,0,String(battery.percentage)); 
   
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   if (isAP == 1)  display->drawString(128,0,"AP");
@@ -179,8 +213,8 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
 
   if (!INACTIVESHOW) display->drawString(100,0,"F");
   
-  if (flash && BatteryPercentage < 10) {} // nothing for flash effect
-  else if (!charge) {
+  if (flash && battery.percentage < 10) {} // nothing for flash effect
+  else if (!battery.charge) {
     display->fillRect(18,3,2,4); //Draw battery end button
     display->fillRect(16,8,1,1); //Untere Ecke
     display->drawRect(0,1,16,7); //Draw Outline

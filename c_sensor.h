@@ -133,7 +133,7 @@ double get_thermocouple(void) {
 // Initialize Charge Detection
 void set_batdetect(boolean stat) {
 
-  if (stat)  pinMode(CHARGEDETECTION, INPUT_PULLDOWN_16);
+  if (!stat)  pinMode(CHARGEDETECTION, INPUT_PULLDOWN_16);
   else pinMode(CHARGEDETECTION, INPUT);
 }
 
@@ -146,28 +146,21 @@ void get_Vbat() {
   
   // Digitalwert transformiert in Batteriespannung in mV
   int voltage = analogRead(ANALOGREADBATTPIN);
-  //charge = digitalRead(CHARGEDETECTION);
 
-  String stat;
-  byte curStateNone = digitalRead(CHARGEDETECTION);
-  set_batdetect(HIGH);
-  stat += String(curStateNone);
-  byte curStatePull = digitalRead(CHARGEDETECTION);
-  set_batdetect(LOW);
-  stat += String(curStatePull);
-  //ch[0].name = stat;
-  /*
-  if (curStateNone != curStatePull) {
-    Serial.println("ungleich");
-    ch[0].name = "UN";
-    charge = HIGH;
-  } else {
-    if (curStateNone)
-    
-    ch[0].name = "Kanal 1";
-  }*/
+  // CHARGE DETECTION
+  //                LOAD        COMPLETE        SHUTDOWN
+  // MCP:           LOW           HIGH           HIGH-Z 
+  // curStateNone:  LOW           HIGH           HIGH
+  // curStatePull:  LOW           HIGH           LOW
   
-  charge = curStateNone;
+  // Messung bei INPUT_PULLDOWN
+  set_batdetect(LOW);
+  byte curStatePull = digitalRead(CHARGEDETECTION);
+  // Messung bei INPUT
+  set_batdetect(HIGH);
+  byte curStateNone = digitalRead(CHARGEDETECTION);
+  // Ladeanzeige
+  battery.charge = curStateNone;
   
   // Standby erkennen
   if (voltage < 10) {
@@ -179,9 +172,23 @@ void get_Vbat() {
   // Transformation Digitalwert in Batteriespannung
   voltage = voltage * BATTDIV; 
 
+  // Referenzwert bei COMPLETE neu setzen
+  if ((curStateNone && curStatePull) && battery.setreference) {     // COMPLETE
+    if (battery.voltage > 0) {
+      battery.max = battery.voltage-5;      // Grenze etwas nach unten versetzen
+      modifyconfig(eSYSTEM,{});                                      // SPEICHERN
+      #ifdef DEBUG
+        Serial.printf("[INFO]\tNew Battery Voltage Reference: %umV\r\n", battery.max); 
+      #endif
+    }
+    battery.setreference = false;
+  } else if (!curStateNone && !curStatePull) {                      // LOAD
+    battery.setreference = true;
+  }
+
   // Batteriespannung wird in einen Buffer geschrieben da die gemessene
   // Spannung leicht schwankt, aufgrund des aktuellen Energieverbrauchs
-  // wird die Batteriespannung als Mittel (Median) aus 20 Messungen ausgegeben
+  // wird die Batteriespannung als Mittel aus mehreren Messungen ausgegeben
 
   vol_sum += voltage;
   vol_count++;
@@ -199,19 +206,19 @@ void cal_soc() {
   if (vol_count > 0) voltage = vol_sum / vol_count;
   else voltage = 0;
   median_add(voltage);
-  voltage = median_average();
+  battery.voltage = median_average();
   
-  BatteryPercentage = ((voltage - BATTMIN)*100)/(BATTMAX - BATTMIN);
+  battery.percentage = ((battery.voltage - battery.min)*100)/(battery.max - battery.min);
   
   // Schwankungen verschiedener Batterien ausgleichen
-  if (BatteryPercentage > 100) BatteryPercentage = 100;
+  if (battery.percentage > 100) battery.percentage = 100;
   
   #ifdef DEBUG
-    Serial.printf("[INFO]\tBattery voltage: %umV\tcharge: %u%%\r\n", voltage, BatteryPercentage); 
+    Serial.printf("[INFO]\tBattery voltage: %umV\tcharge: %u%%\r\n", battery.voltage, battery.percentage); 
   #endif
 
   // Abschaltung des Systems bei <0% Akkuleistung
-  if (BatteryPercentage < 0) {
+  if (battery.percentage < 0) {
     display.clear();
     display.setFont(ArialMT_Plain_10);
     display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
