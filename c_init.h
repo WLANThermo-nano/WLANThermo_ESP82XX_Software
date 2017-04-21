@@ -14,12 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 implement ChannelData
-    0.2.01 - 2017-01-02 change button events
-    0.2.02 - 2017-01-04 add inactive and temperatur unit
-    0.2.03 - 2017-01-04 add button events
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
@@ -62,8 +57,12 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define MAX1161x_ADDRESS 0x33          // MAX11615
 #define ULIMITMIN 10.0
 #define ULIMITMAX 150.0
-#define OLIMITMIN 20.0
+#define OLIMITMIN 35.0
 #define OLIMITMAX 200.0
+#define ULIMITMINF 50.0
+#define ULIMITMAXF 302.0
+#define OLIMITMINF 95.0
+#define OLIMITMAXF 392.0
 
 // BATTERY
 #define BATTMIN 3600                  // MINIMUM BATTERY VOLTAGE in mV
@@ -74,6 +73,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // OLED
 #define OLED_ADRESS 0x3C              // OLED I2C ADRESS
+#define MAXBATTERYBAR 13
 
 // TIMER
 #define INTERVALBATTERYMODE 1000
@@ -100,6 +100,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define APNAME "NANO-AP"
 #define APPASSWORD "12345678"
 #define HOSTNAME "NANO-"
+#define NTP_PACKET_SIZE 48          // NTP time stamp is in the first 48 bytes of the message
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
@@ -192,6 +193,8 @@ struct Battery {
 };
 
 Battery battery;
+uint32_t vol_sum = 0;
+int vol_count = 0;
 
 // OLED
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL       
@@ -227,6 +230,9 @@ struct HoldSSID {
    String pass;
 };
 HoldSSID holdssid;
+
+// NTP
+byte packetBuffer[ NTP_PACKET_SIZE];    //buffer to hold incoming and outgoing packets
 
 // BUTTONS
 byte buttonPins[]={btn_r,btn_l};          // Pins
@@ -685,16 +691,26 @@ static inline void button_event() {
       case 1:  // Upper Limit
         if (event[1]) tempor = ch[current_ch].max;
         tempor += (0.1*mupi);
-        if (tempor > OLIMITMAX) tempor = OLIMITMIN;
-        else if (tempor < OLIMITMIN) tempor = OLIMITMAX;
+        if (temp_unit == "C") {
+          if (tempor > OLIMITMAX) tempor = OLIMITMIN;
+          else if (tempor < OLIMITMIN) tempor = OLIMITMAX;
+        } else {
+          if (tempor > OLIMITMAXF) tempor = OLIMITMINF;
+          else if (tempor < OLIMITMINF) tempor = OLIMITMAXF;
+        }
         if (event[2]) ch[current_ch].max = tempor;
         break;
           
       case 2:  // Lower Limit
         if (event[1]) tempor = ch[current_ch].min;
         tempor += (0.1*mupi);
-        if (tempor > ULIMITMAX) tempor = ULIMITMIN;
-        else if (tempor < ULIMITMIN) tempor = ULIMITMAX;
+        if (temp_unit == "C") {
+          if (tempor > ULIMITMAX) tempor = ULIMITMIN;
+          else if (tempor < ULIMITMIN) tempor = ULIMITMAX;
+        } else {
+          if (tempor > ULIMITMAXF) tempor = ULIMITMINF;
+          else if (tempor < ULIMITMINF) tempor = ULIMITMAXF;
+        }
         if (event[2]) ch[current_ch].min = tempor;
         break;
           
@@ -746,14 +762,24 @@ static inline void button_event() {
         break;
         
       case 12:  // Unit Change
-        if (temp_unit == "C") temp_unit = "F";          // Change Unit
-        else temp_unit = "C";
-        transform_limits();                             // Transform Limits
-        modifyconfig(eCHANNEL,{});                      // Save Config
-        get_Temperature();                              // Update Temperature
-        #ifdef DEBUG
-          Serial.println("[INFO]\tEinheitenwechsel");
-        #endif
+        if (event[1]) {
+          if (temp_unit == "F") tempor = 1;
+        }
+        if (mupi) tempor = !tempor;
+        if (event[2]) {
+          String unit;
+          if (tempor) unit = "F";
+          else unit = "C";
+          if (unit != temp_unit) {
+            temp_unit = unit;
+            transform_limits();                             // Transform Limits
+            modifyconfig(eCHANNEL,{});                      // Save Config
+            get_Temperature();                              // Update Temperature
+            #ifdef DEBUG
+              Serial.println("[INFO]\tEinheitenwechsel");
+            #endif
+          }
+        }
         break;
         
       case 13:  // Hardware Alarm

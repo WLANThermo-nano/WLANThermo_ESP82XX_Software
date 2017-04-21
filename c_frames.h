@@ -14,15 +14,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 implement ChannelData
-    0.2.01 - 2017-01-04 add inactive/active channels and temperature unit
+    HISTORY: Please refer Github History
     
  ****************************************************/
  
-#define MAXBATTERYBAR 13
-
 byte flash = 0;                       // Flash Battery Symbol in Status Row
 
 
@@ -400,10 +395,7 @@ void drawsys3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(120, 20, "HOST-NAME:");
-  
-  String hostname = HOSTNAME;
-  hostname += String(ESP.getChipId(), HEX);
-  display->drawString(120, 36, hostname);
+  display->drawString(120, 36, host);
 }
 
 void drawsys4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -411,7 +403,9 @@ void drawsys4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(114+x, 20+y, "UNIT:");
-  display->drawString(114+x, 36+y, "°" + temp_unit);
+  if (inWork && tempor) display->drawString(114+x, 36+y, "°F");
+  else if (!inWork) display->drawString(114+x, 36+y, "°" + temp_unit);
+  else display->drawString(114+x, 36+y, "°C");
 }
 
 void drawsys5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {

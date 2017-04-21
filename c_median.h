@@ -18,8 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
+    HISTORY: Please refer Github History
     
  ****************************************************/
 

@@ -14,12 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 impliment ChannelData
-    0.2.01 - 2017-01-04 add version and temp_unit in channel.json
-    0.2.02 - 2017-01-05 add serial communication
-    0.2.03 - 2017-01-20 add Thingspeak config
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
@@ -253,11 +248,11 @@ bool setconfig(byte count, const char* data[2]) {
         _typ.add(0);
     
         if (temp_unit == "F") {
-          _min.add(68.0,1);
-          _max.add(86.0,1);
+          _min.add(ULIMITMINF,1);
+          _max.add(OLIMITMINF,1);
         } else {
           _min.add(ULIMITMIN,1);
-          _max.add(OLIMITMAX,1);
+          _max.add(OLIMITMIN,1);
         }
         _alarm.add(false); 
         _color.add(colors[i]);
@@ -354,7 +349,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["host"] = host;
       json["hwalarm"] = false;    // doAlarm
       json["ap"] = APNAME;
-      json["language"] = "de";
+      json["lang"] = "de";
       json["utc"] = 1;
       json["batmax"] = BATTMAX;
       json["batmin"] = BATTMIN;
@@ -543,7 +538,7 @@ bool modifyconfig(byte count, const char* data[12]) {
       json["host"] = host;
       json["hwalarm"] = doAlarm;
       json["ap"] = APNAME;
-      json["language"] = language;
+      json["lang"] = language;
       json["utc"] = timeZone;
       json["batmax"] = battery.max;
       json["batmin"] = battery.min;
@@ -965,6 +960,8 @@ void setEE() {
   
 }
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Write to EEPROM
 void writeEE(const char* json, int len, int startP) {
   
   Serial.print("[INFO]\tWriting to EE: (");
@@ -979,6 +976,8 @@ void writeEE(const char* json, int len, int startP) {
 }
 
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Read from EEPROM
 void readEE(char *buffer, int len, int startP) {
   
   for (int i = startP; i < (startP+len); ++i) {
@@ -988,6 +987,9 @@ void readEE(char *buffer, int len, int startP) {
   Serial.println(buffer);
 }
 
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Clear EEPROM
 void clearEE(int len, int startP) {  
   
   Serial.print("[INFO]\tClear EEPROM from: ");

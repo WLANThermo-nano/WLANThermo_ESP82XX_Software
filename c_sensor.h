@@ -23,9 +23,7 @@
     -> Batteriespannung = ADC-Messspannung * (47+10)/10 
     -> Transformationsvariable Digitalwert-to-Batteriespannung: Battdiv = 1.035 mV * 5.7
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2017-01-04 add inactive channels
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
@@ -137,8 +135,6 @@ void set_batdetect(boolean stat) {
   else pinMode(CHARGEDETECTION, INPUT);
 }
 
-uint32_t vol_sum = 0;
-int vol_count = 0;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Battery Voltage
@@ -257,10 +253,8 @@ void piepserOFF() {
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //Control Hardware Alarm
-void controlAlarm(bool action){
-  // action dient zur Pulsung des Signals
+void controlAlarm(bool action){                // action dient zur Pulsung des Signals
 
-  
   bool setalarm = false;
 
   for (int i=0; i < CHANNELS; i++) {

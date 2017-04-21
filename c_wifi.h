@@ -14,23 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2017-01-03 change NTP time communication
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
 
-ESP8266WiFiMulti wifiMulti;
-
-// A UDP instance to let us send and receive packets over UDP
-WiFiUDP udp;
-
-// Initialize NTP
-IPAddress timeServerIP; // time.nist.gov NTP server address
-const char* ntpServerName = "time.nist.gov";
-const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message
-byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
+ESP8266WiFiMulti wifiMulti;               // MULTIWIFI instance
+WiFiUDP udp;                              // UDP instance
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -133,7 +123,7 @@ void get_rssi() {
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// send an NTP request to the time server at the given address
+// Send NTP request to the time server
 void sendNTPpacket(IPAddress& address) {
   
   #ifdef DEBUG
@@ -164,6 +154,10 @@ void sendNTPpacket(IPAddress& address) {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Get NTP time
 time_t getNtpTime() {
+
+  // Initialize NTP
+  IPAddress timeServerIP;                       // time.nist.gov NTP server address
+  const char* ntpServerName = "time.nist.gov";
   
   //get a random server from the pool
   WiFi.hostByName(ntpServerName, timeServerIP); 
@@ -197,7 +191,6 @@ time_t getNtpTime() {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Show time
-
 String printDigits(int digits){
   String com;
   if(digits < 10) com = "0";
@@ -218,10 +211,8 @@ String digitalClockDisplay(){
 }
 
 
-#define FPM_SLEEP_MAX_TIME 0xFFFFFFF
-bool awaking = false;
-
-
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Connect Wifi after Settings Transmission
 void WIFI_Connect(const char* data[2]) {
 
   // http://www.esp8266.com/viewtopic.php?f=32&t=8286
@@ -246,8 +237,60 @@ void WIFI_Connect(const char* data[2]) {
   if (WiFi.waitForConnectResult() != WL_CONNECTED) return false;
   return true;
   */
-    
 }
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Scan possible SSIDs
+int scan_wifi() {
+
+  #ifdef DEBUG
+    Serial.print("[INFO]\tWifi Scan: ");
+  #endif
+  
+  int n = WiFi.scanNetworks(false, false);
+  // Keine HIDDEN NETWORKS SCANNEN
+
+  // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/scan-class.md#scannetworks
+  // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/station-class.md#setautoreconnect
+  #ifdef DEBUG
+    Serial.print(n);
+    Serial.println(" network(s) found");
+  #endif
+  
+  return n;
+  
+}
+
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Test
+struct station_info *stat_info;
+struct ip_addr *IPaddress;
+IPAddress address;
+
+void dumpClients()
+{
+  // https://github.com/esp8266/Arduino/issues/2681
+  //http://www.esp8266.com/viewtopic.php?f=32&t=5669&sid=a9f40b382551435102f1b5ea3b6ef37c&start=8
+  
+  Serial.print(" Clients:\r\n");
+  stat_info = wifi_softap_get_station_info();
+  //uint8_t client_count = wifi_softap_get_station_num()
+  while (stat_info != NULL)
+  {
+    IPaddress = &stat_info->ip;
+    address = IPaddress->addr;
+    Serial.print("\t");
+    Serial.print(address);
+    Serial.print("\r\n");
+    stat_info = STAILQ_NEXT(stat_info, next);
+  } 
+}
+
+
+#define FPM_SLEEP_MAX_TIME 0xFFFFFFF
 
 
 void stop_wifi() {
@@ -274,49 +317,4 @@ void reconnect_wifi() {
   wifi_set_opmode(STATION_MODE);
   wifi_station_connect();
 }
-
-int scan_wifi() {
-
-  #ifdef DEBUG
-    Serial.print("[INFO]\tWifi Scan: ");
-  #endif
-  
-  int n = WiFi.scanNetworks(false, false);
-  // Keine HIDDEN NETWORKS SCANNEN
-
-  // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/scan-class.md#scannetworks
-  // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/station-class.md#setautoreconnect
-  #ifdef DEBUG
-    Serial.print(n);
-    Serial.println(" network(s) found");
-  #endif
-  
-  return n;
-  
-}
-
-
-struct station_info *stat_info;
-struct ip_addr *IPaddress;
-IPAddress address;
-
-void dumpClients()
-{
-  // https://github.com/esp8266/Arduino/issues/2681
-  //http://www.esp8266.com/viewtopic.php?f=32&t=5669&sid=a9f40b382551435102f1b5ea3b6ef37c&start=8
-  
-  Serial.print(" Clients:\r\n");
-  stat_info = wifi_softap_get_station_info();
-  //uint8_t client_count = wifi_softap_get_station_num()
-  while (stat_info != NULL)
-  {
-    IPaddress = &stat_info->ip;
-    address = IPaddress->addr;
-    Serial.print("\t");
-    Serial.print(address);
-    Serial.print("\r\n");
-    stat_info = STAILQ_NEXT(stat_info, next);
-  } 
-}
-
 

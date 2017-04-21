@@ -502,7 +502,7 @@
 		unit = document.getElementById('unit').value;
 		var data='{"hwalarm":"' + hwalarm + '","host":"' + host + '","utc":' + utc + ',"language":"' + language + '","unit":"' + unit + '"}';
 		
-		alert(data);
+		//alert(data);
 		loadJSON('setsystem', data, function (response) {
 			showIndex();
 		})

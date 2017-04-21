@@ -15,9 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2017-01-04 add setHostname
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
@@ -81,7 +79,8 @@ void set_ota(){
 
 }
 
-
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//
 void check_ota_sector() {
 
   // https://github.com/esp8266/Arduino/blob/master/cores/esp8266/Esp.cpp
@@ -98,14 +97,14 @@ void check_ota_sector() {
   Serial.println("K)");
   log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
     
-  
   //uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
-      
   //Serial.println(ESP.getFlashChipRealSize()/1024);
   //Serial.println(ESP.getFlashChipSize() - 0x4000);
     
-  
 }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Test zum Speichern von Datalog
 
 //unsigned char meinsatz[64] = "Ich nutze ab jetzt den Flash Speicher für meine Daten!\n";
 //unsigned char meinflash[64];

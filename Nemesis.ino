@@ -14,24 +14,18 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 implement ChannelData
-    0.2.01 - 2017-01-02 Change Button Event
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
 // EXECPTION LIST
 // https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
 
-// CHOOSE CONFIGURATION (user input)
-
 // Entwicklereinstellungen
 #define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
-#define THINGSPEAK
-//#define KTYPE
-bool isEco = false;
+#define THINGSPEAK                          // ENABLE THINGSPEAK
+//#define KTYPE                             // ENABLE TYP K (Test only)
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -51,6 +45,7 @@ bool isEco = false;
 #include "c_server.h"
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// TIMER VARIABLES
 
 unsigned long lastUpdateBatteryMode;
 unsigned long lastUpdateSensor;
@@ -59,6 +54,8 @@ unsigned long lastUpdateCommunication;
 unsigned long lastUpdateDatalog;
 unsigned long lastFlashInWork;
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// SETUP
 void setup() {  
 
   // Initialize Serial 
@@ -68,7 +65,6 @@ void setup() {
   set_OLED();
 
   // Current Battery Voltage
-  battery.min = BATTMIN; battery.max = BATTMAX;
   get_Vbat();
   
   if (!stby) {
@@ -116,14 +112,12 @@ void setup() {
     
     // Initialize Pitmaster
     set_pitmaster();
-    
   }
-
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+// LOOP
 void loop() {
 
   // Standby oder Mess-Betrieb
@@ -199,10 +193,6 @@ void loop() {
       }
   } //else if (isAP == 1)
 
-  //if (beginRequest > 0 & millis()-beginRequest > 4000) {
-  //  Serial.println("Senden");
-  //  holdRequest->send(200, "text/plain", "Save");
-  //}
 
   // Detect Serial
   static char serialbuffer[150];
@@ -215,9 +205,7 @@ void loop() {
     ArduinoOTA.handle();
   #endif
 
-  // Server
-  //server.handleClient();
-
+  // Pitmaster Control
   pitmaster_control();
   
   // Detect Button Event
@@ -232,24 +220,25 @@ void loop() {
   } else remainingTimeBudget = 1;
 
 
+  // Timer Actions
   if (remainingTimeBudget > 0) {
-    // Don't do stuff if you are below your
-    // time budget.
-    
+    // Don't do stuff if you are below your time budget.
+
+    // Temperture
     if (millis() - lastUpdateSensor > INTERVALSENSOR) {
-      
       get_Temperature();
       get_Vbat();
       lastUpdateSensor = millis();
     }
 
+    // Alarm
     if (millis() - lastUpdatePiepser > INTERVALSENSOR/4) {
-
       controlAlarm(pulsalarm);
       pulsalarm = !pulsalarm;
       lastUpdatePiepser = millis();
     }
 
+    // Communication
     if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
 
       get_rssi(); // müsste noch an einen anderen Ort wo es unabhängig von INTERVALCOM.. ist
@@ -279,6 +268,7 @@ void loop() {
         lastUpdateCommunication = millis();
     }
 
+    // Datalog
     if (millis() - lastUpdateDatalog > 5000) {
       
       for (int i=0; i < CHANNELS; i++)  {
@@ -312,6 +302,7 @@ void loop() {
       lastUpdateDatalog = millis();
     }
 
+    // Flash
     if (inWork) {
       if (millis() - lastFlashInWork > FLASHINWORK) {
         flashinwork = !flashinwork;
@@ -323,7 +314,6 @@ void loop() {
     delay(1); // sonst geht das Wifi Modul nicht in Standby
     //yield();  // reicht nicht
   }
-
   
 }
 

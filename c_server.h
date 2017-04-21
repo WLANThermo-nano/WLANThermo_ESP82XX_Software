@@ -14,24 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version: Example ESP8266WebServer/FSBrowser
+    HISTORY: Please refer Github History
     
  ****************************************************/
-
-//#include <ESP8266WebServer.h>   // https://github.com/esp8266/Arduino
-//ESP8266WebServer server(80);    // declare webserver to listen on port 80
-//File fsUploadFile;              // holds the current upload
 
 
 AsyncWebServer server(80);        // https://github.com/me-no-dev/ESPAsyncWebServer
 
-//AsyncWebServerRequest *holdRequest;
-//unsigned long beginRequest;
-
 const char* www_username = "admin";
 const char* www_password = "admin";
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 String getContentType(String filename, AsyncWebServerRequest *request) {
   if (request->hasArg("download")) return "application/octet-stream";
   else if (filename.endsWith(".htm")) return "text/html";
@@ -50,8 +45,9 @@ String getContentType(String filename, AsyncWebServerRequest *request) {
   return "text/plain";
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 bool handleFileRead(String path, AsyncWebServerRequest *request){
-  
   if(path.endsWith("/")) path += "index.html";
   String contentType = getContentType(path, request);
   String pathWithGz = path + ".gz";
@@ -69,6 +65,8 @@ bool handleFileRead(String path, AsyncWebServerRequest *request){
   return false;
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 void handleSettings(AsyncWebServerRequest *request, bool www) {
 
   AsyncJsonResponse * response = new AsyncJsonResponse();
@@ -106,6 +104,8 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
 }
 
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 void handleData(AsyncWebServerRequest *request, bool www) {
 
   AsyncJsonResponse * response = new AsyncJsonResponse();
@@ -149,6 +149,8 @@ void handleData(AsyncWebServerRequest *request, bool www) {
   } else root.printTo(Serial);
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 void handleWifiResult(AsyncWebServerRequest *request, bool www) {
 
   // https://github.com/me-no-dev/ESPAsyncWebServer/issues/85
@@ -196,6 +198,8 @@ void handleWifiResult(AsyncWebServerRequest *request, bool www) {
   } else json.printTo(Serial);
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 void handleWifiScan(AsyncWebServerRequest *request, bool www) {
 
   //dumpClients();
@@ -211,6 +215,8 @@ void handleWifiScan(AsyncWebServerRequest *request, bool www) {
 }
 
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
 
   //  https://github.com/me-no-dev/ESPAsyncWebServer/issues/123
@@ -243,6 +249,8 @@ bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
   return 1;
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
 
   Serial.print("[REQUEST]\t");
@@ -260,6 +268,8 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   return 1;
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
 
   Serial.print("[REQUEST]\t");
@@ -280,22 +290,11 @@ bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
   holdssid.ssid = _network["ssid"].asString();
   holdssid.pass = _network["password"].asString();
 
-/*
-  if (!modifyconfig(eWIFI,data)) {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tFailed to save wifi config");
-        #endif
-        //return 0;
-      } else {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tWifi config saved");
-        #endif
-        //return 1;
-      }
-*/
   return 1;
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
 
   Serial.print("[REQUEST]\t");
@@ -310,15 +309,26 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
   host = _system["host"].asString();
   timeZone = _system["utc"];
   language = _system["language"].asString();
-  temp_unit = _system["unit"].asString();
+  String unit = _system["unit"].asString();
 
   modifyconfig(eSYSTEM,{});                                      // SPEICHERN
+  
+  if (temp_unit != unit)  {
+    temp_unit = unit;
+    transform_limits();                             // Transform Limits
+    modifyconfig(eCHANNEL,{});                      // Save Config
+    get_Temperature();                              // Update Temperature
+    #ifdef DEBUG
+      Serial.println("[INFO]\tEinheitenwechsel");
+    #endif
+  }
   
   return 1;
 }
 
 
-
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 String getMacAddress()  {
   uint8_t mac[6];
   char macStr[18] = { 0 };
@@ -331,6 +341,8 @@ String getMacAddress()  {
 
 
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 void server_setup() {
 
     MDNS.begin(host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);

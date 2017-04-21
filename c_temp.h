@@ -14,12 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 implement ChannelData
-    0.2.01 - 2017-01-04 add inactive channels
-    0.2.02 - 2017-01-04 add temperature unit
-    0.2.03 - 2017-01-06 add limits transformation
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
