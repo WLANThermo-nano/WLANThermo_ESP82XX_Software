@@ -171,11 +171,15 @@ void get_Vbat() {
   // Referenzwert bei COMPLETE neu setzen
   if ((curStateNone && curStatePull) && battery.setreference) {     // COMPLETE
     if (battery.voltage > 0) {
-      battery.max = battery.voltage-5;      // Grenze etwas nach unten versetzen
-      modifyconfig(eSYSTEM,{});                                      // SPEICHERN
-      #ifdef DEBUG
-        Serial.printf("[INFO]\tNew Battery Voltage Reference: %umV\r\n", battery.max); 
-      #endif
+      if (battery.voltage < battery.max) {
+        battery.max = battery.voltage-10;      
+        // Grenze etwas nach unten versetzen, um die Ladespannung zu kompensieren
+        // alternativ die Speicherung um 5 min verschieben, Gefahr: das dann schon abgeschaltet
+        modifyconfig(eSYSTEM,{});                                      // SPEICHERN
+        #ifdef DEBUG
+          Serial.printf("[INFO]\tNew Battery Voltage Reference: %umV\r\n", battery.max); 
+        #endif
+      }
     }
     battery.setreference = false;
   } else if (!curStateNone && !curStatePull) {                      // LOAD

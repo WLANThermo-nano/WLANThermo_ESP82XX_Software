@@ -51,7 +51,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
-#define SENSORTYPEN    7               // NUMBER OF SENSORS
+#define SENSORTYPEN    8               // NUMBER OF SENSORS
 #define LIMITUNTERGRENZE -20           // MINIMUM LIMIT
 #define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
 #define MAX1161x_ADDRESS 0x33          // MAX11615
@@ -142,7 +142,9 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
                       "100K",
                       "SMD NTC",
                       "5K3A1B",
+                      "MOUSER47K",
                       "Typ K"};
+
 
 String  temp_unit = "C";
 String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
@@ -225,6 +227,7 @@ bool disconnectAP;
 int timeZone;                     // Central European Time
 String host;
 struct HoldSSID {
+   unsigned long connect;
    bool hold;             
    String ssid;
    String pass;
@@ -718,8 +721,8 @@ static inline void button_event() {
         if (mupi == 10) mupi = 1;
         if (event[1]) tempor = ch[current_ch].typ;
         tempor += mupi;
-        if (tempor > 5) tempor = 0;
-        else if (tempor < 0) tempor = 5;
+        if (tempor > (SENSORTYPEN-2)) tempor = 0;
+        else if (tempor < 0) tempor = SENSORTYPEN-2;
         if (event[2]) ch[current_ch].typ = tempor;
         break;
         

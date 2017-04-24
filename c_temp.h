@@ -51,6 +51,9 @@ float calcT(int r, byte typ){
   case 5:  // NTC 5K3A1B (orange Kopf)
     Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243;  
     break; 
+  case 6: // NTC 47K MOUSER aus B25/50 = 4050
+    Rn = 47; a = 0.003354; b = 0.0002469; c = 0;
+    break;
    
   default:  
     return INACTIVEVALUE;

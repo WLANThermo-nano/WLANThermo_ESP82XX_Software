@@ -147,7 +147,12 @@ void loop() {
   }
 
   // WiFi Monitoring
-  if (WiFi.status() == WL_CONNECTED & isAP > 0) {
+  if (holdssid.connect) {
+    if (millis() - holdssid.connect > 1000) {
+      WIFI_Connect();
+      holdssid.connect = false;
+    }
+  } else if (WiFi.status() == WL_CONNECTED & isAP > 0) {
     // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
     if (isAP == 1) disconnectAP = true;
     isAP = 0;

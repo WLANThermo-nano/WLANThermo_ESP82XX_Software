@@ -776,6 +776,11 @@ void read_serial(char *buffer) {
   // new command
   const char* command = json["command"];
 
+  if (!json.containsKey("command"))  {
+    Serial.println("No command key");
+    return;
+  }
+
   // ADD WIFI SETTINGS
   if (strcmp(command, "addWIFI")==0) {
     const char* data[2];

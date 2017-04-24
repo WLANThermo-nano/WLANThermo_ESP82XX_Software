@@ -48,6 +48,7 @@ void set_wifi() {
   #endif
 
   holdssid.hold = false;
+  holdssid.connect = false;
 
   // Add Wifi Settings
   for (int i = 0; i < lenwifi; i++) {
@@ -213,14 +214,14 @@ String digitalClockDisplay(){
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Connect Wifi after Settings Transmission
-void WIFI_Connect(const char* data[2]) {
+void WIFI_Connect() {
 
   // http://www.esp8266.com/viewtopic.php?f=32&t=8286
   
   //WiFi.disconnect();
   Serial.println("Verbinden mit neuer SSID");
   //WiFi.mode(WIFI_AP_STA);
-  WiFi.begin(data[0], data[1]);
+  WiFi.begin(holdssid.ssid.c_str(), holdssid.pass.c_str());
 
 
   /*

@@ -280,12 +280,11 @@ bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
   JsonObject& _network = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_network.success()) return 0;
   
-  const char* data[2];
-  data[0] = _network["ssid"];
-  data[1] = _network["password"];
+  //const char* data[2];
+  //data[0] = _network["ssid"];
+  //data[1] = _network["password"];
 
-  WIFI_Connect(data);
-
+  holdssid.connect = millis();
   holdssid.hold = true;
   holdssid.ssid = _network["ssid"].asString();
   holdssid.pass = _network["password"].asString();
@@ -488,27 +487,26 @@ void server_setup() {
       if (request->url() == "/setnetwork") {
         //holdRequest = request;
         //beginRequest = millis();
-        if (handleSetNetwork(request, data)) {
-          //request->send(200, "text/plain", "Save");
-        } //else  request->send(200, "text/plain", "Fehler");
+        if (!handleSetNetwork(request, data)){} request->send(200, "text/plain", "false");
+          request->send(200, "text/plain", "true");
       }
       else if (request->url() =="/setchannels") { 
         if(!request->authenticate(www_username, www_password))
           return request->requestAuthentication();    
-        if(!handleSetChannels(request, data)) request->send(200, "text/plain", "0");
-          request->send(200, "text/plain", "1");
+        if(!handleSetChannels(request, data)) request->send(200, "text/plain", "false");
+          request->send(200, "text/plain", "true");
       }
       else if (request->url() =="/setsystem") { 
         if(!request->authenticate(www_username, www_password))
           return request->requestAuthentication();    
-        if(!handleSetSystem(request, data)) request->send(200, "text/plain", "0");
-          request->send(200, "text/plain", "1");
+        if(!handleSetSystem(request, data)) request->send(200, "text/plain", "false");
+          request->send(200, "text/plain", "true");
       }
       else if (request->url() =="/setpitmaster") { 
         if(!request->authenticate(www_username, www_password))
           return request->requestAuthentication();    
-        if(!handleSetPitmaster(request, data)) request->send(200, "text/plain", "0");
-          request->send(200, "text/plain", "1");
+        if(!handleSetPitmaster(request, data)) request->send(200, "text/plain", "false");
+          request->send(200, "text/plain", "true");
       } else {
         if(!index)  Serial.printf("BodyStart: %u\n", total);
         Serial.printf("%s", (const char*)data);
