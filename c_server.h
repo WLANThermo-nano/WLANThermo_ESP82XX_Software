@@ -325,6 +325,34 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
   return 1;
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  Serial.print("[REQUEST]\t");
+  Serial.printf("%s", (const char*)datas);
+  Serial.println();
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& _chart = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_chart.success()) return 0;
+  
+  const char* data[2];
+  data[0] = _chart["thingspeak"];
+  
+  if (!setconfig(eTHING,data)) {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tFailed to save Thingspeak config");
+      #endif
+    } else {
+      #ifdef DEBUG
+        Serial.println("[INFO]\tThingspeak config saved");
+      #endif
+    }
+  
+  return 1;
+}
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
@@ -418,6 +446,19 @@ void server_setup() {
       request->send(200, "text/plain", "0");
     });
 
+
+    server.on("/alex", HTTP_GET, [](AsyncWebServerRequest *request){
+      
+      int params = request->params();
+      for(int i=0;i<params;i++){
+        AsyncWebParameter* p = request->getParam(i);
+        const char* data[2];
+        data[i] = p->value().c_str();
+        setconfig(eTHING,data);
+      }
+      request->send(200, "text/plain", "OK");
+    });
+
     /*  
     // REQUEST: /setnetwork
     server.on("/setnetwork", HTTP_GET, [](AsyncWebServerRequest *request) { 
@@ -506,6 +547,12 @@ void server_setup() {
         if(!request->authenticate(www_username, www_password))
           return request->requestAuthentication();    
         if(!handleSetPitmaster(request, data)) request->send(200, "text/plain", "false");
+          request->send(200, "text/plain", "true");
+      }
+      else if (request->url() =="/setchart") { 
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();    
+        if(!handleSetChart(request, data)) request->send(200, "text/plain", "false");
           request->send(200, "text/plain", "true");
       } else {
         if(!index)  Serial.printf("BodyStart: %u\n", total);

@@ -246,10 +246,11 @@ byte buttonResult[NUMBUTTONS];    // Aktueller Klickstatus der Buttons NONE/SHOR
 unsigned long buttonDownTime[NUMBUTTONS]; // Zeitpunkt FIRSTDOWN
 byte menu_count = 0;                      // Counter for Menu
 byte inMenu = 0;
-enum {TEMPSUB, PITSUB, SYSTEMSUB, MAINMENU, TEMPKONTEXT};
+enum {TEMPSUB, PITSUB, SYSTEMSUB, MAINMENU, TEMPKONTEXT, BACK};
 bool inWork = 0;
-int framepos[3] = {0, 5, 9};
-int frameCount = 16;
+bool isback = 0;
+int framepos[3] = {0, 6, 11};
+int frameCount = 19;
 bool flashinwork = true;
 float tempor;                       // Zwischenspeichervariable
 
@@ -426,52 +427,18 @@ static inline void button_event() {
   }
   */
 
-
-  // Button rechts Longclick: Ins Hauptmenu wechseln
-  if (buttonResult[0] == LONGCLICK) {
-
-    switch (inMenu) {
-      
-      case TEMPSUB:                     // Main aufrufen
-        displayblocked = true;
-        drawMenu();
-        inMenu = MAINMENU;
-        return;
-    }
-  }
-
-  // Bei LONGCLICK rechts großer Zahlensprung jedoch gebremst
-  if (buttonResult[0] == FIRSTDOWN && (millis()-buttonDownTime[0]>400)) {
+  // Bearbeitungsmodus aktivieren/deaktivieren
+  if (buttonResult[0]==DOUBLECLICK) {
     
-    if (inWork) {
-      mupi = 10;
-      if (millis()-lastMupiTime > 200) {
-        event[0] = 1;
-        lastMupiTime = millis();
-      }
-    }
-  }
-
-
-  
-  // Button links Longclick: Wechsel ins Submenu oder Bearbeitung aktivieren/deaktivieren
-  if (buttonResult[1] == LONGCLICK) {
-
     if (inWork) {
       inWork = false;                     // Bearbeitung verlassen
       flashinwork = true;                 // Dauerhafte Symbolanzeige
       event[0] = 1;
       event[1] = 0;
-      event[2] = 1;                       // Zwischenwert setzen
+      event[2] = 1;                       // Endwert setzen
     } else {
-
       switch (inMenu) {
       
-        case TEMPSUB:                     // Temperaturkontextmenu aufgerufen
-          inMenu = TEMPKONTEXT;
-          ui.switchToFrame(framepos[0]+1);
-          return;
-
         case TEMPKONTEXT:                 // Temperaturwerte bearbeiten
           inWork = true;
           break;
@@ -484,19 +451,130 @@ static inline void button_event() {
           inWork = true;
           break;
 
+      }
+      event[0] = 1;
+      event[1] = 1;         // Startwert setzen
+      event[2] = 0;
+      
+    }
+  }
+
+  // Tiefer im Menü
+  if (buttonResult[1]==DOUBLECLICK) {}
+  
+
+
+  // Bei LONGCLICK rechts großer Zahlensprung jedoch gebremst
+  if (buttonResult[0] == FIRSTDOWN && (millis()-buttonDownTime[0]>400)) {
+    
+    if (inWork) {
+      mupi = 10;
+      if (millis()-lastMupiTime > 200) {
+        event[0] = 1;
+        lastMupiTime = millis();
+      }
+    } else {
+      buttonResult[0] = NONE;     // Manuelles Zurücksetzen um Überspringen der Menus zu verhindern
+      switch (inMenu) {
+
         case MAINMENU:                    // Menu aufrufen
           inMenu = menu_count;
           displayblocked = false;
           b_counter = framepos[menu_count];
           ui.switchToFrame(b_counter);
           return;
+      
+        case TEMPSUB:                     // Main aufrufen
+          displayblocked = true;
+          drawMenu();
+          inMenu = MAINMENU;
+          return;
+
+        case PITSUB:                      // Main aufrufen
+          if (isback) {
+            displayblocked = true;
+            drawMenu();
+            inMenu = MAINMENU;
+            //modifyconfig(ePIT,{});
+            isback = 0;
+          }
+          return;
+
+        case SYSTEMSUB:                   // Main aufrufen
+          if (isback) {
+            displayblocked = true;
+            drawMenu();
+            inMenu = MAINMENU;
+            modifyconfig(eSYSTEM,{});
+            isback = 0;
+          }
+          return;
+
+        case TEMPKONTEXT:                 // Temperaturmenu aufrufen
+          if (isback) {
+            b_counter = 0;
+            modifyconfig(eCHANNEL,{});      // Am Ende des Kontextmenu Config speichern
+            inMenu = TEMPSUB;
+            ui.switchToFrame(b_counter);
+            isback = 0;
+          }
+          return;
+          
+
       }
-      event[0] = 1;
-      event[1] = 1;
-      event[2] = 0;              // Zwischenwert setzen
     }
   }
 
+
+  // Bei LONGCLICK links großer negativer Zahlensprung jedoch gebremst
+  if (buttonResult[1] == FIRSTDOWN && (millis()-buttonDownTime[1]>400)) {
+
+    if (inWork) {
+      mupi = -10;
+      if (millis()-lastMupiTime > 200) {
+        event[0] = 1;
+        lastMupiTime = millis();
+      }
+    } else {
+      
+      buttonResult[1] = NONE;     // Manuelles Zurücksetzen um Überspringen der Menus zu verhindern
+      switch (inMenu) {
+        case TEMPSUB:                     // Temperaturkontextmenu aufgerufen
+          inMenu = TEMPKONTEXT;
+          ui.switchToFrame(framepos[0]+1);
+          return;
+
+        case MAINMENU:                    // Menu aufrufen
+          b_counter = 0;
+          displayblocked = false;
+          inMenu = TEMPSUB;
+          ui.switchToFrame(b_counter);
+          return;
+
+        case PITSUB:                      // Main aufrufen
+          displayblocked = true;
+          drawMenu();
+          inMenu = MAINMENU;
+          //modifyconfig(ePIT,{});
+          return;
+
+        case SYSTEMSUB:                   // Main aufrufen
+          displayblocked = true;
+          drawMenu();
+          inMenu = MAINMENU;
+          modifyconfig(eSYSTEM,{});
+          return;
+
+        case TEMPKONTEXT:                 // Temperaturmenu aufrufen
+          b_counter = 0;
+          modifyconfig(eCHANNEL,{});      // Am Ende des Kontextmenu Config speichern
+          inMenu = TEMPSUB;
+          ui.switchToFrame(b_counter);
+          return;
+
+      }
+    }
+  }
 
 
   // Button rechts Shortclick: Vorwärts / hochzählen / Frage mit Ja beantwortet
@@ -558,36 +636,26 @@ static inline void button_event() {
 
         case TEMPKONTEXT:
           if (b_counter < framepos[1]-1) b_counter++;
-          else {
-            b_counter = 0;
-            modifyconfig(eCHANNEL,{});             // Am Ende des Kontextmenu Config speichern
-            inMenu = TEMPSUB;
-          }
+          else b_counter = framepos[0]+1;
+          if (b_counter == framepos[1]-1) isback = 1;
+          else isback = 0;
           ui.switchToFrame(b_counter);
           break;
 
         case PITSUB:
-          if (b_counter < framepos[2]-1) {
-            b_counter++;
-            ui.switchToFrame(b_counter);
-          }
-          else {
-            displayblocked = true;
-            drawMenu();
-            inMenu = MAINMENU;
-          }
+          if (b_counter < framepos[2]-1) b_counter++;
+          else  b_counter = framepos[1];
+          if (b_counter == framepos[2]-1) isback = 1;
+          else isback = 0;
+          ui.switchToFrame(b_counter);
           break;
 
         case SYSTEMSUB:
-          if (b_counter < frameCount-1) {
-            b_counter++;
-            ui.switchToFrame(b_counter);
-          }
-          else {
-            displayblocked = true;
-            drawMenu();
-            inMenu = MAINMENU;
-          }
+          if (b_counter < frameCount-1) b_counter++;
+          else b_counter = framepos[2];
+          if (b_counter == frameCount-1) isback = 1;
+          else isback = 0;
+          ui.switchToFrame(b_counter);
           break;
       }
       return;
@@ -636,8 +704,7 @@ static inline void button_event() {
           if (INACTIVESHOW) {
             current_ch--;
             if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
-          }
-          else {
+          } else {
             do {
               current_ch--;
               j--;
@@ -649,11 +716,13 @@ static inline void button_event() {
           break;
 
         case TEMPKONTEXT:
-          if (b_counter > framepos[0]+1) b_counter--;
+          if (b_counter > framepos[0]+1) {
+            b_counter--;
+            isback = 0;
+          }
           else {
-            b_counter = 0;
-            modifyconfig(eCHANNEL,{});             // Am Ende des Kontextmenu Config speichern
-            inMenu = TEMPSUB;
+            b_counter = framepos[1]-1;
+            isback = 1;
           }
           ui.switchToFrame(b_counter);
           break;
@@ -661,25 +730,23 @@ static inline void button_event() {
         case PITSUB:
           if (b_counter > framepos[1]) {
             b_counter--;
-            ui.switchToFrame(b_counter);
+            isback = 0;
+          } else {
+            b_counter = framepos[2]-1;
+            isback = 1;
           }
-          else {
-            displayblocked = true;
-            drawMenu();
-            inMenu = MAINMENU;
-          }
+          ui.switchToFrame(b_counter);
           break;
 
         case SYSTEMSUB:
           if (b_counter > framepos[2]) {
             b_counter--;
-            ui.switchToFrame(b_counter);
+            isback = 0;
+          } else {
+            b_counter = frameCount-1;
+            isback = 1;
           }
-          else {
-            displayblocked = true;
-            drawMenu();
-            inMenu = MAINMENU;
-          }
+          ui.switchToFrame(b_counter);
           break;
       }
       return;
@@ -732,7 +799,7 @@ static inline void button_event() {
         if (event[2]) ch[current_ch].alarm = tempor;
         break;
         
-      case 5:  // Pitmaster Typ
+      case 6:  // Pitmaster Typ
         if (mupi == 10) mupi = 1;
         if (event[1]) tempor = pitmaster.typ; 
         tempor += mupi;
@@ -741,7 +808,7 @@ static inline void button_event() {
         if (event[2]) pitmaster.typ = tempor;
         break;
         
-      case 6:  // Pitmaster Channel
+      case 7:  // Pitmaster Channel
         if (mupi == 10) mupi = 1;
         if (event[1]) tempor = pitmaster.channel;
         tempor += mupi;
@@ -750,7 +817,7 @@ static inline void button_event() {
         if (event[2]) pitmaster.channel = tempor;
         break;
         
-      case 7:  // Pitmaster Set
+      case 8:  // Pitmaster Set
         if (event[1]) tempor = pitmaster.set;
         tempor += (0.1*mupi);
         if (tempor > ch[pitmaster.channel].max) tempor = ch[pitmaster.channel].min;
@@ -758,13 +825,13 @@ static inline void button_event() {
         if (event[2]) pitmaster.set = tempor;
         break;
         
-      case 8:  // Pitmaster Active
+      case 9:  // Pitmaster Active
         if (event[1]) tempor = pitmaster.active;
         if (mupi) tempor = !tempor;
         if (event[2]) pitmaster.active = tempor;
         break;
         
-      case 12:  // Unit Change
+      case 14:  // Unit Change
         if (event[1]) {
           if (temp_unit == "F") tempor = 1;
         }
@@ -785,13 +852,13 @@ static inline void button_event() {
         }
         break;
         
-      case 13:  // Hardware Alarm
+      case 15:  // Hardware Alarm
         if (event[1]) tempor = doAlarm;
         if (mupi) tempor = !tempor;
         if (event[2]) doAlarm = tempor;
         break;
       
-      case 15:  // Fastmode
+      case 17:  // Fastmode
         if (event[1]) tempor = INACTIVESHOW;
         if (mupi) tempor = !tempor;
         if (event[2]) INACTIVESHOW = tempor;

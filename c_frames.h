@@ -149,28 +149,35 @@ void drawMenu() {
     display.drawLine(3, 7, 13, 7);
     display.drawLine(3, 11, 13, 11);
 
-    display.drawString(50,2,"MENU");
-    display.drawString(20,18,"Temperature");
-    display.drawString(20,33,"Pitmaster");
-    display.drawString(20,48,"System");
+    display.drawXbm(17,41,arrow_height,arrow_width,xbmarrow2); 
+    display.drawXbm(17,27,arrow_height,arrow_width,xbmarrow1);
 
-    display.setColor(INVERSE);
+    display.drawString(50,2,"MENU");
+    display.setFont(ArialMT_Plain_16);
+    //display.drawString(20,18,"Temperature");
+    //display.drawString(20,33,"Pitmaster");
+    //display.drawString(20,48,"System");
+
+    //display.setColor(INVERSE);
     switch (menu_count) {
       
       case 0:   // Temperature
-        display.fillRect(0, 18, 128, 14);
+        //display.fillRect(0, 18, 128, 14);
+        display.drawString(30,27,"Temperatur");
         break;
 
       case 1:   // Pitmaster
-        display.fillRect(0, 33, 128, 14);
+        //display.fillRect(0, 33, 128, 14);
+        display.drawString(30,27,"Pitmaster");
         break;
 
       case 2:   // System
-        display.fillRect(0, 48, 128, 14);
+        //display.fillRect(0, 48, 128, 14);
+        display.drawString(30,27,"System");
         break;
     }
     
-    display.setColor(WHITE);
+    //display.setColor(WHITE);
     display.display();
 }
 
@@ -441,18 +448,26 @@ void drawsys7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   else display->drawString(114+x, 36+y, "YES");
 }
 
+void drawback(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  display->drawXbm(x+5,22+y,back_width,back_height,xbmback);
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->setFont(ArialMT_Plain_16);
+  display->drawString(100+x, 27+y, "BACK");
+}
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialising Frames
 
 // this array keeps function pointers to all frames
 // frames are the single views that slide from right to left
-FrameCallback frames[] = { drawTemp, drawlimito, drawlimitu, drawtyp, drawalarm, 
-                           drawpit1, drawpit2, drawpit3, drawpit4, 
+FrameCallback frames[] = { drawTemp, drawlimito, drawlimitu, drawtyp, drawalarm, drawback,
+                           drawpit1, drawpit2, drawpit3, drawpit4, drawback,
                            drawsys1, drawsys2, drawsys3, drawsys4, drawsys5, 
-                           drawsys6, drawsys7};  // drawFrame3
+                           drawsys6, drawsys7, drawback};  // drawFrame3
+                           // drawback immer als letztes
 
 // how many frames are there?
-// int frameCount = 15;           // siehe c_init.h 
+// int frameCount           // siehe c_init.h 
 
 // Overlays are statically drawn on top of a frame eg. a clock
 OverlayCallback overlays[] = { gBattery };
