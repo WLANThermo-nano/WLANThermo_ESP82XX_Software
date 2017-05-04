@@ -528,7 +528,7 @@ void server_setup() {
       if (request->url() == "/setnetwork") {
         //holdRequest = request;
         //beginRequest = millis();
-        if (!handleSetNetwork(request, data)){} request->send(200, "text/plain", "false");
+        if (!handleSetNetwork(request, data)) request->send(200, "text/plain", "false");
           request->send(200, "text/plain", "true");
       }
       else if (request->url() =="/setchannels") { 
