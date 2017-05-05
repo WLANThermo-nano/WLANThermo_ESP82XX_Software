@@ -279,16 +279,14 @@ bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _network = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_network.success()) return 0;
-  
-  //const char* data[2];
-  //data[0] = _network["ssid"];
-  //data[1] = _network["password"];
 
+  if (!_network.containsKey("ssid")) return 0;
+  holdssid.ssid = _network["ssid"].asString();
+  if (!_network.containsKey("password")) return 0;
+  holdssid.pass = _network["password"].asString();
   holdssid.connect = millis();
   holdssid.hold = true;
-  holdssid.ssid = _network["ssid"].asString();
-  holdssid.pass = _network["password"].asString();
-
+  
   return 1;
 }
 
@@ -526,8 +524,6 @@ void server_setup() {
     
     server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
       if (request->url() == "/setnetwork") {
-        //holdRequest = request;
-        //beginRequest = millis();
         if (!handleSetNetwork(request, data)) request->send(200, "text/plain", "false");
           request->send(200, "text/plain", "true");
       }
