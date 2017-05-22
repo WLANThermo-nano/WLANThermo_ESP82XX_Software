@@ -28,22 +28,6 @@
 //#define KTYPE                             // ENABLE TYP K (Test only)
 
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++
-// INCLUDE SUBROUTINES
-
-#include "c_init.h"
-#include "c_median.h"
-#include "c_sensor.h"
-#include "c_pitmaster.h"
-#include "c_temp.h"
-#include "c_fs.h"
-#include "c_icons.h"
-#include "c_wifi.h"
-#include "c_frames.h"
-#include "c_bot.h"
-#include "c_ota.h"
-#include "c_server.h"
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // TIMER VARIABLES
 
@@ -53,6 +37,27 @@ unsigned long lastUpdatePiepser;
 unsigned long lastUpdateCommunication;
 unsigned long lastUpdateDatalog;
 unsigned long lastFlashInWork;
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++
+// INCLUDE SUBROUTINES
+
+#include "c_init.h"
+#include "c_button.h"
+#include "c_median.h"
+#include "c_sensor.h"
+#include "c_pitmaster.h"
+#include "c_temp.h"
+#include "c_fs.h"
+#include "c_com.h"
+#include "c_ee.h"
+#include "c_icons.h"
+#include "c_wifi.h"
+#include "c_frames.h"
+#include "c_bot.h"
+#include "c_ota.h"
+#include "c_server.h"
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETUP
@@ -71,7 +76,7 @@ void setup() {
 
     // Open Config-File
     check_ota_sector();
-    setEE();start_fs();
+    setEE(); start_fs();
     
     // Initialize Wifi
     set_wifi();
@@ -121,83 +126,10 @@ void setup() {
 void loop() {
 
   // Standby oder Mess-Betrieb
-  if (stby) {
-
-    drawLoading();
-    if (!LADENSHOW) {
-      //drawLoading();
-      LADENSHOW = true;
-      #ifdef DEBUG
-        Serial.println("[INFO]\tChange to Standby");
-      #endif
-      //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
-      pitmaster.active = false;
-      piepserOFF();
-      // set_pitmaster();
-    }
-    
-    if (millis() - lastUpdateBatteryMode > INTERVALBATTERYMODE) {
-      get_Vbat();
-      lastUpdateBatteryMode = millis();  
-
-      if (!stby) ESP.restart();
-    }
-    
-    return;
-  }
+  if (standby_control()) return;
 
   // WiFi Monitoring
-  if (holdssid.connect) {
-    if (millis() - holdssid.connect > 1000) {
-      WIFI_Connect();
-      holdssid.connect = false;
-    }
-  } else if (WiFi.status() == WL_CONNECTED & isAP > 0) {
-    // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
-    if (isAP == 1) disconnectAP = true;
-    isAP = 0;
-    #ifdef DEBUG
-      Serial.print("[INFO]\tWiFi connected to: ");
-      Serial.println(WiFi.SSID());
-      Serial.print("[INFO]\tIP address: ");
-      Serial.println(WiFi.localIP());
-    #endif
-
-    if (holdssid.hold) {
-      holdssid.hold = false;
-      const char* data[2];
-      data[0] = holdssid.ssid.c_str();
-      data[1] = holdssid.pass.c_str();
-      if (!modifyconfig(eWIFI,data)) {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tFailed to save wifi config");
-        #endif
-        //return 0;
-      } else {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tWifi config saved");
-        #endif
-        //return 1;
-      }
-    }
-    
-    WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
-    
-  } else if (WiFi.status() != WL_CONNECTED & isAP == 0) {
-    // Nicht verbunden
-    Serial.println("[INFO]\tWLAN-Verbindung verloren!");
-    isAP = 2;
-  } else if (isAP == 0 & disconnectAP) {
-      uint8_t client_count = wifi_softap_get_station_num();
-      if (!client_count) {
-        disconnectAP = false;
-        WiFi.mode(WIFI_STA);
-        #ifdef DEBUG
-        Serial.println("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
-        #endif
-      }
-  } //else if (isAP == 1)
-
+  wifimonitoring();
 
   // Detect Serial
   static char serialbuffer[150];
@@ -249,28 +181,20 @@ void loop() {
       get_rssi(); // müsste noch an einen anderen Ort wo es unabhängig von INTERVALCOM.. ist
       cal_soc();
       
-      // Erst aufwachen falls im EcoModus
-      // UpdateCommunication wird so lange wiederholt bis ESP wieder wach
+      // falls wach und nicht AP
+      if (!isAP) {
 
-      //const char* neuedata[2];
-      //neuedata[0] = "WLAN-DDC234";
-      //neuedata[1] = "FTZuh5842OBU8753pip";     
-      //if (WiFi.status() != WL_CONNECTED) Serial.println(WIFI_Connect(neuedata));
- 
-        // falls wach und nicht AP
-        if (!isAP) {
-
-          #ifdef THINGSPEAK
-            if (THINGSPEAK_KEY != "") sendData();
-          #endif
+        #ifdef THINGSPEAK
+          if (THINGSPEAK_KEY != "") sendData();
+        #endif
           
-          #ifdef TELEGRAM
-            UserData userData;
-            getUpdates(id, &userData);
-          #endif
-        }
+        #ifdef TELEGRAM
+          UserData userData;
+          getUpdates(id, &userData);
+        #endif
+      }
       
-        lastUpdateCommunication = millis();
+      lastUpdateCommunication = millis();
     }
 
     // Datalog

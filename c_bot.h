@@ -21,7 +21,7 @@
 #ifdef THINGSPEAK
 
 WiFiClient THINGclient;
-const char* server1 = "api.thingspeak.com";
+#define server1 "api.thingspeak.com"
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Send data to Thingspeak

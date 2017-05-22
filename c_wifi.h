@@ -264,6 +264,72 @@ int scan_wifi() {
 }
 
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// WiFi Monitoring
+void wifimonitoring() {
+  if (holdssid.connect) {
+    if (millis() - holdssid.connect > 1000) {
+      WIFI_Connect();
+      holdssid.connect = false;
+    }
+  } else if (WiFi.status() == WL_CONNECTED & isAP > 0) {
+    // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
+    if (isAP == 1) disconnectAP = true;
+    isAP = 0;
+    #ifdef DEBUG
+      Serial.print("[INFO]\tWiFi connected to: ");
+      Serial.println(WiFi.SSID());
+      Serial.print("[INFO]\tIP address: ");
+      Serial.println(WiFi.localIP());
+    #endif
+
+    if (holdssid.hold) {
+      holdssid.hold = false;
+      const char* data[2];
+      data[0] = holdssid.ssid.c_str();
+      data[1] = holdssid.pass.c_str();
+      if (!modifyconfig(eWIFI,data)) {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tFailed to save wifi config");
+        #endif
+        //return 0;
+      } else {
+        #ifdef DEBUG
+          Serial.println("[INFO]\tWifi config saved");
+        #endif
+        //return 1;
+      }
+    }
+    
+    WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
+    
+  } else if (WiFi.status() != WL_CONNECTED & isAP == 0) {
+    // Nicht verbunden
+    Serial.println("[INFO]\tWLAN-Verbindung verloren!");
+    isAP = 2;
+
+    // Verlust nach Verbindungsaufbauversuch
+    if (holdssid.hold) {
+      holdssid.hold = false;
+      Serial.println("[INFO]\tMit ehemaligem Wifi verbinden");
+      WiFi.mode(WIFI_OFF);
+      WiFi.mode(WIFI_STA);
+      wifiMulti.run();        // mit vorherigem Wifi verbinden
+    }
+    
+  } else if (isAP == 0 & disconnectAP) {
+      uint8_t client_count = wifi_softap_get_station_num();
+      if (!client_count) {
+        disconnectAP = false;
+        WiFi.mode(WIFI_STA);
+        #ifdef DEBUG
+        Serial.println("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
+        #endif
+      }
+  } //else if (isAP == 1)
+}
+
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Test
