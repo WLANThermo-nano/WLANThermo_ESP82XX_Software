@@ -335,6 +335,9 @@ void writeEE(const char* json, int len, int startP);
 void readEE(char *buffer, int len, int startP);
 void clearEE(int startP, int endP);
 
+// PITMASTER
+void startautotunePID(float temp, int maxCycles, bool storeValues);
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
 void set_serial() {

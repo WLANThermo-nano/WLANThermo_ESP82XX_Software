@@ -836,6 +836,10 @@ void read_serial(char *buffer) {
     Serial.println(THINGSPEAK_KEY);
   }
 
+  else if (strcmp(command, "autotune")==0) {
+    startautotunePID(json["data"][0], json["data"][1], json["data"][3]);
+  }
+
   // RESTART SYSTEM
   else if (strcmp(command, "restart")==0) {
     ESP.restart();
