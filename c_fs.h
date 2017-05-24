@@ -33,19 +33,19 @@ bool loadfile(const char* filename, File& configFile) {
   
   configFile = SPIFFS.open(filename, "r");
   if (!configFile) {
-    #ifdef DEBUG
-    Serial.print("[INFO]\tFailed to open: ");
-    Serial.println(filename);
-    #endif
+    
+    DPRINT("[INFO]\tFailed to open: ");
+    DPRINTLN(filename);
+    
     return false;
   }
 
   size_t size = configFile.size();
   if (size > 1024) {
-    #ifdef DEBUG
-    Serial.print("[INFO]\tFile size is too large: ");
-    Serial.println(filename);
-    #endif
+    
+    DPRINT("[INFO]\tFile size is too large: ");
+    DPRINTLN(filename);
+    
     return false;
   }
   return true;
@@ -59,10 +59,10 @@ bool savefile(const char* filename, File& configFile) {
   configFile = SPIFFS.open(filename, "w");
   
   if (!configFile) {
-    #ifdef DEBUG
-    Serial.print("Failed to open file for writing: ");
-    Serial.println(filename);
-    #endif
+    
+    DPRINT("[INFO]\tFailed to open file for writing: ");
+    DPRINTLN(filename);
+    
     return false;
   }  
   return true;
@@ -74,10 +74,10 @@ bool savefile(const char* filename, File& configFile) {
 bool checkjson(JsonVariant json, const char* filename) {
   
   if (!json.success()) {
-    #ifdef DEBUG
-      Serial.print("Failed to parse: ");
-      Serial.println(filename);
-    #endif
+    
+    DPRINT("[INFO]\tFailed to parse: ");
+    DPRINTLN(filename);
+    
     return false;
   }
   
@@ -210,11 +210,9 @@ bool loadconfig(byte count) {
   }
 
   /*
-  #ifdef DEBUG
-  Serial.print("[JSON GET]\t");
+  DPRINT("[JSON GET]\t");
   json.printTo(Serial);
-  Serial.println();
-  #endif
+  DPRINTLN();
   */
   return true;
 }
@@ -287,9 +285,7 @@ bool setconfig(byte count, const char* data[2]) {
       
       size_t size = json.measureLength() + 1;
       if (size > 100) {
-        #ifdef DEBUG
-        Serial.println("[INFO]\tZu viele THINGSPEAK Daten!");
-        #endif
+        DPRINTLN("[INFO]\tZu viele THINGSPEAK Daten!");
         return false;
       } else {
         clearEE(100,300);  // Bereich reinigen
@@ -325,9 +321,7 @@ bool setconfig(byte count, const char* data[2]) {
       
       size_t size = json.measureLength() + 1;
       if (size > 600) {
-        #ifdef DEBUG
-        Serial.println("[INFO]\tZu viele PITMASTER Daten!");
-        #endif
+        DPRINTLN("[INFO]\tZu viele PITMASTER Daten!");
         return false;
       } else {
         clearEE(600,900);  // Bereich reinigen
@@ -432,9 +426,9 @@ bool modifyconfig(byte count, const char* data[12]) {
       json.printTo(buffer, size);
       writeEE(buffer, size, 400);
 
-      //Serial.print("[JSON SET]\t");
+      //DPRINT("[JSON SET]\t");
       //json.printTo(Serial);
-      //Serial.println();
+      //DPRINTLN();
       
     }
     break;
@@ -461,9 +455,7 @@ bool modifyconfig(byte count, const char* data[12]) {
       size_t size = json.measureLength() + 1;
       
       if (size > 300) {
-        #ifdef DEBUG
-        Serial.println("[INFO]\tZu viele WIFI Daten!");
-        #endif
+        DPRINTLN("[INFO]\tZu viele WIFI Daten!");
         return false;
       } else {
         static char buffer[300];
@@ -506,11 +498,8 @@ bool modifyconfig(byte count, const char* data[12]) {
     
       // Speichern
       size_t size = json.measureLength() + 1;
-      
       if (size > 600) {
-        #ifdef DEBUG
-        Serial.println("[INFO]\tZu viele PITMASTER Daten!");
-        #endif
+        DPRINTLN("[INFO]\tZu viele PITMASTER Daten!");
         return false;
       } else {
         static char buffer[600];
@@ -566,131 +555,81 @@ bool modifyconfig(byte count, const char* data[12]) {
 void start_fs() {
   
   if (!SPIFFS.begin()) {
-    #ifdef DEBUG
-    Serial.println("[INFO]\tFailed to mount file system");
-    #endif
+    DPRINTLN("[INFO]\tFailed to mount file system");
     return;
   }
 
-  /*
-  Dir dir = SPIFFS.openDir("/");  // Alternativ: Dir dir = SPIFFS.openDir("/data");
-  while (dir.next()) {
-    String fileName = dir.fileName();
-    size_t fileSize = dir.fileSize();
-    Serial.printf("FS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
-  }
-  */
-  #ifdef DEBUG
-    Serial.print("[INFO]\tInitalize SPIFFS at Sector: 0x");
-    Serial.print((((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE), HEX);
-    Serial.print(" (");
-    Serial.print(((uint32_t)&_SPIFFS_end - (uint32_t)&_SPIFFS_start)/1024, DEC);
-    Serial.println("K)");
-    // 0x40200000 ist der Speicherort des SPI FLASH in der Memory Map
-  #endif
+  DPRINT("[INFO]\tInitalize SPIFFS at Sector: 0x");
+  DPRINT((((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE), HEX);
+  DPRINT(" (");
+  DPRINT(((uint32_t)&_SPIFFS_end - (uint32_t)&_SPIFFS_start)/1024, DEC);
+  DPRINTLN("K)");
+  // 0x40200000 ist der Speicherort des SPI FLASH in der Memory Map
 
   // CHANNEL
   if (!loadconfig(eCHANNEL)) {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tFailed to load channel config");
-    #endif
+    DPRINTLN("[INFO]\tFailed to load channel config");
     setconfig(eCHANNEL,{});  // Speicherplatz vorbereiten
     ESP.restart();
-  } else {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tChannel config loaded");
-    #endif
-  }
-
-  /*
-  // CHANNEL
-  if (SPIFFS.exists(CHANNEL_FILE)) {
-    
-    if (!loadconfig(eCHANNEL)) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to load channel config");
-      #endif
-
-      // Falsche Version ueberschreiben
-      if (!setconfig(eCHANNEL,"","")) {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tFailed to save channel config");
-        #endif
-      } else {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tChannel config saved");
-        #endif
-        ESP.restart();
-      }
-      
-    } else {
-      #ifdef DEBUG
-      Serial.println("[INFO]\tChannel config loaded");
-      #endif
-    }
-  }
-  else
-    if (!setconfig(eCHANNEL,"","")) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save channel config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tChannel config saved");
-      #endif
-      ESP.restart();
-    }
-    */
+  } else DPRINTLN("[INFO]\tChannel config loaded");
 
 
   // WIFI
   if (!loadconfig(eWIFI)) {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tFailed to load wifi config");
-    #endif
+    DPRINTLN("[INFO]\tFailed to load wifi config");
     setconfig(eWIFI,{});  // Speicherplatz vorbereiten
-  } else {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tWifi config loaded");
-    #endif
-  }
+  } else DPRINTLN("[INFO]\tWifi config loaded");
 
 
   // THINGSPEAK
-  if (!loadconfig(eTHING)) {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tFailed to load Thingspeak config");
-    #endif
-  } else {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tThingspeak config loaded");
-    #endif
-  }
+  if (!loadconfig(eTHING)) DPRINTLN("[INFO]\tFailed to load Thingspeak config");
+  else DPRINTLN("[INFO]\tThingspeak config loaded");
+
 
   // PITMASTER
   if (!loadconfig(ePIT)) {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tFailed to load pitmaster config");
-    #endif
+    DPRINTLN("[INFO]\tFailed to load pitmaster config");
     setconfig(ePIT,{});  // Reset pitmaster config
-  } else {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tPitmaster config loaded");
-    #endif
-  }
+  } else DPRINTLN("[INFO]\tPitmaster config loaded");
+
 
   // SYSTEM
   if (!loadconfig(eSYSTEM)) {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tFailed to load system config");
-    #endif
+    DPRINTLN("[INFO]\tFailed to load system config");
     setconfig(eSYSTEM,{});  // Speicherplatz vorbereiten
     ESP.restart();
-  } else {
-    #ifdef DEBUG
-      Serial.println("[INFO]\tSystem config loaded");
-    #endif
-  }
+  } else DPRINTLN("[INFO]\tSystem config loaded");
+
 }
+
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Test zum Speichern von Datalog
+
+//unsigned char meinsatz[64] = "Ich nutze ab jetzt den Flash Speicher für meine Daten!\n";
+//unsigned char meinflash[64];
+
+void write_flash(uint32_t _sector) {
+
+  //_sector = 0xD6;            // 0x81 bis 0xD6
+  noInterrupts();
+  if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK) {  // ESP.flashEraseSector
+    spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) mylog, sizeof(mylog));  //ESP.flashWrite
+    DPRINT("[INFO]\tSpeicherung im Sector: ");
+    DPRINTLN(_sector, HEX);
+  } else DPRINTLN("[INFO]\tFehler beim Speichern im Flash");
+  interrupts(); 
+}
+
+
+void read_flash(uint32_t _sector) {
+
+  noInterrupts();
+  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) archivlog, sizeof(archivlog));  //ESP.flashRead
+  //spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) meinflash, sizeof(meinflash));
+  interrupts();
+}
+
 
 

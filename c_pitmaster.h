@@ -14,6 +14,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+    The AutotunePID elements of this program based on the work of 
+    AUTHOR: Repetier
+    PURPOSE: Repetier-Firmware/extruder.cpp
+
     HISTORY: Please refer Github History
     
  ****************************************************/
@@ -47,20 +51,27 @@ struct AutoTune {
    int  maxCycles;        // WIEDERHOLUNGEN
    int cycles;            // CURRENT WIEDERHOLUNG
    int heating;            // HEATING FLAG
+   uint32_t t0;
    uint32_t t1;            // ZEITKONSTANTE 1
    uint32_t t2;           // ZEITKONSTANTE 2
    int32_t t_high;        // FLAG HIGH
    int32_t t_low;         // FLAG LOW
    int32_t bias;
    int32_t d;
-   float Ku;
-   float Tu;
    float Kp;
    float Ki;
    float Kd;
+   float Kp_a;
+   float Ki_a;
+   float Kd_a;
    float maxTemp;
    float minTemp;
    bool initialized;
+   float value;
+   float previousTemp;
+   float maxTP;             // MAXIMALE STEIGUNG = WENDEPUNKT
+   uint32_t tWP;            // ZEITPUNKT WENDEPUNKT  
+   float TWP;               // TEMPERATUR WENDEPUNKT
 };
 
 AutoTune autotune;
@@ -87,6 +98,8 @@ void set_pitmaster() {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // PID
 float PID_Regler(){ 
+
+  // see: http://rn-wissen.de/wiki/index.php/Regelungstechnik
 
   float x = ch[pitmaster.channel].temp;         // IST
   float w = pitmaster.set;                      // SOLL
@@ -132,18 +145,18 @@ float PID_Regler(){
   float y = p_out + i_out + d_out;  
   y = constrain(y,PITMIN,PITMAX);           // Auflösung am Ausgang ist begrenzt            
   
-  #ifdef DEBUG
-  Serial.println("{INFO]\tPID:" + String(y,1) + "\tp:" + String(p_out,1) + "\ti:" + String(i_out,2) + "\td:" + String(d_out,1));
-  #endif
+  DPRINTLN("{INFO]\tPID:" + String(y,1) + "\tp:" + String(p_out,1) + "\ti:" + String(i_out,2) + "\td:" + String(d_out,1));
   
   return y;
 }
 
 
-
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// AUTOTUNE
 void disableAllHeater() {
   // Anschlüsse ausschalten
   digitalWrite(PITMASTER1, LOW);
+  pitmaster.active = 0;
   pitmaster.value = 0;
   pitmaster.event = false;
   pitmaster.msec = 0;
@@ -160,35 +173,42 @@ static inline float max(float a,float b)  {
         return a;
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// AUTOTUNE
+void startautotunePID(int maxCycles, bool storeValues)  {
 
-void startautotunePID(float temp, int maxCycles, bool storeValues)  {
-
-    if (autotune.initialized) {
+    if (!autotune.initialized) {
   
       autotune.cycles = 0;           // Durchläufe
       autotune.heating = true;      // Flag
-      autotune.temp = temp;
+      autotune.temp = pitmaster.set;
       autotune.maxCycles = constrain(maxCycles, 5, 20);
       autotune.storeValues = storeValues;
   
       uint32_t temp_millis = millis();
+      autotune.t0 = temp_millis;    // Zeitpunkt t0
       autotune.t1 = temp_millis;    // Zeitpunkt t1
       autotune.t2 = temp_millis;    // Zeitpunkt t2
       autotune.t_high = 0;
       autotune.bias = pidMax/2;         // Startwert = halber Wert
       autotune.d = pidMax/2;          // Startwert = halber Wert
-    
+
+      float tem = ch[pitmaster.channel].temp; 
       autotune.Kp = 0;
       autotune.Ki = 0; 
       autotune.Kd = 0;
-      autotune.maxTemp = 20; 
-      autotune.minTemp = 20;
+      autotune.maxTemp = tem; 
+      autotune.minTemp = tem;
+      autotune.previousTemp = tem;  // Startwert
+      autotune.maxTP = 0.0;
+      autotune.tWP = temp_millis;
+      autotune.TWP = tem;
   
-      Serial.println("[INFO]\t Autotune started!");
+      DPRINTLN("[AUTOTUNE]\t Start!");
  
       disableAllHeater();         // switch off all heaters.
       
-      pitmaster.manuel = pidMax;   // Aktor einschalten
+      autotune.value = pidMax;   // Aktor einschalten
     }
     
     autotune.initialized = true;
@@ -196,99 +216,192 @@ void startautotunePID(float temp, int maxCycles, bool storeValues)  {
     
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// AUTOTUNE
 float autotunePID() {
+
+  /*
+   Relay Feedback Test [Astrom & Hagglund, 1984
+   Autotune Variation (ATV)
+   see: https://www.google.de/?gws_rd=ssl#q=Relay+Feedback+PID
+   
+         
+             t_high = t1-t2*
+     +d       ____      ____      _
+     bias--__|    |____|    |____|
+     -d     t2*   t1   t2
+   /                         t_low = t2-t1  
+   
+   */
 
   float currentTemp = ch[pitmaster.channel].temp;
   unsigned long time = millis();
+
+  if (autotune.cycles == 0) { 
+    float TP = (currentTemp - autotune.previousTemp)/ (float)pid[pitmaster.typ].pause;
+    if (autotune.maxTP < TP) {
+      autotune.maxTP = TP;
+      autotune.tWP = time;
+      autotune.TWP = (currentTemp + autotune.previousTemp)/2.0;
+      DPRINT("[AUTOTUNE]\tWendepunktbestimmung: ");
+      DPRINTLN(TP*1000);
+    }
+    autotune.previousTemp = currentTemp;
+  }
+  
   autotune.maxTemp = max(autotune.maxTemp,currentTemp);
   autotune.minTemp = min(autotune.minTemp,currentTemp);
-  float y;
   
   // Soll während aufheizen ueberschritten --> switch heating off  
   if (autotune.heating == true && currentTemp > autotune.temp)  {
-    if(time - autotune.t2 > 2500)  {    // warum Wartezeit und wieviel
+    if(time - autotune.t2 > 3000)  {    // warum Wartezeit und wieviel
                 
       autotune.heating = false;
-      y = (autotune.bias - autotune.d);     // Aktorwert
+      autotune.value = (autotune.bias - autotune.d);     // Aktorwert
                 
       autotune.t1 = time;
       autotune.t_high = autotune.t1 - autotune.t2;
       autotune.maxTemp = autotune.temp;
+      DPRINTLN("[AUTOTUNE]\tTemperature overrun!");
     }
   }
-
+  
   // Soll während abkühlen unterschritten --> switch heating on
-  if (autotune.heating == false && currentTemp < autotune.temp) {
-    if(time - autotune.t1 > 5000)  {
+  else if (autotune.heating == false && currentTemp < autotune.temp) {
+    if(time - autotune.t1 > 3000)  {
                 
       autotune.heating = true;
       autotune.t2 = time;
       autotune.t_low = autotune.t2 - autotune.t1; // half wave length
-                
-      if(autotune.cycles > 0)  {
-          
+      DPRINTLN("[AUTOTUNE]\tTemperature fall below!");
+
+      if (autotune.cycles == 0) {
+
+        // Bestimmung von Kp_a, Ki_a, Kd_a
+        // Approximation der Strecke durch PT1Tt-Glied aus Sprungantwort
+
+        uint32_t tWP1 = (autotune.TWP-autotune.minTemp)/autotune.maxTP;  // Zeitabschn. (ms) unter Wendetangente bis Ausgangstemperatur
+        uint32_t tWP2 = (autotune.temp-autotune.TWP)/autotune.maxTP;     // Zeitabschn. (ms) oberhalb Wendetangente bis Zieltemperatur
+        
+        uint32_t Tt = (autotune.tWP - autotune.t0 - tWP1)/1000.0;      // Totzeit in sec
+        uint32_t Tg = (tWP1 + tWP2)/1000.0;                            // Ausgleichszeit in sec
+
+        float Ks = (autotune.temp - autotune.minTemp)/(autotune.bias + autotune.d);
+        float Tn = 2 * Tt;            // Tn = 3.33 * Tt;
+        float Tv = 0.5 * Tt;
+
+        DPRINT("[AUTOTUNE]\tTt: ");
+        DPRINT(Tt);
+        DPRINT(" s, Tg: ");
+        DPRINT(Tg);
+        DPRINTLN(" s");
+
+        autotune.Kp_a = 1.2/Ks * Tg/Tt;  // Kp_a = 0.9/Ks * Tg/Tt
+        autotune.Ki_a = autotune.Kp_a/Tn;
+        autotune.Kd_a = autotune.Kp_a*Tv;
+
+        DPRINT("[AUTOTUNE]\tKp_a: ");
+        DPRINT(autotune.Kp_a);
+        DPRINT(" Ki_a: ");
+        DPRINT(autotune.Ki_a);
+        DPRINT(" Kd_a: ");
+        DPRINTLN(autotune.Kd_a);
+        
+        
+      } else {
+
+        // Anpassung Bias
         autotune.bias += (autotune.d*(autotune.t_high - autotune.t_low))/(autotune.t_low + autotune.t_high);
-        autotune.bias = constrain(autotune.bias, 20 ,pidMax - 20);
+        autotune.bias = constrain(autotune.bias, 5 ,pidMax - 5);  // Arbeitsbereich zwischen 5% und 95%
                     
-        if (autotune.bias > pidMax/2)  autotune.d = pidMax - 1 - autotune.bias;
+        if (autotune.bias > pidMax/2)  autotune.d = pidMax - autotune.bias;
         else autotune.d = autotune.bias;
+        
+        DPRINT("[AUTOTUNE]\tbias: ");
+        DPRINT(autotune.bias);
+        DPRINT(" d: ");
+        DPRINTLN(autotune.d);
 
         if(autotune.cycles > 2)  {
-            
-        // Parameter according Ziegler¡§CNichols method: http://en.wikipedia.org/wiki/Ziegler%E2%80%93Nichols_method
+
+        // Parameter according Ziegler & Nichols method: http://en.wikipedia.org/wiki/Ziegler%E2%80%93Nichols_method
+        // Ku = kritische Verstaerkung = 4*d / (pi*A)
+        // Tu = kritische Periodendauer = t_low + t_high = (t2 - t1) + (t1 - t2*) = t2 - t2*
+        // A = Amplitude der Schwingung = maxTemp-minTemp/2 // Division fehlt in der Quelle
+
+          float A = (autotune.maxTemp - autotune.minTemp)/2.0;
+          float Ku = (4.0 * autotune.d) / (3.14159 * A);
+          float Tu = ((float)(autotune.t_low + autotune.t_high)/1000.0);
+          
+          DPRINT("[AUTOTUNE]\tKu: ");
+          DPRINT(Ku);
+          DPRINT(" Tu: ");
+          DPRINT(Tu);
+          DPRINT(" A: ");
+          DPRINT(A);
+          DPRINT(" t_max: ");
+          DPRINT(autotune.maxTemp);
+          DPRINT(" t_min: ");
+          DPRINTLN(autotune.minTemp);
+
+          float Tn = 0.5*Tu;
+          float Tv = 0.125*Tu;
+          
+          autotune.Kp = 0.6*Ku;
+          autotune.Ki = autotune.Kp/Tn;      // Ki = 1.2*Ku/Tu = Kp/Tn = Kp/(0.5*Tu) = 2*Kp/Tu
+          autotune.Kd = autotune.Kp*Tv;      // Kd = 0.075*Ku*Tu = Kp*Tv = Kp*0.125*Tu
                         
-          autotune.Ku = (4.0 * autotune.d) / (3.14159*(autotune.maxTemp-autotune.minTemp));
-          autotune.Tu = ((float)(autotune.t_low + autotune.t_high)/1000.0);
-          Serial.print("Ku: "); Serial.println(autotune.Ku);
-          Serial.print("Tu: "); Serial.println(autotune.Tu);
-                        
-          autotune.Kp = 0.6*autotune.Ku;
-          autotune.Ki = 2*autotune.Kp/autotune.Tu;
-          autotune.Kd = autotune.Kp*autotune.Tu*0.125;
-                        
-          Serial.print("Kp: "); Serial.println(autotune.Kp);
-          Serial.print("Ki: "); Serial.println(autotune.Ki);
-          Serial.print("Kd: "); Serial.println(autotune.Kd);
+          DPRINT("[AUTOTUNE]\tKp: ");
+          DPRINT(autotune.Kp);
+          DPRINT(" Ki: ");
+          DPRINT(autotune.Ki);
+          DPRINT(" Kd: ");
+          DPRINTLN(autotune.Kd);
             
         }
       }
-      y = (autotune.bias + autotune.d);
+      autotune.value = (autotune.bias + autotune.d);
+      DPRINTLN("[AUTOTUNE]\tNext cycle");
       autotune.cycles++;
       autotune.minTemp = autotune.temp;
     }
   }
     
   if (currentTemp > (autotune.temp + 40))  {   // FEHLER
-    Serial.println("[FEHLER]\t Autotune failure: Overtemperature");
+    DPRINTLN("[ERROR]\tAutotune failure: Overtemperature");
     disableAllHeater();
+    autotune.value = 0;
     autotune.initialized = false;
     return 0;
   }
     
   if (((time - autotune.t1) + (time - autotune.t2)) > (10L*60L*1000L*2L)) {   // 20 Minutes
         
-    Serial.println("[INFO]\t Autotune failure: TIMEOUT");
+    DPRINTLN("[ERROR]\tAutotune failure: TIMEOUT");
     disableAllHeater();
+    autotune.value = 0;
     autotune.initialized = false;
     return 0;
   }
     
   if (autotune.cycles > autotune.maxCycles) {       // FINISH
             
-    Serial.println("[INFO]\t Autotune finished!");
+    DPRINTLN("[AUTOTUNE]\tFinished!");
     disableAllHeater();
+    autotune.value = 0;
     autotune.initialized = false;
             
     if (autotune.storeValues)  {
-      Serial.println(autotune.Kp);
-      Serial.println(autotune.Ki);
-      Serial.println(autotune.Kd);
-
+      
+      pid[pitmaster.typ].Kp = autotune.Kp;
+      pid[pitmaster.typ].Ki = autotune.Ki;
+      pid[pitmaster.typ].Kd = autotune.Kd;
+      DPRINTLN("[AUTOTUNE]\tParameters saved!");
     }
     return 0;
   }
-
-  return y;       
+  DPRINTLN("{INFO]\tAUTOTUNE: " + String(autotune.value,1) + " %");
+  return autotune.value;       
 }
 
 

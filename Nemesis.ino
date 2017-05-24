@@ -27,6 +27,16 @@
 #define THINGSPEAK                          // ENABLE THINGSPEAK
 //#define KTYPE                             // ENABLE TYP K (Test only)
 
+#ifdef DEBUG
+  #define DPRINT(...)    Serial.print(__VA_ARGS__)
+  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)
+  #define DPRINTF(...)   Serial.printf(__VA_ARGS__)
+#else
+  #define DPRINT(...)     //blank line
+  #define DPRINTLN(...)   //blank line
+  #define DPRINTF(...)    //blank line
+#endif
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // TIMER VARIABLES
@@ -75,7 +85,7 @@ void setup() {
   if (!stby) {
 
     // Open Config-File
-    check_ota_sector();
+    check_sector();
     setEE(); start_fs();
     
     // Initialize Wifi
@@ -84,10 +94,8 @@ void setup() {
     // Update Time
     if (!isAP)  setTime(getNtpTime()); //setSyncProvider(getNtpTime);
 
-    #ifdef DEBUG
-      Serial.print("[INFO]\t");
-      Serial.println(digitalClockDisplay());
-    #endif
+    DPRINT("[INFO]\t");
+    DPRINTLN(digitalClockDisplay(now()));
 
     // Scan Network
     WiFi.scanNetworks(true);
@@ -198,17 +206,23 @@ void loop() {
     }
 
     // Datalog
-    if (millis() - lastUpdateDatalog > 5000) {
+    if (millis() - lastUpdateDatalog > 3000) {
+
+      //Serial.println(sizeof(datalogger));
+      //Serial.println(sizeof(mylog));
       
       for (int i=0; i < CHANNELS; i++)  {
-        mylog[log_count].tem[i] = (uint16_t) (ch[i].temp * 10);
+        mylog[log_count].tem[i] = (uint16_t) (ch[i].temp * 10);       // 8 * 16 bit  // 8 * 2 byte
       }
-      mylog[log_count].timestamp = now();
-
+      mylog[log_count].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
+      mylog[log_count].timestamp = now();     // 64 bit
+      
+      // 2*8 + 1 + 8 = 25
       if (log_count < MAXLOGCOUNT-1) {
         log_count++;
       } else {
         log_count = 0;
+        
         /*write_flash(log_sector);
         read_flash(log_sector);
         log_sector++;
@@ -220,13 +234,10 @@ void loop() {
           Serial.print(test/10.0);
           Serial.print(" ");
         }
-        Serial.println();
+        
         */
+        //Serial.println("Log");
       }
-
-      // TEST
-      //Serial.println(ulMeasCount%ulNoMeasValues);
-      //ulMeasCount++;
 
       lastUpdateDatalog = millis();
     }

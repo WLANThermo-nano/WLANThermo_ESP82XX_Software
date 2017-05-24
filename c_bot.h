@@ -18,82 +18,75 @@
     
  ****************************************************/
 
+boolean thingspeakshowbattery = true;
+
 #ifdef THINGSPEAK
 
-WiFiClient THINGclient;
-#define server1 "api.thingspeak.com"
+  WiFiClient THINGclient;
+  #define SERVER1 "api.thingspeak.com"
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send data to Thingspeak
-void sendData() {
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  // Send data to Thingspeak
+  void sendData() {
 
-  unsigned long vorher = millis(); 
-  String apiKey = THINGSPEAK_KEY;
+    unsigned long vorher = millis(); 
+    String apiKey = THINGSPEAK_KEY;
   
-  // Sendedauer: ~120ms  
-  if (THINGclient.connect(server1,80)) {
+    // Sendedauer: ~120ms  
+    if (THINGclient.connect(SERVER1,80)) {
 
-    String postStr = apiKey;
+      String postStr = apiKey;
 
-    for (int i=0; i < CHANNELS; i++)  {
-      if (ch[i].temp!=INACTIVEVALUE) {
-        postStr += "&";
-        postStr += String(i+1);
-        postStr += "=";
-        postStr += String(ch[i].temp,1);
+      for (int i = 0; i < 7; i++)  {
+        if (ch[i].temp != INACTIVEVALUE) {
+          postStr += "&";
+          postStr += String(i+1);
+          postStr += "=";
+          postStr += String(ch[i].temp,1);
+        }
       }
+
+      postStr +="&8=";
+      if (thingspeakshowbattery) postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
+      else postStr += String(ch[7].temp,1);
+
+      THINGclient.print("POST /update HTTP/1.1\nHost: api.thingspeak.com\nConnection: close\nX-THINGSPEAKAPIKEY: "
+                        +apiKey+"\nContent-Type: application/x-www-form-urlencoded\nContent-Length: "
+                        +postStr.length()+"\n\n"+postStr);
+
+      DPRINTF("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
     }
-    postStr +="&8=";                        // Kanal 8 ist Batterie-Status
-    postStr += String(battery.percentage);
 
-    THINGclient.print("POST /update HTTP/1.1\nHost: api.thingspeak.com\nConnection: close\nX-THINGSPEAKAPIKEY: "
-                      +apiKey+"\nContent-Type: application/x-www-form-urlencoded\nContent-Length: "
-                      +postStr.length()+"\n\n"+postStr);
-
-    #ifdef DEBUG
-      Serial.printf("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
-    #endif
+    THINGclient.stop();      
   }
 
-  THINGclient.stop();      
-}
 
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  // Send Message to Telegram via Thingspeak
+  void sendMessage(int ch, int count) {
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send Message to Telegram via Thingspeak
-void sendMessage(int ch, int count) {
+    unsigned long vorher = millis();
+    String apiKey = "xxx";
 
-  unsigned long vorher = millis();
-  String apiKey = "N08GS23IX7J2EA0E";
-
-  // Sendedauer: ~120 ms
-  if (THINGclient.connect(server1,80)) {
+    // Sendedauer: ~120 ms
+    if (THINGclient.connect(SERVER1,80)) {
  
-    // We now create a URI for the request
-    String url = "/apps/thinghttp/send_request?api_key=";
-    url += apiKey;
-    url += "&message=";
-    if (count) url += "hoch";
-    else url += "niedrig";
-    url += "&ch=";
-    url += String(ch);
+      String url = "/apps/thinghttp/send_request?api_key=";
+      url += apiKey;
+      url += "&message=";
+      if (count) url += "hoch";
+      else url += "niedrig";
+      url += "&ch=";
+      url += String(ch);
     
-    //THINGclient.print("GET " + url + "&headers=false" + " HTTP/1.1\r\n" + "Host: " + server + "\r\n" + "Connection: close\r\n\r\n");
-    THINGclient.print("GET " + url + " HTTP/1.1\r\n" + "Host: " + server1 + "\r\n" + "Connection: close\r\n\r\n");
+      THINGclient.print("GET " + url + " HTTP/1.1\r\n" + "Host: " + SERVER1 
+                        + "\r\n" + "Connection: close\r\n\r\n");
   
-  // Read all the lines of the reply from server and print them to Serial
-  //while(THINGclient.available()){
-    //String line = THINGclient.readStringUntil('\r');
-    //Serial.println(line);
-  //}
+      DPRINTF("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
+    }
 
-    #ifdef DEBUG
-      Serial.printf("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
-    #endif
+    THINGclient.stop(); 
   }
-
-  THINGclient.stop(); 
-}
 
 #endif
 

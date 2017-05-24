@@ -103,9 +103,7 @@ double get_thermocouple(void) {
 
   // Invalid Measurement
   if (dd & 0x7) {
-    #ifdef DEBUG
-    //Serial.println("No thermocouple!");
-    #endif
+    //DPRINTLN("No thermocouple!");
     return INACTIVEVALUE; 
   }
 
@@ -176,9 +174,7 @@ void get_Vbat() {
         // Grenze etwas nach unten versetzen, um die Ladespannung zu kompensieren
         // alternativ die Speicherung um 5 min verschieben, Gefahr: das dann schon abgeschaltet
         modifyconfig(eSYSTEM,{});                                      // SPEICHERN
-        #ifdef DEBUG
-          Serial.printf("[INFO]\tNew Battery Voltage Reference: %umV\r\n", battery.max); 
-        #endif
+        DPRINTF("[INFO]\tNew battery voltage reference: %umV\r\n", battery.max); 
       }
     }
     battery.setreference = false;
@@ -213,9 +209,7 @@ void cal_soc() {
   // Schwankungen verschiedener Batterien ausgleichen
   if (battery.percentage > 100) battery.percentage = 100;
   
-  #ifdef DEBUG
-    Serial.printf("[INFO]\tBattery voltage: %umV\tcharge: %u%%\r\n", battery.voltage, battery.percentage); 
-  #endif
+  DPRINTF("[INFO]\tBattery voltage: %umV,\tcharge: %u%%\r\n", battery.voltage, battery.percentage); 
 
   // Abschaltung des Systems bei <0% Akkuleistung
   if (battery.percentage < 0) {
@@ -241,7 +235,6 @@ void set_piepser() {
   // Hardware-Alarm bereit machen
   pinMode(MOSI, OUTPUT);
   analogWriteFreq(4000);
-  //analogWriteFreq(500);
   doAlarm = false;
   
 }

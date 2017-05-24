@@ -79,6 +79,19 @@ void read_serial(char *buffer) {
     return;
   }
 
+  else if (strcmp(buffer, "log")==0) {
+    for (int j=0; j < log_count; j++) {
+      for (int i=0; i < CHANNELS; i++)  {
+        Serial.print(mylog[j].tem[i]/10.0);
+        Serial.print(";");
+      }
+      Serial.print(mylog[j].pitmaster);
+      Serial.print(";");
+      Serial.println(digitalClockDisplay(mylog[j].timestamp));
+    }
+    return;
+  }
+
   else if (strcmp(buffer, "piepsertest")==0) {
     Serial.println("Piepsertest");
     piepserON();
@@ -114,25 +127,15 @@ void read_serial(char *buffer) {
     data[0] = json["data"][0];
     data[1] = json["data"][1];
 
-    if (!modifyconfig(eWIFI,data)) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config saved");
-     #endif
-    }
+    if (!modifyconfig(eWIFI,data)) DPRINTLN("[INFO]\tFailed to save wifi config");
+    else  DPRINTLN("[INFO]\tWifi config saved");
+    
   }
 
   // SET WIFI SETTINGS
   else if (strcmp(command, "setWIFI")==0) {
         
-    if (setconfig(eWIFI,{})) {  
-    #ifdef DEBUG
-      Serial.println("[INFO]\tReset wifi config");
-    #endif
-    } 
+    if (setconfig(eWIFI,{})) DPRINTLN("[INFO]\tReset wifi config");
   }
 
   // GET CURRENT WIFI SSID
@@ -146,15 +149,8 @@ void read_serial(char *buffer) {
     const char* data[1]; 
     data[0] = json["data"][0];
     
-    if (!setconfig(eTHING,data)) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save Thingspeak config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tThingspeak config saved");
-      #endif
-    }
+    if (!setconfig(eTHING,data)) DPRINTLN("[INFO]\tFailed to save Thingspeak config");
+    else DPRINTLN("[INFO]\tThingspeak config saved");
     
   }
 
@@ -163,8 +159,9 @@ void read_serial(char *buffer) {
     Serial.println(THINGSPEAK_KEY);
   }
 
+  // AUTOTUNE
   else if (strcmp(command, "autotune")==0) {
-    startautotunePID(json["data"][0], json["data"][1], json["data"][3]);
+    startautotunePID(json["data"][0], json["data"][1]);
   }
 
   // RESTART SYSTEM
@@ -204,31 +201,18 @@ void read_serial(char *buffer) {
       pid[pidsize].esum =    0;             
       pid[pidsize].elast =   0;    
 
-      if (!modifyconfig(ePIT,{})) {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tFailed to save pitmaster config");
-        #endif
-      } else {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tPitmaster config saved");
-        #endif
+      if (!modifyconfig(ePIT,{})) DPRINTLN("[INFO]\tFailed to save pitmaster config");
+      else {
+        DPRINTLN("[INFO]\tPitmaster config saved");
         pidsize++;   // Erhöhung von pidsize nur wenn auch gespeichert wurde
       }
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tTo many pitmaster");
-      #endif
-    }
+    } else DPRINTLN("[INFO]\tTo many pitmaster");
   }
 
   // SET PITMASTER PID
   else if (strcmp(command, "setPID")==0) {
         
-    if (setconfig(ePIT,{})) {  
-      #ifdef DEBUG
-        Serial.println("[INFO]\tReset pitmaster config");
-      #endif
-    } 
+    if (setconfig(ePIT,{})) DPRINTLN("[INFO]\tReset pitmaster config");
   }
 
   // SET PITMASTER MANUEL
@@ -266,8 +250,7 @@ int readline(int readch, char *buffer, int len) {
         }
     }
   }
-  // No end of line has been found, so return -1.
-  return -1;
+  return -1;    // No end of line has been found, so return -1.
 }
 
 

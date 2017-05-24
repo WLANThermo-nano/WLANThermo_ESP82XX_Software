@@ -23,23 +23,22 @@
 // Initialize Buttons
 void set_button() {
   
-  for (int i=0;i<NUMBUTTONS;i++) pinMode(buttonPins[i],INPUTMODE);
+  for (int i = 0; i < NUMBUTTONS; i++) pinMode(buttonPins[i],INPUTMODE);
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Dedect Button Input
 static inline boolean button_input() {
-// Rückgabewert false ==> Prellzeit läuft, Taster wurden nicht abgefragt
-// Rückgabewert true ==> Taster wurden abgefragt und Status gesetzt
+  // Rückgabewert false ==> Prellzeit läuft, Taster wurden nicht abgefragt
+  // Rückgabewert true ==> Taster wurden abgefragt und Status gesetzt
 
   static unsigned long lastRunTime;
-  //static unsigned long buttonDownTime[NUMBUTTONS];
-  unsigned long now=millis();
+  unsigned long now = millis();
   
-  if (now-lastRunTime<PRELLZEIT) return false; // Prellzeit läuft noch
-  
-  lastRunTime=now;
+  if (now - lastRunTime < PRELLZEIT) return false; // Prellzeit läuft noch
+
+  lastRunTime = now;
   
   for (int i=0;i<NUMBUTTONS;i++)
   {
@@ -84,26 +83,6 @@ static inline void button_event() {
   bool event[3] = {0, 0, 0};
   int b_counter;
   
-  /*
-  // Reset der Config erwuenscht
-  if (buttonResult[1]==DOUBLECLICK && inMenu == TEMPSUB) {
-      displayblocked = true;
-      question = CONFIGRESET;
-      drawQuestion();
-      return;
-  }
-
-  // Anzeigemodus wechseln
-  if (buttonResult[0]==DOUBLECLICK && inMenu == TEMPSUB) {
-    INACTIVESHOW = !INACTIVESHOW;
-
-    #ifdef DEBUG
-      Serial.println("[INFO]\tAnzeigewechsel");
-    #endif
-    return;
-  }
-  */
-
   // Bearbeitungsmodus aktivieren/deaktivieren
   if (buttonResult[0]==DOUBLECLICK) {
     
@@ -139,7 +118,6 @@ static inline void button_event() {
   // Tiefer im Menü
   if (buttonResult[1]==DOUBLECLICK) {}
   
-
 
   // Bei LONGCLICK rechts großer Zahlensprung jedoch gebremst
   if (buttonResult[0] == FIRSTDOWN && (millis()-buttonDownTime[0]>400)) {
@@ -340,7 +318,6 @@ static inline void button_event() {
   }
   
   
-  
   // Button links gedrückt: Rückwärts / runterzählen / Frage mit Nein beantwortet
   if (buttonResult[1] == SHORTCLICK) {
 
@@ -430,7 +407,6 @@ static inline void button_event() {
     }
   }
 
-  
     
   if (event[0]) {  
     switch (ui.getCurrentFrameCount()) {
@@ -522,9 +498,7 @@ static inline void button_event() {
             transform_limits();                             // Transform Limits
             modifyconfig(eCHANNEL,{});                      // Save Config
             get_Temperature();                              // Update Temperature
-            #ifdef DEBUG
-              Serial.println("[INFO]\tEinheitenwechsel");
-            #endif
+            DPRINTLN("[INFO]\tEinheitenwechsel");
           }
         }
         break;

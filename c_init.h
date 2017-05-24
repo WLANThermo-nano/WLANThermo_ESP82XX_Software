@@ -169,9 +169,10 @@ int pidsize;
 struct datalogger {
  uint16_t tem[8];
  long timestamp;
+ uint8_t pitmaster;
 };
 
-#define MAXLOGCOUNT 204             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
+#define MAXLOGCOUNT 170             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
 datalogger mylog[MAXLOGCOUNT];
 datalogger archivlog[MAXLOGCOUNT];
 int log_count = 0;
@@ -336,15 +337,15 @@ void readEE(char *buffer, int len, int startP);
 void clearEE(int startP, int endP);
 
 // PITMASTER
-void startautotunePID(float temp, int maxCycles, bool storeValues);
+void startautotunePID(int maxCycles, bool storeValues);
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
 void set_serial() {
   Serial.begin(115200);
-  Serial.println();
-  Serial.println();
+  DPRINTLN();
+  DPRINTLN();
 }
 
 
@@ -362,6 +363,27 @@ String formatBytes(size_t bytes){
   }
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Show time
+String printDigits(int digits){
+  String com;
+  if(digits < 10) com = "0";
+  com += String(digits);
+  return com;
+}
+
+String digitalClockDisplay(time_t t){
+
+  String zeit;
+  zeit += printDigits(hour(t))+":";
+  zeit += printDigits(minute(t))+":";
+  zeit += printDigits(second(t))+" ";
+  zeit += String(day(t))+".";
+  zeit += String(month(t))+".";
+  zeit += String(year(t));
+  return zeit;
+}
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Standby oder Mess-Betrieb
@@ -372,9 +394,7 @@ bool standby_control() {
     if (!LADENSHOW) {
       //drawLoading();
       LADENSHOW = true;
-      #ifdef DEBUG
-        Serial.println("[INFO]\tChange to Standby");
-      #endif
+      DPRINTLN("[INFO]\tChange to Standby");
       //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
       pitmaster.active = false;
       piepserOFF();
@@ -392,6 +412,7 @@ bool standby_control() {
   }
   return 0;
 }
+
 
 
 

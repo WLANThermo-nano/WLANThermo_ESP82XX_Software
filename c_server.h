@@ -54,7 +54,7 @@ bool handleFileRead(String path, AsyncWebServerRequest *request){
   if(SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)){
     if(SPIFFS.exists(pathWithGz))
       path += ".gz";
-      Serial.println(path);
+      DPRINTLN(path);
       AsyncWebServerResponse *response = request->beginResponse(SPIFFS, path, contentType);
       if (path.endsWith(".gz"))
         response->addHeader("Content-Encoding", "gzip");
@@ -125,10 +125,11 @@ void handleData(AsyncWebServerRequest *request, bool www) {
 
   for (int i = 0; i < CHANNELS; i++) {
   JsonObject& data = channel.createNestedObject();
+    int ctemp = ch[i].temp * 10;
     data["number"]= i+1;
     data["name"]  = ch[i].name;
     data["typ"]   = ch[i].typ;
-    data["temp"]  = ch[i].temp;
+    data["temp"]  = (float) ctemp/10.0;
     data["min"]   = ch[i].min;
     data["max"]   = ch[i].max;
     data["alarm"] = ch[i].alarm;
@@ -148,6 +149,56 @@ void handleData(AsyncWebServerRequest *request, bool www) {
     request->send(response);
   } else root.printTo(Serial);
 }
+
+
+
+boolean sendmore(uint8_t *buffer, size_t maxLen) {
+  
+      buffer[0] = 101;
+      buffer[1] = 101;
+      buffer[2] = '\0';    
+    return 1;
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+void handleLog(AsyncWebServerRequest *request, bool www) {
+
+  
+  AsyncResponseStream *response = request->beginResponseStream("text/html");
+ 
+  for (int j=0; j < log_count; j++) {
+      for (int i=0; i < CHANNELS; i++)  {
+        if (mylog[j].tem[i]/10 == INACTIVEVALUE)
+          response->print(0);
+        else
+          response->print(mylog[j].tem[i]/10.0);
+        response->print(";");
+      }
+      response->print(mylog[j].pitmaster);
+      response->print(";");
+      response->print(digitalClockDisplay(mylog[j].timestamp));
+      response->print("\r\n");
+  }
+
+  request->send(response);
+  
+/*
+  AsyncWebServerResponse *response = request->beginResponse("text/plain", 16, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+  //Write up to "maxLen" bytes into "buffer" and return the amount written.
+  //index equals the amount of bytes that have been already sent
+  //You will be asked for more data until 0 is returned
+  //Keep in mind that you can not delay or yield waiting for more data!
+  //buffer[i-startP] = char(EEPROM.read(i))
+  return sendmore(buffer, maxLen);
+  });
+  
+  response->addHeader("Server","ESP Async Web Server");
+  request->send(response);
+*/
+}
+
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
@@ -220,9 +271,8 @@ void handleWifiScan(AsyncWebServerRequest *request, bool www) {
 bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
 
   //  https://github.com/me-no-dev/ESPAsyncWebServer/issues/123
-  Serial.print("[REQUEST]\t");
-  Serial.printf("%s", (const char*)datas);
-  Serial.println();
+  
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
 
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _cha = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -253,9 +303,7 @@ bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
 // 
 bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
 
-  Serial.print("[REQUEST]\t");
-  Serial.printf("%s", (const char*)datas);
-  Serial.println();
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
   
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _pitmaster = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -272,9 +320,7 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
 // 
 bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
 
-  Serial.print("[REQUEST]\t");
-  Serial.printf("%s", (const char*)datas);
-  Serial.println();
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
   
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _network = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -294,9 +340,7 @@ bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
 // 
 bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
 
-  Serial.print("[REQUEST]\t");
-  Serial.printf("%s", (const char*)datas);
-  Serial.println();
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
   
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _system = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -316,7 +360,7 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
     modifyconfig(eCHANNEL,{});                      // Save Config
     get_Temperature();                              // Update Temperature
     #ifdef DEBUG
-      Serial.println("[INFO]\tEinheitenwechsel");
+      DPRINTLN("[INFO]\tEinheitenwechsel");
     #endif
   }
   
@@ -327,9 +371,7 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
 // 
 bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
 
-  Serial.print("[REQUEST]\t");
-  Serial.printf("%s", (const char*)datas);
-  Serial.println();
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
   
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _chart = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -340,11 +382,11 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
   
   if (!setconfig(eTHING,data)) {
       #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save Thingspeak config");
+        DPRINTLN("[INFO]\tFailed to save Thingspeak config");
       #endif
     } else {
       #ifdef DEBUG
-        Serial.println("[INFO]\tThingspeak config saved");
+        DPRINTLN("[INFO]\tThingspeak config saved");
       #endif
     }
   
@@ -371,9 +413,9 @@ String getMacAddress()  {
 void server_setup() {
 
     MDNS.begin(host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);
-    Serial.print("[INFO]\tOpen http://");
-    Serial.print(host);
-    Serial.println("/data to see the current temperature");
+    DPRINT("[INFO]\tOpen http://");
+    DPRINT(host);
+    DPRINTLN("/data to see the current temperature");
 
     server.on("/help",HTTP_GET, [](AsyncWebServerRequest *request) {
       request->redirect("https://github.com/Phantomias2006/Nemesis/blob/develop/README.md");
@@ -388,6 +430,11 @@ void server_setup() {
     // REQUEST: /data
     server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handleData(request, true);
+    });
+
+    // REQUEST: /log
+    server.on("/log", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      handleLog(request, true);
     });
     
     // REQUEST: /settings
@@ -426,7 +473,7 @@ void server_setup() {
     server.on("/deletenetworkstore", HTTP_POST, [](AsyncWebServerRequest *request) { 
       if (setconfig(eWIFI,{})) {  
         #ifdef DEBUG
-          Serial.println("[INFO]\tReset wifi config");
+          DPRINTLN("[INFO]\tReset wifi config");
         #endif
         request->send(200, "text/plain", "1");
       } 
@@ -437,7 +484,7 @@ void server_setup() {
     server.on("/deletenetworkstore", HTTP_GET, [](AsyncWebServerRequest *request) { 
       if (setconfig(eWIFI,{})) {  
         #ifdef DEBUG
-          Serial.println("[INFO]\tReset wifi config");
+          DPRINTLN("[INFO]\tReset wifi config");
         #endif
         request->send(200, "text/plain", "1");
       } 
@@ -461,13 +508,13 @@ void server_setup() {
     // REQUEST: /setnetwork
     server.on("/setnetwork", HTTP_GET, [](AsyncWebServerRequest *request) { 
       
-      Serial.println("SSID übermittelt");
-      Serial.println(request->method());
-      Serial.println(request->contentType());
-      Serial.println(request->url());
-      Serial.println(request->host());
+      DPRINTLN("SSID übermittelt");
+      DPRINTLN(request->method());
+      DPRINTLN(request->contentType());
+      DPRINTLN(request->url());
+      DPRINTLN(request->host());
       int params = request->params();
-      Serial.println(params);
+      DPRINTLN(params);
       
       request->send(200, "text/plain", "OK");
     });
@@ -551,17 +598,15 @@ void server_setup() {
         if(!handleSetChart(request, data)) request->send(200, "text/plain", "false");
           request->send(200, "text/plain", "true");
       } else {
-        if(!index)  Serial.printf("BodyStart: %u\n", total);
-        Serial.printf("%s", (const char*)data);
-        if(index + len == total) Serial.printf("BodyEnd: %u\n", total);
+        if(!index)  DPRINTF("BodyStart: %u\n", total);
+        DPRINTF("%s", (const char*)data);
+        if(index + len == total) DPRINTF("BodyEnd: %u\n", total);
       }
       
     });
 
     server.begin();
-    #ifdef DEBUG
-    Serial.println("[INFO]\tHTTP server started");
-    #endif
+    DPRINTLN("[INFO]\tHTTP server started");
     MDNS.addService("http", "tcp", 80);
 
 }
