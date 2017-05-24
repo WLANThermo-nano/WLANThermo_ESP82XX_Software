@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <title>WLANThermo - Nano</title>
+</head>
+<body>
+
+<div id="layout">
+	<div class="headmenu">
+    <!-- Menu toggle -->
+    <a href="#menu" id="menuLink" class="menu-link">
+        <!-- Hamburger icon -->
+        <span></span>
+    </a>
+	<div class="loginname">N.C.</div>
+	<div class="battery">N.C.</div>
+	<div class="wifi">N.C.</div>
+	</div>
+	<div class="clear"></div>
+    <div id="menu">
+        <div class="pure-menu custom-restricted-width">
+		<a class="pure-menu-heading" href="javascript:showIndex()"><img src="nano.png" alt="WLANThermo" height="58" width="130"> </a>
+            <ul class="pure-menu-list">
+                <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
+				<li id="menuPlot" class="pure-menu-item"><a href="javascript:showPlot()" class="pure-menu-link">Plot</a></li>
+                <li class="pure-menu-item pure-menu-has-children">
+					<a href="#" id="menuChannel" class="pure-menu-link">Kanal</a>
+					<ul class="pure-menu-children">
+						<li class="pure-menu-item" id="menuChannel0"><a class="pure-menu-link" href="javascript:showSetChannel('0')">Kanal 1</a></li>
+						<li class="pure-menu-item" id="menuChannel1"><a class="pure-menu-link" href="javascript:showSetChannel('1')">Kanal 2</a></li>
+						<li class="pure-menu-item" id="menuChannel2"><a class="pure-menu-link" href="javascript:showSetChannel('2')">Kanal 3</a></li>
+						<li class="pure-menu-item" id="menuChannel3"><a class="pure-menu-link" href="javascript:showSetChannel('3')">Kanal 4</a></li>
+						<li class="pure-menu-item" id="menuChannel4"><a class="pure-menu-link" href="javascript:showSetChannel('4')">Kanal 5</a></li>
+						<li class="pure-menu-item" id="menuChannel5"><a class="pure-menu-link" href="javascript:showSetChannel('5')">Kanal 6</a></li>
+						<li class="pure-menu-item" id="menuChannel6"><a class="pure-menu-link" href="javascript:showSetChannel('6')">Kanal 7</a></li>
+						<li class="pure-menu-item" id="menuChannel7"><a class="pure-menu-link" href="javascript:showSetChannel('7')">Kanal 8</a></li>
+					</ul>
+				</li>
+				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
+				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
+				<!-- <li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li> -->
+				<!-- <li id="menuChart" class="pure-menu-item"><a href="javascript:showChart()" class="pure-menu-link">Chart Dienste</a></li> -->
+                <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="main">
+        <div class="header">
+            <h1>WLANThermo - Nano</h1>
+        </div>
+		<!-- ################################################### -->
+        <div id="index" class="content" class="hidden" style="display:none">
+            <div class="pure-g">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('0')">
+					<div class="1-box channel">
+						<div class="chtitle">N.C.</div>
+						<div class="chnumber">N.C.</div>
+							<div class="tempadjust">
+								<div class="tempmin">N.C.</div>
+								<div class="tempmax">N.C.</div>
+							</div>
+							<div class="temp">N.C.</div>
+							<div class="clear"></div>
+					</div>
+                </div>
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('1')">
+					<div class="1-box channel">
+						<div class="chtitle">N.C.</div>
+						<div class="chnumber">N.C.</div>
+							<div class="tempadjust">
+								<div class="tempmin">N.C.</div>
+								<div class="tempmax">N.C.</div>
+							</div>
+							<div class="temp">N.C.</div>
+							<div class="clear"></div>
+					</div>
+                </div>
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('2')">
+					<div class="1-box channel">
+						<div class="chtitle">N.C.</div>
+						<div class="chnumber">N.C.</div>
+							<div class="tempadjust">
+								<div class="tempmin">N.C.</div>
+								<div class="tempmax">N.C.</div>
+							</div>
+							<div class="temp">N.C.</div>
+							<div class="clear"></div>
+					</div>
+                </div>
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('3')">
+					<div class="1-box channel">
+						<div class="chtitle">N.C.</div>
+						<div class="chnumber">N.C.</div>
+							<div class="tempadjust">
+								<div class="tempmin">N.C.</div>
+								<div class="tempmax">N.C.</div>
+							</div>
+							<div class="temp">N.C.</div>
+							<div class="clear"></div>
+					</div>
+                </div>
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('4')">
+					<div class="1-box channel">
+						<div class="chtitle">N.C.</div>
+						<div class="chnumber">N.C.</div>
+							<div class="tempadjust">
+								<div class="tempmin">N.C.</div>
+								<div class="tempmax">N.C.</div>
+							</div>
+							<div class="temp">N.C.</div>
+							<div class="clear"></div>
+					</div>
+                </div>
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('5')">
+					<div class="1-box channel">
+						<div class="chtitle">N.C.</div>
+						<div class="chnumber">N.C.</div>
+							<div class="tempadjust">
+								<div class="tempmin">N.C.</div>
+								<div class="tempmax">N.C.</div>
+							</div>
+							<div class="temp">N.C.</div>
+							<div class="clear"></div>
+					</div>
+                </div>
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('6')">
+					<div class="1-box channel">
+						<div class="chtitle">N.C.</div>
+						<div class="chnumber">N.C.</div>
+							<div class="tempadjust">
+								<div class="tempmin">N.C.</div>
+								<div class="tempmax">N.C.</div>
+							</div>
+							<div class="temp">N.C.</div>
+							<div class="clear"></div>
+					</div>
+                </div>
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('7')">
+					<div class="1-box channel">
+						<div class="chtitle">N.C.</div>
+						<div class="chnumber">N.C.</div>
+							<div class="tempadjust">
+								<div class="tempmin">N.C.</div>
+								<div class="tempmax">N.C.</div>
+							</div>
+							<div class="temp">N.C.</div>
+							<div class="clear"></div>
+					</div>
+                </div>
+            </div>
+        </div>
+		<!-- ################################################### -->
+		<div id="wlan_config" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">WLAN</button>
+			</div>
+			<h3 class="headtitle">WLAN Einstellungen</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-3">
+					<div class="1-box wlan_conf">
+							<label class="switch">
+								<input type="checkbox">
+								<div class="slider round"></div>
+								<div class="checkbox_title">WLAN</div>
+							</label>
+							<hr />
+							<table id="networkconnect" class="wlantable" width="100%">
+								<!--Netzwerkliste -->
+							</table> 
+							<hr />
+						<h3>Netzwerk wählen...</h3>
+						<table id="networklist" class="wlantable" width="100%">
+								<!--Netzwerkliste -->
+						</table> 
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="wlan_set" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showWLAN()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">WLAN</button>
+				<button class="pure-button" onclick="setWLAN(document.getElementsByName('ssidInput')[0].value, document.getElementsByName('ssidPasswordInput')[0].value)">Verbinden</button>
+			</div>
+			<hr />
+			<h3 class="headtitle">WLAN Einstellungen</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-3">
+					<div class="1-box wlan_conf">
+						<h3>Netzwerk Verbinden</h3>
+						<input name="ssidInput" type="text" maxlength="32" placeholder="SSID" readonly>
+						<input name="ssidPasswordInput" type="password" maxlength="63" placeholder="Passwort" required />
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="channel_settings" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">Kanal $</button>
+				<button id="channel_settings_save" class="pure-button" onclick="">Speichern</button>
+			</div>
+			<h3 id="channel_settings_headtitle" class="headtitle">N.C.</h3>
+            <div class="pure-g">
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-5">
+					<div class="1-box channel_conf">
+					<form class="pure-form pure-form-stacked">
+						<fieldset>
+							<table>
+								<tr>
+									<td><label for="ChannelName">Kanal Name:&nbsp;&nbsp;</label></td>
+									<td><input class="temp_input" id="channel_name" type="text" maxlength="10" placeholder="Kanal Name"></td>
+								</tr>
+								<tr>
+									<td><label for="CH1TMin">Temp Min:</label></td>
+									<td><input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this);" placeholder="Temp Min"></td>
+								</tr>
+								<tr>
+									<td><label for="CH1TMax">Temp Max:</label></td>
+									<td><input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this);" placeholder="Temp Max"></td>
+								</tr>
+								<tr>
+									<td><label for="sensor">Fühler:</label></td>
+									<td>
+										<select id="sensor">
+											<!-- Placeholder -->
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label for="color">Farbe:</label></td>
+									<td>
+										<select style="width:8.6em" id="color">
+											<option>rot</option>
+											<option>blau</option>
+											<option>gelb</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Webalarm&nbsp;&nbsp;</td>
+									<td>
+										<label class="switch">
+											<input type="checkbox">
+											<div class="slider round"></div>
+										</label>
+									</td>
+								</tr>
+							</table>
+						</fieldset>
+					</form>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="system_config" class="content" style="display:none">
+			<!-- html for about-Site -->
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">System</button>
+				<button class="pure-button" onclick="setSystem()">Speichern</button>
+			</div>
+			<h3 class="headtitle">System Einstellungen</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-5">
+					<div class="1-box channel_conf">
+						<form class="pure-form pure-form-stacked">
+							<fieldset>
+								<table>
+									<tr>
+										<td><label for="hostname">Hostname</label></td>
+										<td><input style="width:8em" id="hostname" type="hostname" placeholder="Hostname"></td>
+									</tr>
+									<tr>
+										<td><label for="timezone">Zeitzone</label></td>
+										<td>
+											<select style="width:8.4em" id="timezone">
+												<option value="0">MEZ</option>
+												<option value="1">MEZ+1</option>
+												<option value="-1">MEZ-1</option>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td><label for="language">Sprache</label></td>
+										<td>
+											<select style="width:8.4em" id="language">
+												<option value="de">Deutsch</option>
+												<option value="en">Englisch</option>
+												<option value="fr">Französisch</option>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td><label for="unit">Einheit</label></td>
+										<td>
+											<select style="width:8.4em" id="unit">
+												<option value="C">Celsius</option>
+												<option value="F">Fahrenheit</option>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td><label for="hardwarealert">Hardwarealarm</label></td>
+										<td>
+											<label class="switch">
+												<input id="hwalarm" type="checkbox">
+												<div class="slider round"></div>
+											</label>
+										</td>
+									</tr>
+								</table>
+							</fieldset>
+						</form>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="pitmaster_config" class="content" style="display:none">
+			<!-- html for about-Site -->
+			<h3 class="headtitle">Pitmaster Einstellungen</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="chart_config" class="content" style="display:none">
+			<!-- html for about-Site -->
+			<h3 class="headtitle">Chart Dienste</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+					<div class="1-box channel_conf">
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="plot" class="content" style="display:none">
+			<!-- html for config-Site -->
+			<h1>WLANThermo - plot site</h1>
+        </div>
+		<!-- ################################################### -->
+		<div id="about" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+			</div>
+			<h3 class="headtitle">WlanThermo Team</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1  pure-u-md-1-2 pure-u-lg-1-5">
+					<div class="1-box channel_conf">
+						<table>
+							<tr>
+								<td>
+									&#10032;&nbsp;Armin Thinnes
+								</td>
+							</tr>
+							<tr>
+								<td>
+									&#10032;&nbsp;Björn Schrader
+								</td>
+							</tr>
+							<tr>
+								<td>
+									&#10032;&nbsp;Alexander Schäfer
+								</td>
+							</tr>
+							<tr>
+								<td>
+									&#10032;&nbsp;Steffen Ochs
+								</td>
+							</tr>
+							<tr>
+								<td>
+									&#10032;&nbsp;Florian Riedl
+								</td>
+							</tr>
+							<tr>
+								<td>
+									&#10032;&nbsp;Maik Kaste
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+    </div>
+</div>
+
+<script src="ui.js"></script>
+<script>
+	loadjscssfile('style.css','css');
+	setInterval("readTemp();", 2000);
+	document.getElementById("index").style.display = "inline";
+	
+	function showWLAN(){
+		hideAll();
+		document.getElementById("wlan_config").style.display = "inline";
+		networklist();
+		networkscan();
+	}
+	
+	function showPlot(){
+		hideAll();
+		document.getElementById("plot").style.display = "inline";
+	}	
+
+	function showSetWLAN(){
+		hideAll();
+		document.getElementById("wlan_set").style.display = "inline";
+	}	
+
+	function showSetChannel(channel){
+		hideAll();
+		document.getElementById("channel_settings").style.display = "inline";
+		loadJSON('settings', '', function (response) {
+			jsonresponse = JSON.parse(response);
+			clearOption('sensor');
+			for (var i = 0; i < jsonresponse.sensors.length; i++) {
+				document.getElementById('sensor').options[document.getElementById('sensor').options.length] = new Option(jsonresponse.sensors[i], i);
+			}
+		})
+		loadJSON('data', '', function (response) {
+			jsonresponse = JSON.parse(response);
+			document.getElementById('channel_settings_save').setAttribute('onclick','setChannel(' + channel + ');');
+			document.getElementById('channel_settings_headtitle').innerHTML  = jsonresponse.channel[channel].name;
+			document.getElementById('channel_name').value  = jsonresponse.channel[channel].name;
+			document.getElementById('temp_max').value  = jsonresponse.channel[channel].max;
+			document.getElementById('temp_min').value  = jsonresponse.channel[channel].min;
+			document.getElementById('sensor').value = jsonresponse.channel[channel].typ;
+		})
+	}
+
+	function setChannel(channel){
+		loadJSON('data', '', function (response) {
+			jsonresponse = JSON.parse(response);
+			jsonresponse.channel[channel].min = document.getElementById('temp_min').value;
+			jsonresponse.channel[channel].max = document.getElementById('temp_max').value;
+			jsonresponse.channel[channel].name = document.getElementById('channel_name').value;
+			jsonresponse.channel[channel].typ = document.getElementById('sensor').value;
+			//alert(jsonresponse.channel[channel].min);
+			var data = JSON.stringify(jsonresponse.channel[channel]);
+				//alert(data);
+				loadJSON('setchannels', data, function (response) {
+				showIndex();
+			})		
+		})	
+	}
+	
+	function clearOption(id){
+		var selectbox = document.getElementById(id);
+		var i;
+		for(i = selectbox.options.length - 1 ; i >= 0 ; i--)
+		{
+			selectbox.remove(i);
+		}
+	}
+	
+	function setWLAN(ssid, passwd){
+		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
+		loadJSON('setnetwork', data, function (response) {
+			showWLAN();
+		})
+		
+	}	
+	
+	function showSystem(){
+		hideAll();
+		loadJSON('settings', '', function (response) {
+			jsonresponse = JSON.parse(response);
+			document.getElementById('timezone').value = jsonresponse.system.utc;
+			document.getElementById('language').value = jsonresponse.system.language;
+			document.getElementById('hostname').value = jsonresponse.system.host;
+			document.getElementById('unit').value = jsonresponse.system.unit;
+			document.getElementById('hwalarm').value = jsonresponse.system.hwalarm;
+		})
+		document.getElementById("system_config").style.display = "inline";
+	}	
+	
+	function setSystem(){
+		if (document.getElementById('hwalarm').checked == true){
+			hwalarm = 'true';
+		}else{
+			hwalarm = 'false';
+		}
+		host = document.getElementById('hostname').value;
+		utc = document.getElementById('timezone').value;
+		language = document.getElementById('language').value;
+		unit = document.getElementById('unit').value;
+		var data='{"hwalarm":"' + hwalarm + '","host":"' + host + '","utc":' + utc + ',"language":"' + language + '","unit":"' + unit + '"}';
+		
+		//alert(data);
+		loadJSON('setsystem', data, function (response) {
+			showIndex();
+		})
+		
+	}
+	function showPitmaster(){
+		hideAll();
+		document.getElementById("pitmaster_config").style.display = "inline";
+	}	
+	
+	function showChart(){
+		hideAll();
+		document.getElementById("chart_config").style.display = "inline";
+	}	
+	
+	function showIndex(){
+		hideAll();
+		document.getElementById("index").style.display = "inline";
+	}	
+	function showAbout(){
+		hideAll();
+		document.getElementById("about").style.display = "inline";
+	}	
+
+	function hideAll(){
+		document.getElementById("index").style.display = "none";
+		document.getElementById("wlan_config").style.display = "none";
+		document.getElementById("system_config").style.display = "none";
+		document.getElementById("pitmaster_config").style.display = "none";
+		document.getElementById("chart_config").style.display = "none";
+		document.getElementById("plot").style.display = "none";
+		document.getElementById("about").style.display = "none";
+		document.getElementById("wlan_set").style.display = "none";
+		document.getElementById("channel_settings").style.display = "none";
+	}
+    function loadJSON(url, data, callback) {
+        var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+        xobj.open('POST', url, true);
+        xobj.setRequestHeader("Content-Type", "application/json");
+        xobj.onreadystatechange = function () {
+            if (xobj.readyState == 4 && xobj.status == "200") {
+                // .open will NOT return a value but simply returns undefined in async mode so use a callback
+                callback(xobj.responseText);
+            }
+        }
+        xobj.send(data);
+    }
+	
+	function readTemp(){
+		loadJSON('data', '', function (response) {
+		//loadJSON(function(response) {	
+			jsonresponse = JSON.parse(response);
+			document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%";
+			document.getElementsByClassName("wifi")[0].innerHTML = jsonresponse.system.rssi + "dBm";
+			var x = document.getElementsByClassName("pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index");
+			var i;
+			for (i = 0; i < x.length; i++) {
+				x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jsonresponse.channel[i].color;
+				x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;
+				x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jsonresponse.channel[i].number;
+				x[i].getElementsByClassName('tempmin')[0].innerHTML = jsonresponse.channel[i].min + "°";
+				x[i].getElementsByClassName('tempmax')[0].innerHTML = jsonresponse.channel[i].max + "°";
+				x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;					
+			}
+
+		})
+	}
+	
+	function readSettings(){
+		loadJSON('settings', '', function (response) {
+			jsonresponse = JSON.parse(response);
+		})
+	}
+	
+   function loadjscssfile(filename, filetype) {
+                if (filetype == "js") { //if filename is a external JavaScript file
+                    var fileref = document.createElement('script')
+                    fileref.setAttribute("type", "text/javascript")
+                    fileref.setAttribute("src", filename)
+                    alert('called');
+                }
+                else if (filetype == "css") { //if filename is an external CSS file
+                    var fileref = document.createElement("link")
+                    fileref.setAttribute("rel", "stylesheet")
+                    fileref.setAttribute("type", "text/css")
+                    fileref.setAttribute("href", filename)
+                }
+                if (typeof fileref != "undefined")
+                    document.getElementsByTagName("head")[0].appendChild(fileref)
+    }
+	function networkscan(){
+		loadJSON('networkscan', '', function (response) {
+			if (response == "OK"){
+				setTimeout("networklist();", 3000);
+			}
+		})
+	}
+	function networklist(){
+		loadJSON('networklist', '', function (response) {
+			jsonresponse = JSON.parse(response);
+			document.getElementById("networklist").innerHTML = '';
+			document.getElementById("networkconnect").innerHTML = '';
+			var table_networklist = document.getElementById("networklist");
+			var table_networkconnect = document.getElementById("networkconnect");
+			if (jsonresponse.Connect){			
+				var row = table_networkconnect.insertRow(0);
+				var cell1 = row.insertCell(0);
+				var cell2 = row.insertCell(1);
+				var cell3 = row.insertCell(2);
+				var cell4 = row.insertCell(3);
+				cell1.innerHTML = '&#10003;';
+				cell1.className = 'row-Check';
+				cell2.innerHTML = jsonresponse.SSID;
+				cell2.className = 'row-SSID';
+				cell3.innerHTML = jsonresponse.RSSI + 'dBm';
+				cell3.className = 'row-RSSI';
+				cell4.innerHTML = jsonresponse.Enc;
+				cell4.className = 'row-Enc';	
+			}
+			NetworkconnectRowClick();
+			for (var i = 0; i < jsonresponse.Scan.length; i++) {
+				var row = table_networklist.insertRow(-1);
+				var cell1 = row.insertCell(0);
+				cell1.className = 'row-Check';
+				var cell2 = row.insertCell(1);
+				var cell3 = row.insertCell(2);
+				var cell4 = row.insertCell(3);
+				cell1.innerHTML = '';
+				cell1.className = 'row-Check';
+				cell2.innerHTML = jsonresponse.Scan[i].SSID;
+				cell2.className = 'row-SSID';
+				cell3.innerHTML = jsonresponse.Scan[i].RSSI + 'dBm';
+				cell3.className = 'row-RSSI';
+				cell4.innerHTML = jsonresponse.Scan[i].Enc;	
+				cell4.className = 'row-Enc';
+			}
+			NetworklistRowClick();
+		})
+	}
+	
+	function NetworklistRowClick() {
+		var table = document.getElementById("networklist");
+		var rows = table.rows; // or table.getElementsByTagName("tr");
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].onclick = (function() { // closure
+				var cnt = i; // save the counter to use in the function
+				return function() {
+					showSetWLAN();
+					//alert("row"+cnt+" data="+this.cells[1].innerHTML);
+					//document.getElementsByName('ssidInput')[0].placeholder=this.cells[1].innerHTML;
+					document.getElementsByName('ssidInput')[0].value = this.cells[1].innerHTML;
+					document.getElementsByName('ssidPasswordInput')[0].value = null;
+				}    
+			})(i);
+		}
+	}
+	
+	function NetworkconnectRowClick() {
+		var table = document.getElementById("networkconnect");
+		var rows = table.rows; // or table.getElementsByTagName("tr");
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].onclick = (function() { // closure
+				var cnt = i; // save the counter to use in the function
+				return function() {
+				  alert("row"+cnt+" data="+this.cells[1].innerHTML);
+				}    
+			})(i);
+		}
+	}
+	
+	function validateNumber(number) {
+	
+		val = number.value.replace(/[^0-9.,]/g,'');
+		val = val.replace(/[,]/g, '.'); // "," ersetzen zu "."
+		if(val){
+			val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];
+		}
+		// Nur ein Dez-Zeichen erlauben
+		if(val.split('.').length>2){
+			val = val.replace(/\.+$/,"");
+		}		
+		number.value = val;
+	}
+	readTemp();
+</script>
+
+</body>
+</html>

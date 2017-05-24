@@ -14,66 +14,67 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 implement ChannelData
-    0.2.01 - 2017-01-02 Change Button Event
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
+// EXECPTION LIST
+// https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
 
-// CHOOSE CONFIGURATION (user input)
-
-// bitte auskommentieren falls nicht benutzt
+// Entwicklereinstellungen
 #define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
+#define THINGSPEAK                          // ENABLE THINGSPEAK
+//#define KTYPE                             // ENABLE TYP K (Test only)
 
-// bitte nicht zutreffendes auskommentieren
-//#define VARIANT_A                           // 3xNTC// CHOOSE HARDWARE
-#define VARIANT_B                           // 6xNTC, 1xSYSTEM
-//#define VARIANT_C                           // 4xNTC, 1xKYTPE, 1xSYSTEM
-
-// falls erstes Flashen "xxx" ersetzen
-#define WIFISSID "xxx"              // SET WIFI SSID (falls noch kein wifi.json angelegt ist)  
-#define PASSWORD "xxx"              // SET WIFI PASSWORD (falls noch kein wifi.json angelegt ist)
-
-// bitte auskommentieren falls nicht benutzt
-//#define TELEGRAM
-#define BOTTOKEN "xxx" 
-
-// bitte auskommentieren falls nicht benutzt
-#define THINGSPEAK
+#ifdef DEBUG
+  #define DPRINT(...)    Serial.print(__VA_ARGS__)
+  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)
+  #define DPRINTF(...)   Serial.printf(__VA_ARGS__)
+#else
+  #define DPRINT(...)     //blank line
+  #define DPRINTLN(...)   //blank line
+  #define DPRINTF(...)    //blank line
+#endif
 
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// TIMER VARIABLES
 
+unsigned long lastUpdateBatteryMode;
+unsigned long lastUpdateSensor;
+unsigned long lastUpdatePiepser;
+unsigned long lastUpdateCommunication;
+unsigned long lastUpdateDatalog;
+unsigned long lastFlashInWork;
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 // INCLUDE SUBROUTINES
 
 #include "c_init.h"
+#include "c_button.h"
 #include "c_median.h"
 #include "c_sensor.h"
+#include "c_pitmaster.h"
 #include "c_temp.h"
 #include "c_fs.h"
+#include "c_com.h"
+#include "c_ee.h"
 #include "c_icons.h"
 #include "c_wifi.h"
 #include "c_frames.h"
 #include "c_bot.h"
 #include "c_ota.h"
 #include "c_server.h"
-#include "c_pitmaster.h"
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-unsigned long lastUpdateBatteryMode;
-unsigned long lastUpdateSensor;
-unsigned long lastUpdateCommunication;
-
+// SETUP
 void setup() {  
 
   // Initialize Serial 
-  set_serial();
+  set_serial(); //Serial.setDebugOutput(true);
   
   // Initialize OLED
   set_OLED();
@@ -81,10 +82,11 @@ void setup() {
   // Current Battery Voltage
   get_Vbat();
   
-  if (!LADEN) {
+  if (!stby) {
 
     // Open Config-File
-    start_fs();
+    check_sector();
+    setEE(); start_fs();
     
     // Initialize Wifi
     set_wifi();
@@ -92,9 +94,13 @@ void setup() {
     // Update Time
     if (!isAP)  setTime(getNtpTime()); //setSyncProvider(getNtpTime);
 
-    #ifdef DEBUG
-    digitalClockDisplay();
-    #endif
+    DPRINT("[INFO]\t");
+    DPRINTLN(digitalClockDisplay(now()));
+
+    // Scan Network
+    WiFi.scanNetworks(true);
+    scantime = millis();
+    //scantime = String(now());
 
     // Initialize Server
     server_setup();
@@ -108,49 +114,34 @@ void setup() {
     // Initialize Sensors
     set_sensor();
     set_Channels();
+    set_piepser();
 
     // Initialize Buttons
     set_button();
         
     // Current Wifi Signal Strength
     get_rssi();
-
+    cal_soc();
+    
     // Initialize Pitmaster
     set_pitmaster();
   }
-
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+// LOOP
 void loop() {
 
-  // Lade-Betrieb oder Mess-Betrieb
-  if (LADEN) {
+  // Standby oder Mess-Betrieb
+  if (standby_control()) return;
 
-    if (!LADENSHOW) {
-      drawLoading();
-      LADENSHOW = true;
-      //WiFi.mode(WIFI_OFF);
-    }
-    
-    if (millis() - lastUpdateBatteryMode > INTERVALBATTERYMODE) {
-      get_Vbat();
-      lastUpdateBatteryMode = millis();  
-
-      if (!LADEN) ESP.restart();
-    }
-    
-    return;
-  }
+  // WiFi Monitoring
+  wifimonitoring();
 
   // Detect Serial
-  static char serialbuffer[80];
-  if (readline(Serial.read(), serialbuffer, 80) > 0) {
-    Serial.print("You entered: >");
-    Serial.print(serialbuffer);
-    Serial.println("<");
+  static char serialbuffer[150];
+  if (readline(Serial.read(), serialbuffer, 150) > 0) {
     read_serial(serialbuffer);
   }
   
@@ -159,19 +150,12 @@ void loop() {
     ArduinoOTA.handle();
   #endif
 
-  // Server
-  server.handleClient();
-
-  //pitmaster_control();
+  // Pitmaster Control
+  pitmaster_control();
   
   // Detect Button Event
   if (button_input()) {
     button_event();
-  }
-
-  if (awaking) {
-    check_wifi();
-    //monitorWiFi();
   }
   
   // Update Display
@@ -181,66 +165,95 @@ void loop() {
   } else remainingTimeBudget = 1;
 
 
+  // Timer Actions
   if (remainingTimeBudget > 0) {
-    // Don't do stuff if you are below your
-    // time budget.
-    
+    // Don't do stuff if you are below your time budget.
+
+    // Temperture
     if (millis() - lastUpdateSensor > INTERVALSENSOR) {
-      get_Vbat();
       get_Temperature();
-      
-      if (!isAP) {
-      if (ch[0].alarm && ch[0].isalarm) {
-        
-        // Alarmfunktion
-        String postStr = "ACHTUNG: ";
-        postStr += String(ch[0].temp,1);
-      }
-      
-      }
+      get_Vbat();
       lastUpdateSensor = millis();
     }
 
+    // Alarm
+    if (millis() - lastUpdatePiepser > INTERVALSENSOR/4) {
+      controlAlarm(pulsalarm);
+      pulsalarm = !pulsalarm;
+      lastUpdatePiepser = millis();
+    }
+
+    // Communication
     if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
 
       get_rssi(); // müsste noch an einen anderen Ort wo es unabhängig von INTERVALCOM.. ist
+      cal_soc();
+      
+      // falls wach und nicht AP
+      if (!isAP) {
 
-      // Erst aufwachen falls im EcoModus
-      // UpdateCommunication wird so lange wiederholt bis ESP wieder wach
-      if (isEco && !awaking && (WiFi.status() != WL_CONNECTED)) {
-        reconnect_wifi();
+        #ifdef THINGSPEAK
+          if (THINGSPEAK_KEY != "") sendData();
+        #endif
+          
+        #ifdef TELEGRAM
+          UserData userData;
+          getUpdates(id, &userData);
+        #endif
       }
-      else if (!awaking) {
+      
+      lastUpdateCommunication = millis();
+    }
 
-        // falls wach und nicht AP
-        if (!isAP) {
+    // Datalog
+    if (millis() - lastUpdateDatalog > 3000) {
 
-          #ifdef THINGSPEAK
-            if (THINGSPEAK_KEY != "") sendData();
-          #endif
-
-          #ifdef TELEGRAM
-            UserData userData;
-            getUpdates(id, &userData);
-          #endif
+      //Serial.println(sizeof(datalogger));
+      //Serial.println(sizeof(mylog));
+      
+      for (int i=0; i < CHANNELS; i++)  {
+        mylog[log_count].tem[i] = (uint16_t) (ch[i].temp * 10);       // 8 * 16 bit  // 8 * 2 byte
+      }
+      mylog[log_count].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
+      mylog[log_count].timestamp = now();     // 64 bit
+      
+      // 2*8 + 1 + 8 = 25
+      if (log_count < MAXLOGCOUNT-1) {
+        log_count++;
+      } else {
+        log_count = 0;
         
+        /*write_flash(log_sector);
+        read_flash(log_sector);
+        log_sector++;
+        
+        // Test
+        
+        for (int j=0; j<10; j++) {
+          int16_t test = archivlog[j].tem[0];
+          Serial.print(test/10.0);
+          Serial.print(" ");
         }
-
-        // Wieder einschlafen
-        if (isEco) {
-          stop_wifi();
-        }
-      
-        lastUpdateCommunication = millis();
+        
+        */
+        //Serial.println("Log");
       }
-      
+
+      lastUpdateDatalog = millis();
+    }
+
+    // Flash
+    if (inWork) {
+      if (millis() - lastFlashInWork > FLASHINWORK) {
+        flashinwork = !flashinwork;
+        lastFlashInWork = millis();
+      }
     }
     
     //delay(remainingTimeBudget);
     delay(1); // sonst geht das Wifi Modul nicht in Standby
     //yield();  // reicht nicht
   }
-
   
 }
 

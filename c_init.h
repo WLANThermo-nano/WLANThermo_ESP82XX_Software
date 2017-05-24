@@ -14,12 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 implement ChannelData
-    0.2.01 - 2017-01-02 change button events
-    0.2.02 - 2017-01-04 add inactive and temperatur unit
-    0.2.03 - 2017-01-04 add button events
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
@@ -30,55 +25,70 @@
 #include <WiFiClientSecure.h>     // HTTPS
 #include <WiFiUdp.h>              // NTP
 #include <TimeLib.h>              // TIME
-
+#include <EEPROM.h>               // EEPROM
+#include <FS.h>                   // FILESYSTEM
+#include <ArduinoJson.h>          // JSON
+#include <ESP8266mDNS.h>        
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
+#include "AsyncJson.h"
 
 extern "C" {
 #include "user_interface.h"
+#include "spi_flash.h"
+#include "core_esp8266_si2c.c"
 }
+
+extern "C" uint32_t _SPIFFS_start;      // START ADRESS FS
+extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
 
-#define FIRMWAREVERSION "V0.1"
-
 // HARDWARE
-#ifdef VARIANT_C
-  #define CHANNELS 6                  // 4xNTC, 1xKYTPE, 1xSYSTEM
-  #define KTYPE 1
-  #define MAX1161x_ADDRESS 0x33       // MAX11615
-  #define THERMOCOUPLE_CS 16
-#elif defined(VARIANT_B)
-  #define CHANNELS 7                  // 6xNTC, 1xSYSTEM
-  #define MAX1161x_ADDRESS 0x33       // MAX11615
-#else 
-  #define CHANNELS 3                  // 3xNTC
-  #define MAX1161x_ADDRESS 0x34       // MAX11613
-#endif
+#define FIRMWAREVERSION "V0.3"
 
 // CHANNELS
+#define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
+#define SENSORTYPEN    8               // NUMBER OF SENSORS
+#define LIMITUNTERGRENZE -20           // MINIMUM LIMIT
+#define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
+#define MAX1161x_ADDRESS 0x33          // MAX11615
+#define ULIMITMIN 10.0
+#define ULIMITMAX 150.0
+#define OLIMITMIN 35.0
+#define OLIMITMAX 200.0
+#define ULIMITMINF 50.0
+#define ULIMITMAXF 302.0
+#define OLIMITMINF 95.0
+#define OLIMITMAXF 392.0
 
 // BATTERY
 #define BATTMIN 3600                  // MINIMUM BATTERY VOLTAGE in mV
 #define BATTMAX 4185                  // MAXIMUM BATTERY VOLTAGE in mV 
-#define ANALOGREADBATTPIN 0
+#define ANALOGREADBATTPIN 0           // INTERNAL ADC PIN
 #define BATTDIV 5.9F
+#define CHARGEDETECTION 16              // LOAD DETECTION PIN
 
 // OLED
 #define OLED_ADRESS 0x3C              // OLED I2C ADRESS
+#define MAXBATTERYBAR 13
 
 // TIMER
 #define INTERVALBATTERYMODE 1000
 #define INTERVALSENSOR 1000
 #define INTERVALCOMMUNICATION 30000
+#define FLASHINWORK 500
 
 // BUS
 #define SDA 0
 #define SCL 2
+#define THERMOCOUPLE_CS 12          // 12
 
 // BUTTONS
-#define btn_r  4      // Pullup vorhanden
-#define btn_l  5      // Pullup vorhanden
+#define btn_r  4                    // Pullup vorhanden
+#define btn_l  5                    // Pullup vorhanden
 #define INPUTMODE INPUT_PULLUP      // INPUT oder INPUT_PULLUP
 #define PRELLZEIT 5                 // Prellzeit in Millisekunden   
 #define DOUBLECLICKTIME 400         // Längste Zeit für den zweiten Klick beim DOUBLECLICK
@@ -87,12 +97,21 @@ extern "C" {
 #define MAXCOUNTER CHANNELS-1
 
 // WIFI
-#define APNAME "NEMESIS"
+#define APNAME "NANO-AP"
 #define APPASSWORD "12345678"
+#define HOSTNAME "NANO-"
+#define NTP_PACKET_SIZE 48          // NTP time stamp is in the first 48 bytes of the message
 
 // FILESYSTEM
-#define CHANNELJSONVERSION 1
+#define CHANNELJSONVERSION 4        // FS VERSION
+#define EEPROM_SIZE 1792            // EEPROM SIZE
 
+// PITMASTER
+#define PITMASTER1 15               // PITMASTER PIN
+//#define PITMASTER2 14             // ab Platine V7.2
+#define PITMIN 0                    // LOWER LIMIT SET
+#define PITMAX 100                  // UPPER LIMIT SET
+#define PITMASTERSIZE 5             // PITMASTER SETTINGS LIMIT
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -102,47 +121,122 @@ extern "C" {
 
 // CHANNELS
 struct ChannelData {
-   float temp;            // TEMPERATURE
-   int   match;           // Anzeige im Temperatursymbol
-   float max;             // MAXIMUM TEMPERATURE
-   float min;             // MINIMUM TEMPERATURE
-   byte  typ;             // TEMPERATURE SENSOR
-   bool  alarm;           // CHANNEL ALARM
-   bool  isalarm;         // CURRENT ALARM
+   String name;             // CHANNEL NAME
+   float temp;              // TEMPERATURE
+   int   match;             // Anzeige im Temperatursymbol
+   float max;               // MAXIMUM TEMPERATURE
+   float min;               // MINIMUM TEMPERATURE
+   byte  typ;               // TEMPERATURE SENSOR
+   bool  alarm;             // SET CHANNEL ALARM
+   bool  isalarm;           // Limits überschritten
+   bool  show;              // Anzeigen am OLED       
+   bool  showalarm;         // Alarm nicht weiter anzeigen
+   String color;            // COLOR
 };
 
 ChannelData ch[CHANNELS];
 
-String  ttypname[] = {"Maverick",
+String  ttypname[SENSORTYPEN] = {"Maverick",
                       "Fantast-Neu",
                       "100K6A1B",
                       "100K",
                       "SMD NTC",
                       "5K3A1B",
+                      "MOUSER47K",
                       "Typ K"};
 
+
 String  temp_unit = "C";
+String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
+
+// PITMASTER
+struct Pitmaster {
+   byte typ;           // PITMASTER NAME/TYP
+   float set;            // SET-TEMPERATUR
+   bool  active;           // IS PITMASTER ACTIVE
+   byte  channel;         // PITMASTER CHANNEL
+   float value;           // PITMASTER VALUE IN %
+   int manuel;            // MANUEL PITMASTER VALUE IN %
+   bool event;
+   int16_t msec;          // PITMASTER VALUE IN MILLISEC
+   unsigned long last;
+};
+
+Pitmaster pitmaster;
+int pidsize;
+
+// DATALOGGER
+struct datalogger {
+ uint16_t tem[8];
+ long timestamp;
+ uint8_t pitmaster;
+};
+
+#define MAXLOGCOUNT 170             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
+datalogger mylog[MAXLOGCOUNT];
+datalogger archivlog[MAXLOGCOUNT];
+int log_count = 0;
+uint32_t log_sector;                // erster Sector von APP2
+uint32_t freeSpaceStart;            // First Sector of OTA
+uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
 // SYSTEM
-bool  LADEN = false;              // USB POWER SUPPLY?
+bool stby = false;                // USB POWER SUPPLY?
+bool doAlarm = false;             // HARDWARE ALARM           
+byte pulsalarm = 1;
+String language;
+
+struct Battery {
+  int voltage;                    // CURRENT VOLTAGE
+  bool charge;                    // CHARGE DETECTION
+  int percentage;                 // BATTERY CHARGE STATE in %
+  bool setreference;              // LOAD COMPLETE SAVE VOLTAGE
+  int max;                        // MAX VOLTAGE
+  int min;
+};
+
+Battery battery;
+uint32_t vol_sum = 0;
+int vol_count = 0;
 
 // OLED
-int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL
-int BatteryPercentage = 0;        // BATTERY CHARGE STATE in %
+int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL       
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool INACTIVESHOW = true;         // SHOW INACTIVE CHANNELS
 bool displayblocked = false;                     // No OLED Update
-enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE};
-int question = NO;                               // Which Question;
+enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM};
 
+struct MyQuestion {
+   int typ;    
+   int con;            
+};
+
+MyQuestion question;
+
+// FILESYSTEM
+enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
 // WIFI
-byte isAP = 0;                    // WIFI MODE
+byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO)
 String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;
 long rssi = 0;                   // Buffer rssi
 String THINGSPEAK_KEY;
+long scantime;
+bool disconnectAP;
+int timeZone;                     // Central European Time
+String host;
+struct HoldSSID {
+   unsigned long connect;
+   bool hold;             
+   String ssid;
+   String pass;
+};
+HoldSSID holdssid;
+
+// NTP
+byte packetBuffer[ NTP_PACKET_SIZE];    //buffer to hold incoming and outgoing packets
 
 // BUTTONS
 byte buttonPins[]={btn_r,btn_l};          // Pins
@@ -151,12 +245,15 @@ byte buttonState[NUMBUTTONS];     // Aktueller Status des Buttons HIGH/LOW
 enum {NONE, FIRSTDOWN, FIRSTUP, SHORTCLICK, DOUBLECLICK, LONGCLICK};
 byte buttonResult[NUMBUTTONS];    // Aktueller Klickstatus der Buttons NONE/SHORTCLICK/LONGCLICK
 unsigned long buttonDownTime[NUMBUTTONS]; // Zeitpunkt FIRSTDOWN
-int b_counter = 0;
-
-// PITMASTER
-int pit_manuell = 0;
-int16_t pit_y = 0;
-int16_t pit_pause = 3000;       // Regler Intervall
+byte menu_count = 0;                      // Counter for Menu
+byte inMenu = 0;
+enum {TEMPSUB, PITSUB, SYSTEMSUB, MAINMENU, TEMPKONTEXT, BACK};
+bool inWork = 0;
+bool isback = 0;
+int framepos[3] = {0, 6, 11};
+int frameCount = 19;
+bool flashinwork = true;
+float tempor;                       // Zwischenspeichervariable
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -170,12 +267,17 @@ void set_serial();                                // Initialize Serial
 void set_button();                                // Initialize Buttons
 static inline boolean button_input();             // Dectect Button Input
 static inline void button_event();                // Response Button Status
+void controlAlarm(bool action);                              // Control Hardware Alarm
+void set_piepser();
+void piepserOFF();
+void piepserON();      
 
 // SENSORS
 byte set_sensor();                                // Initialize Sensors
 int  get_adc_average (byte ch);                   // Reading ADC-Channel Average
 double get_thermocouple(void);                    // Reading Temperature KTYPE
-void get_Vbat();                                  // Reading Battery Voltage
+void get_Vbat();                                   // Reading Battery Voltage
+void cal_soc();
 
 // TEMPERATURE (TEMP)
 float calcT(int r, byte typ);                     // Calculate Temperature from ADC-Bytes
@@ -190,25 +292,19 @@ SSD1306 display(OLED_ADRESS, SDA, SCL);
 OLEDDisplayUi ui     ( &display );
 
 // FRAMES
-void drawConnect(int count, int active);          // Frame while system start
+void drawConnect();                       // Frane while System Start
 void drawLoading();                               // Frame while Loading
-void drawQuestion();                    // Frame while Question
-void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state);
-void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawlimito(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawlimitu(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawtyp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawalarm(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawwifi(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
+void drawQuestion(int counter);                    // Frame while Question
+void drawMenu();
 void set_OLED();                                  // Configuration OLEDDisplay
 
 // FILESYSTEM (FS)
-bool loadConfig();                                // Load Config.json at system start
-bool setConfig();                                 // Reset config.json to default
-bool changeConfig();                              // Set config.json after Change
-bool loadWifiSettings();                          // Load wifi.json at system start
-bool setWifiSettings();                           // Reset config.json to default
-bool addWifiSettings();                           // Add Wifi Settings to config.json 
+bool loadfile(const char* filename, File& configFile);
+bool savefile(const char* filename, File& configFile);
+bool checkjson(JsonVariant json, const char* filename);
+bool loadconfig(byte count);
+bool setconfig(byte count, const char* data[2]);
+bool modifyconfig(byte count, const char* data[12]);
 void start_fs();                                  // Initialize FileSystem
 void read_serial(char *buffer);                   // React to Serial Input 
 int readline(int readch, char *buffer, int len);  // Put together Serial Input
@@ -228,248 +324,28 @@ void reconnect_wifi();
 void stop_wifi();
 void check_wifi();
 
+// SERVER
+void handleSettings(AsyncWebServerRequest *request, bool www);
+void handleData(AsyncWebServerRequest *request, bool www);
+void handleWifiResult(AsyncWebServerRequest *request, bool www);
+void handleWifiScan(AsyncWebServerRequest *request, bool www);
+
+// EEPROM
+void setEE();
+void writeEE(const char* json, int len, int startP);
+void readEE(char *buffer, int len, int startP);
+void clearEE(int startP, int endP);
+
+// PITMASTER
+void startautotunePID(int maxCycles, bool storeValues);
+
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
 void set_serial() {
   Serial.begin(115200);
-  Serial.println();
-  Serial.println();
-}
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Initialize Buttons
-void set_button() {
-  
-  for (int i=0;i<NUMBUTTONS;i++) pinMode(buttonPins[i],INPUTMODE);
-}
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Dedect Button Input
-static inline boolean button_input() {
-// Rückgabewert false ==> Prellzeit läuft, Taster wurden nicht abgefragt
-// Rückgabewert true ==> Taster wurden abgefragt und Status gesetzt
-
-  static unsigned long lastRunTime;
-  //static unsigned long buttonDownTime[NUMBUTTONS];
-  unsigned long now=millis();
-  
-  if (now-lastRunTime<PRELLZEIT) return false; // Prellzeit läuft noch
-  
-  lastRunTime=now;
-  
-  for (int i=0;i<NUMBUTTONS;i++)
-  {
-    byte curState=digitalRead(buttonPins[i]);
-    if (INPUTMODE==INPUT_PULLUP) curState=!curState; // Vertauschte Logik bei INPUT_PULLUP
-    if (buttonResult[i]>=SHORTCLICK) buttonResult[i]=NONE; // Letztes buttonResult löschen
-    if (curState!=buttonState[i]) // Flankenwechsel am Button festgestellt
-    {
-      if (curState)   // Taster wird gedrückt, Zeit merken
-      {
-        if (buttonResult[i]==FIRSTUP && now-buttonDownTime[i]<DOUBLECLICKTIME)
-          buttonResult[i]=DOUBLECLICK;
-        else
-        { 
-          buttonDownTime[i]=now;
-          buttonResult[i]=FIRSTDOWN;
-        }
-      }
-      else  // Taster wird losgelassen
-      {
-        if (buttonResult[i]==FIRSTDOWN) buttonResult[i]=FIRSTUP;
-        if (now-buttonDownTime[i]>=LONGCLICKTIME) buttonResult[i]=LONGCLICK;
-      }
-    }
-    else // kein Flankenwechsel, Up/Down Status ist unverändert
-    {
-      if (buttonResult[i]==FIRSTUP && now-buttonDownTime[i]>DOUBLECLICKTIME)
-        buttonResult[i]=SHORTCLICK;
-    }
-    buttonState[i]=curState;
-  } // for
-  return true;
-}
-
-bool isEco = false;
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Response Button Status
-static inline void button_event() {
-
-  static unsigned long lastMupiTime;    // Zeitpunkt letztes schnelles Zeppen
-  
-  // Frage nach Reset der Config wurde bestätigt
-  if ((buttonResult[0]==SHORTCLICK) && question > 0) {
-      
-      switch (question) {
-        case CONFIGRESET:
-          setConfig();
-          loadConfig();
-          set_Channels();
-          break;
-
-        case CHANGEUNIT:
-          if (temp_unit == "C") temp_unit = "F";          // Change Unit
-          else temp_unit = "C";
-          transform_limits();                             // Transform Limits
-          changeConfig();                                 // Save Config
-          get_Temperature();                              // Update Temperature
-          #ifdef DEBUG
-            Serial.println("[INFO]\tEinheitenwechsel");
-          #endif
-          break;
-
-      }
-      question = NO;
-      displayblocked = false;
-      return;
-  }
-
-  // Frage nach Reset der Config wurde verneint
-  if ((buttonResult[1]==SHORTCLICK) && question > 0) {
-      question = NO;
-      displayblocked = false;
-      return;
-  }
-
-  // Reset der Config erwuenscht
-  if (buttonResult[1]==LONGCLICK && ui.getCurrentFrameCount()==0) {
-      displayblocked = true;
-      question = CONFIGRESET;
-      drawQuestion();
-      return;
-  }
-
-  // Button 1 Doppelclick während man sich im Hauptmenu befindet
-  // -> Anzeigemodus wechseln
-  if (buttonResult[0]==DOUBLECLICK && ui.getCurrentFrameCount()==0) {
-    INACTIVESHOW = !INACTIVESHOW;
-
-    #ifdef DEBUG
-      Serial.println("[INFO]\tAnzeigewechsel");
-    #endif
-    return;
-  }
-
-  
-  // Button 1 Longclick während man sich im Hauptmenu befindet
-  // -> Zur Pitmaster-Übersicht wechseln
-  if (buttonResult[0]==LONGCLICK && ui.getCurrentFrameCount()==0) {
-    // Falls Pitmaster nicht aktiv -> erstmal aktivieren
-    // Code fehlt noch
-
-    /*
-    if (isEco) {
-      reconnect_wifi();
-      isEco = false;
-    } else {
-      stop_wifi();
-      isEco = true;  
-    }
-    */
-    
-    return;
-  }
-
-  // Button 2 Doppelclick während man sich im Hauptmenu befindet
-  // -> Einheit wechseln
-  if (buttonResult[1]==DOUBLECLICK && ui.getCurrentFrameCount()==0) {
-    displayblocked = true;
-    question = CHANGEUNIT;
-    drawQuestion();
-    return;
-  }
-  
-  
-  // Button 1 gedrückt während man sich im Hauptmenü befindet
-  // -> Zum nächsten (aktiven) Kanal switchen
-  if (buttonResult[0]==SHORTCLICK && ui.getCurrentFrameCount()==0) {
-
-    b_counter = 0;
-    int i = 0;          // Endlosschleife verhindern
-
-    if (INACTIVESHOW) {
-      current_ch++;
-      if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-    }
-    else {
-      do {
-        current_ch++;
-        i++;
-        if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-      }
-      while ((ch[current_ch].temp==INACTIVEVALUE) && (i<CHANNELS)); 
-    }
-
-    ui.transitionToFrame(0);
-    return;
-  }
-
-  // Button 1 gedrückt während man im Kontextmenu ist
-  // -> Eingabe im Kontextmenu
-  if (ui.getCurrentFrameCount()!=0) {
-
-    float tempor;
-    int mupi;
-    bool event = false;
-
-    // Bei SHORTCLICK kleiner Zahlensprung
-    if (buttonResult[0]==SHORTCLICK) {
-      mupi = 1;
-      event = 1;
-    }
-
-    // Bei LONGCLICK großer Zahlensprung jedoch gebremst
-    if (buttonResult[0]==FIRSTDOWN && (millis()-buttonDownTime[0]>400)) {
-      mupi = 10;
-      if (millis()-lastMupiTime > 200) {
-        event = 1;
-        lastMupiTime = millis();
-      }
-    }
-    
-    if (event) {  
-      switch (ui.getCurrentFrameCount()) {
-        case 1:  // Upper Limit
-          tempor = ch[current_ch].max +(0.1*mupi);
-          if (tempor > 95.0) tempor = 20.0;
-          ch[current_ch].max = tempor;
-          break;
-        case 2:  // Lower Limit
-          tempor = ch[current_ch].min +(0.1*mupi);
-          if (tempor > 95.0) tempor = 20.0;
-          ch[current_ch].min = tempor;
-          break;
-        case 3:  // Typ
-          tempor = ch[current_ch].typ +1;
-          if (tempor > 5) tempor = 0;
-          ch[current_ch].typ = tempor;
-          break;
-        case 4:  // Alarm
-          ch[current_ch].alarm = !ch[current_ch].alarm;
-          break;
-        default:
-          break; 
-      }
-    }
-  }
-  
-  // Button 2 gedrückt: -> Durchs Kontextmenu bewegen
-  if (buttonResult[1]==SHORTCLICK) {
-    
-    b_counter = ui.getCurrentFrameCount();
-    
-    if (b_counter < 4) { 
-      b_counter++; 
-    }
-    else {
-      b_counter = 0;
-      changeConfig();             // Am Ende des Kontextmenu Config speichern
-    }
-    
-    ui.switchToFrame(b_counter);
-  }
-
+  DPRINTLN();
+  DPRINTLN();
 }
 
 
@@ -486,5 +362,59 @@ String formatBytes(size_t bytes){
     return String(bytes/1024.0/1024.0/1024.0)+"GB";
   }
 }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Show time
+String printDigits(int digits){
+  String com;
+  if(digits < 10) com = "0";
+  com += String(digits);
+  return com;
+}
+
+String digitalClockDisplay(time_t t){
+
+  String zeit;
+  zeit += printDigits(hour(t))+":";
+  zeit += printDigits(minute(t))+":";
+  zeit += printDigits(second(t))+" ";
+  zeit += String(day(t))+".";
+  zeit += String(month(t))+".";
+  zeit += String(year(t));
+  return zeit;
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Standby oder Mess-Betrieb
+bool standby_control() {
+  if (stby) {
+
+    drawLoading();
+    if (!LADENSHOW) {
+      //drawLoading();
+      LADENSHOW = true;
+      DPRINTLN("[INFO]\tChange to Standby");
+      //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
+      pitmaster.active = false;
+      piepserOFF();
+      // set_pitmaster();
+    }
+    
+    if (millis() - lastUpdateBatteryMode > INTERVALBATTERYMODE) {
+      get_Vbat();
+      lastUpdateBatteryMode = millis();  
+
+      if (!stby) ESP.restart();
+    }
+    
+    return 1;
+  }
+  return 0;
+}
+
+
+
+
 
 

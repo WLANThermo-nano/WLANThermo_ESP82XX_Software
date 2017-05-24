@@ -14,484 +14,540 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 impliment ChannelData
-    0.2.01 - 2017-01-04 add version and temp_unit in channel.json
-    0.2.02 - 2017-01-05 add serial communication
-    0.2.03 - 2017-01-20 add Thingspeak config
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
  // HELP: https://github.com/bblanchon/ArduinoJson
 
-#include <FS.h>
-#include <ArduinoJson.h>
-
-
 #define CHANNEL_FILE "/channel.json"
 #define WIFI_FILE "/wifi.json"
 #define THING_FILE "/thing.json"
+#define PIT_FILE "/pit.json"
+#define SYSTEM_FILE "/system.json"
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Load Config.json at system start
-bool loadConfig() {
+// Load xxx.json
+bool loadfile(const char* filename, File& configFile) {
   
-  File configFile = SPIFFS.open(CHANNEL_FILE, "r");
+  configFile = SPIFFS.open(filename, "r");
   if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file");
-    #endif
+    
+    DPRINT("[INFO]\tFailed to open: ");
+    DPRINTLN(filename);
+    
     return false;
   }
 
   size_t size = configFile.size();
   if (size > 1024) {
-    #ifdef DEBUG
-    Serial.println("Config file size is too large");
-    #endif
-    return false;
-  }
-
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-  
-  configFile.close();
-
-  //StaticJsonBuffer<200> jsonBuffer;
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(buf.get());
-
-  if (!json.success()) {
-    #ifdef DEBUG
-    Serial.println("Failed to parse config file");
-    #endif
-    return false;
-  }
-  
-  #ifdef DEBUG
-  json.printTo(Serial);
-  Serial.println();
-  #endif
-
-  int _version = json["VERSION"];
-
-  if (_version == CHANNELJSONVERSION) {
-  
-    const char* author = json["AUTHOR"];
-    temp_unit = json["temp_unit"].asString();
-
-    for (int i=0; i < CHANNELS; i++){
     
-      // Fühlertyp auslesen  
-      ch[i].typ = json["ttyp"][i];
+    DPRINT("[INFO]\tFile size is too large: ");
+    DPRINTLN(filename);
+    
+    return false;
+  }
+  return true;
+}
 
-      // Temperatur MIN auslesen
-      ch[i].min = json["tmin"][i];
 
-      // Temperatur MAX auslesen
-      ch[i].max = json["tmax"][i];  
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Save xxx.json
+bool savefile(const char* filename, File& configFile) {
+  
+  configFile = SPIFFS.open(filename, "w");
+  
+  if (!configFile) {
+    
+    DPRINT("[INFO]\tFailed to open file for writing: ");
+    DPRINTLN(filename);
+    
+    return false;
+  }  
+  return true;
+}
 
-      // Temperatur ALARM auslesen
-      ch[i].alarm = json["talarm"][i];  
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Check JSON
+bool checkjson(JsonVariant json, const char* filename) {
+  
+  if (!json.success()) {
+    
+    DPRINT("[INFO]\tFailed to parse: ");
+    DPRINTLN(filename);
+    
+    return false;
+  }
+  
+  return true;
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Load xxx.json at system start
+bool loadconfig(byte count) {
+
+  const size_t bufferSize = 6*JSON_ARRAY_SIZE(CHANNELS) + JSON_OBJECT_SIZE(9) + 320;
+  DynamicJsonBuffer jsonBuffer(bufferSize);
+  File configFile;
+
+  switch (count) {
+    
+    case 0:     // CHANNEL
+    {
+      //if (!loadfile(CHANNEL_FILE,configFile)) return false;
+      //std::unique_ptr<char[]> buf(new char[configFile.size()]);
+      //configFile.readBytes(buf.get(), configFile.size());
+      //configFile.close();
+
+      std::unique_ptr<char[]> buf(new char[500]);
+      readEE(buf.get(),500, 400);
+      
+      JsonObject& json = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(json,CHANNEL_FILE)) return false;
+      if (json["VERSION"] != CHANNELJSONVERSION) return false;
+  
+      const char* author = json["AUTHOR"];
+      temp_unit = json["temp_unit"].asString();
+
+      for (int i=0; i < CHANNELS; i++){
+          ch[i].name = json["tname"][i].asString();
+          ch[i].typ = json["ttyp"][i];            
+          ch[i].min = json["tmin"][i];            
+          ch[i].max = json["tmax"][i];                     
+          ch[i].alarm = json["talarm"][i];        
+          ch[i].color = json["tcolor"][i].asString();        
+      }
     }
-
-    return true;
-  
-  }
-
-  // Falsche Version
-  return false;
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Reset config.json to default
-bool setConfig() {
-  
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
-  
-  json["AUTHOR"] = "s.ochs";
-  json["VERSION"] = CHANNELJSONVERSION;
-  json["temp_unit"] = temp_unit;
-
-  JsonArray& _typ = json.createNestedArray("ttyp");
-  JsonArray& _min = json.createNestedArray("tmin");
-  JsonArray& _max = json.createNestedArray("tmax");
-  JsonArray& _alarm = json.createNestedArray("talarm");
-  
-  for (int i=0; i < CHANNELS; i++){
-    _typ.add(2);
+    break;
     
-    if (temp_unit == "F") {
-      _min.add(68.0,1);
-      _max.add(86.0,1);
-    } else {
-      _min.add(20.0,1);
-      _max.add(30.0,1); 
+    case 1:     // WIFI
+    {
+      std::unique_ptr<char[]> buf(new char[300]);
+      readEE(buf.get(),300, 0);
+
+      JsonArray& _wifi = jsonBuffer.parseArray(buf.get());
+      if (!checkjson(_wifi,WIFI_FILE)) return false;
+      
+      // Wie viele WLAN Schlüssel sind vorhanden
+      for (JsonArray::iterator it=_wifi.begin(); it!=_wifi.end(); ++it) {  
+        wifissid[lenwifi] = _wifi[lenwifi]["SSID"].asString();
+        wifipass[lenwifi] = _wifi[lenwifi]["PASS"].asString();  
+        lenwifi++;
+      }
     }
-    _alarm.add(false); 
-  }
- 
-  File configFile = SPIFFS.open(CHANNEL_FILE, "w");
+    break;
   
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file for writing");
-    #endif
-    return false;
-  }
+    case 2:     // THINGSPEAK
+    { 
+      std::unique_ptr<char[]> buf(new char[100]);
+      readEE(buf.get(),100, 300);
+      
+      JsonObject& json = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(json,THING_FILE)) return false;
+      THINGSPEAK_KEY = json["KEY"].asString();
+    }
+    break;
 
-  json.printTo(configFile);    
-  configFile.close();
+    case 3:     // PITMASTER
+    {
+      std::unique_ptr<char[]> buf(new char[600]);
+      readEE(buf.get(),600, 900);
 
-  return true;
+      JsonArray& _pid = jsonBuffer.parseArray(buf.get());
+      if (!checkjson(_pid,PIT_FILE)) return false;
 
-}
+      pidsize = 0;
+      
+      // Wie viele Pitmaster sind vorhanden
+      for (JsonArray::iterator it=_pid.begin(); it!=_pid.end(); ++it) {  
+        pid[pidsize].name = _pid[pidsize]["name"].asString();
+        pid[pidsize].Kp = _pid[pidsize]["Kp"];  
+        pid[pidsize].Ki = _pid[pidsize]["Ki"];    
+        pid[pidsize].Kd = _pid[pidsize]["Kd"];                     
+        pid[pidsize].Kp_a = _pid[pidsize]["Kp_a"];                   
+        pid[pidsize].Ki_a = _pid[pidsize]["Ki_a"];                   
+        pid[pidsize].Kd_a = _pid[pidsize]["Kd_a"];                   
+        pid[pidsize].Ki_min = _pid[pidsize]["Ki_min"];                   
+        pid[pidsize].Ki_max = _pid[pidsize]["Ki_max"];                  
+        pid[pidsize].pswitch = _pid[pidsize]["switch"];               
+        pid[pidsize].pause = _pid[pidsize]["pause"];                   
+        pid[pidsize].freq = _pid[pidsize]["freq"];
+        pid[pidsize].esum = 0;             
+        pid[pidsize].elast = 0;       
+        pidsize++;
+      }
+    }
+    break;
 
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Set config.json after Change
-bool changeConfig() {
-
-  // Alte Daten auslesen
-
-  File configFile = SPIFFS.open(CHANNEL_FILE, "r");
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file");
-    #endif
-    return false;
-  }
+    case 4:     // SYSTEM
+    {
+      std::unique_ptr<char[]> buf(new char[250]);
+      readEE(buf.get(),250, 1500);
+      
+      JsonObject& json = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(json,SYSTEM_FILE)) return false;
   
-  size_t size = configFile.size();
-  if (size > 1024) {
-    #ifdef DEBUG
-    Serial.println("Config file size is too large");
-    #endif
-    return false;
-  }
-
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-
-  //StaticJsonBuffer<200> jsonBuffer;
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& alt = jsonBuffer.parseObject(buf.get());
-
-  if (!alt.success()) {
-    #ifdef DEBUG
-    Serial.println("Failed to parse current config file");
-    #endif
-    return false;
-  }
-
-  configFile.close();
-
-  // Neue Daten erzeugen
-
-  DynamicJsonBuffer jsonBuffer2;
-  JsonObject& neu = jsonBuffer2.createObject();
-
-  neu["AUTHOR"] = alt["AUTHOR"];
-  neu["VERSION"] = CHANNELJSONVERSION;
-  neu["temp_unit"] = temp_unit;
-
-  JsonArray& _typ = neu.createNestedArray("ttyp");
-  JsonArray& _min = neu.createNestedArray("tmin");
-  JsonArray& _max = neu.createNestedArray("tmax");
-  JsonArray& _alarm = neu.createNestedArray("talarm");
+      const char* author = json["AUTHOR"];
+      host = json["host"].asString();
+      doAlarm = json["hwalarm"];
+      //json["ap"];
+      language = json["lang"].asString();
+      timeZone = json["utc"];
+      battery.max = json["batmax"];
+      battery.min = json["batmin"];
+    }
+    break;
     
-  for (int i=0; i < CHANNELS; i++){
-    _typ.add(ch[i].typ); 
-    _min.add(ch[i].min,1);
-    _max.add(ch[i].max,1); 
-    _alarm.add(ch[i].alarm); 
-  }
-
-  // Alte Daten überschreiben
-  configFile = SPIFFS.open(CHANNEL_FILE, "w");
+    //case 5:     // PRESETS
+    //break;
   
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("[INFO]\tFailed to open channel config file for writing");
-    #endif
+    default:
     return false;
-  }
-  else Serial.println("[INFO]\tUpdate Channel Config");
-
-  neu.printTo(configFile);
-
-  #ifdef DEBUG
-  neu.printTo(Serial);
-  Serial.println();
-  #endif
-    
-  configFile.close();
-
-  return true;
-
-}
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Load wifi.json at system start
-bool loadWifiSettings() {
   
-  File configFile = SPIFFS.open(WIFI_FILE, "r");
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open wifi config file");
-    #endif
-    return false;
   }
 
-  size_t size = configFile.size();
-  if (size > 1024) {
-    #ifdef DEBUG
-    Serial.println("Wifi config file size is too large");
-    #endif
-    return false;
-  }
-
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-
-  //StaticJsonBuffer<200> jsonBuffer;
-  DynamicJsonBuffer jsonBuffer;
-  JsonArray& json = jsonBuffer.parseArray(buf.get());
-  
-  if (!json.success()) {
-    #ifdef DEBUG
-    Serial.println("Failed to parse wifi config file");
-    #endif
-    return false;
-  }
-
-  // Wie viele WLAN Schlüssel sind vorhanden
-  for (JsonArray::iterator it=json.begin(); it!=json.end(); ++it) {  
-    wifissid[lenwifi] = json[lenwifi]["SSID"].asString();
-    wifipass[lenwifi] = json[lenwifi]["PASS"].asString();  
-    lenwifi++;
-  }
-
-  configFile.close();
-
-  #ifdef DEBUG
+  /*
+  DPRINT("[JSON GET]\t");
   json.printTo(Serial);
-  Serial.println();
-  #endif
-  
+  DPRINTLN();
+  */
   return true;
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Reset wifi.json to default
-bool setWifiSettings(const char* ssid, const char* pass) {
+// Set xxx.json
+bool setconfig(byte count, const char* data[2]) {
   
-  //StaticJsonBuffer<200> jsonBuffer;
   DynamicJsonBuffer jsonBuffer;
-  JsonArray& json = jsonBuffer.createArray();
-  
-  JsonObject& _wifi1 = json.createNestedObject();
+  File configFile;
 
-  _wifi1["SSID"] = ssid;
-  _wifi1["PASS"] = pass;
- 
-  File configFile = SPIFFS.open(WIFI_FILE, "w");
+  switch (count) {
+    case 0:         // CHANNEL
+    {
+      JsonObject& json = jsonBuffer.createObject();
   
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file for writing");
-    #endif
-    return false;
-  }
+      json["AUTHOR"] = "s.ochs";
+      json["VERSION"] = CHANNELJSONVERSION;
+      json["temp_unit"] = temp_unit;
 
-  json.printTo(configFile);
+      JsonArray& _name = json.createNestedArray("tname");
+      JsonArray& _typ = json.createNestedArray("ttyp");
+      JsonArray& _min = json.createNestedArray("tmin");
+      JsonArray& _max = json.createNestedArray("tmax");
+      JsonArray& _alarm = json.createNestedArray("talarm");
+      JsonArray& _color = json.createNestedArray("tcolor");
+  
+      for (int i=0; i < CHANNELS; i++){
+        _name.add("Kanal " + String(i+1));
+        _typ.add(0);
     
-  configFile.close();
+        if (temp_unit == "F") {
+          _min.add(ULIMITMINF,1);
+          _max.add(OLIMITMINF,1);
+        } else {
+          _min.add(ULIMITMIN,1);
+          _max.add(OLIMITMIN,1);
+        }
+        _alarm.add(false); 
+        _color.add(colors[i]);
+      }
 
-  return true;
+      //if (!savefile(CHANNEL_FILE, configFile)) return false;
+      //json.printTo(configFile);
+      //configFile.close();
+      size_t size = json.measureLength() + 1;
+      clearEE(500,400);  // Bereich reinigen
+      static char buffer[500];
+      json.printTo(buffer, size);
+      writeEE(buffer, size, 400);
+    }
+    break;
 
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Add Wifi Settings to wifi.json 
-bool addWifiSettings(const char* ssid, const char* pass) {
-
-  // Alte Daten auslesen
-  File configFile = SPIFFS.open(WIFI_FILE, "r");
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open wifi config file");
-    #endif
-    return false;
-  }
-
-  size_t size = configFile.size();
-  if (size > 1024) {
-    #ifdef DEBUG
-    Serial.println("Wifi config file size is too large");
-    #endif
-    return false;
-  }
-
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-
-  //StaticJsonBuffer<200> jsonBuffer;
-  DynamicJsonBuffer jsonBuffer;
-  JsonArray& json = jsonBuffer.parseArray(buf.get());
-  
-  if (!json.success()) {
-    #ifdef DEBUG
-    Serial.println("Failed to parse wifi config file");
-    #endif
-    return false;
-  }
-
-  // Wie viele WLAN Schlüssel sind vorhanden
-  int len = 0;
-  
-  for (JsonArray::iterator it=json.begin(); it!=json.end(); ++it) {  
-    len++;
-  }
-
-  configFile.close();
-
-  if (len < 5) {
-
-  // Neue Daten eintragen
-  JsonObject& _wifi = json.createNestedObject();
-
-  _wifi["SSID"] = ssid;
-  _wifi["PASS"] = pass;
- 
-  configFile = SPIFFS.open(WIFI_FILE, "w");
-  
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file for writing");
-    #endif
-    return false;
-  }
-
-  json.printTo(configFile);
-  
-  configFile.close();
-
-  #ifdef DEBUG
-  json.printTo(Serial);
-  Serial.println();
-  #endif
-  
-  
-  return true;
-  }
-
-}
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Load thing.json at system start
-bool loadThingSettings() {
-  
-  File configFile = SPIFFS.open(THING_FILE, "r");
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open Thingspeak config file");
-    #endif
-    return false;
-  }
-
-  size_t size = configFile.size();
-  if (size > 1024) {
-    #ifdef DEBUG
-    Serial.println("Thingspeak config file size is too large");
-    #endif
-    return false;
-  }
-
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(buf.get());
-  
-  if (!json.success()) {
-    #ifdef DEBUG
-    Serial.println("Failed to parse Thingspeak config file");
-    #endif
-    return false;
-  }
-
-  THINGSPEAK_KEY = json["KEY"].asString();
-  
-  configFile.close();
-
-  #ifdef DEBUG
-  json.printTo(Serial);
-  Serial.println();
-  #endif
-  
-  return true;
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Set thing.json
-bool setThingSettings(const char* key) {
-  
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
-  
-  THINGSPEAK_KEY = key;
-  json["KEY"] = THINGSPEAK_KEY;
-  
-  File configFile = SPIFFS.open(THING_FILE, "w");
-  
-  if (!configFile) {
-    #ifdef DEBUG
-    Serial.println("Failed to open config file for writing");
-    #endif
-    return false;
-  }
-
-  json.printTo(configFile);
+    case 1:        // WIFI
+    {
+      JsonArray& json = jsonBuffer.createArray();
+      clearEE(300,0);  // Bereich reinigen
+      static char buffer[3];
+      json.printTo(buffer, 3);
+      writeEE(buffer, 3, 0);
+    }
+    break;
     
-  configFile.close();
+    case 2:         //THING
+    {
+      JsonObject& json = jsonBuffer.createObject();
+      THINGSPEAK_KEY = data[0];
+      json["KEY"] = THINGSPEAK_KEY;
+      
+      size_t size = json.measureLength() + 1;
+      if (size > 100) {
+        DPRINTLN("[INFO]\tZu viele THINGSPEAK Daten!");
+        return false;
+      } else {
+        clearEE(100,300);  // Bereich reinigen
+        static char buffer[100];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, 300);
+      }
+    }
+    break;
 
+    case 3:        // PITMASTER
+    {
+      JsonArray& json = jsonBuffer.createArray();
+      JsonObject& _pid = json.createNestedObject();
+
+      // Default Pitmaster
+      pid[0] = {"SSR", 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 3000, 0, 0, 0};
+      pidsize = 0;  // Reset counter
+      
+      _pid["name"]    = pid[pidsize].name;
+      _pid["Kp"]      = pid[pidsize].Kp;  
+      _pid["Ki"]      = pid[pidsize].Ki;    
+      _pid["Kd"]      = pid[pidsize].Kd;                   
+      _pid["Kp_a"]    = pid[pidsize].Kp_a;               
+      _pid["Ki_a"]    = pid[pidsize].Ki_a;                  
+      _pid["Kd_a"]    = pid[pidsize].Kd_a;             
+      _pid["Ki_min"]  = pid[pidsize].Ki_min;             
+      _pid["Ki_max"]  = pid[pidsize].Ki_max;             
+      _pid["switch"]  = pid[pidsize].pswitch;           
+      _pid["pause"]   = pid[pidsize].pause;                
+      _pid["freq"]    = pid[pidsize].freq;
+      pidsize++;
+      
+      size_t size = json.measureLength() + 1;
+      if (size > 600) {
+        DPRINTLN("[INFO]\tZu viele PITMASTER Daten!");
+        return false;
+      } else {
+        clearEE(600,900);  // Bereich reinigen
+        static char buffer[600];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, 900);
+      }
+    }
+    break;
+
+    case 4:         // SYSTEM
+    {
+      String host = HOSTNAME;
+      host += String(ESP.getChipId(), HEX);
+      
+      JsonObject& json = jsonBuffer.createObject();
+  
+      json["AUTHOR"] = "s.ochs";
+      json["host"] = host;
+      json["hwalarm"] = false;    // doAlarm
+      json["ap"] = APNAME;
+      json["lang"] = "de";
+      json["utc"] = 1;
+      json["batmax"] = BATTMAX;
+      json["batmin"] = BATTMIN;
+    
+      size_t size = json.measureLength() + 1;
+      clearEE(250,1500);  // Bereich reinigen
+      static char buffer[250];
+      json.printTo(buffer, size);
+      writeEE(buffer, size, 1500);
+    }
+    break;
+
+    case 5:         //PRESETS
+    {
+      
+    }
+    break;
+
+    default:
+    return false;
+  
+  }
+      
   return true;
-
 }
 
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Modify xxx.json
+bool modifyconfig(byte count, const char* data[12]) {
+  
+  DynamicJsonBuffer jsonBuffer;
+  File configFile;
+
+  switch (count) {
+    case 0:           // CHANNEL
+    {
+      // Alte Daten auslesen
+      //if (!loadfile(CHANNEL_FILE,configFile)) return false;
+      //std::unique_ptr<char[]> buf(new char[configFile.size()]);
+      //configFile.readBytes(buf.get(), configFile.size());
+      //configFile.close();
+      
+      std::unique_ptr<char[]> buf(new char[500]);
+      readEE(buf.get(),500, 400);
+      
+      JsonObject& alt = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(alt,CHANNEL_FILE)) return false;
+      
+      // Neue Daten erzeugen
+      JsonObject& json = jsonBuffer.createObject();
+
+      json["AUTHOR"] = alt["AUTHOR"];
+      json["VERSION"] = CHANNELJSONVERSION;
+      json["temp_unit"] = temp_unit;
+
+      JsonArray& _name = json.createNestedArray("tname");
+      JsonArray& _typ = json.createNestedArray("ttyp");
+      JsonArray& _min = json.createNestedArray("tmin");
+      JsonArray& _max = json.createNestedArray("tmax");
+      JsonArray& _alarm = json.createNestedArray("talarm");
+      JsonArray& _color = json.createNestedArray("tcolor");
+    
+      for (int i=0; i < CHANNELS; i++){
+        _name.add(ch[i].name);
+        _typ.add(ch[i].typ); 
+        _min.add(ch[i].min,1);
+        _max.add(ch[i].max,1);
+        _alarm.add(ch[i].alarm); 
+        _color.add(ch[i].color);
+      }
+
+      // Speichern
+      //if (!savefile(CHANNEL_FILE, configFile)) return false;
+      //json.printTo(configFile);
+      //configFile.close();
+      size_t size = json.measureLength() + 1;
+      clearEE(500,400);  // Bereich reinigen
+      static char buffer[500];
+      json.printTo(buffer, size);
+      writeEE(buffer, size, 400);
+
+      //DPRINT("[JSON SET]\t");
+      //json.printTo(Serial);
+      //DPRINTLN();
+      
+    }
+    break;
+
+    case 1:         // WIFI
+    {
+      // Alte Daten auslesen
+      std::unique_ptr<char[]> buf(new char[300]);
+      readEE(buf.get(), 300, 0);
+
+      JsonArray& json = jsonBuffer.parseArray(buf.get());
+      if (!checkjson(json,WIFI_FILE)) {
+        setconfig(eWIFI,{});
+        return false;
+      }
+
+      // Neue Daten eintragen
+      JsonObject& _wifi = json.createNestedObject();
+
+      _wifi["SSID"] = data[0];
+      _wifi["PASS"] = data[1];
+      
+      // Speichern
+      size_t size = json.measureLength() + 1;
+      
+      if (size > 300) {
+        DPRINTLN("[INFO]\tZu viele WIFI Daten!");
+        return false;
+      } else {
+        static char buffer[300];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, 0); 
+      } 
+    }
+    break;
+    
+    case 2:         //THING
+    break;
+
+    case 3:         // PITMASTER
+    {
+      // Alte Daten auslesen
+      std::unique_ptr<char[]> buf(new char[600]);
+      readEE(buf.get(), 600, 900);
+
+      JsonArray& json = jsonBuffer.parseArray(buf.get());
+      if (!checkjson(json,PIT_FILE)) {
+        setconfig(ePIT,{});
+        return false;
+      }
+
+      // Neue Daten eintragen
+      JsonObject& _pid = json.createNestedObject();
+      
+      _pid["name"]    = pid[pidsize].name;
+      _pid["Kp"]      = pid[pidsize].Kp;  
+      _pid["Ki"]      = pid[pidsize].Ki;    
+      _pid["Kd"]      = pid[pidsize].Kd;                   
+      _pid["Kp_a"]    = pid[pidsize].Kp_a;               
+      _pid["Ki_a"]    = pid[pidsize].Ki_a;                  
+      _pid["Kd_a"]    = pid[pidsize].Kd_a;             
+      _pid["Ki_min"]  = pid[pidsize].Ki_min;             
+      _pid["Ki_max"]  = pid[pidsize].Ki_max;             
+      _pid["switch"]  = pid[pidsize].pswitch;           
+      _pid["pause"]   = pid[pidsize].pause;                
+      _pid["freq"]    = pid[pidsize].freq;
+    
+      // Speichern
+      size_t size = json.measureLength() + 1;
+      if (size > 600) {
+        DPRINTLN("[INFO]\tZu viele PITMASTER Daten!");
+        return false;
+      } else {
+        static char buffer[600];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, 900); 
+      } 
+    }
+    break;
+
+    case 4:           // SYSTEM
+    {
+      // Alte Daten auslesen
+      std::unique_ptr<char[]> buf(new char[250]);
+      readEE(buf.get(),250, 1500);
+      
+      JsonObject& alt = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(alt,SYSTEM_FILE)) return false;
+      
+      // Neue Daten erzeugen
+      JsonObject& json = jsonBuffer.createObject();
+
+      json["AUTHOR"] = alt["AUTHOR"];
+      //json["VERSION"] = CHANNELJSONVERSION;
+      
+      json["host"] = host;
+      json["hwalarm"] = doAlarm;
+      json["ap"] = APNAME;
+      json["lang"] = language;
+      json["utc"] = timeZone;
+      json["batmax"] = battery.max;
+      json["batmin"] = battery.min;
+
+      // Speichern
+      size_t size = json.measureLength() + 1;
+      clearEE(250,1500);  // Bereich reinigen
+      static char buffer[250];
+      json.printTo(buffer, size);
+      writeEE(buffer, size, 1500);
+      
+    }
+    break;
+
+    default:
+    return false;
+  }
+  
+  return true;
+}
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -499,245 +555,81 @@ bool setThingSettings(const char* key) {
 void start_fs() {
   
   if (!SPIFFS.begin()) {
-    #ifdef DEBUG
-    Serial.println("[INFO]\tFailed to mount file system");
-    #endif
+    DPRINTLN("[INFO]\tFailed to mount file system");
     return;
   }
 
-  /*
-  Dir dir = SPIFFS.openDir("/");
-  while (dir.next()) {
-    String fileName = dir.fileName();
-    size_t fileSize = dir.fileSize();
-    Serial.printf("FS File: %s, size: %s\r\n", fileName.c_str(), formatBytes(fileSize).c_str());
-  }
-  */
-  
+  DPRINT("[INFO]\tInitalize SPIFFS at Sector: 0x");
+  DPRINT((((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE), HEX);
+  DPRINT(" (");
+  DPRINT(((uint32_t)&_SPIFFS_end - (uint32_t)&_SPIFFS_start)/1024, DEC);
+  DPRINTLN("K)");
+  // 0x40200000 ist der Speicherort des SPI FLASH in der Memory Map
 
-  if (SPIFFS.exists(CHANNEL_FILE)) {
-    
-    if (!loadConfig()) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to load config");
-      #endif
-
-      // Falsche Version ueberschreiben
-      if (!setConfig()) {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tFailed to save config");
-        #endif
-      } else {
-        #ifdef DEBUG
-          Serial.println("[INFO]\tChannel config saved");
-        #endif
-        ESP.restart();
-      }
-      
-    } else {
-      #ifdef DEBUG
-      Serial.println("[INFO]\tChannel config loaded");
-      #endif
-    }
-  }
-  else
-    if (!setConfig()) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save channel config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tChannel config saved");
-      #endif
-      ESP.restart();
-    }
-
-    //setWifiSettings();
-    //addWifiSettings(WIFISSID2, PASSWORD2);
-    
-  if (SPIFFS.exists(WIFI_FILE)) {
-    
-    if (!loadWifiSettings()) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to load wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config loaded");
-      #endif
-    }
-  }
-  else
-    if (!setWifiSettings(WIFISSID,PASSWORD)) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config saved");
-      #endif
-    }
-
-  if (SPIFFS.exists(THING_FILE)) {
-    
-    if (!loadThingSettings()) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to load Thingspeak config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tThingspeak config loaded");
-      #endif
-    }
-  }
-  else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tNo Thingspeak config available");
-      #endif
-  }
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// React to Serial Input 
-void read_serial(char *buffer) {
-
-  // GET HELP
-  if (strcmp(buffer, "help")==0) {
-    Serial.println();
-    Serial.println("Syntax: {\"command\":\"xxx\",\"data\":[\"xxx\",\"xxx\"]}");
-    Serial.println("Possible commands");
-    Serial.println("restart    -> Restart ESP");
-    Serial.println("getVersion -> Show Firmware Version Number");
-    Serial.println("getSSID    -> Show current SSID");
-    Serial.println("setWIFI    -> Reset wifi.json and add new SSID");
-    Serial.println("           -> expected data SSID and PASSWORD");
-    Serial.println("addWIFI    -> Add new SSID to wifi.json");
-    Serial.println("           -> expected data SSID and PASSWORD");
-    Serial.println("setTS      -> Add THINGSPEAK KEY");
-    Serial.println("           -> expected data KEY");
-    Serial.println("getTS      -> Show THINGSPEAK KEY");
-    Serial.println();
-    return;
-  }
-
-  // Wenn nicht help dann json-Befehl auslesen
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(buffer);
-  
-  if (!json.success()) {
-    Serial.println("String invalid");
-    return;
-  }
-
-  // new command
-  const char* command = json["command"];
-
-  // ADD WIFI SETTINGS
-  if (strcmp(command, "addWIFI")==0) {
-    //const char* ssid = json["data"][0];
-    //const char* pass = json["data"][1];
-
-    if (!addWifiSettings(json["data"][0], json["data"][1])) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config saved");
-     #endif
-    }
-  }
-
-  // SET WIFI SETTINGS
-  else if (strcmp(command, "setWIFI")==0) {
-    //const char* ssid = json["data"][0];
-    //const char* pass = json["data"][1];
-    
-    if (!setWifiSettings(json["data"][0], json["data"][1])) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save wifi config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tWifi config saved");
-      #endif
-    } 
-    
-  }
-
-  // GET CURRENT WIFI SSID
-  else if (strcmp(command, "getSSID")==0) {
-    Serial.println(WiFi.SSID());
-  }
-
-  // SET THINGSPEAK KEY
-  else if (strcmp(command, "setTS")==0) {
-
-    //const char* key = json["data"][0];
-    
-    if (!setThingSettings(json["data"][0])) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tFailed to save Thingspeak config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tThingspeak config saved");
-      #endif
-    }
-    
-  }
-
-  // GET THINGSPEAK KEY
-  else if (strcmp(command, "getTS")==0) {
-    Serial.println(THINGSPEAK_KEY);
-  }
-
-  // RESTART SYSTEM
-  else if (strcmp(command, "restart")==0) {
+  // CHANNEL
+  if (!loadconfig(eCHANNEL)) {
+    DPRINTLN("[INFO]\tFailed to load channel config");
+    setconfig(eCHANNEL,{});  // Speicherplatz vorbereiten
     ESP.restart();
-  }
+  } else DPRINTLN("[INFO]\tChannel config loaded");
 
-  // LET ESP SLEEP
-  else if (strcmp(command, "sleep")==0) {
-    display.displayOff();
-    ESP.deepSleep(0);
-    delay(100); // notwendig um Prozesse zu beenden
-  }
 
-  // GET FIRMWAREVERSION
-  else if (strcmp(command, "getVersion")==0) {
-    Serial.println(FIRMWAREVERSION);
-  }
+  // WIFI
+  if (!loadconfig(eWIFI)) {
+    DPRINTLN("[INFO]\tFailed to load wifi config");
+    setconfig(eWIFI,{});  // Speicherplatz vorbereiten
+  } else DPRINTLN("[INFO]\tWifi config loaded");
 
-  else Serial.println("Unkwown command");     // Befehl nicht erkannt
-    
+
+  // THINGSPEAK
+  if (!loadconfig(eTHING)) DPRINTLN("[INFO]\tFailed to load Thingspeak config");
+  else DPRINTLN("[INFO]\tThingspeak config loaded");
+
+
+  // PITMASTER
+  if (!loadconfig(ePIT)) {
+    DPRINTLN("[INFO]\tFailed to load pitmaster config");
+    setconfig(ePIT,{});  // Reset pitmaster config
+  } else DPRINTLN("[INFO]\tPitmaster config loaded");
+
+
+  // SYSTEM
+  if (!loadconfig(eSYSTEM)) {
+    DPRINTLN("[INFO]\tFailed to load system config");
+    setconfig(eSYSTEM,{});  // Speicherplatz vorbereiten
+    ESP.restart();
+  } else DPRINTLN("[INFO]\tSystem config loaded");
+
 }
 
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Put together Serial Input 
-int readline(int readch, char *buffer, int len) {
-  
-  static int pos = 0;
-  int rpos;
 
-  if (readch > 0) {
-    switch (readch) {
-      case '\n': // Ignore new-lines
-        break;
-      case '\r': // Return on CR
-        rpos = pos;
-        pos = 0;  // Reset position index ready for next time
-        return rpos;
-      default:
-        if (pos < len-1) {
-          buffer[pos++] = readch;
-          buffer[pos] = 0;
-        }
-    }
-  }
-  // No end of line has been found, so return -1.
-  return -1;
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Test zum Speichern von Datalog
+
+//unsigned char meinsatz[64] = "Ich nutze ab jetzt den Flash Speicher für meine Daten!\n";
+//unsigned char meinflash[64];
+
+void write_flash(uint32_t _sector) {
+
+  //_sector = 0xD6;            // 0x81 bis 0xD6
+  noInterrupts();
+  if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK) {  // ESP.flashEraseSector
+    spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) mylog, sizeof(mylog));  //ESP.flashWrite
+    DPRINT("[INFO]\tSpeicherung im Sector: ");
+    DPRINTLN(_sector, HEX);
+  } else DPRINTLN("[INFO]\tFehler beim Speichern im Flash");
+  interrupts(); 
 }
+
+
+void read_flash(uint32_t _sector) {
+
+  noInterrupts();
+  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) archivlog, sizeof(archivlog));  //ESP.flashRead
+  //spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) meinflash, sizeof(meinflash));
+  interrupts();
+}
+
+
 

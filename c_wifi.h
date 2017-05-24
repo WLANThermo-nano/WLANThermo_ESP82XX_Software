@@ -14,26 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2017-01-03 change NTP time communication
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
 
-ESP8266WiFiMulti wifiMulti;
-
-// A UDP instance to let us send and receive packets over UDP
-WiFiUDP udp;
-
-// Initialize NTP
-IPAddress timeServerIP; // time.nist.gov NTP server address
-const char* ntpServerName = "time.nist.gov";
-const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message
-byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
-const int timeZone = 1;     // Central European Time
-
-#define HOSTNAME "NEMESIS-OTA-" ///< Hostename. The setup function adds the Chip ID at the end.
+ESP8266WiFiMulti wifiMulti;               // MULTIWIFI instance
+WiFiUDP udp;                              // UDP instance
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -48,77 +35,63 @@ void set_wifi() {
   IPAddress gateway(192,168,66,1);
   IPAddress subnet(255,255,255,0);
 
-  String hostname = HOSTNAME;
-  hostname += String(ESP.getChipId(), HEX);
-  WiFi.hostname(hostname);
-
-  #ifdef DEBUG
-    Serial.println("[INFO]\tHostname: " + hostname);
-  #endif
-
+  WiFi.hostname(host);
   WiFi.mode(WIFI_STA);
   
-  #ifdef DEBUG
-  Serial.print("[INFO]\tConnecting");
-  #endif
+  DPRINTLN("[INFO]\tHostname: " + host);
+  DPRINT("[INFO]\tConnecting");
+  
+  holdssid.hold = false;
+  holdssid.connect = false;
 
   // Add Wifi Settings
   for (int i = 0; i < lenwifi; i++) {
     wifiMulti.addAP(wifissid[i].c_str(), wifipass[i].c_str());
   }
-
+  
+  drawConnect();
   int counter = 0;
   while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
     delay(500);
-    #ifdef DEBUG
-      Serial.print(".");
-    #endif
-    drawConnect(3, counter % 3);
+    DPRINT(".");
     counter++;
   }
 
-  #ifdef DEBUG
-    Serial.println();
-  #endif
+  DPRINTLN();
   
   if (WiFi.status() == WL_CONNECTED) {
 
-    #ifdef DEBUG
-      Serial.print("[INFO]\tWiFi connected to: ");
-      Serial.println(WiFi.SSID());
-      Serial.print("[INFO]\tIP address: ");
-      Serial.println(WiFi.localIP());
-    #endif
-    
-    isAP = false;
- 
-     udp.begin(2390);  // localPort = 2390;
+    DPRINT("[INFO]\tWiFi connected to: ");
+    DPRINTLN(WiFi.SSID());
+    DPRINT("[INFO]\tIP address: ");
+    DPRINTLN(WiFi.localIP());
+        
+    isAP = 0;
 
-    #ifdef DEBUG
-      Serial.print("[INFO]\tStarting UDP: Local port ");
-      Serial.println(udp.localPort());
-    #endif
+    WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
+ 
+    udp.begin(2390);  // localPort = 2390;
+
+    DPRINT("[INFO]\tStarting UDP: Local port ");
+    DPRINTLN(udp.localPort());
     
   }
   else {
 
-    WiFi.mode(WIFI_AP);
+    WiFi.mode(WIFI_AP_STA);
 
-    #ifdef DEBUG
-      Serial.print("[INFO]\tConfiguring access point: ");
-      Serial.print(APNAME);
-      Serial.println(" ...");
-    #endif
+    DPRINT("[INFO]\tConfiguring access point: ");
+    DPRINT(APNAME);
+    DPRINTLN(" ...");
     
     WiFi.softAPConfig(local_IP, gateway, subnet);
     WiFi.softAP(apname, appass, 5);  // Channel 5
 
-    #ifdef DEBUG
-      Serial.print("[INFO]\tAP IP address: ");
-      Serial.println(WiFi.softAPIP());
-    #endif
+    DPRINT("[INFO]\tAP IP address: ");
+    DPRINTLN(WiFi.softAPIP());
     
-    isAP = true;
+    isAP = 1;
+    disconnectAP = false;
     
   }
 }
@@ -133,12 +106,10 @@ void get_rssi() {
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// send an NTP request to the time server at the given address
+// Send NTP request to the time server
 void sendNTPpacket(IPAddress& address) {
   
-  #ifdef DEBUG
-    Serial.println("[INFO]\tsending NTP packet...");
-  #endif
+  DPRINTLN("[INFO]\tSending NTP packet...");
   
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
@@ -164,24 +135,22 @@ void sendNTPpacket(IPAddress& address) {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Get NTP time
 time_t getNtpTime() {
+
+  // Initialize NTP
+  IPAddress timeServerIP;                       // time.nist.gov NTP server address
+  const char* ntpServerName = "time.nist.gov";
   
   //get a random server from the pool
   WiFi.hostByName(ntpServerName, timeServerIP); 
 
   while (udp.parsePacket() > 0) ; // discard any previously received packets
-
-  #ifdef DEBUG
-    Serial.println("[INFO]\tTransmit NTP Request");
-  #endif
   
   sendNTPpacket(timeServerIP);
   uint32_t beginWait = millis();
-  while (millis() - beginWait < 1500) {
+  while (millis() - beginWait < 4000) {
     int size = udp.parsePacket();
     if (size >= NTP_PACKET_SIZE) {
-      #ifdef DEBUG
-        Serial.println("[INFO]\tReceive NTP Response");
-      #endif
+      DPRINTLN("[INFO]\tReceive NTP Response");
       udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
       unsigned long secsSince1900;
       // convert four bytes starting at location 40 to a long integer
@@ -192,47 +161,149 @@ time_t getNtpTime() {
       return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
     }
   }
-  #ifdef DEBUG
-    Serial.println("[INFO]\tNo NTP Response!");
-  #endif
+  DPRINTLN("[INFO]\tNo NTP Response!");
   return 0; // return 0 if unable to get the time
 }
 
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Show time
 
-void printDigits(int digits){
-  // utility for digital clock display: prints preceding colon and leading 0
-  Serial.print(":");
-  if(digits < 10)
-    Serial.print('0');
-  Serial.print(digits);
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Connect Wifi after Settings Transmission
+void WIFI_Connect() {
+
+  // http://www.esp8266.com/viewtopic.php?f=32&t=8286
+  
+  //WiFi.disconnect();
+  DPRINTLN("[INFO]\tVerbinden mit neuer SSID");
+  //WiFi.mode(WIFI_AP_STA);
+  WiFi.begin(holdssid.ssid.c_str(), holdssid.pass.c_str());
+
+
+  /*
+  // führt zu einem SOFT WDT RESET, wenn die Zeit > 4000
+  uint32_t beginWait = millis();
+  while (millis() - beginWait < 2000) {
+    if (WiFi.isConnected()) return 1;  
+  }
+  return 0;
+  */
+
+  /*
+  // Funktioniert leider nicht im Request, führt zu Exception
+  if (WiFi.waitForConnectResult() != WL_CONNECTED) return false;
+  return true;
+  */
 }
 
-void digitalClockDisplay(){
 
-  Serial.print("[INFO]\t");
-  Serial.print(hour());
-  printDigits(minute());
-  printDigits(second());
-  Serial.print(" ");
-  Serial.print(day());
-  Serial.print(".");
-  Serial.print(month());
-  Serial.print(".");
-  Serial.print(year()); 
-  Serial.println(); 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Scan possible SSIDs
+int scan_wifi() {
+
+  DPRINT("[INFO]\tWifi Scan: ");
+  
+  int n = WiFi.scanNetworks(false, false);
+  // Keine HIDDEN NETWORKS SCANNEN
+
+  // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/scan-class.md#scannetworks
+  // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/station-class.md#setautoreconnect
+  DPRINT(n);
+  DPRINTLN(" network(s) found");
+  
+  return n;
+  
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// WiFi Monitoring
+void wifimonitoring() {
+  if (holdssid.connect) {
+    if (millis() - holdssid.connect > 1000) {
+      WIFI_Connect();
+      holdssid.connect = false;
+    }
+  } else if (WiFi.status() == WL_CONNECTED & isAP > 0) {
+    // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
+    if (isAP == 1) disconnectAP = true;
+    isAP = 0;
+    
+    DPRINT("[INFO]\tWiFi connected to: ");
+    DPRINTLN(WiFi.SSID());
+    DPRINT("[INFO]\tIP address: ");
+    DPRINTLN(WiFi.localIP());
+
+    if (holdssid.hold) {
+      holdssid.hold = false;
+      const char* data[2];
+      data[0] = holdssid.ssid.c_str();
+      data[1] = holdssid.pass.c_str();
+      if (!modifyconfig(eWIFI,data)) 
+        DPRINTLN("[INFO]\tFailed to save wifi config");
+      else  
+        DPRINTLN("[INFO]\tWifi config saved");
+    }
+    
+    WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
+    
+  } else if (WiFi.status() != WL_CONNECTED & isAP == 0) {
+    // Nicht verbunden
+    DPRINTLN("[INFO]\tWLAN-Verbindung verloren!");
+    isAP = 2;
+
+    // Verlust nach Verbindungsaufbauversuch
+    if (holdssid.hold) {
+      holdssid.hold = false;
+      DPRINTLN("[INFO]\tMit ehemaligem Wifi verbinden");
+      WiFi.mode(WIFI_OFF);
+      WiFi.mode(WIFI_STA);
+      wifiMulti.run();        // mit vorherigem Wifi verbinden
+    }
+    
+  } else if (isAP == 0 & disconnectAP) {
+      uint8_t client_count = wifi_softap_get_station_num();
+      if (!client_count) {
+        disconnectAP = false;
+        WiFi.mode(WIFI_STA);
+        DPRINTLN("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
+      }
+  } //else if (isAP == 1)
+}
+
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Test
+struct station_info *stat_info;
+struct ip_addr *IPaddress;
+IPAddress address;
+
+void dumpClients()
+{
+  // https://github.com/esp8266/Arduino/issues/2681
+  //http://www.esp8266.com/viewtopic.php?f=32&t=5669&sid=a9f40b382551435102f1b5ea3b6ef37c&start=8
+  
+  DPRINT(" Clients:\r\n");
+  stat_info = wifi_softap_get_station_info();
+  //uint8_t client_count = wifi_softap_get_station_num()
+  while (stat_info != NULL)
+  {
+    IPaddress = &stat_info->ip;
+    address = IPaddress->addr;
+    DPRINT("\t");
+    DPRINT(address);
+    DPRINT("\r\n");
+    stat_info = STAILQ_NEXT(stat_info, next);
+  } 
 }
 
 
 #define FPM_SLEEP_MAX_TIME 0xFFFFFFF
-bool awaking = false;
 
 
 void stop_wifi() {
   
-  Serial.println("diconnecting wifi");
+  DPRINTLN("[INFO]\tStop Wifi");
   
   wifi_station_disconnect();
   wifi_set_opmode(NULL_MODE);
@@ -241,7 +312,7 @@ void stop_wifi() {
   wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
   delay(100); // leider notwendig
 
-  isAP = true;
+  isAP = 2;
 }
 
 void reconnect_wifi() {
@@ -251,26 +322,5 @@ void reconnect_wifi() {
   wifi_fpm_close();
   wifi_set_opmode(STATION_MODE);
   wifi_station_connect();
-
-  if (WiFi.status() != WL_CONNECTED) {
-    
-    WiFi.mode(WIFI_STA);
-    Serial.println("Reconnecting");
-    awaking = true;
-  }
-}
-
-void check_wifi() {
-
-  if (wifiMulti.run() == WL_CONNECTED) {
-    isAP = false;
-    awaking = false;
-    Serial.printf(" connected to %s\n", WiFi.SSID().c_str());
-  }
-  else { 
-    yield();
-    //isAP = true;
-  }
-
 }
 

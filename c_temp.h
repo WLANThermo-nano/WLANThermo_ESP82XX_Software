@@ -14,12 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
-    HISTORY:
-    0.1.00 - 2016-12-30 initial version
-    0.2.00 - 2016-12-30 implement ChannelData
-    0.2.01 - 2017-01-04 add inactive channels
-    0.2.02 - 2017-01-04 add temperature unit
-    0.2.03 - 2017-01-06 add limits transformation
+    HISTORY: Please refer Github History
     
  ****************************************************/
 
@@ -31,7 +26,10 @@ float calcT(int r, byte typ){
   float Rmess = 47;
   float a, b, c, Rn;
 
-  if (r < 2) return INACTIVEVALUE;        // Kanal ist mit GND gebrückt
+  // kleine Abweichungen an GND verursachen Messfehler von wenigen Digitalwerten
+  // daher werden nur Messungen mit einem Digitalwert von mind. 10 ausgewertet,
+  // das entspricht 5 mV
+  if (r < 10) return INACTIVEVALUE;        // Kanal ist mit GND gebrückt
 
   switch (typ) {
   case 0:  // Maverik
@@ -53,6 +51,9 @@ float calcT(int r, byte typ){
   case 5:  // NTC 5K3A1B (orange Kopf)
     Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243;  
     break; 
+  case 6: // NTC 47K MOUSER aus B25/50 = 4050
+    Rn = 47; a = 0.003354; b = 0.0002469; c = 0;
+    break;
    
   default:  
     return INACTIVEVALUE;
@@ -74,18 +75,18 @@ void get_Temperature() {
 
     float value;
   
-    if (CHANNELS > 3 && i == CHANNELS-1) {
+    //if (CHANNELS > 3 && i == CHANNELS-1) {
       // Letzter Kanal ist immer Umgebungstemperatur und der ist Kanal 7
-      value = calcT(get_adc_average(6),ch[i].typ);
-    }
+      //value = calcT(get_adc_average(6),ch[i].typ);
+    //}
     // NTC der Reihe nach auslesen
-    else  {
+    //else  {
       value = calcT(get_adc_average(i),ch[i].typ);
-    }
+    //}
  
     // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
     // KTYPE wandert dann auf Kanal 5
-    #if KTYPE
+    #ifdef KTYPE
     if (i == 4) value = get_thermocouple();
     #endif
 
@@ -107,9 +108,6 @@ void get_Temperature() {
     }
     else ch[i].match = 0;
 
-    // Check limit exceeded
-    if ((value > max || value < min) && value!=INACTIVEVALUE) ch[i].isalarm = true;
-    else ch[i].isalarm = false;
   }
 }
 
@@ -124,10 +122,12 @@ void set_Channels() {
     ch[i].temp = INACTIVEVALUE;
     ch[i].match = 0;
     ch[i].isalarm = false;
+    ch[i].showalarm = false;
+    ch[i].show = false;
   }
 
   // Wenn KTYPE muss Kanal 5 auch KTYPE sein
-  #if KTYPE
+  #ifdef KTYPE
   ch[4].typ = 6;
   #endif
 
@@ -151,7 +151,7 @@ void transform_limits() {
       max += 32;
       min *= 9.0;
       min /= 5.0;
-      min += 32;  
+      min += 32; 
     } else {                              // Transform to °C
       max -= 32;
       max *= 5.0;
