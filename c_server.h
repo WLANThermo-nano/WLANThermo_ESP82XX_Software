@@ -18,11 +18,14 @@
     
  ****************************************************/
 
-
 AsyncWebServer server(80);        // https://github.com/me-no-dev/ESPAsyncWebServer
 
 const char* www_username = "admin";
 const char* www_password = "admin";
+
+// Beispiele:
+// https://github.com/spacehuhn/wifi_ducky/blob/master/esp8266_wifi_duck/esp8266_wifi_duck.ino
+
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -150,21 +153,262 @@ void handleData(AsyncWebServerRequest *request, bool www) {
   } else root.printTo(Serial);
 }
 
+/*
+// Funktioniert leider nur bis zu einer gewissen Laenge (2741 Zeichen)
+void handleLog(AsyncWebServerRequest *request, bool www) {
 
-
-boolean sendmore(uint8_t *buffer, size_t maxLen) {
-  
-      buffer[0] = 101;
-      buffer[1] = 101;
-      buffer[2] = '\0';    
-    return 1;
+  StreamString output;
+  getLog(&output,0);
+  request->send(output, "application/json", output.length());
 }
+*/
+
+/*
+void handlePlot(AsyncWebServerRequest *request, bool www) {
+    //unsigned long ulSizeList = MakeList(&client,false); // get size of list first
+
+    AsyncResponseStream *response = request->beginResponseStream("text/html");
+    
+    response->print(F("<html>\n<head>\n<script type=\"text/javascript\" src=\"https://www.gstatic.com/charts/loader.js\"></script>\n"));
+    response->print(F("<script type=\"text/javascript\">\n google.charts.load('current', {packages: ['corechart', 'line']});\ngoogle.charts.setOnLoadCallback(drawChart);\n"));
+    response->print(F("function drawChart() {\nvar data = new google.visualization.DataTable();\ndata.addColumn('datetime','name');\ndata.addColumn('number','Pitmaster');\ndata.addColumn('number','Soll');\n"));
+    response->print(F("data.addColumn('number','Kanal1');\n"));
+    response->print(F("data.addRows([\n"));
+
+    int sta = (log_count > 20)?log_count-20:0;
+    
+    for (int j=sta; j < log_count; j++) {
+
+      response->print("[");
+      response->print(newDate(mylog[j].timestamp));
+      response->print(",");
+      response->print(mylog[j].pitmaster);
+      response->print(",100");
+      
+      for (int i=0; i < 1; i++)  {
+        response->print(",");
+        if (mylog[j].tem[i]/10 == INACTIVEVALUE)
+          response->print(0);
+        else
+          response->print(mylog[j].tem[i]/10.0);   
+      } 
+      response->print("],\n");
+    }
+
+    // part 2 of response - after the big list
+    response->print(F("]);\nvar options = {\nhAxis: {gridlines: {color: 'white', count: 5}},\nwidth: 700,\nheight: 400,\ncurveType: 'function',\n"));
+    response->print(F("vAxes:{\n0:{title:'Pitmaster in %',ticks:[0,20,40,60,80,100],viewWindow:{min: 0},gridlines:{color:'transparent'},titleTextStyle:{italic:0}},\n1: {title: 'Temperatur in C',maxValue: 120, minValue: 0, gridlines: {color: 'transparent'}, titleTextStyle: {italic:0}},},\n"));
+    response->print(F("series:{\n0: {targetAxisIndex: 0, color: 'black'},\n1: {targetAxisIndex: 1, color: 'red', lineDashStyle: [4,4]},\n2: {targetAxisIndex: 1, color: '#6495ED'},\n},\n};\n"));
+    response->print(F("var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));\nchart.draw(data, options);}\n</script>\n</head>\n"));
+    response->print(F("<body>\n<font color=\"#000000\">\n<body bgcolor=\"#d0d0f0\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">"));
+    response->print(F("\n<div id=\"curve_chart\"></div>\n</body>\n</html>"));
+    
+    // Send the response to the client - delete strings after use to keep mem low
+     
+    
+    //MakeList(&client,true);
+
+    request->send(response);
+
+}
+*/
+int dothis;
+
+void handlePlot(AsyncWebServerRequest *request, bool www) {
+    //unsigned long ulSizeList = MakeList(&client,false); // get size of list first
+
+    dothis = (log_count<MAXLOGCOUNT)?log_count:MAXLOGCOUNT;
+    
+    AsyncWebServerResponse *response = request->beginChunkedResponse("text/html", [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+    
+    StreamString output;
+    Serial.println(maxLen);
+    
+    if (index == 0) {
+      Serial.print("first: ");
+      output.print(F("<html>\n<head>\n<script type=\"text/javascript\" src=\"https://www.gstatic.com/charts/loader.js\"></script>\n"));
+      output.print(F("<script type=\"text/javascript\">\n google.charts.load('current', {packages: ['corechart', 'line']});\ngoogle.charts.setOnLoadCallback(drawChart);\n"));
+      output.print(F("function drawChart() {\nvar data = new google.visualization.DataTable();\ndata.addColumn('datetime','name');\ndata.addColumn('number','Pitmaster');\ndata.addColumn('number','Soll');\n"));
+      output.print(F("data.addColumn('number','Kanal1');\n"));
+      output.print(F("data.addRows([\n"));
+      
+      Serial.println(output.length());
+      
+      if (output.length() < maxLen) {
+        output.getBytes(buffer, maxLen); 
+        return output.length();
+      } else return 0;
+      
+    } else if (dothis > 0)  {
+
+
+      while (output.length()+50 < maxLen && dothis != 0) {  
+        
+        int j;
+        if (log_count<MAXLOGCOUNT) j = log_count - dothis;
+        else j = MAXLOGCOUNT - dothis;     // ACHTUNG: log_count verändert sich, könnte blöd werden
+        
+        //Serial.print(log_count); Serial.print(" | ");
+        //Serial.print(log_count%MAXLOGCOUNT); Serial.print(" | ");
+        //Serial.println(dothis);
+        
+        output.print(F("["));
+        output.print(newDate(mylog[j].timestamp));
+        output.print(F(","));
+        output.print(mylog[j].pitmaster);
+        output.print(",100");
+      
+        for (int i=0; i < 1; i++)  {
+          output.print(",");
+          if (mylog[j].tem[i]/10 == INACTIVEVALUE)
+            output.print(0);
+          else
+            output.print(mylog[j].tem[i]/10.0);   
+        } 
+        output.print("],\n");
+        
+        dothis--;
+      }
+      Serial.print("next: ");
+      Serial.println(output.length());
+      
+      output.getBytes(buffer, maxLen); 
+      return output.length();
+
+    } else if (dothis == 0) {
+
+      Serial.print("last: ");
+      
+      output.print(F("]);\nvar options = {\nhAxis: {gridlines: {color: 'white', count: 5}},\nwidth: 700,\nheight: 400,\ncurveType: 'function',\n"));
+      output.print(F("vAxes:{\n0:{title:'Pitmaster in %',ticks:[0,20,40,60,80,100],viewWindow:{min: 0},gridlines:{color:'transparent'},titleTextStyle:{italic:0}},\n1: {title: 'Temperatur in C', minValue: 0, gridlines: {color: 'transparent'}, titleTextStyle: {italic:0}},},\n"));
+      output.print(F("series:{\n0: {targetAxisIndex: 0, color: 'black'},\n1: {targetAxisIndex: 1, color: 'red', lineDashStyle: [4,4]},\n2: {targetAxisIndex: 1, color: '#6495ED'},\n},\n};\n"));
+      output.print(F("var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));\nchart.draw(data, options);}\n</script>\n</head>\n"));
+      output.print(F("<body>\n<font color=\"#000000\">\n<body bgcolor=\"#d0d0f0\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">"));
+      output.print(F("\n<div id=\"curve_chart\"></div>\n</body>\n</html>"));
+
+      Serial.println(output.length());
+      dothis--;
+      if (output.length() < maxLen) {
+        output.getBytes(buffer, maxLen); 
+        return output.length();
+      } else  return 0;
+
+      
+    } else {
+      dothis = 2;
+      return 0;
+    }
+    
+
+/*
+    
+    
+    
+
+    // part 2 of response - after the big list
+    
+    
+    // Send the response to the client - delete strings after use to keep mem low
+     
+    
+    //MakeList(&client,true);
+
+*/
+    });
+    
+    request->send(response);
+
+}
+
+
+void handleLog(AsyncWebServerRequest *request, bool www) {
+
+  File f = SPIFFS.open("/log.html", "w");
+  
+  getLog(&f,3);
+  
+  f.close();
+  
+  request->send(SPIFFS, "/log.html", String(), true);
+  
+  SPIFFS.remove("/log.txt");
+  Serial.println("LOG");
+
+}
+
+
+/*
+void handleLog(AsyncWebServerRequest *request, bool www) {
+
+  //StreamString output;
+  //getLog(&output,0);
+
+ // Serial.println(output.length());
+  
+  AsyncWebServerResponse *response = request->beginChunkedResponse("text/plain", [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+
+    // wenn in der lambda Funktion dann werden nur etwa 3,3kB übertragen
+    StreamString output;
+  getLog(&output,0);
+  
+    size_t Len = output.length();
+    size_t leftToWrite = Len - index;
+    
+    if(! leftToWrite)
+     return 0;//end of transfer
+    size_t willWrite = (leftToWrite > maxLen)?maxLen:leftToWrite;
+
+    for (int i = 0; i < willWrite; i++) {
+      buffer[i] = output[index+i];
+    }
+    return willWrite;
+  });
+  
+
+  // Als log.txt speichern
+  char buf[26+7];
+  snprintf(buf, sizeof (buf), "attachment; filename=\"log.txt\"");
+  response->addHeader("Content-Disposition", buf);
+
+  //response->addHeader("Server","ESP Async Web Server");
+  request->send(response);
+ 
+}
+*/
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
-void handleLog(AsyncWebServerRequest *request, bool www) {
+void handleLog2(AsyncWebServerRequest *request, bool www) {
 
-  
+  //StreamString output;
+  //output.print("Hallo");
+
+
+
+/* 
+    StreamString output;
+      if(output.reserve(8192)){
+
+        for (int j=0; j < log_count; j++) {
+          for (int i=0; i < CHANNELS; i++)  {
+            if (mylog[j].tem[i]/10 == INACTIVEVALUE)
+              output.print(0);
+            else
+              output.print(mylog[j].tem[i]/10.0);
+            output.print(";");
+          }
+          output.print(mylog[j].pitmaster);
+          output.print(";");
+          output.print(digitalClockDisplay(mylog[j].timestamp));
+          output.print("\r\n");
+      }
+
+      } else {
+        output.print("Fehler");
+      }
+      request->send(200, "text/html", (String)output);
+ 
+ *   
   AsyncResponseStream *response = request->beginResponseStream("text/html");
  
   for (int j=0; j < log_count; j++) {
@@ -183,7 +427,7 @@ void handleLog(AsyncWebServerRequest *request, bool www) {
 
   request->send(response);
   
-/*
+
   AsyncWebServerResponse *response = request->beginResponse("text/plain", 16, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
   //Write up to "maxLen" bytes into "buffer" and return the amount written.
   //index equals the amount of bytes that have been already sent
@@ -197,7 +441,6 @@ void handleLog(AsyncWebServerRequest *request, bool www) {
   request->send(response);
 */
 }
-
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -436,6 +679,15 @@ void server_setup() {
     server.on("/log", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handleLog(request, true);
     });
+
+    server.on("/plot", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      handlePlot(request, true);
+    });
+    
+    server.on("/indexhtml", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      request->send(SPIFFS, "/index.html", String(), true);
+    });
+    
     
     // REQUEST: /settings
     server.on("/settings", HTTP_POST, [](AsyncWebServerRequest *request) { 

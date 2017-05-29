@@ -396,6 +396,11 @@ float autotunePID() {
       pid[pitmaster.typ].Kp = autotune.Kp;
       pid[pitmaster.typ].Ki = autotune.Ki;
       pid[pitmaster.typ].Kd = autotune.Kd;
+
+      
+      pid[pitmaster.typ].Kp_a = autotune.Kp_a;
+      pid[pitmaster.typ].Ki_a = autotune.Ki_a;
+      pid[pitmaster.typ].Kd_a = autotune.Kd_a;
       DPRINTLN("[AUTOTUNE]\tParameters saved!");
     }
     return 0;

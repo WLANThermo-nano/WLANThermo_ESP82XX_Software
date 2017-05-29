@@ -91,20 +91,18 @@ void check_sector() {
 
   // https://github.com/esp8266/Arduino/blob/master/cores/esp8266/Esp.cpp
   freeSpaceStart = (ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));
-  freeSpaceEnd = (uint32_t)&_SPIFFS_start - 0x40200000;
-
+  freeSpaceEnd = (uint32_t)&_SPIFFS_start - 0x40200000 - FLASH_SECTOR_SIZE;
+  log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
+  
   DPRINT("[INFO]\tInitalize SKETCH at Sector: 0x01 (");
   DPRINT((ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1)/1024);
   DPRINTLN("K)");
   DPRINT("[INFO]\tInitalize DATALG at Sector: 0x");
-  DPRINT(freeSpaceStart/SPI_FLASH_SEC_SIZE,HEX);
+  DPRINT(log_sector,HEX);
   DPRINT(" (");
   DPRINT((freeSpaceEnd - freeSpaceStart)/1024, DEC);  // ESP.getFreeSketchSpace()
   DPRINTLN("K)");
-  
-  log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
     
-  //uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
   //DPRINTLN(ESP.getFlashChipRealSize()/1024);
   //DPRINTLN(ESP.getFlashChipSize() - 0x4000);
     

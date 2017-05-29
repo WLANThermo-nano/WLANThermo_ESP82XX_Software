@@ -80,15 +80,9 @@ void read_serial(char *buffer) {
   }
 
   else if (strcmp(buffer, "log")==0) {
-    for (int j=0; j < log_count; j++) {
-      for (int i=0; i < CHANNELS; i++)  {
-        Serial.print(mylog[j].tem[i]/10.0);
-        Serial.print(";");
-      }
-      Serial.print(mylog[j].pitmaster);
-      Serial.print(";");
-      Serial.println(digitalClockDisplay(mylog[j].timestamp));
-    }
+    StreamString output;
+    getLog(&output,0);
+    Serial.print(output);
     return;
   }
 

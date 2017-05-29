@@ -191,13 +191,25 @@ bool loadconfig(byte count) {
       if (!checkjson(json,SYSTEM_FILE)) return false;
   
       const char* author = json["AUTHOR"];
-      host = json["host"].asString();
-      doAlarm = json["hwalarm"];
-      //json["ap"];
-      language = json["lang"].asString();
-      timeZone = json["utc"];
-      battery.max = json["batmax"];
-      battery.min = json["batmin"];
+      if (json.containsKey("host")) host = json["host"].asString();
+      else return false;
+      if (json.containsKey("hwalarm")) doAlarm = json["hwalarm"];
+      else return false;
+      if (json.containsKey("lang")) language = json["lang"].asString();
+      else return false;
+      if (json.containsKey("utc")) timeZone = json["utc"];
+      else return false;
+      if (json.containsKey("batmax")) battery.max = json["batmax"];
+      else return false;
+      if (json.containsKey("batmin")) battery.min = json["batmin"];
+      else return false;
+      if (json.containsKey("logsec")) {
+        int sector = json["logsec"];
+        if (sector > log_sector) log_sector = sector;
+        // oberes limit wird spaeter abgefragt
+      }
+      else return false;
+      Serial.println(log_sector,HEX);
     }
     break;
     
@@ -302,7 +314,7 @@ bool setconfig(byte count, const char* data[2]) {
       JsonObject& _pid = json.createNestedObject();
 
       // Default Pitmaster
-      pid[0] = {"SSR", 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 3000, 0, 0, 0};
+      pid[0] = {"SSR", 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 1000, 0, 0, 0};
       pidsize = 0;  // Reset counter
       
       _pid["name"]    = pid[pidsize].name;
@@ -347,6 +359,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["utc"] = 1;
       json["batmax"] = BATTMAX;
       json["batmin"] = BATTMIN;
+      json["logsec"] = log_sector;
     
       size_t size = json.measureLength() + 1;
       clearEE(250,1500);  // Bereich reinigen
@@ -523,6 +536,7 @@ bool modifyconfig(byte count, const char* data[12]) {
 
       json["AUTHOR"] = alt["AUTHOR"];
       //json["VERSION"] = CHANNELJSONVERSION;
+      json["log_sector"] = alt["log_sector"];
       
       json["host"] = host;
       json["hwalarm"] = doAlarm;
@@ -612,11 +626,10 @@ void start_fs() {
 
 void write_flash(uint32_t _sector) {
 
-  //_sector = 0xD6;            // 0x81 bis 0xD6
   noInterrupts();
   if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK) {  // ESP.flashEraseSector
     spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) mylog, sizeof(mylog));  //ESP.flashWrite
-    DPRINT("[INFO]\tSpeicherung im Sector: ");
+    DPRINT("[LOG]\tSpeicherung im Sector: ");
     DPRINTLN(_sector, HEX);
   } else DPRINTLN("[INFO]\tFehler beim Speichern im Flash");
   interrupts(); 
@@ -630,6 +643,136 @@ void read_flash(uint32_t _sector) {
   //spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) meinflash, sizeof(meinflash));
   interrupts();
 }
+
+void getLog(StreamString *output,int maxlog) {
+
+  //StreamString output;
+
+  int logstart;
+  int logend;
+  int rest = log_count%MAXLOGCOUNT;
+  int saved = (log_count-rest)/MAXLOGCOUNT;    // Anzahl an gespeicherten Sektoren
+  
+  if (log_count < MAXLOGCOUNT+1) {             // noch alle Daten im Kurzspeicher
+    logstart = 0;
+    logend = log_count;
+  } else {                                    // Daten aus Kurzspeicher und Archiv
+
+    saved = constrain(saved, 0, maxlog);      // maximal angezeigte Logdaten
+    int savedend = saved;
+    
+    if (rest == 0) {                          // noch ein Logpaket im Kurzspeicher
+      logstart = 0;                           
+      savedend--;
+    } else  logstart = MAXLOGCOUNT - rest;   // nur Rest aus Kurzspeicher holen
+    
+    logend = MAXLOGCOUNT;
+
+    for (int k = 0; k < savedend; k++) {
+      Serial.println(log_sector - saved + k,HEX);
+      /*
+      read_flash(log_sector - saved + k);
+
+      for (int j = 0; j < MAXLOGCOUNT; j++) {
+        for (int i=0; i < CHANNELS; i++)  {
+          output.print(archivlog[j].tem[i]/10.0);
+          output.print(";");
+        }
+        output.print(archivlog[j].pitmaster);
+        output.print(";");
+        output.print(digitalClockDisplay(archivlog[j].timestamp));
+        output.print("\r\n");
+      }
+      output.print("\r\n");
+      */
+    }
+  }
+
+  // Kurzspeicher auslesen
+  for (int j = logstart; j < logend; j++) {
+    for (int i=0; i < CHANNELS; i++)  {
+      output->print(mylog[j].tem[i]/10.0);
+      output->print(";");
+    }
+    output->print(mylog[j].pitmaster);
+    output->print(";");
+    output->print(digitalClockDisplay(mylog[j].timestamp));
+    output->print("\r\n");
+  }
+
+    /* Test
+
+        read_flash(log_sector-1);
+        for (int j=0; j<10; j++) {
+          int16_t test = archivlog[j].tem[0];
+          Serial.print(test/10.0);
+          Serial.print(" ");
+        }
+    */
+
+   
+  //Serial.print(output);
+    
+
+    
+}
+
+void getLog(File *output,int maxlog) {
+
+  int logstart;
+  int logend;
+  int rest = log_count%MAXLOGCOUNT;
+  int saved = (log_count-rest)/MAXLOGCOUNT;    // Anzahl an gespeicherten Sektoren
+  
+  if (log_count < MAXLOGCOUNT+1) {             // noch alle Daten im Kurzspeicher
+    logstart = 0;
+    logend = log_count;
+  } else {                                    // Daten aus Kurzspeicher und Archiv
+
+    saved = constrain(saved, 0, maxlog);      // maximal angezeigte Logdaten
+    int savedend = saved;
+    
+    if (rest == 0) {                          // noch ein Logpaket im Kurzspeicher
+      logstart = 0;                           
+      savedend--;
+    } else  logstart = MAXLOGCOUNT - rest;   // nur Rest aus Kurzspeicher holen
+    
+    logend = MAXLOGCOUNT;
+
+    for (int k = 0; k < savedend; k++) {
+      Serial.println(log_sector - saved + k,HEX);
+      
+      read_flash(log_sector - saved + k);
+
+      for (int j = 0; j < MAXLOGCOUNT; j++) {
+        for (int i=0; i < CHANNELS; i++)  {
+          output->print(archivlog[j].tem[i]/10.0);
+          output->print(";");
+        }
+        output->print(archivlog[j].pitmaster);
+        output->print(";");
+        output->print(digitalClockDisplay(archivlog[j].timestamp));
+        output->print("\r\n");
+      }
+      output->print("\r\n");
+      
+    }
+  }
+
+  // Kurzspeicher auslesen
+  for (int j = logstart; j < logend; j++) {
+    for (int i=0; i < CHANNELS; i++)  {
+      output->print(mylog[j].tem[i]/10.0);
+      output->print(";");
+    }
+    output->print(mylog[j].pitmaster);
+    output->print(";");
+    output->print(digitalClockDisplay(mylog[j].timestamp));
+    output->print("\r\n");
+  }
+    
+}
+
 
 
 
