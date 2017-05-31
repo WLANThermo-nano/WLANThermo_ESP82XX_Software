@@ -452,6 +452,7 @@
 			jsonresponse.channel[channel].max = document.getElementById('temp_max').value;
 			jsonresponse.channel[channel].name = document.getElementById('channel_name').value;
 			jsonresponse.channel[channel].typ = document.getElementById('sensor').value;
+			jsonresponse.channel[channel].alarm = document.getElementById('webalarm').checked;
 			//alert(jsonresponse.channel[channel].min);
 			var data = JSON.stringify(jsonresponse.channel[channel]);
 				//alert(data);
@@ -492,15 +493,11 @@
 	}	
 	
 	function setSystem(){
-		if (document.getElementById('hwalarm').checked == true){
-			hwalarm = true;
-		}else{
-			hwalarm = false;
-		}
 		host = document.getElementById('hostname').value;
 		utc = document.getElementById('timezone').value;
 		language = document.getElementById('language').value;
 		unit = document.getElementById('unit').value;
+		hwalarm = document.getElementById('hwalarm').checked;
 		var data='{"hwalarm":"' + hwalarm + '","host":"' + host + '","utc":' + utc + ',"language":"' + language + '","unit":"' + unit + '"}';
 		
 		//alert(data);
