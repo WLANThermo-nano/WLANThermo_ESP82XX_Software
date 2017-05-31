@@ -34,7 +34,7 @@ bool loadfile(const char* filename, File& configFile) {
   configFile = SPIFFS.open(filename, "r");
   if (!configFile) {
     
-    DPRINT("[INFO]\tFailed to open: ");
+    DPRINTP("[INFO]\tFailed to open: ");
     DPRINTLN(filename);
     
     return false;
@@ -43,7 +43,7 @@ bool loadfile(const char* filename, File& configFile) {
   size_t size = configFile.size();
   if (size > 1024) {
     
-    DPRINT("[INFO]\tFile size is too large: ");
+    DPRINTP("[INFO]\tFile size is too large: ");
     DPRINTLN(filename);
     
     return false;
@@ -60,7 +60,7 @@ bool savefile(const char* filename, File& configFile) {
   
   if (!configFile) {
     
-    DPRINT("[INFO]\tFailed to open file for writing: ");
+    DPRINTP("[INFO]\tFailed to open file for writing: ");
     DPRINTLN(filename);
     
     return false;
@@ -75,7 +75,7 @@ bool checkjson(JsonVariant json, const char* filename) {
   
   if (!json.success()) {
     
-    DPRINT("[INFO]\tFailed to parse: ");
+    DPRINTP("[INFO]\tFailed to parse: ");
     DPRINTLN(filename);
     
     return false;
@@ -191,13 +191,24 @@ bool loadconfig(byte count) {
       if (!checkjson(json,SYSTEM_FILE)) return false;
   
       const char* author = json["AUTHOR"];
-      host = json["host"].asString();
-      doAlarm = json["hwalarm"];
-      //json["ap"];
-      language = json["lang"].asString();
-      timeZone = json["utc"];
-      battery.max = json["batmax"];
-      battery.min = json["batmin"];
+      if (json.containsKey("host")) host = json["host"].asString();
+      else return false;
+      if (json.containsKey("hwalarm")) doAlarm = json["hwalarm"];
+      else return false;
+      if (json.containsKey("lang")) language = json["lang"].asString();
+      else return false;
+      if (json.containsKey("utc")) timeZone = json["utc"];
+      else return false;
+      if (json.containsKey("batmax")) battery.max = json["batmax"];
+      else return false;
+      if (json.containsKey("batmin")) battery.min = json["batmin"];
+      else return false;
+      if (json.containsKey("logsec")) {
+        int sector = json["logsec"];
+        if (sector > log_sector) log_sector = sector;
+        // oberes limit wird spaeter abgefragt
+      }
+      else return false;
     }
     break;
     
@@ -285,7 +296,7 @@ bool setconfig(byte count, const char* data[2]) {
       
       size_t size = json.measureLength() + 1;
       if (size > 100) {
-        DPRINTLN("[INFO]\tZu viele THINGSPEAK Daten!");
+        DPRINTPLN("[INFO]\tZu viele THINGSPEAK Daten!");
         return false;
       } else {
         clearEE(100,300);  // Bereich reinigen
@@ -302,7 +313,7 @@ bool setconfig(byte count, const char* data[2]) {
       JsonObject& _pid = json.createNestedObject();
 
       // Default Pitmaster
-      pid[0] = {"SSR", 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 3000, 0, 0, 0};
+      pid[0] = {"SSR", 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 1000, 0, 0, 0};
       pidsize = 0;  // Reset counter
       
       _pid["name"]    = pid[pidsize].name;
@@ -321,7 +332,7 @@ bool setconfig(byte count, const char* data[2]) {
       
       size_t size = json.measureLength() + 1;
       if (size > 600) {
-        DPRINTLN("[INFO]\tZu viele PITMASTER Daten!");
+        DPRINTPLN("[INFO]\tZu viele PITMASTER Daten!");
         return false;
       } else {
         clearEE(600,900);  // Bereich reinigen
@@ -347,6 +358,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["utc"] = 1;
       json["batmax"] = BATTMAX;
       json["batmin"] = BATTMIN;
+      json["logsec"] = log_sector;
     
       size_t size = json.measureLength() + 1;
       clearEE(250,1500);  // Bereich reinigen
@@ -455,7 +467,7 @@ bool modifyconfig(byte count, const char* data[12]) {
       size_t size = json.measureLength() + 1;
       
       if (size > 300) {
-        DPRINTLN("[INFO]\tZu viele WIFI Daten!");
+        DPRINTPLN("[INFO]\tZu viele WIFI Daten!");
         return false;
       } else {
         static char buffer[300];
@@ -499,7 +511,7 @@ bool modifyconfig(byte count, const char* data[12]) {
       // Speichern
       size_t size = json.measureLength() + 1;
       if (size > 600) {
-        DPRINTLN("[INFO]\tZu viele PITMASTER Daten!");
+        DPRINTPLN("[INFO]\tZu viele PITMASTER Daten!");
         return false;
       } else {
         static char buffer[600];
@@ -523,7 +535,7 @@ bool modifyconfig(byte count, const char* data[12]) {
 
       json["AUTHOR"] = alt["AUTHOR"];
       //json["VERSION"] = CHANNELJSONVERSION;
-      
+            
       json["host"] = host;
       json["hwalarm"] = doAlarm;
       json["ap"] = APNAME;
@@ -531,6 +543,7 @@ bool modifyconfig(byte count, const char* data[12]) {
       json["utc"] = timeZone;
       json["batmax"] = battery.max;
       json["batmin"] = battery.min;
+      json["logsec"] = log_sector;
 
       // Speichern
       size_t size = json.measureLength() + 1;
@@ -555,50 +568,50 @@ bool modifyconfig(byte count, const char* data[12]) {
 void start_fs() {
   
   if (!SPIFFS.begin()) {
-    DPRINTLN("[INFO]\tFailed to mount file system");
+    DPRINTPLN("[INFO]\tFailed to mount file system");
     return;
   }
 
-  DPRINT("[INFO]\tInitalize SPIFFS at Sector: 0x");
+  DPRINTP("[INFO]\tInitalize SPIFFS at Sector: 0x");
   DPRINT((((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE), HEX);
-  DPRINT(" (");
+  DPRINTP(" (");
   DPRINT(((uint32_t)&_SPIFFS_end - (uint32_t)&_SPIFFS_start)/1024, DEC);
-  DPRINTLN("K)");
+  DPRINTPLN("K)");
   // 0x40200000 ist der Speicherort des SPI FLASH in der Memory Map
 
   // CHANNEL
   if (!loadconfig(eCHANNEL)) {
-    DPRINTLN("[INFO]\tFailed to load channel config");
+    DPRINTPLN("[INFO]\tFailed to load channel config");
     setconfig(eCHANNEL,{});  // Speicherplatz vorbereiten
     ESP.restart();
-  } else DPRINTLN("[INFO]\tChannel config loaded");
+  } else DPRINTPLN("[INFO]\tChannel config loaded");
 
 
   // WIFI
   if (!loadconfig(eWIFI)) {
-    DPRINTLN("[INFO]\tFailed to load wifi config");
+    DPRINTPLN("[INFO]\tFailed to load wifi config");
     setconfig(eWIFI,{});  // Speicherplatz vorbereiten
-  } else DPRINTLN("[INFO]\tWifi config loaded");
+  } else DPRINTPLN("[INFO]\tWifi config loaded");
 
 
   // THINGSPEAK
-  if (!loadconfig(eTHING)) DPRINTLN("[INFO]\tFailed to load Thingspeak config");
-  else DPRINTLN("[INFO]\tThingspeak config loaded");
+  if (!loadconfig(eTHING)) DPRINTPLN("[INFO]\tFailed to load Thingspeak config");
+  else DPRINTPLN("[INFO]\tThingspeak config loaded");
 
 
   // PITMASTER
   if (!loadconfig(ePIT)) {
-    DPRINTLN("[INFO]\tFailed to load pitmaster config");
+    DPRINTPLN("[INFO]\tFailed to load pitmaster config");
     setconfig(ePIT,{});  // Reset pitmaster config
-  } else DPRINTLN("[INFO]\tPitmaster config loaded");
+  } else DPRINTPLN("[INFO]\tPitmaster config loaded");
 
 
   // SYSTEM
   if (!loadconfig(eSYSTEM)) {
-    DPRINTLN("[INFO]\tFailed to load system config");
+    DPRINTPLN("[INFO]\tFailed to load system config");
     setconfig(eSYSTEM,{});  // Speicherplatz vorbereiten
     ESP.restart();
-  } else DPRINTLN("[INFO]\tSystem config loaded");
+  } else DPRINTPLN("[INFO]\tSystem config loaded");
 
 }
 
@@ -612,13 +625,12 @@ void start_fs() {
 
 void write_flash(uint32_t _sector) {
 
-  //_sector = 0xD6;            // 0x81 bis 0xD6
   noInterrupts();
   if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK) {  // ESP.flashEraseSector
     spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) mylog, sizeof(mylog));  //ESP.flashWrite
-    DPRINT("[INFO]\tSpeicherung im Sector: ");
+    DPRINTP("[LOG]\tSpeicherung im Sector: ");
     DPRINTLN(_sector, HEX);
-  } else DPRINTLN("[INFO]\tFehler beim Speichern im Flash");
+  } else DPRINTPLN("[INFO]\tFehler beim Speichern im Flash");
   interrupts(); 
 }
 
@@ -630,6 +642,139 @@ void read_flash(uint32_t _sector) {
   //spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) meinflash, sizeof(meinflash));
   interrupts();
 }
+
+void getLog(StreamString *output,int maxlog) {
+
+  //StreamString output;
+
+  int logstart;
+  int logend;
+  int rest = log_count%MAXLOGCOUNT;
+  int saved = (log_count-rest)/MAXLOGCOUNT;    // Anzahl an gespeicherten Sektoren
+  
+  if (log_count < MAXLOGCOUNT+1) {             // noch alle Daten im Kurzspeicher
+    logstart = 0;
+    logend = log_count;
+  } else {                                    // Daten aus Kurzspeicher und Archiv
+
+    saved = constrain(saved, 0, maxlog);      // maximal angezeigte Logdaten
+    int savedend = saved;
+    
+    if (rest == 0) {                          // noch ein Logpaket im Kurzspeicher
+      logstart = 0;                           
+      savedend--;
+    } else  logstart = MAXLOGCOUNT - rest;   // nur Rest aus Kurzspeicher holen
+    
+    logend = MAXLOGCOUNT;
+
+    for (int k = 0; k < savedend; k++) {
+      Serial.println(log_sector - saved + k,HEX);
+
+      /*
+      read_flash(log_sector - saved + k);
+
+      for (int j = 0; j < MAXLOGCOUNT; j++) {
+        for (int i=0; i < CHANNELS; i++)  {
+          output->print(archivlog[j].tem[i]/10.0);
+          output->print(";");
+        }
+        output->print(archivlog[j].pitmaster);
+        output->print(";");
+        output->print(digitalClockDisplay(archivlog[j].timestamp));
+        output->print("\r\n");
+      }
+      output->print("\r\n");
+      */
+    }
+  }
+
+  // Kurzspeicher auslesen
+  for (int j = logstart; j < logend; j++) {
+    for (int i=0; i < CHANNELS; i++)  {
+      output->print(mylog[j].tem[i]/10.0);
+      output->print(";");
+    }
+    output->print(mylog[j].pitmaster);
+    output->print(";");
+    output->print(digitalClockDisplay(mylog[j].timestamp));
+    output->print("\r\n");
+  }
+
+    /* Test
+
+        read_flash(log_sector-1);
+        for (int j=0; j<10; j++) {
+          int16_t test = archivlog[j].tem[0];
+          Serial.print(test/10.0);
+          Serial.print(" ");
+        }
+    */
+
+   
+  //Serial.print(output);
+    
+
+    
+}
+
+void getLog(File *output,int maxlog) {
+
+  int logstart;
+  int logend;
+  int rest = log_count%MAXLOGCOUNT;
+  int saved = (log_count-rest)/MAXLOGCOUNT;    // Anzahl an gespeicherten Sektoren
+  
+  if (log_count < MAXLOGCOUNT+1) {             // noch alle Daten im Kurzspeicher
+    logstart = 0;
+    logend = log_count;
+  } else {                                    // Daten aus Kurzspeicher und Archiv
+
+    saved = constrain(saved, 0, maxlog);      // maximal angezeigte Logdaten
+    int savedend = saved;
+    
+    if (rest == 0) {                          // noch ein Logpaket im Kurzspeicher
+      logstart = 0;                           
+      savedend--;
+    } else  logstart = MAXLOGCOUNT - rest;   // nur Rest aus Kurzspeicher holen
+    
+    logend = MAXLOGCOUNT;
+
+    for (int k = 0; k < savedend; k++) {
+      Serial.println(log_sector - saved + k,HEX);
+
+      /*
+      read_flash(log_sector - saved + k);
+
+      for (int j = 0; j < MAXLOGCOUNT; j++) {
+        for (int i=0; i < CHANNELS; i++)  {
+          output->print(archivlog[j].tem[i]/10.0);
+          output->print(";");
+        }
+        output->print(archivlog[j].pitmaster);
+        output->print(";");
+        output->print(digitalClockDisplay(archivlog[j].timestamp));
+        output->print("\r\n");
+      }
+      output->print("\r\n");
+      */
+      
+    }
+  }
+
+  // Kurzspeicher auslesen
+  for (int j = logstart; j < logend; j++) {
+    for (int i=0; i < CHANNELS; i++)  {
+      output->print(mylog[j].tem[i]/10.0);
+      output->print(";");
+    }
+    output->print(mylog[j].pitmaster);
+    output->print(";");
+    output->print(digitalClockDisplay(mylog[j].timestamp));
+    output->print("\r\n");
+  }
+    
+}
+
 
 
 

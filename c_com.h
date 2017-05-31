@@ -80,15 +80,9 @@ void read_serial(char *buffer) {
   }
 
   else if (strcmp(buffer, "log")==0) {
-    for (int j=0; j < log_count; j++) {
-      for (int i=0; i < CHANNELS; i++)  {
-        Serial.print(mylog[j].tem[i]/10.0);
-        Serial.print(";");
-      }
-      Serial.print(mylog[j].pitmaster);
-      Serial.print(";");
-      Serial.println(digitalClockDisplay(mylog[j].timestamp));
-    }
+    StreamString output;
+    getLog(&output,0);
+    Serial.print(output);
     return;
   }
 
@@ -100,9 +94,9 @@ void read_serial(char *buffer) {
     return;
   }
   
-  Serial.print("You entered: >");
-  Serial.print(buffer);
-  Serial.println("<");
+  DPRINTP("You entered: >");
+  DPRINT(buffer);
+  DPRINTPLN("<");
 
   // Wenn nicht help dann json-Befehl auslesen
   DynamicJsonBuffer jsonBuffer;
@@ -127,15 +121,15 @@ void read_serial(char *buffer) {
     data[0] = json["data"][0];
     data[1] = json["data"][1];
 
-    if (!modifyconfig(eWIFI,data)) DPRINTLN("[INFO]\tFailed to save wifi config");
-    else  DPRINTLN("[INFO]\tWifi config saved");
+    if (!modifyconfig(eWIFI,data)) DPRINTPLN("[INFO]\tFailed to save wifi config");
+    else  DPRINTPLN("[INFO]\tWifi config saved");
     
   }
 
   // SET WIFI SETTINGS
   else if (strcmp(command, "setWIFI")==0) {
         
-    if (setconfig(eWIFI,{})) DPRINTLN("[INFO]\tReset wifi config");
+    if (setconfig(eWIFI,{})) DPRINTPLN("[INFO]\tReset wifi config");
   }
 
   // GET CURRENT WIFI SSID
@@ -149,8 +143,8 @@ void read_serial(char *buffer) {
     const char* data[1]; 
     data[0] = json["data"][0];
     
-    if (!setconfig(eTHING,data)) DPRINTLN("[INFO]\tFailed to save Thingspeak config");
-    else DPRINTLN("[INFO]\tThingspeak config saved");
+    if (!setconfig(eTHING,data)) DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
+    else DPRINTPLN("[INFO]\tThingspeak config saved");
     
   }
 
@@ -201,18 +195,18 @@ void read_serial(char *buffer) {
       pid[pidsize].esum =    0;             
       pid[pidsize].elast =   0;    
 
-      if (!modifyconfig(ePIT,{})) DPRINTLN("[INFO]\tFailed to save pitmaster config");
+      if (!modifyconfig(ePIT,{})) DPRINTPLN("[INFO]\tFailed to save pitmaster config");
       else {
-        DPRINTLN("[INFO]\tPitmaster config saved");
+        DPRINTPLN("[INFO]\tPitmaster config saved");
         pidsize++;   // Erhöhung von pidsize nur wenn auch gespeichert wurde
       }
-    } else DPRINTLN("[INFO]\tTo many pitmaster");
+    } else DPRINTPLN("[INFO]\tTo many pitmaster");
   }
 
   // SET PITMASTER PID
   else if (strcmp(command, "setPID")==0) {
         
-    if (setconfig(ePIT,{})) DPRINTLN("[INFO]\tReset pitmaster config");
+    if (setconfig(ePIT,{})) DPRINTPLN("[INFO]\tReset pitmaster config");
   }
 
   // SET PITMASTER MANUEL

@@ -33,6 +33,8 @@
 #include <ESPAsyncWebServer.h>    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
 #include "AsyncJson.h"
 
+#include <StreamString.h>
+
 extern "C" {
 #include "user_interface.h"
 #include "spi_flash.h"
@@ -108,7 +110,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // PITMASTER
 #define PITMASTER1 15               // PITMASTER PIN
-//#define PITMASTER2 14             // ab Platine V7.2
+#define PITMASTER2 14             // ab Platine V7.2
 #define PITMIN 0                    // LOWER LIMIT SET
 #define PITMAX 100                  // UPPER LIMIT SET
 #define PITMASTERSIZE 5             // PITMASTER SETTINGS LIMIT
@@ -170,12 +172,13 @@ struct datalogger {
  uint16_t tem[8];
  long timestamp;
  uint8_t pitmaster;
+ uint8_t soll;
 };
 
-#define MAXLOGCOUNT 170             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
+#define MAXLOGCOUNT 155             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
 datalogger mylog[MAXLOGCOUNT];
 datalogger archivlog[MAXLOGCOUNT];
-int log_count = 0;
+unsigned long log_count = 0;
 uint32_t log_sector;                // erster Sector von APP2
 uint32_t freeSpaceStart;            // First Sector of OTA
 uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
@@ -385,6 +388,20 @@ String digitalClockDisplay(time_t t){
 }
 
 
+String newDate(time_t t){
+
+  String zeit;
+  zeit += "new Date(";
+  zeit += String(year(t))+",";
+  zeit += String(month(t)-1)+",";
+  zeit += String(day(t))+",";
+  zeit += String(hour(t))+",";
+  zeit += String(minute(t))+",";
+  zeit += String(second(t))+")";
+  
+  return zeit;
+}
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Standby oder Mess-Betrieb
 bool standby_control() {
@@ -394,7 +411,7 @@ bool standby_control() {
     if (!LADENSHOW) {
       //drawLoading();
       LADENSHOW = true;
-      DPRINTLN("[INFO]\tChange to Standby");
+      DPRINTPLN("[INFO]\tChange to Standby");
       //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
       pitmaster.active = false;
       piepserOFF();

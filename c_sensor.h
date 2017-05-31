@@ -103,7 +103,7 @@ double get_thermocouple(void) {
 
   // Invalid Measurement
   if (dd & 0x7) {
-    //DPRINTLN("No thermocouple!");
+    //DPRINTPLN("No thermocouple!");
     return INACTIVEVALUE; 
   }
 

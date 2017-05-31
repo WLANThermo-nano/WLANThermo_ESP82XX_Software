@@ -39,7 +39,7 @@ void set_wifi() {
   WiFi.mode(WIFI_STA);
   
   DPRINTLN("[INFO]\tHostname: " + host);
-  DPRINT("[INFO]\tConnecting");
+  DPRINTP("[INFO]\tConnecting");
   
   holdssid.hold = false;
   holdssid.connect = false;
@@ -53,7 +53,7 @@ void set_wifi() {
   int counter = 0;
   while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
     delay(500);
-    DPRINT(".");
+    DPRINTP(".");
     counter++;
   }
 
@@ -61,9 +61,9 @@ void set_wifi() {
   
   if (WiFi.status() == WL_CONNECTED) {
 
-    DPRINT("[INFO]\tWiFi connected to: ");
+    DPRINTP("[INFO]\tWiFi connected to: ");
     DPRINTLN(WiFi.SSID());
-    DPRINT("[INFO]\tIP address: ");
+    DPRINTP("[INFO]\tIP address: ");
     DPRINTLN(WiFi.localIP());
         
     isAP = 0;
@@ -72,7 +72,7 @@ void set_wifi() {
  
     udp.begin(2390);  // localPort = 2390;
 
-    DPRINT("[INFO]\tStarting UDP: Local port ");
+    DPRINTP("[INFO]\tStarting UDP: Local port ");
     DPRINTLN(udp.localPort());
     
   }
@@ -80,14 +80,14 @@ void set_wifi() {
 
     WiFi.mode(WIFI_AP_STA);
 
-    DPRINT("[INFO]\tConfiguring access point: ");
+    DPRINTP("[INFO]\tConfiguring access point: ");
     DPRINT(APNAME);
-    DPRINTLN(" ...");
+    DPRINTPLN(" ...");
     
     WiFi.softAPConfig(local_IP, gateway, subnet);
     WiFi.softAP(apname, appass, 5);  // Channel 5
 
-    DPRINT("[INFO]\tAP IP address: ");
+    DPRINTP("[INFO]\tAP IP address: ");
     DPRINTLN(WiFi.softAPIP());
     
     isAP = 1;
@@ -109,7 +109,7 @@ void get_rssi() {
 // Send NTP request to the time server
 void sendNTPpacket(IPAddress& address) {
   
-  DPRINTLN("[INFO]\tSending NTP packet...");
+  DPRINTPLN("[INFO]\tSending NTP packet...");
   
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
@@ -150,7 +150,7 @@ time_t getNtpTime() {
   while (millis() - beginWait < 4000) {
     int size = udp.parsePacket();
     if (size >= NTP_PACKET_SIZE) {
-      DPRINTLN("[INFO]\tReceive NTP Response");
+      DPRINTPLN("[INFO]\tReceive NTP Response");
       udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
       unsigned long secsSince1900;
       // convert four bytes starting at location 40 to a long integer
@@ -161,7 +161,7 @@ time_t getNtpTime() {
       return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
     }
   }
-  DPRINTLN("[INFO]\tNo NTP Response!");
+  DPRINTPLN("[INFO]\tNo NTP Response!");
   return 0; // return 0 if unable to get the time
 }
 
@@ -174,7 +174,7 @@ void WIFI_Connect() {
   // http://www.esp8266.com/viewtopic.php?f=32&t=8286
   
   //WiFi.disconnect();
-  DPRINTLN("[INFO]\tVerbinden mit neuer SSID");
+  DPRINTPLN("[INFO]\tVerbinden mit neuer SSID");
   //WiFi.mode(WIFI_AP_STA);
   WiFi.begin(holdssid.ssid.c_str(), holdssid.pass.c_str());
 
@@ -200,7 +200,7 @@ void WIFI_Connect() {
 // Scan possible SSIDs
 int scan_wifi() {
 
-  DPRINT("[INFO]\tWifi Scan: ");
+  DPRINTP("[INFO]\tWifi Scan: ");
   
   int n = WiFi.scanNetworks(false, false);
   // Keine HIDDEN NETWORKS SCANNEN
@@ -208,7 +208,7 @@ int scan_wifi() {
   // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/scan-class.md#scannetworks
   // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/station-class.md#setautoreconnect
   DPRINT(n);
-  DPRINTLN(" network(s) found");
+  DPRINTPLN(" network(s) found");
   
   return n;
   
@@ -228,9 +228,9 @@ void wifimonitoring() {
     if (isAP == 1) disconnectAP = true;
     isAP = 0;
     
-    DPRINT("[INFO]\tWiFi connected to: ");
+    DPRINTP("[INFO]\tWiFi connected to: ");
     DPRINTLN(WiFi.SSID());
-    DPRINT("[INFO]\tIP address: ");
+    DPRINTP("[INFO]\tIP address: ");
     DPRINTLN(WiFi.localIP());
 
     if (holdssid.hold) {
@@ -239,22 +239,22 @@ void wifimonitoring() {
       data[0] = holdssid.ssid.c_str();
       data[1] = holdssid.pass.c_str();
       if (!modifyconfig(eWIFI,data)) 
-        DPRINTLN("[INFO]\tFailed to save wifi config");
+        DPRINTPLN("[INFO]\tFailed to save wifi config");
       else  
-        DPRINTLN("[INFO]\tWifi config saved");
+        DPRINTPLN("[INFO]\tWifi config saved");
     }
     
     WiFi.setAutoReconnect(true); //Automatisch neu verbinden falls getrennt
     
   } else if (WiFi.status() != WL_CONNECTED & isAP == 0) {
     // Nicht verbunden
-    DPRINTLN("[INFO]\tWLAN-Verbindung verloren!");
+    DPRINTPLN("[INFO]\tWLAN-Verbindung verloren!");
     isAP = 2;
 
     // Verlust nach Verbindungsaufbauversuch
     if (holdssid.hold) {
       holdssid.hold = false;
-      DPRINTLN("[INFO]\tMit ehemaligem Wifi verbinden");
+      DPRINTPLN("[INFO]\tMit ehemaligem Wifi verbinden");
       WiFi.mode(WIFI_OFF);
       WiFi.mode(WIFI_STA);
       wifiMulti.run();        // mit vorherigem Wifi verbinden
@@ -265,7 +265,7 @@ void wifimonitoring() {
       if (!client_count) {
         disconnectAP = false;
         WiFi.mode(WIFI_STA);
-        DPRINTLN("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
+        DPRINTPLN("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
       }
   } //else if (isAP == 1)
 }
@@ -283,16 +283,16 @@ void dumpClients()
   // https://github.com/esp8266/Arduino/issues/2681
   //http://www.esp8266.com/viewtopic.php?f=32&t=5669&sid=a9f40b382551435102f1b5ea3b6ef37c&start=8
   
-  DPRINT(" Clients:\r\n");
+  DPRINTP(" Clients:\r\n");
   stat_info = wifi_softap_get_station_info();
   //uint8_t client_count = wifi_softap_get_station_num()
   while (stat_info != NULL)
   {
     IPaddress = &stat_info->ip;
     address = IPaddress->addr;
-    DPRINT("\t");
+    DPRINTP("\t");
     DPRINT(address);
-    DPRINT("\r\n");
+    DPRINTP("\r\n");
     stat_info = STAILQ_NEXT(stat_info, next);
   } 
 }
@@ -303,7 +303,7 @@ void dumpClients()
 
 void stop_wifi() {
   
-  DPRINTLN("[INFO]\tStop Wifi");
+  DPRINTPLN("[INFO]\tStop Wifi");
   
   wifi_station_disconnect();
   wifi_set_opmode(NULL_MODE);

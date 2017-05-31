@@ -30,10 +30,14 @@
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)
   #define DPRINTLN(...)  Serial.println(__VA_ARGS__)
+  #define DPRINTP(...)   Serial.print(F(__VA_ARGS__))
+  #define DPRINTPLN(...) Serial.println(F(__VA_ARGS__))
   #define DPRINTF(...)   Serial.printf(__VA_ARGS__)
 #else
   #define DPRINT(...)     //blank line
-  #define DPRINTLN(...)   //blank line
+  #define DPRINTLN(...)   //blank line 
+  #define DPRINTP(...)    //blank line
+  #define DPRINTPLN(...)  //blank line
   #define DPRINTF(...)    //blank line
 #endif
 
@@ -94,7 +98,7 @@ void setup() {
     // Update Time
     if (!isAP)  setTime(getNtpTime()); //setSyncProvider(getNtpTime);
 
-    DPRINT("[INFO]\t");
+    DPRINTP("[INFO]\t");
     DPRINTLN(digitalClockDisplay(now()));
 
     // Scan Network
@@ -149,9 +153,6 @@ void loop() {
   #ifdef OTA
     ArduinoOTA.handle();
   #endif
-
-  // Pitmaster Control
-  pitmaster_control();
   
   // Detect Button Event
   if (button_input()) {
@@ -182,6 +183,9 @@ void loop() {
       pulsalarm = !pulsalarm;
       lastUpdatePiepser = millis();
     }
+    
+    // Pitmaster Control
+    pitmaster_control();
 
     // Communication
     if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
@@ -206,39 +210,42 @@ void loop() {
     }
 
     // Datalog
-    if (millis() - lastUpdateDatalog > 3000) {
+    if (millis() - lastUpdateDatalog > 60000) {
 
       //Serial.println(sizeof(datalogger));
       //Serial.println(sizeof(mylog));
-      
-      for (int i=0; i < CHANNELS; i++)  {
-        mylog[log_count].tem[i] = (uint16_t) (ch[i].temp * 10);       // 8 * 16 bit  // 8 * 2 byte
-      }
-      mylog[log_count].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
-      mylog[log_count].timestamp = now();     // 64 bit
-      
-      // 2*8 + 1 + 8 = 25
-      if (log_count < MAXLOGCOUNT-1) {
-        log_count++;
-      } else {
-        log_count = 0;
-        
-        /*write_flash(log_sector);
-        read_flash(log_sector);
-        log_sector++;
-        
-        // Test
-        
-        for (int j=0; j<10; j++) {
-          int16_t test = archivlog[j].tem[0];
-          Serial.print(test/10.0);
-          Serial.print(" ");
-        }
-        
-        */
-        //Serial.println("Log");
+
+      int logc;
+      if (log_count < MAXLOGCOUNT) logc = log_count;
+      else {
+        logc = MAXLOGCOUNT-1;
+        memcpy(&mylog[0], &mylog[1], (MAXLOGCOUNT-1)*sizeof(*mylog));
       }
 
+      for (int i=0; i < CHANNELS; i++)  {
+        mylog[logc].tem[i] = (uint16_t) (ch[i].temp * 10);       // 8 * 16 bit  // 8 * 2 byte
+      }
+      mylog[logc].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
+      mylog[logc].soll = (uint8_t) pitmaster.set;           // 8 bit  // 1 byte
+      mylog[logc].timestamp = now();     // 64 bit // 8 byte
+
+      log_count++;
+      // 2*8 + 2 + 8 = 26
+      if (log_count%MAXLOGCOUNT == 0 && log_count != 0) {
+        
+        if (log_sector > freeSpaceEnd/SPI_FLASH_SEC_SIZE) 
+          log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
+        
+        write_flash(log_sector);
+ 
+        log_sector++;
+        modifyconfig(eSYSTEM,{});
+
+        //getLog(3);
+        
+      }
+      
+      
       lastUpdateDatalog = millis();
     }
 

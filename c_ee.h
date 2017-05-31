@@ -26,11 +26,11 @@ void setEE() {
   
   // EEPROM Sector: 0xFB, ab Sector 0xFC liegen System Parameter
   
-  DPRINT("[INFO]\tInitalize EEPROM at Sector: 0x"); // letzter Sector von APP2
+  DPRINTP("[INFO]\tInitalize EEPROM at Sector: 0x"); // letzter Sector von APP2
   DPRINT((((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE),HEX);
-  DPRINT(" (");
+  DPRINTP(" (");
   DPRINT(EEPROM_SIZE, DEC);  // ESP.getFreeSketchSpace()
-  DPRINTLN("B)");
+  DPRINTPLN("B)");
   
   EEPROM.begin(EEPROM_SIZE);
 
@@ -46,9 +46,9 @@ void setEE() {
 // Write to EEPROM
 void writeEE(const char* json, int len, int startP) {
   
-  DPRINT("[INFO]\tWriting to EE: (");
+  DPRINTP("[INFO]\tWriting to EE: (");
   DPRINT(len);
-  DPRINT(") ");
+  DPRINTP(") ");
   DPRINTLN(json);
   
   for (int i = startP; i < (startP+len); ++i) {
@@ -66,7 +66,7 @@ void readEE(char *buffer, int len, int startP) {
     buffer[i-startP] = char(EEPROM.read(i));
   }
   
-  DPRINT("[INFO]\tReading from EE: ");
+  DPRINTP("[INFO]\tReading from EE: ");
   DPRINTLN(buffer);
 }
 
@@ -91,20 +91,18 @@ void check_sector() {
 
   // https://github.com/esp8266/Arduino/blob/master/cores/esp8266/Esp.cpp
   freeSpaceStart = (ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));
-  freeSpaceEnd = (uint32_t)&_SPIFFS_start - 0x40200000;
-
-  DPRINT("[INFO]\tInitalize SKETCH at Sector: 0x01 (");
-  DPRINT((ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1)/1024);
-  DPRINTLN("K)");
-  DPRINT("[INFO]\tInitalize DATALG at Sector: 0x");
-  DPRINT(freeSpaceStart/SPI_FLASH_SEC_SIZE,HEX);
-  DPRINT(" (");
-  DPRINT((freeSpaceEnd - freeSpaceStart)/1024, DEC);  // ESP.getFreeSketchSpace()
-  DPRINTLN("K)");
-  
+  freeSpaceEnd = (uint32_t)&_SPIFFS_start - 0x40200000 - FLASH_SECTOR_SIZE;
   log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
+  
+  DPRINTP("[INFO]\tInitalize SKETCH at Sector: 0x01 (");
+  DPRINT((ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1)/1024);
+  DPRINTPLN("K)");
+  DPRINTP("[INFO]\tInitalize DATALG at Sector: 0x");
+  DPRINT(log_sector,HEX);
+  DPRINTP(" (");
+  DPRINT((freeSpaceEnd - freeSpaceStart)/1024, DEC);  // ESP.getFreeSketchSpace()
+  DPRINTPLN("K)");
     
-  //uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
   //DPRINTLN(ESP.getFlashChipRealSize()/1024);
   //DPRINTLN(ESP.getFlashChipSize() - 0x4000);
     
