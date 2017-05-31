@@ -83,6 +83,9 @@ void set_pitmaster() {
   pinMode(PITMASTER1, OUTPUT);
   digitalWrite(PITMASTER1, LOW);
 
+  pinMode(PITMASTER2, OUTPUT);
+  digitalWrite(PITMASTER2, LOW);
+  
   pitmaster.typ = 0;
   pitmaster.channel = 0;
   pitmaster.set = ch[pitmaster.channel].min;
@@ -204,7 +207,7 @@ void startautotunePID(int maxCycles, bool storeValues)  {
       autotune.tWP = temp_millis;
       autotune.TWP = tem;
   
-      DPRINTLN("[AUTOTUNE]\t Start!");
+      DPRINTPLN("[AUTOTUNE]\t Start!");
  
       disableAllHeater();         // switch off all heaters.
       
@@ -243,7 +246,7 @@ float autotunePID() {
       autotune.maxTP = TP;
       autotune.tWP = time;
       autotune.TWP = (currentTemp + autotune.previousTemp)/2.0;
-      DPRINT("[AUTOTUNE]\tWendepunktbestimmung: ");
+      DPRINTP("[AUTOTUNE]\tWendepunktbestimmung: ");
       DPRINTLN(TP*1000);
     }
     autotune.previousTemp = currentTemp;
@@ -262,7 +265,7 @@ float autotunePID() {
       autotune.t1 = time;
       autotune.t_high = autotune.t1 - autotune.t2;
       autotune.maxTemp = autotune.temp;
-      DPRINTLN("[AUTOTUNE]\tTemperature overrun!");
+      DPRINTPLN("[AUTOTUNE]\tTemperature overrun!");
     }
   }
   
@@ -273,7 +276,7 @@ float autotunePID() {
       autotune.heating = true;
       autotune.t2 = time;
       autotune.t_low = autotune.t2 - autotune.t1; // half wave length
-      DPRINTLN("[AUTOTUNE]\tTemperature fall below!");
+      DPRINTPLN("[AUTOTUNE]\tTemperature fall below!");
 
       if (autotune.cycles == 0) {
 
@@ -290,21 +293,21 @@ float autotunePID() {
         float Tn = 2 * Tt;            // Tn = 3.33 * Tt;
         float Tv = 0.5 * Tt;
 
-        DPRINT("[AUTOTUNE]\tTt: ");
+        DPRINTP("[AUTOTUNE]\tTt: ");
         DPRINT(Tt);
-        DPRINT(" s, Tg: ");
+        DPRINTP(" s, Tg: ");
         DPRINT(Tg);
-        DPRINTLN(" s");
+        DPRINTPLN(" s");
 
         autotune.Kp_a = 1.2/Ks * Tg/Tt;  // Kp_a = 0.9/Ks * Tg/Tt
         autotune.Ki_a = autotune.Kp_a/Tn;
         autotune.Kd_a = autotune.Kp_a*Tv;
 
-        DPRINT("[AUTOTUNE]\tKp_a: ");
+        DPRINTP("[AUTOTUNE]\tKp_a: ");
         DPRINT(autotune.Kp_a);
-        DPRINT(" Ki_a: ");
+        DPRINTP(" Ki_a: ");
         DPRINT(autotune.Ki_a);
-        DPRINT(" Kd_a: ");
+        DPRINTP(" Kd_a: ");
         DPRINTLN(autotune.Kd_a);
         
         
@@ -317,9 +320,9 @@ float autotunePID() {
         if (autotune.bias > pidMax/2)  autotune.d = pidMax - autotune.bias;
         else autotune.d = autotune.bias;
         
-        DPRINT("[AUTOTUNE]\tbias: ");
+        DPRINTP("[AUTOTUNE]\tbias: ");
         DPRINT(autotune.bias);
-        DPRINT(" d: ");
+        DPRINTP(" d: ");
         DPRINTLN(autotune.d);
 
         if(autotune.cycles > 2)  {
@@ -333,15 +336,15 @@ float autotunePID() {
           float Ku = (4.0 * autotune.d) / (3.14159 * A);
           float Tu = ((float)(autotune.t_low + autotune.t_high)/1000.0);
           
-          DPRINT("[AUTOTUNE]\tKu: ");
+          DPRINTP("[AUTOTUNE]\tKu: ");
           DPRINT(Ku);
-          DPRINT(" Tu: ");
+          DPRINTP(" Tu: ");
           DPRINT(Tu);
-          DPRINT(" A: ");
+          DPRINTP(" A: ");
           DPRINT(A);
-          DPRINT(" t_max: ");
+          DPRINTP(" t_max: ");
           DPRINT(autotune.maxTemp);
-          DPRINT(" t_min: ");
+          DPRINTP(" t_min: ");
           DPRINTLN(autotune.minTemp);
 
           float Tn = 0.5*Tu;
@@ -351,24 +354,24 @@ float autotunePID() {
           autotune.Ki = autotune.Kp/Tn;      // Ki = 1.2*Ku/Tu = Kp/Tn = Kp/(0.5*Tu) = 2*Kp/Tu
           autotune.Kd = autotune.Kp*Tv;      // Kd = 0.075*Ku*Tu = Kp*Tv = Kp*0.125*Tu
                         
-          DPRINT("[AUTOTUNE]\tKp: ");
+          DPRINTP("[AUTOTUNE]\tKp: ");
           DPRINT(autotune.Kp);
-          DPRINT(" Ki: ");
+          DPRINTP(" Ki: ");
           DPRINT(autotune.Ki);
-          DPRINT(" Kd: ");
+          DPRINTP(" Kd: ");
           DPRINTLN(autotune.Kd);
             
         }
       }
       autotune.value = (autotune.bias + autotune.d);
-      DPRINTLN("[AUTOTUNE]\tNext cycle");
+      DPRINTPLN("[AUTOTUNE]\tNext cycle");
       autotune.cycles++;
       autotune.minTemp = autotune.temp;
     }
   }
     
   if (currentTemp > (autotune.temp + 40))  {   // FEHLER
-    DPRINTLN("[ERROR]\tAutotune failure: Overtemperature");
+    DPRINTPLN("[ERROR]\tAutotune failure: Overtemperature");
     disableAllHeater();
     autotune.value = 0;
     autotune.initialized = false;
@@ -377,7 +380,7 @@ float autotunePID() {
     
   if (((time - autotune.t1) + (time - autotune.t2)) > (10L*60L*1000L*2L)) {   // 20 Minutes
         
-    DPRINTLN("[ERROR]\tAutotune failure: TIMEOUT");
+    DPRINTPLN("[ERROR]\tAutotune failure: TIMEOUT");
     disableAllHeater();
     autotune.value = 0;
     autotune.initialized = false;
@@ -386,7 +389,7 @@ float autotunePID() {
     
   if (autotune.cycles > autotune.maxCycles) {       // FINISH
             
-    DPRINTLN("[AUTOTUNE]\tFinished!");
+    DPRINTPLN("[AUTOTUNE]\tFinished!");
     disableAllHeater();
     autotune.value = 0;
     autotune.initialized = false;
@@ -416,7 +419,7 @@ float autotunePID() {
 void pitmaster_control() {
   // ESP PWM funktioniert nur bis 10 Hz Trägerfrequenz stabil, daher eigene Taktung
   if (pitmaster.active == 1) {
-
+  
     // Ende eines HIGH-Intervalls, wird durch pit_event nur einmal pro Intervall durchlaufen
     if ((millis() - pitmaster.last > pitmaster.msec) && pitmaster.event) {
       digitalWrite(PITMASTER1, LOW);

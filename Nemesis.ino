@@ -30,10 +30,14 @@
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)
   #define DPRINTLN(...)  Serial.println(__VA_ARGS__)
+  #define DPRINTP(...)   Serial.print(F(__VA_ARGS__))
+  #define DPRINTPLN(...) Serial.println(F(__VA_ARGS__))
   #define DPRINTF(...)   Serial.printf(__VA_ARGS__)
 #else
   #define DPRINT(...)     //blank line
-  #define DPRINTLN(...)   //blank line
+  #define DPRINTLN(...)   //blank line 
+  #define DPRINTP(...)    //blank line
+  #define DPRINTPLN(...)  //blank line
   #define DPRINTF(...)    //blank line
 #endif
 
@@ -94,7 +98,7 @@ void setup() {
     // Update Time
     if (!isAP)  setTime(getNtpTime()); //setSyncProvider(getNtpTime);
 
-    DPRINT("[INFO]\t");
+    DPRINTP("[INFO]\t");
     DPRINTLN(digitalClockDisplay(now()));
 
     // Scan Network
@@ -206,7 +210,7 @@ void loop() {
     }
 
     // Datalog
-    if (millis() - lastUpdateDatalog > 2000) {
+    if (millis() - lastUpdateDatalog > 60000) {
 
       //Serial.println(sizeof(datalogger));
       //Serial.println(sizeof(mylog));
@@ -222,10 +226,11 @@ void loop() {
         mylog[logc].tem[i] = (uint16_t) (ch[i].temp * 10);       // 8 * 16 bit  // 8 * 2 byte
       }
       mylog[logc].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
+      mylog[logc].soll = (uint8_t) pitmaster.set;           // 8 bit  // 1 byte
       mylog[logc].timestamp = now();     // 64 bit // 8 byte
 
       log_count++;
-      // 2*8 + 1 + 8 = 25
+      // 2*8 + 2 + 8 = 26
       if (log_count%MAXLOGCOUNT == 0 && log_count != 0) {
         
         if (log_sector > freeSpaceEnd/SPI_FLASH_SEC_SIZE) 

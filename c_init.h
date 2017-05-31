@@ -110,7 +110,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // PITMASTER
 #define PITMASTER1 15               // PITMASTER PIN
-//#define PITMASTER2 14             // ab Platine V7.2
+#define PITMASTER2 14             // ab Platine V7.2
 #define PITMIN 0                    // LOWER LIMIT SET
 #define PITMAX 100                  // UPPER LIMIT SET
 #define PITMASTERSIZE 5             // PITMASTER SETTINGS LIMIT
@@ -172,9 +172,10 @@ struct datalogger {
  uint16_t tem[8];
  long timestamp;
  uint8_t pitmaster;
+ uint8_t soll;
 };
 
-#define MAXLOGCOUNT 170             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
+#define MAXLOGCOUNT 155             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
 datalogger mylog[MAXLOGCOUNT];
 datalogger archivlog[MAXLOGCOUNT];
 unsigned long log_count = 0;
@@ -410,7 +411,7 @@ bool standby_control() {
     if (!LADENSHOW) {
       //drawLoading();
       LADENSHOW = true;
-      DPRINTLN("[INFO]\tChange to Standby");
+      DPRINTPLN("[INFO]\tChange to Standby");
       //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
       pitmaster.active = false;
       piepserOFF();

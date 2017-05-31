@@ -54,22 +54,22 @@
 	
 		  switch (error) {
 			  case OTA_AUTH_ERROR:
-			    DPRINTLN("Auth Failed");
+			    DPRINTPLN("Auth Failed");
 				  break;
 			  case OTA_BEGIN_ERROR:
-				  DPRINTLN("Connect Failed");
+				  DPRINTPLN("Connect Failed");
 				  break;
 			  case OTA_CONNECT_ERROR:
-				  DPRINTLN("Connect Failed");
+				  DPRINTPLN("Connect Failed");
 				  break;
 			  case OTA_RECEIVE_ERROR:
-				  DPRINTLN("Receive Failed");
+				  DPRINTPLN("Receive Failed");
 				  break;
 			  case OTA_END_ERROR:
-				  DPRINTLN("End Failed");
+				  DPRINTPLN("End Failed");
 				  break;
 			  default:
-				  DPRINTLN("OTA unknown ERROR");
+				  DPRINTPLN("OTA unknown ERROR");
 				  break;
 		  }
 	  });
