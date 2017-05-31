@@ -2611,7 +2611,7 @@
 	}	
 	
 	function setSystem(){
-		host = document.getElementById('hostname').value;
+		host = document.getElementById('hostname').value.replace(/ /g, '_');
 		utc = document.getElementById('timezone').value;
 		language = document.getElementById('language').value;
 		unit = document.getElementById('unit').value;
