@@ -248,7 +248,7 @@
 									<td>Webalarm&nbsp;&nbsp;</td>
 									<td>
 										<label class="switch">
-											<input type="checkbox">
+											<input id="webalarm" type="checkbox">
 											<div class="slider round"></div>
 										</label>
 									</td>
@@ -441,6 +441,7 @@
 			document.getElementById('temp_max').value  = jsonresponse.channel[channel].max;
 			document.getElementById('temp_min').value  = jsonresponse.channel[channel].min;
 			document.getElementById('sensor').value = jsonresponse.channel[channel].typ;
+			document.getElementById('webalarm').checked = jsonresponse.channel[channel].alarm;
 		})
 	}
 
@@ -485,16 +486,16 @@
 			document.getElementById('language').value = jsonresponse.system.language;
 			document.getElementById('hostname').value = jsonresponse.system.host;
 			document.getElementById('unit').value = jsonresponse.system.unit;
-			document.getElementById('hwalarm').value = jsonresponse.system.hwalarm;
+			document.getElementById('hwalarm').checked = jsonresponse.system.hwalarm;
 		})
 		document.getElementById("system_config").style.display = "inline";
 	}	
 	
 	function setSystem(){
 		if (document.getElementById('hwalarm').checked == true){
-			hwalarm = 'true';
+			hwalarm = true;
 		}else{
-			hwalarm = 'false';
+			hwalarm = false;
 		}
 		host = document.getElementById('hostname').value;
 		utc = document.getElementById('timezone').value;
