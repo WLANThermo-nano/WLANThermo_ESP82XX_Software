@@ -2317,7 +2317,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 										</td>
 									</tr>
 									<tr>
-										<td><label for="language">Sprache:</label></td>
+										<td><label for="language">Sprache:&nbsp;</label></td>
 										<td>
 											<select style="width:8.4em" id="language">
 												<option value="de">Deutsch</option>
@@ -2327,11 +2327,19 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 										</td>
 									</tr>
 									<tr>
-										<td><label for="unit">Einheit:</label></td>
+										<td><label for="unit">Einheit:&nbsp;</label></td>
 										<td>
 											<select style="width:8.4em" id="unit">
 												<option value="C">Celsius</option>
 												<option value="F">Fahrenheit</option>
+											</select>
+										</td>
+									</tr>
+									<tr>
+									<td><label for="unit">Hardwareversion:&nbsp;</label></td>
+										<td>
+											<select style="width:8.4em" id="hwversion">
+												<!-- Placeholder -->
 											</select>
 										</td>
 									</tr>
@@ -2698,6 +2706,11 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			document.getElementById('hwalarm').checked = jsonresponse.system.hwalarm;
 			document.getElementById('summer').checked = jsonresponse.system.summer;
 			document.getElementById('fastmode').checked = jsonresponse.system.fastmode;
+			clearOption('hwversion');
+			for (var i = 0; i < jsonresponse.hardware.length; i++) {
+				document.getElementById('hwversion').options[document.getElementById('hwversion').options.length] = new Option(jsonresponse.hardware[i], jsonresponse.hardware[i]);
+			}
+			document.getElementById('hwversion').value = jsonresponse.system.hwversion;
 		})
 		document.getElementById("system_config").style.display = "inline";
 	}
@@ -2707,6 +2720,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse = JSON.parse(response);
 			jsonresponse.system.host = document.getElementById('hostname').value.replace(/ /g, '_');
 			jsonresponse.system.ap = document.getElementById('apname').value.replace(/ /g, '_');
+			jsonresponse.system.hwversion = document.getElementById('hwversion').value;
 			jsonresponse.system.utc = document.getElementById('timezone').value;
 			jsonresponse.system.language = document.getElementById('language').value;
 			jsonresponse.system.unit = document.getElementById('unit').value;
@@ -2715,7 +2729,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse.system.fastmode = document.getElementById('fastmode').checked;			
 			var data = JSON.stringify(jsonresponse.system);
 			loadJSON('setsystem', data, function (response) {
-				alert(data);
+				//alert(data);
 				document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 				showIndex();
 			})		
