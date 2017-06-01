@@ -1522,21 +1522,21 @@
 		}
 
 		.headmenu {
-		background-color:#404040;
+		background-color:#333;
+		border-bottom:4px solid #2F2F2F;
 		color:#ccc;
 		height:44px;
 		}
 
 		#thermoname {
 		padding:14px 5px;
-		float:left
+		float:left;
 		}
 
 		.wifi {
 		text-align:center;
 		padding:14px 5px;
 		float:right;
-		border-left:2px solid #333
 		}
 
 		.battery {
@@ -1827,17 +1827,17 @@
 		display:block;
 		top:0;
 		left:0;
-		background:#000;
+		background:#333;
 		font-size:10px;
 		z-index:10;
 		width:2em;
 		height:auto;
 		padding:2.1em 1.6em;
-		float:left
+		float:left;
 		}
 
 		.menu-link:hover,.menu-link:focus {
-		background:#000
+		background:#333;
 		}
 
 		.menu-link span {
@@ -1905,7 +1905,7 @@
 			display: block; /* show this only on small screens */
 			top: 0;
 			left: 0; /* "#menu width" */
-			background: #000;
+			background: #333;			
 			font-size: 10px; /* change this value to increase/decrease button size */
 			z-index: 10;
 			width: 2em;
@@ -1916,7 +1916,7 @@
 
 			.menu-link:hover,
 			.menu-link:focus {
-				background: #000;
+				background: #333;
 			}
 
 			.menu-link span {
@@ -2246,7 +2246,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 									</td>
 								</tr>
 								<tr>
-									<td>Webalarm&nbsp;&nbsp;</td>
+									<td>Webalarm:</td>
 									<td>
 										<label class="switch">
 											<input id="webalarm" type="checkbox">
@@ -2277,11 +2277,11 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 							<fieldset>
 								<table>
 									<tr>
-										<td><label for="hostname">Hostname</label></td>
+										<td><label for="hostname">Hostname:</label></td>
 										<td><input style="width:8em" id="hostname" type="hostname" placeholder="Hostname"></td>
 									</tr>
 									<tr>
-										<td><label for="timezone">Zeitzone</label></td>
+										<td><label for="timezone">Zeitzone:</label></td>
 										<td>
 											<select style="width:8.4em" id="timezone">
 												<option value="-12">MEZ-12</option>
@@ -2313,7 +2313,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 										</td>
 									</tr>
 									<tr>
-										<td><label for="language">Sprache</label></td>
+										<td><label for="language">Sprache:</label></td>
 										<td>
 											<select style="width:8.4em" id="language">
 												<option value="de">Deutsch</option>
@@ -2323,7 +2323,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 										</td>
 									</tr>
 									<tr>
-										<td><label for="unit">Einheit</label></td>
+										<td><label for="unit">Einheit:</label></td>
 										<td>
 											<select style="width:8.4em" id="unit">
 												<option value="C">Celsius</option>
@@ -2332,7 +2332,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 										</td>
 									</tr>
 									<tr>
-										<td><label for="hardwarealert">Hardwarealarm&nbsp;</label></td>
+										<td><label for="hardwarealert">Hardwarealarm:&nbsp;</label></td>
 										<td>
 											<label class="switch">
 												<input id="hwalarm" type="checkbox">
