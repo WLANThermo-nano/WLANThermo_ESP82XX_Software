@@ -814,6 +814,18 @@ void server_setup() {
       handleWifiResult(request, true);
     });
 
+    // REQUEST: /stop wifi
+    server.on("/stopwifi", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      isAP = 3; // Turn Wifi off
+      request->send(200, "text/json", "OK");
+    });
+    
+    // REQUEST: /stop wifi
+    server.on("/stopwifi", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      isAP = 3; // Turn Wifi off
+      request->send(200, "text/json", "OK");
+    });
+
     // REQUEST: /configreset
     server.on("/configreset", HTTP_GET, [](AsyncWebServerRequest *request) { 
       setconfig(eCHANNEL,{});

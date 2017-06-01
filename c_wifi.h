@@ -218,6 +218,8 @@ void wifimonitoring() {
       WIFI_Connect();
       holdssid.connect = false;
     }
+  } else if (isAP == 3) {
+    stop_wifi();
   } else if (WiFi.status() == WL_CONNECTED & isAP > 0) {
     // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
     if (isAP == 1) disconnectAP = true;
@@ -262,7 +264,7 @@ void wifimonitoring() {
         WiFi.mode(WIFI_STA);
         DPRINTPLN("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
       }
-  } //else if (isAP == 1)
+  }
 }
 
 
@@ -300,11 +302,13 @@ void stop_wifi() {
   
   DPRINTPLN("[INFO]\tStop Wifi");
   
-  wifi_station_disconnect();
-  wifi_set_opmode(NULL_MODE);
-  wifi_set_sleep_type(MODEM_SLEEP_T);
-  wifi_fpm_open();
-  wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+  //wifi_station_disconnect();
+  //wifi_set_opmode(NULL_MODE);
+  //wifi_set_sleep_type(MODEM_SLEEP_T);
+  //wifi_fpm_open();
+  //wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+  WiFi.disconnect();
+  WiFi.mode(WIFI_OFF);
   delay(100); // leider notwendig
 
   isAP = 2;
@@ -313,9 +317,14 @@ void stop_wifi() {
 void reconnect_wifi() {
 
   // wake up to use WiFi again
-  wifi_fpm_do_wakeup();
-  wifi_fpm_close();
-  wifi_set_opmode(STATION_MODE);
+  //wifi_fpm_do_wakeup();
+  //wifi_fpm_close();
+  //wifi_set_opmode(STATION_MODE);
+  //wifi_station_connect();
+
+  WiFi.forceSleepWake();
+  WiFi.mode(WIFI_STA);  
   wifi_station_connect();
+  //WiFi.begin(ssid, password); 
 }
 

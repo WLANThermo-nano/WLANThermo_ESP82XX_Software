@@ -232,7 +232,7 @@ MyQuestion question;
 enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
 // WIFI
-byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO)
+byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO, 3 = Turn off)
 String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;
