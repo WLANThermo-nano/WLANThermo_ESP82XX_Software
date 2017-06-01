@@ -2331,7 +2331,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 										</td>
 									</tr>
 									<tr>
-										<td><label for="hardwarealert">Hardwarealarm</label></td>
+										<td><label for="hardwarealert">Hardwarealarm&nbsp;</label></td>
 										<td>
 											<label class="switch">
 												<input id="hwalarm" type="checkbox">
@@ -2725,8 +2725,8 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
         xobj.open('POST', url, true);
-		xobj.timeout = 2000;
         xobj.setRequestHeader("Content-Type", "application/json");
+		xobj.timeout = 3000;
         xobj.onreadystatechange = function () {
             if (xobj.readyState == 4 && xobj.status == "200") {
                 // .open will NOT return a value but simply returns undefined in async mode so use a callback
