@@ -2340,6 +2340,24 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 											</label>
 										</td>
 									</tr>
+									<tr>
+										<td><label for="summer">Summer:&nbsp;</label></td>
+										<td>
+											<label class="switch">
+												<input id="summer" type="checkbox">
+												<div class="slider round"></div>
+											</label>
+										</td>
+									</tr>
+									<tr>
+										<td><label for="fastmode">Fastmode:&nbsp;</label></td>
+										<td>
+											<label class="switch">
+												<input id="fastmode" type="checkbox">
+												<div class="slider round"></div>
+											</label>
+										</td>
+									</tr>
 								</table>
 							</fieldset>
 						</form>
@@ -2673,6 +2691,8 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 			document.getElementById('unit').value = jsonresponse.system.unit;
 			document.getElementById('hwalarm').checked = jsonresponse.system.hwalarm;
+			document.getElementById('summer').checked = jsonresponse.system.summer;
+			document.getElementById('fastmode').checked = jsonresponse.system.fastmode;
 		})
 		document.getElementById("system_config").style.display = "inline";
 	}
@@ -2684,9 +2704,11 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse.system.utc = document.getElementById('timezone').value;
 			jsonresponse.system.language = document.getElementById('language').value;
 			jsonresponse.system.unit = document.getElementById('unit').value;
-			jsonresponse.system.hwalarm = document.getElementById('hwalarm').checked;			
+			jsonresponse.system.hwalarm = document.getElementById('hwalarm').checked;
+			jsonresponse.system.summer = document.getElementById('summer').checked;
+			jsonresponse.system.fastmode = document.getElementById('fastmode').checked;			
 			var data = JSON.stringify(jsonresponse.system);
-			alert(data);
+			//alert(data);
 			loadJSON('setsystem', data, function (response) {
 				document.getElementById('thermoname').innerHTML = host;
 				showIndex();
