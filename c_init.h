@@ -184,10 +184,23 @@ uint32_t freeSpaceStart;            // First Sector of OTA
 uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
 // SYSTEM
-bool stby = false;                // USB POWER SUPPLY?
-bool doAlarm = false;             // HARDWARE ALARM           
+bool stby = false;                // USB POWER SUPPLY?            
 byte pulsalarm = 1;
-String language;
+
+
+// SYSTEM
+struct System {
+   String hwversion;           // HARDWARE VERSION
+   bool fastmode;              // FAST DISPLAY MODE
+   String apname;             // AP NAME
+   bool sommer;              // SUMMER TIME
+   String host;                     // HOST NAME
+   String language;           // SYSTEM LANGUAGE
+   int timeZone;              // TIMEZONE
+   bool hwalarm;              // HARDWARE ALARM 
+};
+
+System sys;
 
 struct Battery {
   int voltage;                    // CURRENT VOLTAGE
@@ -228,8 +241,6 @@ long rssi = 0;                   // Buffer rssi
 String THINGSPEAK_KEY;
 long scantime;
 bool disconnectAP;
-int timeZone;                     // Central European Time
-String host;
 struct HoldSSID {
    unsigned long connect;
    bool hold;             
@@ -349,6 +360,23 @@ void set_serial() {
   Serial.begin(115200);
   DPRINTLN();
   DPRINTLN();
+}
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Initialize System
+void set_system() {
+
+  String host = HOSTNAME;
+  host += String(ESP.getChipId(), HEX);
+
+  sys.apname = APNAME;
+  sys.sommer = false;
+  sys.fastmode = false;
+  sys.hwversion = "V1";
+  sys.host = host;
+  sys.language = "de";
+  sys.timeZone = 1;
+  sys.hwalarm = false;
 }
 
 

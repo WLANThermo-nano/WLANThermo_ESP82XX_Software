@@ -79,6 +79,9 @@ void setup() {
 
   // Initialize Serial 
   set_serial(); //Serial.setDebugOutput(true);
+
+  // Initialize System
+  set_system();
   
   // Initialize OLED
   set_OLED();
@@ -96,8 +99,16 @@ void setup() {
     set_wifi();
 
     // Update Time
-    if (!isAP)  setTime(getNtpTime()); //setSyncProvider(getNtpTime);
-
+    if (!isAP) {
+      time_t present = 0;
+      int ii = 0;
+      while (present == 0 && ii < 3) {
+        present = getNtpTime(); 
+        ii++;
+      }
+      setTime(present);
+    }
+    //setSyncProvider(getNtpTime);
     DPRINTP("[INFO]\t");
     DPRINTLN(digitalClockDisplay(now()));
 

@@ -504,9 +504,9 @@ static inline void button_event() {
         break;
         
       case 15:  // Hardware Alarm
-        if (event[1]) tempor = doAlarm;
+        if (event[1]) tempor = sys.hwalarm;
         if (mupi) tempor = !tempor;
-        if (event[2]) doAlarm = tempor;
+        if (event[2]) sys.hwalarm = tempor;
         break;
       
       case 17:  // Fastmode

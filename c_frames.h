@@ -337,7 +337,7 @@ void drawsys1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   
   if (isAP == 1) {
     display->drawString(120, 20, "AP-SSID:");
-    display->drawString(120, 36, APNAME);
+    display->drawString(120, 36, sys.apname);
   }
   else if (isAP == 0) {
     display->drawString(120, 20, "SSID:");
@@ -367,7 +367,7 @@ void drawsys3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(120, 20, "HOST-NAME:");
-  display->drawString(120, 36, host);
+  display->drawString(120, 36, sys.host);
 }
 
 void drawsys4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -386,7 +386,7 @@ void drawsys5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setFont(ArialMT_Plain_10);
   display->drawString(114+x, 20+y, "HW-ALARM:");
   if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
-  else if (!inWork && doAlarm) display->drawString(114+x, 36+y, "YES");
+  else if (!inWork && sys.hwalarm) display->drawString(114+x, 36+y, "YES");
   else display->drawString(114+x, 36+y, "NO");
 }
 

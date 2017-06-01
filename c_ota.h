@@ -26,7 +26,7 @@
   // Configuration OTA
   void set_ota(){
 
-    ArduinoOTA.setHostname((const char *)host.c_str());
+    ArduinoOTA.setHostname((const char *)sys.host.c_str());
 
     ArduinoOTA.onStart([]() {
       display.clear();

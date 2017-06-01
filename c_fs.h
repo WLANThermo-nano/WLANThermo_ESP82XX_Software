@@ -190,14 +190,15 @@ bool loadconfig(byte count) {
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,SYSTEM_FILE)) return false;
   
-      const char* author = json["AUTHOR"];
-      if (json.containsKey("host")) host = json["host"].asString();
+      if (json.containsKey("host")) sys.host = json["host"].asString();
       else return false;
-      if (json.containsKey("hwalarm")) doAlarm = json["hwalarm"];
+      if (json.containsKey("hwalarm")) sys.hwalarm = json["hwalarm"];
       else return false;
-      if (json.containsKey("lang")) language = json["lang"].asString();
+      if (json.containsKey("ap")) sys.apname = json["ap"].asString();
       else return false;
-      if (json.containsKey("utc")) timeZone = json["utc"];
+      if (json.containsKey("lang")) sys.language = json["lang"].asString();
+      else return false;
+      if (json.containsKey("utc")) sys.timeZone = json["utc"];
       else return false;
       if (json.containsKey("batmax")) battery.max = json["batmax"];
       else return false;
@@ -208,6 +209,12 @@ bool loadconfig(byte count) {
         if (sector > log_sector) log_sector = sector;
         // oberes limit wird spaeter abgefragt
       }
+      else return false;
+      if (json.containsKey("sommer")) sys.sommer = json["sommer"];
+      else return false;
+      if (json.containsKey("fast")) sys.fastmode = json["fast"];
+      else return false;
+      if (json.containsKey("hwversion")) sys.hwversion = json["hwversion"].asString();
       else return false;
     }
     break;
@@ -345,20 +352,20 @@ bool setconfig(byte count, const char* data[2]) {
 
     case 4:         // SYSTEM
     {
-      String host = HOSTNAME;
-      host += String(ESP.getChipId(), HEX);
       
       JsonObject& json = jsonBuffer.createObject();
   
-      json["AUTHOR"] = "s.ochs";
-      json["host"] = host;
-      json["hwalarm"] = false;    // doAlarm
-      json["ap"] = APNAME;
-      json["lang"] = "de";
-      json["utc"] = 1;
-      json["batmax"] = BATTMAX;
-      json["batmin"] = BATTMIN;
-      json["logsec"] = log_sector;
+      json["host"] =        sys.host;
+      json["hwalarm"] =     sys.hwalarm; 
+      json["ap"] =          sys.apname;
+      json["lang"] =        sys.language;
+      json["utc"] =         sys.timeZone;
+      json["sommer"] =      sys.sommer;
+      json["fast"] =        sys.fastmode;
+      json["hwversion"] =   sys.hwversion;
+      json["batmax"] =      BATTMAX;
+      json["batmin"] =      BATTMIN;
+      json["logsec"] =      log_sector;
     
       size_t size = json.measureLength() + 1;
       clearEE(250,1500);  // Bereich reinigen
@@ -533,17 +540,17 @@ bool modifyconfig(byte count, const char* data[12]) {
       // Neue Daten erzeugen
       JsonObject& json = jsonBuffer.createObject();
 
-      json["AUTHOR"] = alt["AUTHOR"];
-      //json["VERSION"] = CHANNELJSONVERSION;
-            
-      json["host"] = host;
-      json["hwalarm"] = doAlarm;
-      json["ap"] = APNAME;
-      json["lang"] = language;
-      json["utc"] = timeZone;
-      json["batmax"] = battery.max;
-      json["batmin"] = battery.min;
-      json["logsec"] = log_sector;
+      json["host"] =        sys.host;
+      json["hwalarm"] =     sys.hwalarm;
+      json["ap"] =          sys.apname;
+      json["lang"] =        sys.language;
+      json["utc"] =         sys.timeZone;
+      json["sommer"] =      sys.sommer;
+      json["fast"] =        sys.fastmode;
+      json["hwversion"] =   sys.hwversion;
+      json["batmax"] =      battery.max;
+      json["batmin"] =      battery.min;
+      json["logsec"] =      log_sector;
 
       // Speichern
       size_t size = json.measureLength() + 1;

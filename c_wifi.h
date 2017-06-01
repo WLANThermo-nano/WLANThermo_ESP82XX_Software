@@ -35,10 +35,10 @@ void set_wifi() {
   IPAddress gateway(192,168,66,1);
   IPAddress subnet(255,255,255,0);
 
-  WiFi.hostname(host);
+  WiFi.hostname(sys.host);
   WiFi.mode(WIFI_STA);
   
-  DPRINTLN("[INFO]\tHostname: " + host);
+  DPRINTLN("[INFO]\tHostname: " + sys.host);
   DPRINTP("[INFO]\tConnecting");
   
   holdssid.hold = false;
@@ -158,7 +158,8 @@ time_t getNtpTime() {
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
-      return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
+      if (sys.sommer) return secsSince1900 - 2208988800UL + (sys.timeZone+1) * SECS_PER_HOUR;
+      else return secsSince1900 - 2208988800UL + sys.timeZone * SECS_PER_HOUR;
     }
   }
   DPRINTPLN("[INFO]\tNo NTP Response!");

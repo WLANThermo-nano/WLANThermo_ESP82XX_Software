@@ -79,12 +79,12 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   JsonObject& _system = root.createNestedObject("system");
 
   _system["time"] = String(now());
-  _system["utc"] = timeZone;
-  _system["ap"] = APNAME;
-  _system["host"] = host;
-  _system["language"] = language;
+  _system["utc"] = sys.timeZone;
+  _system["ap"] = sys.apname;
+  _system["host"] = sys.host;
+  _system["language"] = sys.language;
   _system["unit"] = temp_unit;
-  _system["hwalarm"] = doAlarm;
+  _system["hwalarm"] = sys.hwalarm;
   _system["version"] = FIRMWAREVERSION;
   
   JsonArray& _typ = root.createNestedArray("sensors");
@@ -118,7 +118,7 @@ void handleData(AsyncWebServerRequest *request, bool www) {
   JsonObject& system = root.createNestedObject("system");
 
   system["time"] = String(now());
-  system["utc"] = timeZone;
+  system["utc"] = sys.timeZone;
   system["soc"] = battery.percentage;
   system["charge"] = !battery.charge;
   system["rssi"] = rssi;
@@ -675,10 +675,10 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
   JsonObject& _system = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_system.success()) return 0;
   
-  doAlarm = _system["hwalarm"];
-  host = _system["host"].asString();
-  timeZone = _system["utc"];
-  language = _system["language"].asString();
+  sys.hwalarm = _system["hwalarm"];
+  sys.host = _system["host"].asString();
+  sys.timeZone = _system["utc"];
+  sys.language = _system["language"].asString();
   String unit = _system["unit"].asString();
 
   modifyconfig(eSYSTEM,{});                                      // SPEICHERN
@@ -741,9 +741,9 @@ String getMacAddress()  {
 // 
 void server_setup() {
 
-    MDNS.begin(host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);
+    MDNS.begin(sys.host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);
     DPRINTP("[INFO]\tOpen http://");
-    DPRINT(host);
+    DPRINT(sys.host);
     DPRINTPLN("/data to see the current temperature");
 
     server.on("/help",HTTP_GET, [](AsyncWebServerRequest *request) {

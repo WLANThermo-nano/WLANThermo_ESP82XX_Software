@@ -235,7 +235,7 @@ void set_piepser() {
   // Hardware-Alarm bereit machen
   pinMode(MOSI, OUTPUT);
   analogWriteFreq(4000);
-  doAlarm = false;
+  sys.hwalarm = false;
   
 }
 
@@ -294,8 +294,8 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
     }
   }
 
-  // Hardware-Alarm-Variable: doAlarm
-  if (doAlarm && setalarm && action) {
+  // Hardware-Alarm-Variable: sys.hwalarm
+  if (sys.hwalarm && setalarm && action) {
     piepserON();
   }
   else {
