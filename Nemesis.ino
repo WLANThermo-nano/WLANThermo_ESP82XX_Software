@@ -107,12 +107,12 @@ void setup() {
     }
     //setSyncProvider(getNtpTime);
     DPRINTP("[INFO]\t");
-    DPRINTLN(digitalClockDisplay(now()));
+    DPRINTLN(digitalClockDisplay(mynow()));
 
     // Scan Network
     WiFi.scanNetworks(true);
     scantime = millis();
-    //scantime = String(now());
+    //scantime = String(mynow());
 
     // Initialize Server
     server_setup();

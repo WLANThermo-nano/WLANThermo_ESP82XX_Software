@@ -440,6 +440,15 @@ bool standby_control() {
   return 0;
 }
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// SYSTEM TIME based on UTC
+time_t mynow() {
+
+  if (sys.summer) return now() + (sys.timeZone+1) * SECS_PER_HOUR;
+  else return now() + sys.timeZone * SECS_PER_HOUR;
+  
+}
+
 
 
 

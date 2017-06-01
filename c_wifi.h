@@ -113,6 +113,7 @@ void sendNTPpacket(IPAddress& address) {
   
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
+  
   // Initialize values needed to form NTP request
   // (see URL above for details on the packets)
   packetBuffer[0] = 0b11100011;   // LI, Version, Mode
@@ -125,8 +126,6 @@ void sendNTPpacket(IPAddress& address) {
   packetBuffer[14]  = 49;
   packetBuffer[15]  = 52;
 
-  // all NTP fields have been given values, now
-  // you can send a packet requesting a timestamp:
   udp.beginPacket(address, 123); //NTP requests are to port 123
   udp.write(packetBuffer, NTP_PACKET_SIZE);
   udp.endPacket();
@@ -136,16 +135,12 @@ void sendNTPpacket(IPAddress& address) {
 // Get NTP time
 time_t getNtpTime() {
 
-  // Initialize NTP
-  IPAddress timeServerIP;                       // time.nist.gov NTP server address
-  const char* ntpServerName = "time.nist.gov";
-  
-  //get a random server from the pool
-  WiFi.hostByName(ntpServerName, timeServerIP); 
+  IPAddress timeServerIP;   
+  WiFi.hostByName("time.nist.gov", timeServerIP); 
 
   while (udp.parsePacket() > 0) ; // discard any previously received packets
-  
   sendNTPpacket(timeServerIP);
+  
   uint32_t beginWait = millis();
   while (millis() - beginWait < 4000) {
     int size = udp.parsePacket();
@@ -158,8 +153,7 @@ time_t getNtpTime() {
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
-      if (sys.summer) return secsSince1900 - 2208988800UL + (sys.timeZone+1) * SECS_PER_HOUR;
-      else return secsSince1900 - 2208988800UL + sys.timeZone * SECS_PER_HOUR;
+      return secsSince1900 - 2208988800UL;
     }
   }
   DPRINTPLN("[INFO]\tNo NTP Response!");

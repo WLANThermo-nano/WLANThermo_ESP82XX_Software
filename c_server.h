@@ -78,7 +78,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   JsonObject& root = response->getRoot();
   JsonObject& _system = root.createNestedObject("system");
 
-  _system["time"] =       String(now());
+  _system["time"] =       String(mynow());
   _system["utc"] =        sys.timeZone;
   _system["summer"] =     sys.summer;
   _system["ap"] =         sys.apname;
@@ -123,7 +123,7 @@ void handleData(AsyncWebServerRequest *request, bool www) {
   JsonObject& root = response->getRoot();
   JsonObject& system = root.createNestedObject("system");
 
-  system["time"] = String(now());
+  system["time"] = String(mynow());
   system["utc"] = sys.timeZone;
   system["soc"] = battery.percentage;
   system["charge"] = !battery.charge;
@@ -709,10 +709,9 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
       DPRINTPLN("[INFO]\tEinheitenwechsel");
     #endif
   }
-
-  //if (!isAP) setTime(getNtpTime());  Restart notwendig?
   
-  DPRINTLN(digitalClockDisplay(now()));
+  DPRINTP("[INFO]\t");
+  DPRINTLN(digitalClockDisplay(mynow()));
   return 1;
 }
 
