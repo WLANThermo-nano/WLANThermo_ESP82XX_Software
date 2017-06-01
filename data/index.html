@@ -2644,9 +2644,11 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse = JSON.parse(response);
 			document.getElementById('channel_settings_save').setAttribute('onclick','setChannel(' + channel + ');');
 			document.getElementById('channel_settings_headtitle').innerHTML  = jsonresponse.channel[channel].name;
-			document.getElementById('channel_name').value  = jsonresponse.channel[channel].name;
-			document.getElementById('temp_max').value  = jsonresponse.channel[channel].max;
-			document.getElementById('temp_min').value  = jsonresponse.channel[channel].min;
+			for (var i = 0; i < 2; i++) {	//mehrfacher aufruf für Safari
+				document.getElementById('channel_name').value  = jsonresponse.channel[channel].name;
+				document.getElementById('temp_max').value  = jsonresponse.channel[channel].max;
+				document.getElementById('temp_min').value  = jsonresponse.channel[channel].min;
+			}
 			document.getElementById('sensor').value = jsonresponse.channel[channel].typ;
 			document.getElementById('webalarm').checked = jsonresponse.channel[channel].alarm;
 		})
@@ -2692,15 +2694,17 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 		})
 	}
-	
+		
 	function showSystem(){
 		hideAll();
 		loadJSON('settings', '', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('timezone').value = jsonresponse.system.utc;
 			document.getElementById('language').value = jsonresponse.system.language;
-			document.getElementById('hostname').value = jsonresponse.system.host;
-			document.getElementById('apname').value = jsonresponse.system.ap;
+			for (var i = 0; i < 2; i++) {	//mehrfacher aufruf für Safari
+				document.getElementById('hostname').value = jsonresponse.system.host;
+				document.getElementById('apname').value = jsonresponse.system.ap;
+			}
 			document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 			document.getElementById('unit').value = jsonresponse.system.unit;
 			document.getElementById('hwalarm').checked = jsonresponse.system.hwalarm;
