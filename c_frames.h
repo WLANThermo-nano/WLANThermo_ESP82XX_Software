@@ -179,7 +179,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
 
   //display->drawString(80,0,String(map(pit_y,0,pit_pause,0,100)) + "%");
 
-  if (!INACTIVESHOW) display->drawString(100,0,"F");
+  if (sys.fastmode) display->drawString(100,0,"F");
   
   if (flash && battery.percentage < 10) {} // nothing for flash effect
   else if (!battery.charge) {
@@ -391,6 +391,18 @@ void drawsys5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
 }
 
 void drawsys6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  if (flashinwork)   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->setFont(ArialMT_Plain_10);
+  
+  // Draw Fastmode
+  display->drawString(114+x, 20+y, "FASTMODE:");
+  if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
+  else if (!inWork && sys.fastmode) display->drawString(114+x, 36+y, "YES");
+  else display->drawString(114+x, 36+y, "NO");
+}
+
+void drawsys7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   
   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
@@ -399,18 +411,6 @@ void drawsys6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   // Draw Version
   display->drawString(114+x, 20+y, "FIRMWARE:");
   display->drawString(114+x,36+y,FIRMWAREVERSION);
-}
-
-void drawsys7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork)   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  display->setFont(ArialMT_Plain_10);
-  
-  // Draw Fastmode
-  display->drawString(114+x, 20+y, "FASTMODE:");
-  if (inWork && tempor) display->drawString(114+x, 36+y, "NO");
-  else if (!inWork && INACTIVESHOW) display->drawString(114+x, 36+y, "NO");
-  else display->drawString(114+x, 36+y, "YES");
 }
 
 void drawback(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {

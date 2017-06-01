@@ -274,7 +274,7 @@ static inline void button_event() {
           break;
 
         case TEMPSUB:                     // Temperaturen durchwandern
-          if (INACTIVESHOW) {
+          if (!sys.fastmode) {
             current_ch++;
             if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
           }
@@ -355,7 +355,7 @@ static inline void button_event() {
           break;
         
         case TEMPSUB: 
-          if (INACTIVESHOW) {
+          if (!sys.fastmode) {
             current_ch--;
             if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
           } else {
@@ -506,13 +506,26 @@ static inline void button_event() {
       case 15:  // Hardware Alarm
         if (event[1]) tempor = sys.hwalarm;
         if (mupi) tempor = !tempor;
-        if (event[2]) sys.hwalarm = tempor;
+        if (event[2]) {
+          if(sys.hwalarm != tempor) {
+            sys.hwalarm = tempor;
+            modifyconfig(eSYSTEM,{});
+          }
+        }
         break;
       
-      case 17:  // Fastmode
-        if (event[1]) tempor = INACTIVESHOW;
+      case 16:  // Fastmode
+        if (event[1]) tempor = sys.fastmode;
         if (mupi) tempor = !tempor;
-        if (event[2]) INACTIVESHOW = tempor;
+        if (event[2]) {
+          if (sys.fastmode != tempor);
+          sys.fastmode = tempor;
+          modifyconfig(eSYSTEM,{});
+        }
+        break;
+
+      default:
+        if (event[1]) inWork = false;     // kein bearbeitbares Attribut
         break;
      
     }

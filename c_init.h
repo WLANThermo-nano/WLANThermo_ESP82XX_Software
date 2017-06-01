@@ -218,7 +218,6 @@ int vol_count = 0;
 // OLED
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL       
 bool LADENSHOW = false;           // LOADING INFORMATION?
-bool INACTIVESHOW = true;         // SHOW INACTIVE CHANNELS
 bool displayblocked = false;                     // No OLED Update
 enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM};
 
