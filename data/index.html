@@ -2332,7 +2332,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 										</td>
 									</tr>
 									<tr>
-										<td><label for="hardwarealert">Hardwarealarm:&nbsp;</label></td>
+										<td><label for="hardwarealert">Summer:&nbsp;</label></td>
 										<td>
 											<label class="switch">
 												<input id="hwalarm" type="checkbox">
@@ -2341,7 +2341,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 										</td>
 									</tr>
 									<tr>
-										<td><label for="summer">Summer:&nbsp;</label></td>
+										<td><label for="summer">Sommerzeit:&nbsp;</label></td>
 										<td>
 											<label class="switch">
 												<input id="summer" type="checkbox">
@@ -2350,7 +2350,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 										</td>
 									</tr>
 									<tr>
-										<td><label for="fastmode">Fastmode:&nbsp;</label></td>
+										<td><label for="fastmode">Schnelllauf:&nbsp;</label></td>
 										<td>
 											<label class="switch">
 												<input id="fastmode" type="checkbox">
@@ -2708,9 +2708,8 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse.system.summer = document.getElementById('summer').checked;
 			jsonresponse.system.fastmode = document.getElementById('fastmode').checked;			
 			var data = JSON.stringify(jsonresponse.system);
-			//alert(data);
 			loadJSON('setsystem', data, function (response) {
-				document.getElementById('thermoname').innerHTML = host;
+				document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 				showIndex();
 			})		
 		})	
