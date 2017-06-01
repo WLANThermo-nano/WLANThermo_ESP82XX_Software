@@ -2721,8 +2721,8 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
     function loadJSON(url, data, callback) {
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
-		xobj.timeout = 1000;
         xobj.open('POST', url, true);
+		xobj.timeout = 2000;
         xobj.setRequestHeader("Content-Type", "application/json");
         xobj.onreadystatechange = function () {
             if (xobj.readyState == 4 && xobj.status == "200") {
