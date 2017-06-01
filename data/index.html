@@ -2633,7 +2633,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			//alert(jsonresponse.channel[channel].min);
 			var data = JSON.stringify(jsonresponse.channel[channel]);
 				//alert(data);
-				loadJSON('setchannels', data, function (response) {
+			loadJSON('setchannels', data, function (response) {
 				showIndex();
 			})		
 		})	
@@ -2675,23 +2675,25 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			document.getElementById('hwalarm').checked = jsonresponse.system.hwalarm;
 		})
 		document.getElementById("system_config").style.display = "inline";
-	}	
+	}
 	
 	function setSystem(){
-		host = document.getElementById('hostname').value.replace(/ /g, '_');
-		utc = document.getElementById('timezone').value;
-		language = document.getElementById('language').value;
-		unit = document.getElementById('unit').value;
-		hwalarm = document.getElementById('hwalarm').checked;
-		var data='{"hwalarm":"' + hwalarm + '","host":"' + host + '","utc":' + utc + ',"language":"' + language + '","unit":"' + unit + '"}';
-		
-		//alert(data);
-		loadJSON('setsystem', data, function (response) {
-			document.getElementById('thermoname').innerHTML = host;
-			showIndex();
-		})
-		
+		loadJSON('settings', '', function (response) {
+			jsonresponse = JSON.parse(response);
+			jsonresponse.system.host = document.getElementById('hostname').value.replace(/ /g, '_');
+			jsonresponse.system.utc = document.getElementById('timezone').value;
+			jsonresponse.system.language = document.getElementById('language').value;
+			jsonresponse.system.unit = document.getElementById('unit').value;
+			jsonresponse.system.hwalarm = document.getElementById('hwalarm').checked;			
+			var data = JSON.stringify(jsonresponse.system);
+			alert(data);
+			loadJSON('setsystem', data, function (response) {
+				document.getElementById('thermoname').innerHTML = host;
+				showIndex();
+			})		
+		})	
 	}
+	
 	function showPitmaster(){
 		hideAll();
 		document.getElementById("pitmaster_config").style.display = "inline";
