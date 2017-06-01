@@ -78,14 +78,17 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   JsonObject& root = response->getRoot();
   JsonObject& _system = root.createNestedObject("system");
 
-  _system["time"] = String(now());
-  _system["utc"] = sys.timeZone;
-  _system["ap"] = sys.apname;
-  _system["host"] = sys.host;
-  _system["language"] = sys.language;
-  _system["unit"] = temp_unit;
-  _system["hwalarm"] = sys.hwalarm;
-  _system["version"] = FIRMWAREVERSION;
+  _system["time"] =       String(now());
+  _system["utc"] =        sys.timeZone;
+  _system["summer"] =     sys.summer;
+  _system["ap"] =         sys.apname;
+  _system["host"] =       sys.host;
+  _system["language"] =   sys.language;
+  _system["unit"] =       temp_unit;
+  _system["hwalarm"] =    sys.hwalarm;
+  _system["fastmode"] =   sys.fastmode;
+  _system["version"] =    FIRMWAREVERSION;
+  _system["hwversion"] =  String("V")+String(sys.hwversion);
   
   JsonArray& _typ = root.createNestedArray("sensors");
   for (int i = 0; i < SENSORTYPEN; i++) {
@@ -99,6 +102,9 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
 
   JsonObject& _chart = root.createNestedObject("charts");
   _chart["thingspeak"] = THINGSPEAK_KEY;
+
+  JsonArray& _hw = root.createNestedArray("hardware");
+  _hw.add(String("V")+String(1));
     
   if (www) {
     response->setLength();
@@ -674,12 +680,23 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _system = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_system.success()) return 0;
+
+  String unit;
   
-  sys.hwalarm = _system["hwalarm"];
-  sys.host = _system["host"].asString();
-  sys.timeZone = _system["utc"];
-  sys.language = _system["language"].asString();
-  String unit = _system["unit"].asString();
+  if (_system.containsKey("hwalarm")) sys.hwalarm = _system["hwalarm"];
+  if (_system.containsKey("host")) sys.host = _system["host"].asString();
+  if (_system.containsKey("utc")) sys.timeZone = _system["utc"];
+  if (_system.containsKey("language")) sys.language = _system["language"].asString();
+  if (_system.containsKey("unit"))  unit = _system["unit"].asString();
+  
+  if (_system.containsKey("summer")) sys.summer = _system["summer"];
+  if (_system.containsKey("fastmode")) sys.fastmode = _system["fastmode"];
+  if (_system.containsKey("ap")) sys.apname = _system["ap"].asString();
+  if (_system.containsKey("hwversion")) {
+    String ver = _system["hwversion"].asString();
+    ver.replace("V","");
+    sys.hwversion = ver.toInt();
+  }
 
   modifyconfig(eSYSTEM,{});                                      // SPEICHERN
   
@@ -692,7 +709,10 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
       DPRINTPLN("[INFO]\tEinheitenwechsel");
     #endif
   }
+
+  //if (!isAP) setTime(getNtpTime());  Restart notwendig?
   
+  DPRINTLN(digitalClockDisplay(now()));
   return 1;
 }
 

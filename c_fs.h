@@ -210,11 +210,11 @@ bool loadconfig(byte count) {
         // oberes limit wird spaeter abgefragt
       }
       else return false;
-      if (json.containsKey("sommer")) sys.sommer = json["sommer"];
+      if (json.containsKey("summer")) sys.summer = json["summer"];
       else return false;
       if (json.containsKey("fast")) sys.fastmode = json["fast"];
       else return false;
-      if (json.containsKey("hwversion")) sys.hwversion = json["hwversion"].asString();
+      if (json.containsKey("hwversion")) sys.hwversion = json["hwversion"];
       else return false;
     }
     break;
@@ -352,17 +352,19 @@ bool setconfig(byte count, const char* data[2]) {
 
     case 4:         // SYSTEM
     {
-      
+      String host = HOSTNAME;
+      host += String(ESP.getChipId(), HEX);
+
       JsonObject& json = jsonBuffer.createObject();
   
-      json["host"] =        sys.host;
-      json["hwalarm"] =     sys.hwalarm; 
-      json["ap"] =          sys.apname;
-      json["lang"] =        sys.language;
-      json["utc"] =         sys.timeZone;
-      json["sommer"] =      sys.sommer;
-      json["fast"] =        sys.fastmode;
-      json["hwversion"] =   sys.hwversion;
+      json["host"] =        host;
+      json["hwalarm"] =     false; 
+      json["ap"] =          APNAME;
+      json["lang"] =        "de";
+      json["utc"] =         1;
+      json["summer"] =      false;
+      json["fast"] =        false;
+      json["hwversion"] =   1;
       json["batmax"] =      BATTMAX;
       json["batmin"] =      BATTMIN;
       json["logsec"] =      log_sector;
@@ -545,7 +547,7 @@ bool modifyconfig(byte count, const char* data[12]) {
       json["ap"] =          sys.apname;
       json["lang"] =        sys.language;
       json["utc"] =         sys.timeZone;
-      json["sommer"] =      sys.sommer;
+      json["summer"] =      sys.summer;
       json["fast"] =        sys.fastmode;
       json["hwversion"] =   sys.hwversion;
       json["batmax"] =      battery.max;

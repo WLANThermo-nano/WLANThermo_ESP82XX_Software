@@ -190,10 +190,10 @@ byte pulsalarm = 1;
 
 // SYSTEM
 struct System {
-   String hwversion;           // HARDWARE VERSION
+   byte hwversion;           // HARDWARE VERSION
    bool fastmode;              // FAST DISPLAY MODE
    String apname;             // AP NAME
-   bool sommer;              // SUMMER TIME
+   bool summer;              // SUMMER TIME
    String host;                     // HOST NAME
    String language;           // SYSTEM LANGUAGE
    int timeZone;              // TIMEZONE
@@ -359,23 +359,6 @@ void set_serial() {
   Serial.begin(115200);
   DPRINTLN();
   DPRINTLN();
-}
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Initialize System
-void set_system() {
-
-  String host = HOSTNAME;
-  host += String(ESP.getChipId(), HEX);
-
-  sys.apname = APNAME;
-  sys.sommer = false;
-  sys.fastmode = false;
-  sys.hwversion = "V1";
-  sys.host = host;
-  sys.language = "de";
-  sys.timeZone = 1;
-  sys.hwalarm = false;
 }
 
 

@@ -158,7 +158,7 @@ time_t getNtpTime() {
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
-      if (sys.sommer) return secsSince1900 - 2208988800UL + (sys.timeZone+1) * SECS_PER_HOUR;
+      if (sys.summer) return secsSince1900 - 2208988800UL + (sys.timeZone+1) * SECS_PER_HOUR;
       else return secsSince1900 - 2208988800UL + sys.timeZone * SECS_PER_HOUR;
     }
   }

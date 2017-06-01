@@ -79,9 +79,6 @@ void setup() {
 
   // Initialize Serial 
   set_serial(); //Serial.setDebugOutput(true);
-
-  // Initialize System
-  set_system();
   
   // Initialize OLED
   set_OLED();
@@ -94,7 +91,7 @@ void setup() {
     // Open Config-File
     check_sector();
     setEE(); start_fs();
-    
+
     // Initialize Wifi
     set_wifi();
 
