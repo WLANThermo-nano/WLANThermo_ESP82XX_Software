@@ -872,9 +872,9 @@ void server_setup() {
       request->send(200, "text/json", "OK");
     });
     
-    // REQUEST: /stop wifi
-    server.on("/stopwifi", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      isAP = 3; // Turn Wifi off
+    // REQUEST: /clear wifi
+    server.on("/clearwifi", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      setconfig(eWIFI,{}); // clear Wifi settings
       request->send(200, "text/json", "OK");
     });
 
