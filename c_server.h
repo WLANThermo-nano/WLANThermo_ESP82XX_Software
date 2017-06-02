@@ -95,9 +95,21 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
     _typ.add(ttypname[i]);
   }
 
-  JsonArray& _pit = root.createNestedArray("pitmaster");
-  for (int j = 0; j < pidsize; j++) {
-    _pit.add(pid[j].name);
+  JsonArray& _pid = root.createNestedArray("pitmaster");
+  for (int i = 0; i < pidsize; i++) {
+    JsonObject& _pid = root.createNestedObject("charts");
+    _pid["name"] = pid[i].name;
+    _pid["number"] = i;
+    _pid["Kp"] = pid[i].Kp;
+    _pid["Ki"] = pid[i].Ki;
+    _pid["Kd"] = pid[i].Kd;
+    _pid["Kp_a"] = pid[i].Kp_a;
+    _pid["Ki_a"] = pid[i].Ki_a;
+    _pid["Kd_a"] = pid[i].Kd_a;
+    _pid["switch"] = pid[i].pswitch;
+    _pid["freq"] = pid[i].freq;
+    _pid["pwmmin"] = pid[i].pwmmin;
+    _pid["pwmmax"] = pid[i].pwmmax;
   }
 
   JsonObject& _chart = root.createNestedObject("charts");
@@ -105,6 +117,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
 
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
+  _hw.add(String("V")+String(2));
     
   if (www) {
     response->setLength();
@@ -152,6 +165,7 @@ void handleData(AsyncWebServerRequest *request, bool www) {
   master["value"] = pitmaster.value;
   master["set"] = pitmaster.set;
   master["active"] = pitmaster.active;
+  master["manuel"] = pitmaster.manuel;
   
   if (www) {
     response->setLength();
@@ -797,7 +811,7 @@ void server_setup() {
     // REQUEST: /settings
     server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handleSettings(request, true);
-    });
+    });    
     
     // REQUEST: /networkscan
     server.on("/networkscan", HTTP_POST, [](AsyncWebServerRequest *request) { 

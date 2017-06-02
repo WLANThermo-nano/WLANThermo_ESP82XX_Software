@@ -40,6 +40,8 @@ struct PID {
   bool freq;
   float esum;                   // Startbedingung I-Anteil
   float elast;                  // Startbedingung D-Anteil
+  int pwmmin;
+  int pwmmax;
 };
 
 PID pid[PITMASTERSIZE];
