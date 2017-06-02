@@ -159,7 +159,8 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
 
 
 String  temp_unit = "C";
-String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
+//String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
+String colors[8] = {"#0C4C88","#22B14C","#EF562D","#FFC100","#A349A4","#804000","#5587A2","#5C7148"};
 
 // PITMASTER
 struct Pitmaster {
@@ -373,6 +374,11 @@ void clearEE(int startP, int endP);
 // PITMASTER
 void startautotunePID(int maxCycles, bool storeValues);
 
+// BOT
+#ifdef THINGSPEAK
+void sendMessage(int ch, int count);
+void sendData();
+#endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial

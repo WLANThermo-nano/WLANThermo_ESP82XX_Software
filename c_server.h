@@ -648,7 +648,7 @@ bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
     if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[num].max = _limit;
     ch[num].alarm = _cha["alarm"];                           // ALARM
     ch[num].color = _cha["color"].asString();                // COLOR
-  }
+  } else return 0;
   
   modifyconfig(eCHANNEL,{});                                      // SPEICHERN
   return 1;
