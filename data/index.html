@@ -2593,11 +2593,11 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 							  <label class="control-label" for="input">Kanal Name</label><i class="bar"></i>
 							</div>			
 							<div class="form-group">
-							  <input class="temp_input" id="temp_min" type="number" step="0.01" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
+							  <input class="temp_input" id="temp_min" type="number" step="0.1" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
 							  <label class="control-label" for="input">Temp Min</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
-							  <input class="temp_input" id="temp_max" type="number" step="0.01" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
+							  <input class="temp_input" id="temp_max" type="number" step="0.1" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
 							  <label class="control-label" for="input">Temp Max</label><i class="bar"></i>
 							</div>													
 							<div class="form-group">
@@ -2608,9 +2608,16 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 							</div>	
 							<div class="form-group">
 							  <select id="color">
-								<option>rot</option>
-								<option>blau</option>
-								<option>gelb</option>
+								<option value="#5587A2">Niagara</option>
+								<option value="#FFAEC9">Rosa</option>
+								<option value="#0C4C88">Lapis Blue</option>
+								<option value="#EF562D">Orange</option>
+								<option value="#A349A4">Lila</option>
+								<option value="#ED1C24">Red</option>
+								<option value="#22B14C">Green</option>
+								<option value="#FFC100">Gold</option>
+								<option value="#5C7148">Kale</option>
+								<option value="#804000">Brown</option>
 							  </select>
 							  <label class="control-label" for="select">Farbe</label><i class="bar"></i>
 							</div>	
@@ -2698,7 +2705,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 							</div>
 							<div class="checkbox">
 							  <label>
-								<input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i>Summer
+								<input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i>Hardwarealarm
 							  </label>
 							</div>
 							<div class="checkbox">
@@ -3022,11 +3029,10 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse = JSON.parse(response);
 			document.getElementById('channel_settings_save').setAttribute('onclick','setChannel(' + channel + ');');
 			document.getElementById('channel_settings_headtitle').innerHTML  = jsonresponse.channel[channel].name;
-			for (var i = 0; i < 2; i++) {	//mehrfacher aufruf für Safari
-				document.getElementById('channel_name').value  = jsonresponse.channel[channel].name;
-				document.getElementById('temp_max').value  = jsonresponse.channel[channel].max;
-				document.getElementById('temp_min').value  = jsonresponse.channel[channel].min;
-			}
+			document.getElementById('channel_name').value  = jsonresponse.channel[channel].name;
+			document.getElementById('temp_max').value  = jsonresponse.channel[channel].max;
+			document.getElementById('temp_min').value  = jsonresponse.channel[channel].min;
+			document.getElementById('color').value = jsonresponse.channel[channel].color;
 			document.getElementById('sensor').value = jsonresponse.channel[channel].typ;
 			document.getElementById('webalarm').checked = jsonresponse.channel[channel].alarm;
 		})
@@ -3040,6 +3046,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse.channel[channel].name = document.getElementById('channel_name').value;
 			jsonresponse.channel[channel].typ = document.getElementById('sensor').value;
 			jsonresponse.channel[channel].alarm = document.getElementById('webalarm').checked;
+			jsonresponse.channel[channel].color = document.getElementById('color').value;
 			//alert(jsonresponse.channel[channel].min);
 			var data = JSON.stringify(jsonresponse.channel[channel]);
 				//alert(data);
