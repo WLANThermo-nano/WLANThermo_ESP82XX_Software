@@ -3027,7 +3027,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse.charts.TShttp = document.getElementById('TShttp').value;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
-			loadJSON('setchannels', data, function (response) {
+			loadJSON('setcharts', data, function (response) {
 				showIndex();
 			})		
 		})
