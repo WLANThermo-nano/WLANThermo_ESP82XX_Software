@@ -113,7 +113,9 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   }
 
   JsonObject& _chart = root.createNestedObject("charts");
-  _chart["thingspeak"] = THINGSPEAK_KEY;
+  _chart["TSwrite"] = charts.TSwriteKey; 
+  _chart["TShttp"] = charts.TShttpKey;
+  _chart["TSchID"] = charts.TSchID;
 
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
@@ -719,9 +721,7 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
     transform_limits();                             // Transform Limits
     modifyconfig(eCHANNEL,{});                      // Save Config
     get_Temperature();                              // Update Temperature
-    #ifdef DEBUG
-      DPRINTPLN("[INFO]\tEinheitenwechsel");
-    #endif
+    DPRINTPLN("[INFO]\tEinheitenwechsel");
   }
   
   DPRINTP("[INFO]\t");
@@ -739,19 +739,13 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
   JsonObject& _chart = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_chart.success()) return 0;
   
-  const char* data[2];
-  data[0] = _chart["thingspeak"];
+  charts.TSwriteKey = _chart["TSwrite"].asString();  
+  charts.TShttpKey = _chart["TShttp"].asString(); 
+  charts.TSchID = _chart["TSchID"].asString();
   
-  if (!setconfig(eTHING,data)) {
-      #ifdef DEBUG
-        DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        DPRINTPLN("[INFO]\tThingspeak config saved");
-      #endif
-    }
-  
+  if (!setconfig(eTHING,{})) DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
+  else  DPRINTPLN("[INFO]\tThingspeak config saved");
+      
   return 1;
 }
 

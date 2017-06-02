@@ -141,16 +141,20 @@ void read_serial(char *buffer) {
   else if (strcmp(command, "setTS")==0) {
 
     const char* data[1]; 
-    data[0] = json["data"][0];
+    charts.TSwriteKey = json["data"][0].asString();
+    charts.TShttpKey = json["data"][1].asString();
+    charts.TSchID = json["data"][2].asString();
     
-    if (!setconfig(eTHING,data)) DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
+    if (!setconfig(eTHING,{})) DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
     else DPRINTPLN("[INFO]\tThingspeak config saved");
     
   }
 
   // GET THINGSPEAK KEY
   else if (strcmp(command, "getTS")==0) {
-    Serial.println(THINGSPEAK_KEY);
+    Serial.println(charts.TSwriteKey);
+    Serial.println(charts.TShttpKey);
+    Serial.println(charts.TSchID);
   }
 
   // AUTOTUNE

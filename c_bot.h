@@ -29,13 +29,12 @@ boolean thingspeakshowbattery = true;
   // Send data to Thingspeak
   void sendData() {
 
-    unsigned long vorher = millis(); 
-    String apiKey = THINGSPEAK_KEY;
+    unsigned long vorher = millis();
   
     // Sendedauer: ~120ms  
     if (THINGclient.connect(SERVER1,80)) {
 
-      String postStr = apiKey;
+      String postStr = charts.TSwriteKey;
 
       for (int i = 0; i < 7; i++)  {
         if (ch[i].temp != INACTIVEVALUE) {
@@ -51,7 +50,7 @@ boolean thingspeakshowbattery = true;
       else postStr += String(ch[7].temp,1);
 
       THINGclient.print("POST /update HTTP/1.1\nHost: api.thingspeak.com\nConnection: close\nX-THINGSPEAKAPIKEY: "
-                        +apiKey+"\nContent-Type: application/x-www-form-urlencoded\nContent-Length: "
+                        +charts.TSwriteKey+"\nContent-Type: application/x-www-form-urlencoded\nContent-Length: "
                         +postStr.length()+"\n\n"+postStr);
 
       DPRINTF("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
@@ -66,13 +65,12 @@ boolean thingspeakshowbattery = true;
   void sendMessage(int ch, int count) {
 
     unsigned long vorher = millis();
-    String apiKey = "xxx";
 
     // Sendedauer: ~120 ms
     if (THINGclient.connect(SERVER1,80)) {
  
       String url = "/apps/thinghttp/send_request?api_key=";
-      url += apiKey;
+      url += charts.TShttpKey;
       url += "&message=";
       if (count) url += "hoch";
       else url += "niedrig";

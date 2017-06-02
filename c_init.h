@@ -203,6 +203,7 @@ struct System {
 
 System sys;
 
+// BATTERY
 struct Battery {
   int voltage;                    // CURRENT VOLTAGE
   bool charge;                    // CHARGE DETECTION
@@ -215,6 +216,15 @@ struct Battery {
 Battery battery;
 uint32_t vol_sum = 0;
 int vol_count = 0;
+
+// CHARTS
+struct Charts {
+   String TSwriteKey;           // THINGSPEAK WRITE API KEY
+   String TShttpKey;            // THINGSPEAK HTTP API KEY 
+   String TSchID;                // THINGSPEAK CHANNEL ID 
+};
+
+Charts charts;
 
 // OLED
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL       
@@ -238,7 +248,7 @@ String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;
 long rssi = 0;                   // Buffer rssi
-String THINGSPEAK_KEY;
+
 long scantime;
 bool disconnectAP;
 struct HoldSSID {

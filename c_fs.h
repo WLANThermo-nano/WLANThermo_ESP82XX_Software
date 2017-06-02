@@ -147,7 +147,9 @@ bool loadconfig(byte count) {
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,THING_FILE)) return false;
-      THINGSPEAK_KEY = json["KEY"].asString();
+      charts.TSwriteKey = json["TSwrite"].asString();
+      charts.TShttpKey = json["TShttp"].asString();
+      charts.TSchID = json["TSchID"].asString();
     }
     break;
 
@@ -304,8 +306,10 @@ bool setconfig(byte count, const char* data[2]) {
     case 2:         //THING
     {
       JsonObject& json = jsonBuffer.createObject();
-      THINGSPEAK_KEY = data[0];
-      json["KEY"] = THINGSPEAK_KEY;
+      
+      json["TSwrite"] = charts.TSwriteKey;
+      json["TShttp"] = charts.TShttpKey;
+      json["TSchID"] = charts.TSchID;
       
       size_t size = json.measureLength() + 1;
       if (size > 100) {
@@ -497,6 +501,7 @@ bool modifyconfig(byte count, const char* data[12]) {
     break;
     
     case 2:         //THING
+    // nicht notwendig, kann über setconfig beschrieben werden
     break;
 
     case 3:         // PITMASTER

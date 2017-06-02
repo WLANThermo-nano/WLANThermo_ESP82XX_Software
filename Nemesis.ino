@@ -205,7 +205,7 @@ void loop() {
       if (!isAP) {
 
         #ifdef THINGSPEAK
-          if (THINGSPEAK_KEY != "") sendData();
+          if (charts.TSwriteKey != "") sendData();
         #endif
           
         #ifdef TELEGRAM
