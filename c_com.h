@@ -185,7 +185,7 @@ void read_serial(char *buffer) {
     if (pidsize < PITMASTERSIZE) {
 
       pid[pidsize].name =    json["data"][0].asString();
-      pid[pidsize].typ =     json["data"][1];
+      pid[pidsize].aktor =   json["data"][1];
       pid[pidsize].Kp =      json["data"][2];  
       pid[pidsize].Ki =      json["data"][3];    
       pid[pidsize].Kd =      json["data"][4];                     

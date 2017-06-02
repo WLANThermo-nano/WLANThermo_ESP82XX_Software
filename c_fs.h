@@ -102,16 +102,15 @@ bool loadconfig(byte count) {
       //configFile.readBytes(buf.get(), configFile.size());
       //configFile.close();
 
-      std::unique_ptr<char[]> buf(new char[500]);
-      readEE(buf.get(),500, 400);
+      std::unique_ptr<char[]> buf(new char[EECHANNEL]);
+      readEE(buf.get(),EECHANNEL, EECHANNELBEGIN);
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,CHANNEL_FILE)) return false;
-      if (json["VERSION"] != CHANNELJSONVERSION) return false;
-  
-      const char* author = json["AUTHOR"];
-      temp_unit = json["temp_unit"].asString();
-
+      
+      if (json.containsKey("temp_unit"))  temp_unit = json["temp_unit"].asString();
+      else return false;
+      
       for (int i=0; i < CHANNELS; i++){
           ch[i].name = json["tname"][i].asString();
           ch[i].typ = json["ttyp"][i];            
@@ -125,8 +124,8 @@ bool loadconfig(byte count) {
     
     case 1:     // WIFI
     {
-      std::unique_ptr<char[]> buf(new char[300]);
-      readEE(buf.get(),300, 0);
+      std::unique_ptr<char[]> buf(new char[EEWIFI]);
+      readEE(buf.get(),EEWIFI, EEWIFIBEGIN);
 
       JsonArray& _wifi = jsonBuffer.parseArray(buf.get());
       if (!checkjson(_wifi,WIFI_FILE)) return false;
@@ -142,21 +141,25 @@ bool loadconfig(byte count) {
   
     case 2:     // THINGSPEAK
     { 
-      std::unique_ptr<char[]> buf(new char[100]);
-      readEE(buf.get(),100, 300);
+      std::unique_ptr<char[]> buf(new char[EETHING]);
+      readEE(buf.get(),EETHING, EETHINGBEGIN);
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,THING_FILE)) return false;
-      charts.TSwriteKey = json["TSwrite"].asString();
-      charts.TShttpKey = json["TShttp"].asString();
-      charts.TSchID = json["TSchID"].asString();
+      
+      if (json.containsKey("TSwrite"))  charts.TSwriteKey = json["TSwrite"].asString();
+      else return false;
+      if (json.containsKey("TShttp"))  charts.TShttpKey = json["TShttp"].asString();
+      else return false;
+      if (json.containsKey("TSchID"))  charts.TSchID = json["TSchID"].asString();
+      else return false;
     }
     break;
 
     case 3:     // PITMASTER
     {
-      std::unique_ptr<char[]> buf(new char[600]);
-      readEE(buf.get(),600, 900);
+      std::unique_ptr<char[]> buf(new char[EEPITMASTER]);
+      readEE(buf.get(),EEPITMASTER, EEPITMASTERBEGIN);
 
       JsonArray& _pid = jsonBuffer.parseArray(buf.get());
       if (!checkjson(_pid,PIT_FILE)) return false;
@@ -167,7 +170,7 @@ bool loadconfig(byte count) {
       for (JsonArray::iterator it=_pid.begin(); it!=_pid.end(); ++it) {  
         pid[pidsize].name = _pid[pidsize]["name"].asString();
         pid[pidsize].id = _pid[pidsize]["id"];
-        pid[pidsize].typ = _pid[pidsize]["typ"];  
+        pid[pidsize].aktor = _pid[pidsize]["aktor"];  
         pid[pidsize].Kp = _pid[pidsize]["Kp"];  
         pid[pidsize].Ki = _pid[pidsize]["Ki"];    
         pid[pidsize].Kd = _pid[pidsize]["Kd"];                     
@@ -192,8 +195,8 @@ bool loadconfig(byte count) {
 
     case 4:     // SYSTEM
     {
-      std::unique_ptr<char[]> buf(new char[250]);
-      readEE(buf.get(),250, 1500);
+      std::unique_ptr<char[]> buf(new char[EESYSTEM]);
+      readEE(buf.get(),EESYSTEM, EESYSTEMBEGIN);
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,SYSTEM_FILE)) return false;
@@ -256,8 +259,6 @@ bool setconfig(byte count, const char* data[2]) {
     {
       JsonObject& json = jsonBuffer.createObject();
   
-      json["AUTHOR"] = "s.ochs";
-      json["VERSION"] = CHANNELJSONVERSION;
       json["temp_unit"] = temp_unit;
 
       JsonArray& _name = json.createNestedArray("tname");
@@ -286,20 +287,20 @@ bool setconfig(byte count, const char* data[2]) {
       //json.printTo(configFile);
       //configFile.close();
       size_t size = json.measureLength() + 1;
-      clearEE(500,400);  // Bereich reinigen
-      static char buffer[500];
+      clearEE(EECHANNEL,EECHANNELBEGIN);  // Bereich reinigen
+      static char buffer[EECHANNEL];
       json.printTo(buffer, size);
-      writeEE(buffer, size, 400);
+      writeEE(buffer, size, EECHANNELBEGIN);
     }
     break;
 
     case 1:        // WIFI
     {
       JsonArray& json = jsonBuffer.createArray();
-      clearEE(300,0);  // Bereich reinigen
+      clearEE(EEWIFI,EEWIFIBEGIN);  // Bereich reinigen
       static char buffer[3];
       json.printTo(buffer, 3);
-      writeEE(buffer, 3, 0);
+      writeEE(buffer, 3, EEWIFIBEGIN);
     }
     break;
     
@@ -312,14 +313,14 @@ bool setconfig(byte count, const char* data[2]) {
       json["TSchID"] = charts.TSchID;
       
       size_t size = json.measureLength() + 1;
-      if (size > 100) {
+      if (size > EETHING) {
         DPRINTPLN("[INFO]\tZu viele THINGSPEAK Daten!");
         return false;
       } else {
-        clearEE(100,300);  // Bereich reinigen
-        static char buffer[100];
+        clearEE(EETHING,EETHINGBEGIN);  // Bereich reinigen
+        static char buffer[EETHING];
         json.printTo(buffer, size);
-        writeEE(buffer, size, 300);
+        writeEE(buffer, size, EETHINGBEGIN);
       }
     }
     break;
@@ -333,7 +334,7 @@ bool setconfig(byte count, const char* data[2]) {
         JsonObject& _pid = json.createNestedObject();
         _pid["name"]     = pid[i].name;
         _pid["id"]       = pid[i].id;
-        _pid["typ"]      = pid[i].typ;
+        _pid["aktor"]    = pid[i].aktor;
         _pid["Kp"]       = pid[i].Kp;  
         _pid["Ki"]       = pid[i].Ki;    
         _pid["Kd"]       = pid[i].Kd;                   
@@ -352,14 +353,14 @@ bool setconfig(byte count, const char* data[2]) {
       }    
       
       size_t size = json.measureLength() + 1;
-      if (size > 600) {
+      if (size > EEPITMASTER) {
         DPRINTPLN("[INFO]\tZu viele PITMASTER Daten!");
         return false;
       } else {
-        clearEE(600,900);  // Bereich reinigen
-        static char buffer[600];
+        clearEE(EEPITMASTER,EEPITMASTERBEGIN);  // Bereich reinigen
+        static char buffer[EEPITMASTER];
         json.printTo(buffer, size);
-        writeEE(buffer, size, 900);
+        writeEE(buffer, size, EEPITMASTERBEGIN);
       }
     }
     break;
@@ -384,10 +385,10 @@ bool setconfig(byte count, const char* data[2]) {
       json["logsec"] =      log_sector;
     
       size_t size = json.measureLength() + 1;
-      clearEE(250,1500);  // Bereich reinigen
-      static char buffer[250];
+      clearEE(EESYSTEM,EESYSTEMBEGIN);  // Bereich reinigen
+      static char buffer[EESYSTEM];
       json.printTo(buffer, size);
-      writeEE(buffer, size, 1500);
+      writeEE(buffer, size, EESYSTEMBEGIN);
     }
     break;
 
@@ -415,24 +416,10 @@ bool modifyconfig(byte count, const char* data[12]) {
 
   switch (count) {
     case 0:           // CHANNEL
-    {
-      // Alte Daten auslesen
-      //if (!loadfile(CHANNEL_FILE,configFile)) return false;
-      //std::unique_ptr<char[]> buf(new char[configFile.size()]);
-      //configFile.readBytes(buf.get(), configFile.size());
-      //configFile.close();
-      
-      std::unique_ptr<char[]> buf(new char[500]);
-      readEE(buf.get(),500, 400);
-      
-      JsonObject& alt = jsonBuffer.parseObject(buf.get());
-      if (!checkjson(alt,CHANNEL_FILE)) return false;
-      
+    {   
       // Neue Daten erzeugen
       JsonObject& json = jsonBuffer.createObject();
 
-      json["AUTHOR"] = alt["AUTHOR"];
-      json["VERSION"] = CHANNELJSONVERSION;
       json["temp_unit"] = temp_unit;
 
       JsonArray& _name = json.createNestedArray("tname");
@@ -452,27 +439,19 @@ bool modifyconfig(byte count, const char* data[12]) {
       }
 
       // Speichern
-      //if (!savefile(CHANNEL_FILE, configFile)) return false;
-      //json.printTo(configFile);
-      //configFile.close();
       size_t size = json.measureLength() + 1;
-      clearEE(500,400);  // Bereich reinigen
-      static char buffer[500];
+      clearEE(EECHANNEL,EECHANNELBEGIN);  // Bereich reinigen
+      static char buffer[EECHANNEL];
       json.printTo(buffer, size);
-      writeEE(buffer, size, 400);
-
-      //DPRINT("[JSON SET]\t");
-      //json.printTo(Serial);
-      //DPRINTLN();
-      
+      writeEE(buffer, size, EECHANNELBEGIN);
     }
     break;
 
     case 1:         // WIFI
     {
       // Alte Daten auslesen
-      std::unique_ptr<char[]> buf(new char[300]);
-      readEE(buf.get(), 300, 0);
+      std::unique_ptr<char[]> buf(new char[EEWIFI]);
+      readEE(buf.get(), EEWIFI, EEWIFIBEGIN);
 
       JsonArray& json = jsonBuffer.parseArray(buf.get());
       if (!checkjson(json,WIFI_FILE)) {
@@ -489,13 +468,14 @@ bool modifyconfig(byte count, const char* data[12]) {
       // Speichern
       size_t size = json.measureLength() + 1;
       
-      if (size > 300) {
+      if (size > EEWIFI) {
         DPRINTPLN("[INFO]\tZu viele WIFI Daten!");
         return false;
       } else {
-        static char buffer[300];
+        clearEE(EEWIFI,EEWIFIBEGIN);  // Bereich reinigen
+        static char buffer[EEWIFI];
         json.printTo(buffer, size);
-        writeEE(buffer, size, 0); 
+        writeEE(buffer, size, EEWIFIBEGIN); 
       } 
     }
     break;
@@ -507,8 +487,8 @@ bool modifyconfig(byte count, const char* data[12]) {
     case 3:         // PITMASTER
     {
       // Alte Daten auslesen
-      std::unique_ptr<char[]> buf(new char[600]);
-      readEE(buf.get(), 600, 900);
+      std::unique_ptr<char[]> buf(new char[EEPITMASTER]);
+      readEE(buf.get(), EEPITMASTER, EEPITMASTERBEGIN);
 
       JsonArray& json = jsonBuffer.parseArray(buf.get());
       if (!checkjson(json,PIT_FILE)) {
@@ -522,7 +502,7 @@ bool modifyconfig(byte count, const char* data[12]) {
       
       _pid["name"]     = pid[pidsize].name;
       _pid["id"]       = pid[pidsize].id;
-      _pid["typ"]      = pid[pidsize].typ;
+      _pid["aktor"]    = pid[pidsize].aktor;
       _pid["Kp"]       = pid[pidsize].Kp;  
       _pid["Ki"]       = pid[pidsize].Ki;    
       _pid["Kd"]       = pid[pidsize].Kd;                   
@@ -540,13 +520,14 @@ bool modifyconfig(byte count, const char* data[12]) {
     
       // Speichern
       size_t size = json.measureLength() + 1;
-      if (size > 600) {
+      if (size > EEPITMASTER) {
         DPRINTPLN("[INFO]\tZu viele PITMASTER Daten!");
         return false;
       } else {
-        static char buffer[600];
+        clearEE(EEPITMASTER,EEPITMASTERBEGIN);  // Bereich reinigen
+        static char buffer[EEPITMASTER];
         json.printTo(buffer, size);
-        writeEE(buffer, size, 900); 
+        writeEE(buffer, size, EEPITMASTERBEGIN); 
       }
     }
     break;
@@ -554,8 +535,8 @@ bool modifyconfig(byte count, const char* data[12]) {
     case 4:           // SYSTEM
     {
       // Alte Daten auslesen
-      std::unique_ptr<char[]> buf(new char[250]);
-      readEE(buf.get(),250, 1500);
+      std::unique_ptr<char[]> buf(new char[EESYSTEM]);
+      readEE(buf.get(),EESYSTEM, EESYSTEMBEGIN);
       
       JsonObject& alt = jsonBuffer.parseObject(buf.get());
       if (!checkjson(alt,SYSTEM_FILE)) return false;
@@ -577,10 +558,10 @@ bool modifyconfig(byte count, const char* data[12]) {
 
       // Speichern
       size_t size = json.measureLength() + 1;
-      clearEE(250,1500);  // Bereich reinigen
-      static char buffer[250];
+      clearEE(EESYSTEM,EESYSTEMBEGIN);  // Bereich reinigen
+      static char buffer[EESYSTEM];
       json.printTo(buffer, size);
-      writeEE(buffer, size, 1500);
+      writeEE(buffer, size, EESYSTEMBEGIN);
       
     }
     break;
@@ -625,8 +606,10 @@ void start_fs() {
 
 
   // THINGSPEAK
-  if (!loadconfig(eTHING)) DPRINTPLN("[INFO]\tFailed to load Thingspeak config");
-  else DPRINTPLN("[INFO]\tThingspeak config loaded");
+  if (!loadconfig(eTHING)) {
+    DPRINTPLN("[INFO]\tFailed to load Thingspeak config");
+    setconfig(eTHING,{});  // Speicherplatz vorbereiten
+  } else DPRINTPLN("[INFO]\tThingspeak config loaded");
 
 
   // PITMASTER

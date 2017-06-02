@@ -28,7 +28,7 @@ int pidMax = 100;      // Maximum (PWM) value, the heater should be set
 struct PID {
   String name;
   byte id;
-  byte typ;                     // 0: SSR, 1:FAN, 2:Servo
+  byte aktor;                     // 0: SSR, 1:FAN, 2:Servo
   //byte port;                  // IO wird über typ bestimmt
   float Kp;                     // P-Konstante oberhalb pswitch
   float Ki;                     // I-Konstante oberhalb pswitch
@@ -98,7 +98,7 @@ void set_pitmaster() {
   pitmaster.set = ch[pitmaster.channel].min;
   pitmaster.active = false;
   pitmaster.value = 0;
-  pitmaster.manuel = 0;
+  pitmaster.manuel = false;
   pitmaster.event = false;
   pitmaster.msec = 0;
   pitmaster.pause = 1000;
@@ -111,9 +111,9 @@ void set_pitmaster() {
 void set_pid() {
   
   pidsize = 3;
-  pid[0] = {"PID1", 0, 0, 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 0, 0, 100, 0, 0, 0, 0};
-  pid[1] = {"PID2", 1, 0, 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 0, 0, 100, 0, 0, 0, 0};
-  pid[2] = {"PID3", 2, 0, 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 0, 0, 100, 0, 0, 0, 0};
+  pid[0] = {"SSR SousVide", 0, 0, 165, 0.591, 1000, 100, 0.08, 5, 0, 95, 0.9, 0, 0, 80, 0, 0, 0, 0};
+  pid[1] = {"TITAN 50x50", 1, 1, 3.8, 0.01, 128, 6.0, 0.001, 10, 0, 95, 0.9, 0, 22, 100, 0, 0, 0, 0};
+  pid[2] = {"TITAN 60x60", 2, 1, 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 0, 33, 100, 0, 0, 0, 0};
 
 }
 
@@ -451,16 +451,14 @@ void pitmaster_control() {
   
       float y;
 
-      if (autotune.initialized)       y = autotunePID();
-      else if (pitmaster.manuel > 0)  y = pitmaster.manuel;
-      else                            y = PID_Regler();
+      if (autotune.initialized)       pitmaster.value = autotunePID();
+      else if (!pitmaster.manuel)     pitmaster.value = PID_Regler();
+      // falls manuel wird value vorgegeben
       
-      pitmaster.value = y;
-
-      if (pid[pitmaster.pid].typ == 1)
-        analogWrite(PITMASTER1,map(y,0,100,0,1024));
-      else if (pid[pitmaster.pid].typ == 0){
-        pitmaster.msec = map(y,0,100,0,pitmaster.pause); 
+      if (pid[pitmaster.pid].aktor == 1)                // FAN
+        analogWrite(PITMASTER1,map(pitmaster.value,0,100,0,1024));
+      else if (pid[pitmaster.pid].aktor == 0){          // SSR
+        pitmaster.msec = map(pitmaster.value,0,100,0,pitmaster.pause); 
         if (pitmaster.msec > 0) digitalWrite(PITMASTER1, HIGH);
         if (pitmaster.msec < pitmaster.pause) pitmaster.event = true;  // außer bei 100%
       }

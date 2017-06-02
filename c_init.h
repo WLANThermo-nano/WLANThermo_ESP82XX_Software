@@ -106,7 +106,17 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
-#define EEPROM_SIZE 1792            // EEPROM SIZE
+#define EEPROM_SIZE 1920            // EEPROM SIZE
+#define EEWIFIBEGIN         0
+#define EEWIFI              300
+#define EESYSTEMBEGIN       EEWIFIBEGIN+EEWIFI
+#define EESYSTEM            250
+#define EECHANNELBEGIN      EESYSTEMBEGIN+EESYSTEM
+#define EECHANNEL           500
+#define EETHINGBEGIN        EECHANNELBEGIN+EECHANNEL
+#define EETHING             150
+#define EEPITMASTERBEGIN    EETHINGBEGIN+EETHING
+#define EEPITMASTER         700
 
 // PITMASTER
 #define PITMASTER1 15               // PITMASTER PIN
@@ -168,6 +178,7 @@ struct Pitmaster {
 Pitmaster pitmaster;
 int pidsize;
 
+
 // DATALOGGER
 struct datalogger {
  uint16_t tem[8];
@@ -184,10 +195,6 @@ uint32_t log_sector;                // erster Sector von APP2
 uint32_t freeSpaceStart;            // First Sector of OTA
 uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
-// SYSTEM
-bool stby = false;                // USB POWER SUPPLY?            
-byte pulsalarm = 1;
-
 
 // SYSTEM
 struct System {
@@ -202,6 +209,9 @@ struct System {
 };
 
 System sys;
+bool stby = false;                // USB POWER SUPPLY?            
+byte pulsalarm = 1;
+
 
 // BATTERY
 struct Battery {

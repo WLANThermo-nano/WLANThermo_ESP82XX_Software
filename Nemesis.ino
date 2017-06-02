@@ -201,16 +201,10 @@ void loop() {
       get_rssi(); // müsste noch an einen anderen Ort wo es unabhängig von INTERVALCOM.. ist
       cal_soc();
       
-      // falls wach und nicht AP
       if (!isAP) {
 
         #ifdef THINGSPEAK
           if (charts.TSwriteKey != "") sendData();
-        #endif
-          
-        #ifdef TELEGRAM
-          UserData userData;
-          getUpdates(id, &userData);
         #endif
       }
       
