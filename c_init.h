@@ -153,7 +153,7 @@ String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFE
 
 // PITMASTER
 struct Pitmaster {
-   byte typ;           // PITMASTER NAME/TYP
+   byte pid;           // PITMASTER PID-Setting
    float set;            // SET-TEMPERATUR
    bool  active;           // IS PITMASTER ACTIVE
    byte  channel;         // PITMASTER CHANNEL
@@ -162,6 +162,7 @@ struct Pitmaster {
    bool event;
    int16_t msec;          // PITMASTER VALUE IN MILLISEC
    unsigned long last;
+   int pause;             // PITMASTER PAUSE
 };
 
 Pitmaster pitmaster;

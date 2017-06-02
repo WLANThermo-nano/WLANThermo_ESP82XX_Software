@@ -95,11 +95,11 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
     _typ.add(ttypname[i]);
   }
 
-  JsonArray& _pid = root.createNestedArray("pitmaster");
+  JsonArray& _pit = root.createNestedArray("pid");
   for (int i = 0; i < pidsize; i++) {
-    JsonObject& _pid = root.createNestedObject("charts");
+    JsonObject& _pid = _pit.createNestedObject();
     _pid["name"] = pid[i].name;
-    _pid["number"] = i;
+    _pid["id"] = pid[i].id;
     _pid["Kp"] = pid[i].Kp;
     _pid["Ki"] = pid[i].Ki;
     _pid["Kd"] = pid[i].Kd;
@@ -107,9 +107,9 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
     _pid["Ki_a"] = pid[i].Ki_a;
     _pid["Kd_a"] = pid[i].Kd_a;
     _pid["switch"] = pid[i].pswitch;
-    _pid["freq"] = pid[i].freq;
-    _pid["pwmmin"] = pid[i].pwmmin;
-    _pid["pwmmax"] = pid[i].pwmmax;
+    
+    _pid["DCmmin"] = pid[i].DCmin;
+    _pid["DCmmax"] = pid[i].DCmax;
   }
 
   JsonObject& _chart = root.createNestedObject("charts");
@@ -161,7 +161,7 @@ void handleData(AsyncWebServerRequest *request, bool www) {
   JsonObject& master = root.createNestedObject("pitmaster");
 
   master["channel"] = pitmaster.channel;
-  master["typ"] = pitmaster.typ;
+  master["pid"] = pitmaster.pid;
   master["value"] = pitmaster.value;
   master["set"] = pitmaster.set;
   master["active"] = pitmaster.active;
@@ -659,7 +659,7 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   if (!_pitmaster.success()) return 0;
   
   pitmaster.channel = _pitmaster["channel"]; // 0
-  pitmaster.typ = _pitmaster["typ"]; // ""
+  pitmaster.pid = _pitmaster["pid"]; // ""
   pitmaster.set = _pitmaster["value"]; // 100
   pitmaster.active = _pitmaster["active"];
   return 1;

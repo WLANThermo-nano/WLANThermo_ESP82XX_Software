@@ -164,6 +164,8 @@ bool loadconfig(byte count) {
       // Wie viele Pitmaster sind vorhanden
       for (JsonArray::iterator it=_pid.begin(); it!=_pid.end(); ++it) {  
         pid[pidsize].name = _pid[pidsize]["name"].asString();
+        pid[pidsize].id = _pid[pidsize]["id"];
+        pid[pidsize].typ = _pid[pidsize]["typ"];  
         pid[pidsize].Kp = _pid[pidsize]["Kp"];  
         pid[pidsize].Ki = _pid[pidsize]["Ki"];    
         pid[pidsize].Kd = _pid[pidsize]["Kd"];                     
@@ -173,13 +175,17 @@ bool loadconfig(byte count) {
         pid[pidsize].Ki_min = _pid[pidsize]["Ki_min"];                   
         pid[pidsize].Ki_max = _pid[pidsize]["Ki_max"];                  
         pid[pidsize].pswitch = _pid[pidsize]["switch"];               
-        pid[pidsize].pause = _pid[pidsize]["pause"];                   
-        pid[pidsize].freq = _pid[pidsize]["freq"];
+        pid[pidsize].reversal = _pid[pidsize]["rev"];                
+        pid[pidsize].DCmin    = _pid[pidsize]["DCmin"];              
+        pid[pidsize].DCmax    = _pid[pidsize]["DCmax"];              
+        pid[pidsize].SVmin    = _pid[pidsize]["SVmin"];             
+        pid[pidsize].SVmax    = _pid[pidsize]["SVmax"];   
         pid[pidsize].esum = 0;             
         pid[pidsize].elast = 0;       
         pidsize++;
       }
     }
+    if (pidsize < 3) return 0;   // Alte Versionen abfangen und 3 Default PID-Settings laden
     break;
 
     case 4:     // SYSTEM
@@ -317,25 +323,29 @@ bool setconfig(byte count, const char* data[2]) {
     case 3:        // PITMASTER
     {
       JsonArray& json = jsonBuffer.createArray();
-      JsonObject& _pid = json.createNestedObject();
-
-      // Default Pitmaster
-      pid[0] = {"SSR", 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 1000, 0, 0, 0};
-      pidsize = 0;  // Reset counter
       
-      _pid["name"]    = pid[pidsize].name;
-      _pid["Kp"]      = pid[pidsize].Kp;  
-      _pid["Ki"]      = pid[pidsize].Ki;    
-      _pid["Kd"]      = pid[pidsize].Kd;                   
-      _pid["Kp_a"]    = pid[pidsize].Kp_a;               
-      _pid["Ki_a"]    = pid[pidsize].Ki_a;                  
-      _pid["Kd_a"]    = pid[pidsize].Kd_a;             
-      _pid["Ki_min"]  = pid[pidsize].Ki_min;             
-      _pid["Ki_max"]  = pid[pidsize].Ki_max;             
-      _pid["switch"]  = pid[pidsize].pswitch;           
-      _pid["pause"]   = pid[pidsize].pause;                
-      _pid["freq"]    = pid[pidsize].freq;
-      pidsize++;
+      for (int i = 0; i < pidsize; i++) {
+        
+        JsonObject& _pid = json.createNestedObject();
+        _pid["name"]     = pid[i].name;
+        _pid["id"]       = pid[i].id;
+        _pid["typ"]      = pid[i].typ;
+        _pid["Kp"]       = pid[i].Kp;  
+        _pid["Ki"]       = pid[i].Ki;    
+        _pid["Kd"]       = pid[i].Kd;                   
+        _pid["Kp_a"]     = pid[i].Kp_a;               
+        _pid["Ki_a"]     = pid[i].Ki_a;                  
+        _pid["Kd_a"]     = pid[i].Kd_a;             
+        _pid["Ki_min"]   = pid[i].Ki_min;             
+        _pid["Ki_max"]   = pid[i].Ki_max;             
+        _pid["switch"]   = pid[i].pswitch;           
+        _pid["rev"]      = pid[i].reversal;                
+        _pid["DCmin"]    = pid[i].DCmin;             
+        _pid["DCmax"]    = pid[i].DCmax;             
+        _pid["SVmin"]    = pid[i].SVmin;             
+        _pid["SVmax"]    = pid[i].SVmax;           
+        
+      }    
       
       size_t size = json.measureLength() + 1;
       if (size > 600) {
@@ -497,6 +507,7 @@ bool modifyconfig(byte count, const char* data[12]) {
 
       JsonArray& json = jsonBuffer.parseArray(buf.get());
       if (!checkjson(json,PIT_FILE)) {
+        //set_pid();
         setconfig(ePIT,{});
         return false;
       }
@@ -504,18 +515,23 @@ bool modifyconfig(byte count, const char* data[12]) {
       // Neue Daten eintragen
       JsonObject& _pid = json.createNestedObject();
       
-      _pid["name"]    = pid[pidsize].name;
-      _pid["Kp"]      = pid[pidsize].Kp;  
-      _pid["Ki"]      = pid[pidsize].Ki;    
-      _pid["Kd"]      = pid[pidsize].Kd;                   
-      _pid["Kp_a"]    = pid[pidsize].Kp_a;               
-      _pid["Ki_a"]    = pid[pidsize].Ki_a;                  
-      _pid["Kd_a"]    = pid[pidsize].Kd_a;             
-      _pid["Ki_min"]  = pid[pidsize].Ki_min;             
-      _pid["Ki_max"]  = pid[pidsize].Ki_max;             
-      _pid["switch"]  = pid[pidsize].pswitch;           
-      _pid["pause"]   = pid[pidsize].pause;                
-      _pid["freq"]    = pid[pidsize].freq;
+      _pid["name"]     = pid[pidsize].name;
+      _pid["id"]       = pid[pidsize].id;
+      _pid["typ"]      = pid[pidsize].typ;
+      _pid["Kp"]       = pid[pidsize].Kp;  
+      _pid["Ki"]       = pid[pidsize].Ki;    
+      _pid["Kd"]       = pid[pidsize].Kd;                   
+      _pid["Kp_a"]     = pid[pidsize].Kp_a;               
+      _pid["Ki_a"]     = pid[pidsize].Ki_a;                  
+      _pid["Kd_a"]     = pid[pidsize].Kd_a;             
+      _pid["Ki_min"]   = pid[pidsize].Ki_min;             
+      _pid["Ki_max"]   = pid[pidsize].Ki_max;             
+      _pid["switch"]   = pid[pidsize].pswitch;           
+      _pid["rev"]      = pid[pidsize].reversal;
+      _pid["DCmin"]    = pid[pidsize].DCmin;             
+      _pid["DCmax"]    = pid[pidsize].DCmax;             
+      _pid["SVmin"]    = pid[pidsize].SVmin;             
+      _pid["SVmax"]    = pid[pidsize].SVmax;  
     
       // Speichern
       size_t size = json.measureLength() + 1;
@@ -526,7 +542,7 @@ bool modifyconfig(byte count, const char* data[12]) {
         static char buffer[600];
         json.printTo(buffer, size);
         writeEE(buffer, size, 900); 
-      } 
+      }
     }
     break;
 
@@ -611,6 +627,7 @@ void start_fs() {
   // PITMASTER
   if (!loadconfig(ePIT)) {
     DPRINTPLN("[INFO]\tFailed to load pitmaster config");
+    set_pid();  // Default PID-Settings
     setconfig(ePIT,{});  // Reset pitmaster config
   } else DPRINTPLN("[INFO]\tPitmaster config loaded");
 

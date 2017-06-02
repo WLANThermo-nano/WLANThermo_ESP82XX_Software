@@ -136,7 +136,7 @@ void setup() {
     cal_soc();
     
     // Initialize Pitmaster
-    set_pitmaster();
+    set_pitmaster(); 
   }
 }
 

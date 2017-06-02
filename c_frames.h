@@ -298,7 +298,7 @@ void drawpit1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setFont(ArialMT_Plain_10);
   display->drawString(114+x, 20+y, "PITMASTER:");           
   if (inWork) display->drawString(114+x, 36+y, pid[(int) tempor].name);
-  else display->drawString(114+x, 36+y, pid[pitmaster.typ].name);
+  else display->drawString(114+x, 36+y, pid[pitmaster.pid].name);
 }
 
 void drawpit2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {

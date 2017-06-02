@@ -454,11 +454,11 @@ static inline void button_event() {
         
       case 6:  // Pitmaster Typ
         if (mupi == 10) mupi = 1;
-        if (event[1]) tempor = pitmaster.typ; 
+        if (event[1]) tempor = pitmaster.pid; 
         tempor += mupi;
         if (tempor > pidsize-1) tempor = 0;
         else if (tempor < 0) tempor = pidsize-1;
-        if (event[2]) pitmaster.typ = tempor;
+        if (event[2]) pitmaster.pid = tempor;
         break;
         
       case 7:  // Pitmaster Channel

@@ -181,20 +181,26 @@ void read_serial(char *buffer) {
     if (pidsize < PITMASTERSIZE) {
 
       pid[pidsize].name =    json["data"][0].asString();
-      pid[pidsize].Kp =      json["data"][1];  
-      pid[pidsize].Ki =      json["data"][2];    
-      pid[pidsize].Kd =      json["data"][3];                     
-      pid[pidsize].Kp_a =    json["data"][4];                   
-      pid[pidsize].Ki_a =    json["data"][5];                   
-      pid[pidsize].Kd_a =    json["data"][6];                   
-      pid[pidsize].Ki_min =  json["data"][7];                   
-      pid[pidsize].Ki_max =  json["data"][8];                  
-      pid[pidsize].pswitch = json["data"][9];               
-      pid[pidsize].pause =   json["data"][10];                   
-      pid[pidsize].freq =    json["data"][11];
+      pid[pidsize].typ =     json["data"][1];
+      pid[pidsize].Kp =      json["data"][2];  
+      pid[pidsize].Ki =      json["data"][3];    
+      pid[pidsize].Kd =      json["data"][4];                     
+      pid[pidsize].Kp_a =    json["data"][5];                   
+      pid[pidsize].Ki_a =    json["data"][6];                   
+      pid[pidsize].Kd_a =    json["data"][7];                   
+      pid[pidsize].Ki_min =  json["data"][8];                   
+      pid[pidsize].Ki_max =  json["data"][9];                  
+      pid[pidsize].pswitch = json["data"][10];                   
+      pid[pidsize].reversal =json["data"][11];                   
+      //pid[pidsize].DCmin =   json["data"][12];                   
+      //pid[pidsize].DCmax =   json["data"][13];                   
+      //pid[pidsize].SVmim =   json["data"][14];                  
+      //pid[pidsize].SVmax =   json["data"][15];               
+       
       pid[pidsize].esum =    0;             
       pid[pidsize].elast =   0;    
-
+      pid[pidsize].id = pidsize;
+      
       if (!modifyconfig(ePIT,{})) DPRINTPLN("[INFO]\tFailed to save pitmaster config");
       else {
         DPRINTPLN("[INFO]\tPitmaster config saved");
@@ -205,14 +211,14 @@ void read_serial(char *buffer) {
 
   // SET PITMASTER PID
   else if (strcmp(command, "setPID")==0) {
-        
+    set_pid();  // Default PID-Settings
     if (setconfig(ePIT,{})) DPRINTPLN("[INFO]\tReset pitmaster config");
   }
 
   // SET PITMASTER MANUEL
   else if (strcmp(command, "setManuel")==0) {
     pitmaster.active = true;
-    pitmaster.typ = 1;
+    //pitmaster.typ = 1;
     pitmaster.manuel = json["data"][0];
     
   }
