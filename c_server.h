@@ -100,17 +100,21 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
     JsonObject& _pid = _pit.createNestedObject();
     _pid["name"] = pid[i].name;
     _pid["id"] = pid[i].id;
+    _pid["aktor"] = pid[i].aktor;
     _pid["Kp"] = pid[i].Kp;
     _pid["Ki"] = pid[i].Ki;
     _pid["Kd"] = pid[i].Kd;
     _pid["Kp_a"] = pid[i].Kp_a;
     _pid["Ki_a"] = pid[i].Ki_a;
     _pid["Kd_a"] = pid[i].Kd_a;
-    _pid["switch"] = pid[i].pswitch;
-    
+    _pid["reversal"] = pid[i].reversal;
     _pid["DCmmin"] = pid[i].DCmin;
     _pid["DCmmax"] = pid[i].DCmax;
   }
+
+  JsonArray& _aktor = root.createNestedArray("aktor");
+  _aktor.add("SSR");
+  _aktor.add("FAN");
 
   JsonObject& _chart = root.createNestedObject("charts");
   _chart["TSwrite"] = charts.TSwriteKey; 
@@ -660,10 +664,45 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   JsonObject& _pitmaster = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_pitmaster.success()) return 0;
   
-  pitmaster.channel = _pitmaster["channel"]; // 0
-  pitmaster.pid = _pitmaster["pid"]; // ""
-  pitmaster.set = _pitmaster["value"]; // 100
-  pitmaster.active = _pitmaster["active"];
+  if (_pitmaster.containsKey("channel")) pitmaster.channel = _pitmaster["channel"];
+  else return 0;
+  if (_pitmaster.containsKey("pid")) pitmaster.pid = _pitmaster["pid"]; // ""
+  else return 0;
+  if (_pitmaster.containsKey("active")) pitmaster.active = _pitmaster["active"];
+  else return 0;
+  if (_pitmaster.containsKey("set")) pitmaster.set = _pitmaster["set"];
+  else return 0;
+  bool manuel;
+  if (_pitmaster.containsKey("manuel")) manuel = _pitmaster["manuel"];
+  else return 0;
+  pitmaster.manuel = manuel;
+  if (_pitmaster.containsKey("value") && manuel) pitmaster.value = _pitmaster["value"];
+  else return 0;
+  
+  
+  JsonObject& _pid = _pitmaster["setting"];
+  
+  byte id;
+  if (_pid.containsKey("id")) id = _pid["id"];
+  else return 0;
+  if (id >= pidsize) return 0;
+  pid[id].name = _pid["name"].asString();
+  pid[id].aktor =  _pid["aktor"];
+  pid[id].Kp =  _pid["Kp"];
+  pid[id].Ki =  _pid["Ki"];
+  pid[id].Kd =  _pid["Kd"];
+  pid[id].Kp_a =  _pid["Kp_a"];
+  pid[id].Ki_a =  _pid["Ki_a"];
+  pid[id].Kd_a =  _pid["Kd_a"];
+  pid[id].reversal =  _pid["reversal"];
+  pid[id].DCmin =  _pid["DCmmin"];
+  pid[id].DCmax =  _pid["DCmmax"];
+
+  if (!setconfig(ePIT,{})) {
+    DPRINTPLN("[INFO]\tFailed to save Pitmaster config");
+    return 0;
+  }
+  else  DPRINTPLN("[INFO]\tPitmaster config saved");
   return 1;
 }
 
@@ -738,14 +777,19 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _chart = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_chart.success()) return 0;
-  
-  charts.TSwriteKey = _chart["TSwrite"].asString();  
-  charts.TShttpKey = _chart["TShttp"].asString(); 
-  charts.TSchID = _chart["TSchID"].asString();
-  
-  if (!setconfig(eTHING,{})) DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
-  else  DPRINTPLN("[INFO]\tThingspeak config saved");
-      
+
+  if (_chart.containsKey("TSwrite"))  charts.TSwriteKey = _chart["TSwrite"].asString();  
+  else return 0;
+  if (_chart.containsKey("TShttp")) charts.TShttpKey = _chart["TShttp"].asString(); 
+  else return 0;
+  if (_chart.containsKey("TSchID")) charts.TSchID = _chart["TSchID"].asString();
+  else return 0;
+
+  if (!setconfig(eTHING,{})) {
+    DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
+    return 0;
+  }
+  else  DPRINTPLN("[INFO]\tThingspeak config saved");    
   return 1;
 }
 
@@ -964,7 +1008,7 @@ void server_setup() {
         if(!handleSetPitmaster(request, data)) request->send(200, "text/plain", "false");
           request->send(200, "text/plain", "true");
       }
-      else if (request->url() =="/setchart") { 
+      else if (request->url() =="/setcharts") { 
         if(!request->authenticate(www_username, www_password))
           return request->requestAuthentication();    
         if(!handleSetChart(request, data)) request->send(200, "text/plain", "false");

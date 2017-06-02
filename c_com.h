@@ -65,7 +65,8 @@ void read_serial(char *buffer) {
   }
   else if (strcmp(buffer, "activ")==0) {
     pitmaster.active = true;
-    pitmaster.manuel = 90;
+    pitmaster.manuel = true;
+    pitmaster.value = 90;
     return;
   }
   
@@ -222,8 +223,8 @@ void read_serial(char *buffer) {
   // SET PITMASTER MANUEL
   else if (strcmp(command, "setManuel")==0) {
     pitmaster.active = true;
-    //pitmaster.typ = 1;
-    pitmaster.manuel = json["data"][0];
+    pitmaster.manuel = true;
+    pitmaster.value = json["data"][0];
     
   }
 
