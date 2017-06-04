@@ -235,7 +235,7 @@ void set_piepser() {
   // Hardware-Alarm bereit machen
   pinMode(MOSI, OUTPUT);
   analogWriteFreq(4000);
-  sys.hwalarm = false;
+  //sys.hwalarm = false;
   
 }
 
