@@ -42,17 +42,6 @@
 #endif
 
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// TIMER VARIABLES
-
-unsigned long lastUpdateBatteryMode;
-unsigned long lastUpdateSensor;
-unsigned long lastUpdatePiepser;
-unsigned long lastUpdateCommunication;
-unsigned long lastUpdateDatalog;
-unsigned long lastFlashInWork;
-
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 // INCLUDE SUBROUTINES
 
@@ -96,19 +85,8 @@ void setup() {
     set_wifi();
 
     // Update Time
-    if (!isAP) {
-      time_t present = 0;
-      int ii = 0;
-      while (present == 0 && ii < 3) {
-        present = getNtpTime(); 
-        ii++;
-      }
-      setTime(present);
-    }
-    //setSyncProvider(getNtpTime);
-    DPRINTP("[INFO]\t");
-    DPRINTLN(digitalClockDisplay(mynow()));
-
+    set_time();
+    
     // Scan Network
     WiFi.scanNetworks(true);
     scantime = millis();
@@ -163,105 +141,25 @@ void loop() {
   #endif
   
   // Detect Button Event
-  if (button_input()) {
-    button_event();
-  }
+  if (button_input()) button_event();
   
   // Update Display
   int remainingTimeBudget;
-  if (!displayblocked) {
-    remainingTimeBudget = ui.update();
-  } else remainingTimeBudget = 1;
-
+  if (!displayblocked)  remainingTimeBudget = ui.update();
+  else remainingTimeBudget = 1;
 
   // Timer Actions
   if (remainingTimeBudget > 0) {
     // Don't do stuff if you are below your time budget.
 
-    // Temperture
-    if (millis() - lastUpdateSensor > INTERVALSENSOR) {
-      get_Temperature();
-      get_Vbat();
-      lastUpdateSensor = millis();
-    }
-
-    // Alarm
-    if (millis() - lastUpdatePiepser > INTERVALSENSOR/4) {
-      controlAlarm(pulsalarm);
-      pulsalarm = !pulsalarm;
-      lastUpdatePiepser = millis();
-    }
+    timer_sensor();           // Temperture
+    timer_alarm();            // Alarm
+    pitmaster_control();      // Pitmaster
+    timer_charts();           // Charts
+    timer_datalog();          // Datalog
+    flash_control();          // Flash
     
-    // Pitmaster Control
-    pitmaster_control();
-
-    // Communication
-    if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
-
-      get_rssi(); // müsste noch an einen anderen Ort wo es unabhängig von INTERVALCOM.. ist
-      cal_soc();
-      
-      if (!isAP) {
-
-        #ifdef THINGSPEAK
-          if (charts.TSwriteKey != "") sendData();
-        #endif
-      }
-      
-      lastUpdateCommunication = millis();
-    }
-
-    // Datalog
-    if (millis() - lastUpdateDatalog > 60000) {
-
-      //Serial.println(sizeof(datalogger));
-      //Serial.println(sizeof(mylog));
-
-      int logc;
-      if (log_count < MAXLOGCOUNT) logc = log_count;
-      else {
-        logc = MAXLOGCOUNT-1;
-        memcpy(&mylog[0], &mylog[1], (MAXLOGCOUNT-1)*sizeof(*mylog));
-      }
-
-      for (int i=0; i < CHANNELS; i++)  {
-        mylog[logc].tem[i] = (uint16_t) (ch[i].temp * 10);       // 8 * 16 bit  // 8 * 2 byte
-      }
-      mylog[logc].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
-      mylog[logc].soll = (uint8_t) pitmaster.set;           // 8 bit  // 1 byte
-      mylog[logc].timestamp = now();     // 64 bit // 8 byte
-
-      log_count++;
-      // 2*8 + 2 + 8 = 26
-      if (log_count%MAXLOGCOUNT == 0 && log_count != 0) {
-        
-        if (log_sector > freeSpaceEnd/SPI_FLASH_SEC_SIZE) 
-          log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
-        
-        write_flash(log_sector);
- 
-        log_sector++;
-        modifyconfig(eSYSTEM,{});
-
-        //getLog(3);
-        
-      }
-      
-      
-      lastUpdateDatalog = millis();
-    }
-
-    // Flash
-    if (inWork) {
-      if (millis() - lastFlashInWork > FLASHINWORK) {
-        flashinwork = !flashinwork;
-        lastFlashInWork = millis();
-      }
-    }
-    
-    //delay(remainingTimeBudget);
-    delay(1); // sonst geht das Wifi Modul nicht in Standby
-    //yield();  // reicht nicht
+    delay(1);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
   }
   
 }

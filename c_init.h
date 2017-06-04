@@ -290,6 +290,14 @@ int frameCount = 19;
 bool flashinwork = true;
 float tempor;                       // Zwischenspeichervariable
 
+// TIMER
+unsigned long lastUpdateBatteryMode;
+unsigned long lastUpdateSensor;
+unsigned long lastUpdatePiepser;
+unsigned long lastUpdateCommunication;
+unsigned long lastUpdateDatalog;
+unsigned long lastFlashInWork;
+unsigned long lastUpdateRSSI;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -343,6 +351,7 @@ bool modifyconfig(byte count, const char* data[12]);
 void start_fs();                                  // Initialize FileSystem
 void read_serial(char *buffer);                   // React to Serial Input 
 int readline(int readch, char *buffer, int len);  // Put together Serial Input
+void write_flash(uint32_t _sector);
 
 // MEDIAN
 void median_add(int value);                       // add Value to Buffer
@@ -358,6 +367,7 @@ void get_rssi();
 void reconnect_wifi();
 void stop_wifi();
 void check_wifi();
+time_t getNtpTime();
 
 // SERVER
 void handleSettings(AsyncWebServerRequest *request, bool www);
@@ -373,6 +383,7 @@ void clearEE(int startP, int endP);
 
 // PITMASTER
 void startautotunePID(int maxCycles, bool storeValues);
+void pitmaster_control();
 
 // BOT
 #ifdef THINGSPEAK
@@ -386,6 +397,106 @@ void set_serial() {
   Serial.begin(115200);
   DPRINTLN();
   DPRINTLN();
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Temperature and Battery Measurement Timer
+void timer_sensor() {
+  
+  if (millis() - lastUpdateSensor > INTERVALSENSOR) {
+    get_Temperature();
+    get_Vbat();
+    lastUpdateSensor = millis();
+  }
+
+  if (millis() - lastUpdateRSSI > INTERVALCOMMUNICATION) {
+    get_rssi(); 
+    cal_soc();
+    lastUpdateRSSI = millis();
+  }
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Temperature Alarm Timer
+void timer_alarm() {
+  
+  if (millis() - lastUpdatePiepser > INTERVALSENSOR/4) {
+    controlAlarm(pulsalarm);
+    pulsalarm = !pulsalarm;
+    lastUpdatePiepser = millis();
+  }
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Charts Timer
+void timer_charts() {
+  
+  if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
+
+    if (!isAP) {
+      #ifdef THINGSPEAK
+        if (charts.TSwriteKey != "") sendData();
+      #endif
+    }
+    lastUpdateCommunication = millis();
+  }
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// DataLog Timer
+void timer_datalog() {  
+  
+  if (millis() - lastUpdateDatalog > 60000) {
+
+    //Serial.println(sizeof(datalogger));
+    //Serial.println(sizeof(mylog));
+
+    int logc;
+    if (log_count < MAXLOGCOUNT) logc = log_count;
+    else {
+      logc = MAXLOGCOUNT-1;
+      memcpy(&mylog[0], &mylog[1], (MAXLOGCOUNT-1)*sizeof(*mylog));
+    }
+
+    for (int i=0; i < CHANNELS; i++)  {
+      mylog[logc].tem[i] = (uint16_t) (ch[i].temp * 10);       // 8 * 16 bit  // 8 * 2 byte
+    }
+    mylog[logc].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
+    mylog[logc].soll = (uint8_t) pitmaster.set;           // 8 bit  // 1 byte
+    mylog[logc].timestamp = now();     // 64 bit // 8 byte
+
+    log_count++;
+    // 2*8 + 2 + 8 = 26
+    if (log_count%MAXLOGCOUNT == 0 && log_count != 0) {
+        
+      if (log_sector > freeSpaceEnd/SPI_FLASH_SEC_SIZE) 
+        log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
+        
+      write_flash(log_sector);
+      log_sector++;
+      modifyconfig(eSYSTEM,{});
+
+        //getLog(3);
+        
+    }
+    lastUpdateDatalog = millis();
+  }
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Flash
+void flash_control() { 
+  if (inWork) {
+    if (millis() - lastFlashInWork > FLASHINWORK) {
+      flashinwork = !flashinwork;
+      lastFlashInWork = millis();
+    }
+  }
 }
 
 
@@ -439,6 +550,34 @@ String newDate(time_t t){
   return zeit;
 }
 
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// SYSTEM TIME based on UTC
+time_t mynow() {
+
+  if (sys.summer) return now() + (sys.timeZone+1) * SECS_PER_HOUR;
+  else return now() + sys.timeZone * SECS_PER_HOUR;
+  
+}
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Update Time
+void set_time() {
+  if (!isAP) {
+    time_t present = 0;
+    int ii = 0;
+    while (present == 0 && ii < 3) {
+      present = getNtpTime(); 
+      ii++;
+    }
+    setTime(present);
+  }
+  //setSyncProvider(getNtpTime);
+  DPRINTP("[INFO]\t");
+  DPRINTLN(digitalClockDisplay(mynow()));
+}
+
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Standby oder Mess-Betrieb
 bool standby_control() {
@@ -467,14 +606,7 @@ bool standby_control() {
   return 0;
 }
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// SYSTEM TIME based on UTC
-time_t mynow() {
 
-  if (sys.summer) return now() + (sys.timeZone+1) * SECS_PER_HOUR;
-  else return now() + sys.timeZone * SECS_PER_HOUR;
-  
-}
 
 
 
