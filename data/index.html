@@ -2734,39 +2734,6 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			</div>
         </div>
 		<!-- ################################################### -->
-		<div id="pitmaster_config" class="content" style="display:none">
-			<!-- html for about-Site -->
-			<h3 class="headtitle">Pitmaster Einstellungen</h3>
-			<div class="pure-g">
-				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
-					<div class="1-box channel_conf">
-					</div>
-				</div>
-			</div>
-        </div>
-		<!-- ################################################### -->
-		<div id="chart_config" class="content" style="display:none">
-			<!-- html for about-Site -->
-			<h3 class="headtitle">Chart Dienste</h3>
-			<div class="pure-g">
-				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
-					<div class="1-box channel_conf">
-					</div>
-				</div>
-			</div>
-        </div>
-		<!-- ################################################### -->
-		<div id="plot" class="content" style="display:none">
-			<!-- html for config-Site -->
-			<h1>WLANThermo - plot site</h1>
-			<div class="pure-g">
-				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
-					<div class="1-box channel_conf">
-					</div>
-				</div>
-			</div>
-        </div>
-		<!-- ################################################### -->
 		<div id="thingspeak" class="content" style="display:none">
 			<!-- html for thingspeak-Site -->
 			<div class="pure-button-group footer_buttons" role="group">
@@ -2848,12 +2815,9 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			menu     = document.getElementById('menu'),
 			menuLink = document.getElementById('menuLink'),
 			menuHome = document.getElementById('menuHome'),
-			menuPlot = document.getElementById('menuPlot'),
 			menuWlan = document.getElementById('menuWlan'),
 			menuSystem = document.getElementById('menuSystem'),
-			menuPitmaster = document.getElementById('menuPitmaster'),
 			menuThingspeak = document.getElementById('menuThingspeak'),
-			menuChart = document.getElementById('menuChart'),
 			menuChannel0 = document.getElementById('menuChannel0'),
 			menuChannel1 = document.getElementById('menuChannel1'),
 			menuChannel2 = document.getElementById('menuChannel2'),
@@ -2900,12 +2864,6 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 				showIndex();
 			}
 		};
-		//menuPlot.onclick = function (e) {
-		//    if (menu.className.indexOf('active') !== -1) {
-		//        toggleAll(e);
-		//		showPlot();
-		//    }
-		//};
 		menuWlan.onclick = function (e) {
 			if (menu.className.indexOf('active') !== -1) {
 				toggleAll(e);
@@ -2924,18 +2882,6 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 				showSystem();
 			}
 		};
-		//menuPitmaster.onclick = function (e) {
-		//    if (menu.className.indexOf('active') !== -1) {
-		//        toggleAll(e);
-		//		showPitmaster();
-		//    }
-		//};
-		//menuChart.onclick = function (e) {
-		//    if (menu.className.indexOf('active') !== -1) {
-		//        toggleAll(e);
-		//		showChart();
-		//    }
-		//};
 		menuChannel0.onclick = function (e) {
 			if (menu.className.indexOf('active') !== -1) {
 				toggleAll(e);
@@ -3022,7 +2968,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 
 	function showThingspeak(){
 		hideAll();
-		loadJSON('settings', '', function (response) {
+		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('TSwrite').value = jsonresponse.charts.TSwrite;
 			document.getElementById('TShttp').value = jsonresponse.charts.TShttp;
@@ -3031,13 +2977,13 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 	}	
 
 	function setThingspeak(){
-		loadJSON('settings', '', function (response) {
+		loadJSON('settings', '', '3000', function (response){
 			jsonresponse = JSON.parse(response);
 			jsonresponse.charts.TSwrite = document.getElementById('TSwrite').value;
 			jsonresponse.charts.TShttp = document.getElementById('TShttp').value;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
-			loadJSON('setcharts', data, function (response) {
+			loadJSON('setcharts', data, '60000', function (response) {
 				showIndex();
 			})		
 		})
@@ -3051,14 +2997,14 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 	function showSetChannel(channel){
 		hideAll();
 		document.getElementById("channel_settings").style.display = "inline";
-		loadJSON('settings', '', function (response) {
+		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			clearOption('sensor');
 			for (var i = 0; i < jsonresponse.sensors.length; i++) {
 				document.getElementById('sensor').options[document.getElementById('sensor').options.length] = new Option(jsonresponse.sensors[i], i);
 			}
 		})
-		loadJSON('data', '', function (response) {
+		loadJSON('data', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('channel_settings_save').setAttribute('onclick','setChannel(' + channel + ');');
 			document.getElementById('channel_settings_headtitle').innerHTML  = jsonresponse.channel[channel].name;
@@ -3072,7 +3018,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 	}
 
 	function setChannel(channel){
-		loadJSON('data', '', function (response) {
+		loadJSON('data', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			jsonresponse.channel[channel].min = document.getElementById('temp_min').value;
 			jsonresponse.channel[channel].max = document.getElementById('temp_max').value;
@@ -3083,7 +3029,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			//alert(jsonresponse.channel[channel].min);
 			var data = JSON.stringify(jsonresponse.channel[channel]);
 				//alert(data);
-			loadJSON('setchannels', data, function (response) {
+			loadJSON('setchannels', data, '60000', function (response) {
 				showIndex();
 			})		
 		})	
@@ -3100,14 +3046,14 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 	
 	function setWLAN(ssid, passwd){
 		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
-		loadJSON('setnetwork', data, function (response) {
+		loadJSON('setnetwork', data, '60000', function (response) {
 			showWLAN();
 		})
 		
 	}	
 	
 	function setThermoName(){
-		loadJSON('settings', '', function (response) {
+		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 		})
@@ -3115,7 +3061,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 		
 	function showSystem(){
 		hideAll();
-		loadJSON('settings', '', function (response) {
+		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('timezone').value = jsonresponse.system.utc;
 			document.getElementById('language').value = jsonresponse.system.language;
@@ -3136,7 +3082,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 	}
 	
 	function setSystem(){
-		loadJSON('settings', '', function (response) {
+		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			jsonresponse.system.host = document.getElementById('hostname').value.replace(/ /g, '_');
 			jsonresponse.system.ap = document.getElementById('apname').value.replace(/ /g, '_');
@@ -3148,7 +3094,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse.system.summer = document.getElementById('summer').checked;
 			jsonresponse.system.fastmode = document.getElementById('fastmode').checked;			
 			var data = JSON.stringify(jsonresponse.system);
-			loadJSON('setsystem', data, function (response) {
+			loadJSON('setsystem', data, '60000', function (response) {
 				//alert(data);
 				document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 				showIndex();
@@ -3179,20 +3125,17 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 		document.getElementById("index").style.display = "none";
 		document.getElementById("wlan_config").style.display = "none";
 		document.getElementById("system_config").style.display = "none";
-		document.getElementById("pitmaster_config").style.display = "none";
-		document.getElementById("chart_config").style.display = "none";
-		document.getElementById("plot").style.display = "none";
 		document.getElementById("about").style.display = "none";
 		document.getElementById("wlan_set").style.display = "none";
 		document.getElementById("thingspeak").style.display = "none";
 		document.getElementById("channel_settings").style.display = "none";
 	}
-    function loadJSON(url, data, callback) {
+    function loadJSON(url, data, timeout, callback) {
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
         xobj.open('POST', url, true);
         xobj.setRequestHeader("Content-Type", "application/json");
-		xobj.timeout = 3000;
+		xobj.timeout = timeout;
         xobj.onreadystatechange = function () {
             if (xobj.readyState == 4 && xobj.status == "200") {
                 // .open will NOT return a value but simply returns undefined in async mode so use a callback
@@ -3203,7 +3146,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
     }
 	
 	function readTemp(){
-		loadJSON('data', '', function (response) {
+		loadJSON('data', '', '3000', function (response) {
 		//loadJSON(function(response) {	
 			jsonresponse = JSON.parse(response);
 			document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%";
@@ -3222,37 +3165,15 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 		})
 	}
 	
-	function readSettings(){
-		loadJSON('settings', '', function (response) {
-			jsonresponse = JSON.parse(response);
-		})
-	}
-	
-   function loadjscssfile(filename, filetype) {
-                if (filetype == "js") { //if filename is a external JavaScript file
-                    var fileref = document.createElement('script')
-                    fileref.setAttribute("type", "text/javascript")
-                    fileref.setAttribute("src", filename)
-                    alert('called');
-                }
-                else if (filetype == "css") { //if filename is an external CSS file
-                    var fileref = document.createElement("link")
-                    fileref.setAttribute("rel", "stylesheet")
-                    fileref.setAttribute("type", "text/css")
-                    fileref.setAttribute("href", filename)
-                }
-                if (typeof fileref != "undefined")
-                    document.getElementsByTagName("head")[0].appendChild(fileref)
-    }
 	function networkscan(){
-		loadJSON('networkscan', '', function (response) {
+		loadJSON('networkscan', '', '3000', function (response) {
 			if (response == "OK"){
 				setTimeout("networklist();", 3000);
 			}
 		})
 	}
 	function networklist(){
-		loadJSON('networklist', '', function (response) {
+		loadJSON('networklist', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById("networklist").innerHTML = '';
 			document.getElementById("networkconnect").innerHTML = '';
