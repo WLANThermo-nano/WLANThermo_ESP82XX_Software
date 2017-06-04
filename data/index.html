@@ -2341,14 +2341,14 @@ fieldset {
 
 <div id="layout">
 	<div class="headmenu">
-    <!-- Menu toggle -->
-    <a href="#menu" id="menuLink" class="menu-link">
-        <!-- Hamburger icon -->
-        <span></span>
-    </a>
-	<div id="thermoname">N.C.</div>
-	<div class="battery">N.C.</div>
-	<div class="wifi">N.C.</div>
+		<!-- Menu toggle -->
+		<a href="#menu" id="menuLink" class="menu-link">
+			<!-- Hamburger icon -->
+			<span></span>
+		</a>
+		<div id="thermoname">N.C.</div>
+		<div class="battery">N.C.</div>
+		<div class="wifi">N.C.</div>
 	</div>
 	<div class="clear"></div>
     <div id="menu">
@@ -2409,10 +2409,9 @@ fieldset {
 												43I8MfNE9epNK02hjqN5mnIQxClsquMYQ57SSTSTYFiMFx04LnTzOLTYh8N4UxigSaCevudLSVRT
 												Ox+OoBdb3MDtjF5HNzfvm8eFjstFLEhjBTjvRHOVjOaoXM3yO8hmmHY0BzBNpwIfDsOZE3aiuVJG
 												c16/Qr9KncDW35kcoiE6DbxRDEgrhoQrmjc5mnfUg8sEauQ7GInZSqfCin4HlEDMFc2NGJbRLOhA
-F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width="130"> </a>
+												F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width="130"> </a>
             <ul class="pure-menu-list">
                 <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
-				<!--<li id="menuPlot" class="pure-menu-item"><a href="javascript:showPlot()" class="pure-menu-link">Plot</a></li> -->
                 <li class="pure-menu-item pure-menu-has-children">
 					<a href="#" id="menuChannel" class="pure-menu-link">Kanal</a>
 					<ul class="pure-menu-children">
@@ -2428,8 +2427,6 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 				</li>
 				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
 				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
-				<!-- <li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li> -->
-				<!-- <li id="menuChart" class="pure-menu-item"><a href="javascript:showChart()" class="pure-menu-link">Chart Dienste</a></li> -->
 				<li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>
@@ -2754,6 +2751,10 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 							  <input type="text" id="TShttp" maxlength="26" required="required"/>
 							  <label class="control-label" for="input">ThingHTTP API Key</label><i class="bar"></i>
 							</div>
+							<div class="form-group">
+							  <input type="text" id="TSchID" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Channel ID</label><i class="bar"></i>
+							</div>
 						</form>
 					</div>
 				</div>
@@ -2972,6 +2973,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse = JSON.parse(response);
 			document.getElementById('TSwrite').value = jsonresponse.charts.TSwrite;
 			document.getElementById('TShttp').value = jsonresponse.charts.TShttp;
+			document.getElementById('TSchID').value = jsonresponse.charts.TSchID;
 		})
 		document.getElementById("thingspeak").style.display = "inline";
 	}	
@@ -2981,6 +2983,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			jsonresponse = JSON.parse(response);
 			jsonresponse.charts.TSwrite = document.getElementById('TSwrite').value;
 			jsonresponse.charts.TShttp = document.getElementById('TShttp').value;
+			jsonresponse.charts.TSchID = document.getElementById('TSchID').value;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
 			loadJSON('setcharts', data, '60000', function (response) {
@@ -3115,7 +3118,8 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 	function showIndex(){
 		hideAll();
 		document.getElementById("index").style.display = "inline";
-	}	
+	}
+	
 	function showAbout(){
 		hideAll();
 		document.getElementById("about").style.display = "inline";
@@ -3130,6 +3134,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 		document.getElementById("thingspeak").style.display = "none";
 		document.getElementById("channel_settings").style.display = "none";
 	}
+	
     function loadJSON(url, data, timeout, callback) {
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
@@ -3172,6 +3177,7 @@ F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width
 			}
 		})
 	}
+	
 	function networklist(){
 		loadJSON('networklist', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
