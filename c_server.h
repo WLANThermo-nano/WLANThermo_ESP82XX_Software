@@ -120,6 +120,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   _chart["TSwrite"] = charts.TSwriteKey; 
   _chart["TShttp"] = charts.TShttpKey;
   _chart["TSchID"] = charts.TSchID;
+  _chart["TSshow8"] = charts.TSshow8;
 
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
@@ -784,7 +785,9 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
   else return 0;
   if (_chart.containsKey("TSchID")) charts.TSchID = _chart["TSchID"].asString();
   else return 0;
-
+  if (_chart.containsKey("TSshow8")) charts.TSshow8 = _chart["TSshow8"];
+  else return 0;
+  
   if (!setconfig(eTHING,{})) {
     DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
     return 0;
@@ -793,6 +796,55 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
   return 1;
 }
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+bool handleAddPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& _pid = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_pid.success()) return 0;
+
+  if (pidsize < PITMASTERSIZE) {
+    
+    pid[pidsize].name =     _pid["name"].asString();
+    pid[pidsize].aktor =    _pid["aktor"];
+    pid[pidsize].Kp =       _pid["Kp"];  
+    pid[pidsize].Ki =       _pid["Ki"];    
+    pid[pidsize].Kd =       _pid["Kd"];                     
+    pid[pidsize].Kp_a =     _pid["Kpa"];                   
+    pid[pidsize].Ki_a =     _pid["Kia"];                   
+    pid[pidsize].Kd_a =     _pid["Kda"];                   
+    pid[pidsize].Ki_min =   _pid["Kimin"];                   
+    pid[pidsize].Ki_max =   _pid["Kimax"];                  
+    pid[pidsize].pswitch =  _pid["switch"];                   
+    pid[pidsize].reversal = _pid["rev"];                   
+    pid[pidsize].DCmin =    _pid["DCmin"];                   
+    pid[pidsize].DCmax =    _pid["DCmax"];                   
+    pid[pidsize].SVmin =    _pid["SVmin"];                  
+    pid[pidsize].SVmax =    _pid["SVmax"];               
+       
+    pid[pidsize].esum =    0;             
+    pid[pidsize].elast =   0;    
+    pid[pidsize].id = pidsize;
+  
+    if (!modifyconfig(ePIT,{})) {
+      DPRINTPLN("[INFO]\tFailed to save pitmaster config");
+      return 0;
+    }
+    else {
+      DPRINTPLN("[INFO]\tPitmaster config saved");
+      pidsize++;   // Erhöhung von pidsize nur wenn auch gespeichert wurde
+    }
+  } else {
+    DPRINTPLN("[INFO]\tTo many pitmaster");   
+    return 0; 
+  }
+  return 1;
+}
+ 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
@@ -885,82 +937,16 @@ void server_setup() {
       set_Channels();
     });
     
-    // REQUEST: /deletenetworkstore
-    server.on("/deletenetworkstore", HTTP_POST, [](AsyncWebServerRequest *request) { 
-      if (setconfig(eWIFI,{})) {  
-        #ifdef DEBUG
-          DPRINTPLN("[INFO]\tReset wifi config");
-        #endif
-        request->send(200, "text/plain", "1");
-      } 
-      request->send(200, "text/plain", "0");
-    });
-
-    // REQUEST: /deletenetworkstore
-    server.on("/deletenetworkstore", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      if (setconfig(eWIFI,{})) {  
-        #ifdef DEBUG
-          DPRINTPLN("[INFO]\tReset wifi config");
-        #endif
-        request->send(200, "text/plain", "1");
-      } 
-      request->send(200, "text/plain", "0");
-    });
-
-
-    server.on("/alex", HTTP_GET, [](AsyncWebServerRequest *request){
-      
-      int params = request->params();
-      for(int i=0;i<params;i++){
-        AsyncWebParameter* p = request->getParam(i);
-        const char* data[2];
-        data[i] = p->value().c_str();
-        setconfig(eTHING,data);
-      }
-      request->send(200, "text/plain", "OK");
-    });
 
     /*  
-    // REQUEST: /setnetwork
-    server.on("/setnetwork", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      
-      DPRINTLN("SSID übermittelt");
-      DPRINTLN(request->method());
-      DPRINTLN(request->contentType());
-      DPRINTLN(request->url());
-      DPRINTLN(request->host());
-      int params = request->params();
-      DPRINTLN(params);
-      
-      request->send(200, "text/plain", "OK");
-    });
-
-
-
-    server.on("/setchannels", HTTP_POST, handleSetChannels);
-
- 
-    // REQUEST: /setchannels
-    server.on("/setchannels", [](AsyncWebServerRequest *request) { 
-           
-      if(!handleSetChannels) request->send(200, "text/plain", "0");
-        request->send(200, "text/plain", "1");
-      
-    });
-  
-    
-
-    // REQUEST: /setchannels
-    server.on("/setchannels", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      if(!request->authenticate(www_username, www_password))
-        return request->requestAuthentication();
-              
-        if(!handleSetChannels(request)) request->send(200, "text/plain", "0");
-          request->send(200, "text/plain", "1");
-      
     });
     server.on("/index.html",HTTP_GET, [](AsyncWebServerRequest *request) {
       if (!handleFileRead("/index.html", request))
+        request->send(404, "text/plain", "FileNotFound");
+    });
+
+    server.on("/", [](AsyncWebServerRequest *request){
+      if(!handleFileRead("/", request))
         request->send(404, "text/plain", "FileNotFound");
     });
     */
@@ -974,12 +960,6 @@ void server_setup() {
     //server.serveStatic("/css",  SPIFFS, "/css" ,"max-age=86400");
     //server.serveStatic("/png",  SPIFFS, "/png" ,"max-age=86400");
 
-    /*
-    server.on("/", [](AsyncWebServerRequest *request){
-      if(!handleFileRead("/", request))
-        request->send(404, "text/plain", "FileNotFound");
-    });
-    */
 
     // Eventuell andere Lösung zum Auslesen des Body-Inhalts
     // https://github.com/me-no-dev/ESPAsyncWebServer/issues/123

@@ -153,6 +153,8 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("TSchID"))  charts.TSchID = json["TSchID"].asString();
       else return false;
+      if (json.containsKey("TS8"))  charts.TSshow8 = json["TS8"];
+      else return false;
     }
     break;
 
@@ -311,6 +313,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["TSwrite"] = charts.TSwriteKey;
       json["TShttp"] = charts.TShttpKey;
       json["TSchID"] = charts.TSchID;
+      json["TS8"] = charts.TSshow8;
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {

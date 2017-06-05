@@ -233,6 +233,7 @@ struct Charts {
    String TSwriteKey;           // THINGSPEAK WRITE API KEY
    String TShttpKey;            // THINGSPEAK HTTP API KEY 
    String TSchID;                // THINGSPEAK CHANNEL ID 
+   bool TSshow8;
 };
 
 Charts charts;
@@ -374,6 +375,12 @@ void handleSettings(AsyncWebServerRequest *request, bool www);
 void handleData(AsyncWebServerRequest *request, bool www);
 void handleWifiResult(AsyncWebServerRequest *request, bool www);
 void handleWifiScan(AsyncWebServerRequest *request, bool www);
+bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleAddPitmaster(AsyncWebServerRequest *request, uint8_t *datas);
 
 // EEPROM
 void setEE();

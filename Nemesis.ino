@@ -130,8 +130,8 @@ void loop() {
   wifimonitoring();
 
   // Detect Serial
-  static char serialbuffer[150];
-  if (readline(Serial.read(), serialbuffer, 150) > 0) {
+  static char serialbuffer[300];
+  if (readline(Serial.read(), serialbuffer, 300) > 0) {
     read_serial(serialbuffer);
   }
   

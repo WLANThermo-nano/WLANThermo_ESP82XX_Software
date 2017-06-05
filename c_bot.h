@@ -18,8 +18,6 @@
     
  ****************************************************/
 
-boolean thingspeakshowbattery = true;
-
 #ifdef THINGSPEAK
 
   WiFiClient THINGclient;
@@ -45,9 +43,14 @@ boolean thingspeakshowbattery = true;
         }
       }
 
-      postStr +="&8=";
-      if (thingspeakshowbattery) postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
-      else postStr += String(ch[7].temp,1);
+      
+      if (charts.TSshow8) {
+        postStr +="&8=";  
+        postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
+      } else if (ch[7].temp != INACTIVEVALUE) {
+        postStr +="&8="; 
+        postStr += String(ch[7].temp,1);
+      }
 
       THINGclient.print("POST /update HTTP/1.1\nHost: api.thingspeak.com\nConnection: close\nX-THINGSPEAKAPIKEY: "
                         +charts.TSwriteKey+"\nContent-Type: application/x-www-form-urlencoded\nContent-Length: "

@@ -25,211 +25,195 @@
 // React to Serial Input 
 void read_serial(char *buffer) {
 
-  // GET HELP
-  if (strcmp(buffer, "help")==0) {
-    Serial.println();
-    Serial.println("Syntax: {\"command\":\"xxx\",\"data\":[\"xxx\",\"xxx\"]}");
-    Serial.println("Possible commands");
-    Serial.println("restart    -> Restart ESP");
-    Serial.println("getVersion -> Show Firmware Version Number");
-    Serial.println("getSSID    -> Show current SSID");
-    Serial.println("setWIFI    -> Reset wifi.json");
-    Serial.println("           -> expected no data");
-    Serial.println("addWIFI    -> Add new SSID to wifi.json");
-    Serial.println("           -> expected data SSID and PASSWORD");
-    Serial.println("setTS      -> Add THINGSPEAK KEY");
-    Serial.println("           -> expected data KEY");
-    Serial.println("getTS      -> Show THINGSPEAK KEY");
-    Serial.println();
-    return;
-  }
-  else if (strcmp(buffer, "data")==0) {
-    AsyncWebServerRequest *request;
-    handleData(request, false);
-    return;
-  }
-  else if (strcmp(buffer, "settings")==0) {
-    AsyncWebServerRequest *request;
-    handleSettings(request, false);
-    return;
-  }
-  else if (strcmp(buffer, "networklist")==0) {
-    AsyncWebServerRequest *request;
-    handleWifiResult(request, false);
-    return;
-  }
-  else if (strcmp(buffer, "networkscan")==0) {
-    AsyncWebServerRequest *request;
-    handleWifiScan(request, false);
-    return;
-  }
-  else if (strcmp(buffer, "activ")==0) {
-    pitmaster.active = true;
-    pitmaster.manuel = true;
-    pitmaster.value = 90;
-    return;
-  }
+  // Commando auslesen
+  String str(buffer);
+  int index = str.indexOf(':');
+
+  // Falls zusätzliche Attribute vorhanden
+  if (index > 0) {
+    String command = str.substring(0,index);
+    DPRINTP("[INFO]\tSerial Command: ");
+    DPRINTLN(command);
+    
+    for (int i = 0;i<index+1;i++) {
+    *buffer++;
+    }
+    
+    //Serial.println(buffer);
+    uint8_t * PM_buffer = reinterpret_cast<uint8_t *>(buffer);
+
+    // ADD WIFI SETTINGS
+    if (command == "setnetwork") {
+       AsyncWebServerRequest *request;
+       handleSetNetwork(request,PM_buffer);
+       return;
+    }
+
+    // SET THINGSPEAK KEYs
+    else if (command == "setcharts") {
+      AsyncWebServerRequest *request;
+      handleSetChart(request,PM_buffer);
+      return;
+    }
+
+    // SET SYSTEM
+    else if (command == "setsystem") {
+      AsyncWebServerRequest *request;
+      handleSetSystem(request,PM_buffer);
+      return;
+    }
+
+    // SET CHANNELS
+    else if (command == "setchannels") {
+      AsyncWebServerRequest *request;
+      handleSetChannels(request,PM_buffer);
+      return;
+    }
+
+    // AUTOTUNE
+    else if (command == "autotune") {
+      //startautotunePID(json["data"][0], json["data"][1]);
+      return;
+    }
+
+    // ADD PITMASTER PID
+    else if (command == "addpid") {
+      AsyncWebServerRequest *request;
+      handleAddPitmaster(request,PM_buffer);     
+      return;
+    }
+
+    // SET PITMASTER
+    else if (command == "setpitmaster") {
+      AsyncWebServerRequest *request;
+      handleSetPitmaster(request,PM_buffer); 
+      return;    
+    }
+
+    // SET PITMASTER MANUEL
+    else if (command == "setmanuel") {
+      pitmaster.active = true;
+      pitmaster.manuel = true;
+      String val(buffer);
+      pitmaster.value = val.toInt();
+      return;
+    }
   
-  else if (strcmp(buffer, "configreset")==0) {
-    setconfig(eCHANNEL,{});
-    loadconfig(eCHANNEL);
-    set_Channels();
-
-    setconfig(eSYSTEM,{});
-    loadconfig(eSYSTEM);
-    return;
-  }
-
-  else if (strcmp(buffer, "log")==0) {
-    StreamString output;
-    getLog(&output,0);
-    Serial.print(output);
-    return;
-  }
-
-  else if (strcmp(buffer, "piepsertest")==0) {
-    Serial.println("Piepsertest");
-    piepserON();
-    delay(1000);
-    piepserOFF();
-    return;
-  }
+  } else {
   
-  DPRINTP("You entered: >");
+  
+    // GET HELP
+    if (str == "help") {
+      Serial.println();
+      Serial.println(F("Syntax: \"command\":{\"Attribut\":\"Value\"]}"));
+      Serial.println(F("Possible commands without additional attributs"));
+      Serial.println(F("restart\t\t-> Restart ESP"));
+      Serial.println(F("data\t\t-> Read data.json"));
+      Serial.println(F("settings\t-> Read settings.json"));
+      Serial.println(F("networklist\t-> Get Networks"));
+      Serial.println(F("networkscan\t-> Start Network Scan"));
+      Serial.println(F("clearwifi\t-> Reset WIFI Settings"));
+      Serial.println(F("stopwifi\t-> Stop WIFI"));
+      Serial.println();
+      return;
+    }
+    
+    else if (str == "data") {
+      AsyncWebServerRequest *request;
+      handleData(request, false);
+      return;
+    }
+  
+    else if (str == "settings") {
+      AsyncWebServerRequest *request;
+      handleSettings(request, false);
+      return;
+    }
+  
+    else if (str == "networklist") {
+      AsyncWebServerRequest *request;
+      handleWifiResult(request, false);
+      return;
+    }
+    
+    else if (str == "networkscan") {
+      AsyncWebServerRequest *request;
+      handleWifiScan(request, false);
+      return;
+    }
+
+    else if (str == "clearwifi") {
+      setconfig(eWIFI,{}); // clear Wifi settings
+      return;
+    }
+
+    else if (str == "stopwifi") {
+      isAP = 3; // Turn Wifi off
+      return;
+    }
+  
+    else if (str == "pittest") {
+      pitmaster.active = true;
+      pitmaster.manuel = true;
+      pitmaster.value = 90;
+      return;
+    }
+  
+    else if (str == "configreset") {
+      setconfig(eCHANNEL,{});
+      loadconfig(eCHANNEL);
+      set_Channels();
+      setconfig(eSYSTEM,{});
+      loadconfig(eSYSTEM);
+      return;
+    }
+
+    else if (str == "piepsertest") {
+      Serial.println("Piepsertest");
+      piepserON();
+      delay(1000);
+      piepserOFF();
+      return;
+    }
+
+    else if (str == "getSSID") {
+      Serial.println(WiFi.SSID());
+    }
+
+    else if (str == "getTS") {
+      Serial.println(charts.TSwriteKey);
+      Serial.println(charts.TShttpKey);
+      Serial.println(charts.TSchID);
+    }
+
+    // RESTART SYSTEM
+    else if (str == "restart") {
+      ESP.restart();
+    }
+
+    // LET ESP SLEEP
+    else if (str == "sleep") {
+      display.displayOff();
+      ESP.deepSleep(0);
+      delay(100); // notwendig um Prozesse zu beenden
+    }
+
+    // GET FIRMWAREVERSION
+    else if (str == "getVersion") {
+      Serial.println(FIRMWAREVERSION);
+    }
+
+    // Reset PITMASTER PID
+    else if (str == "setPID") {
+      set_pid();  // Default PID-Settings
+      if (setconfig(ePIT,{})) DPRINTPLN("[INFO]\tReset pitmaster config");
+    }
+  }
+
+  DPRINTP("[INFO]\tYou entered: >");
   DPRINT(buffer);
   DPRINTPLN("<");
-
-  // Wenn nicht help dann json-Befehl auslesen
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(buffer);
-  
-  if (!json.success()) {
-    Serial.println("String invalid");
-    return;
-  }
-
-  // new command
-  const char* command = json["command"];
-
-  if (!json.containsKey("command"))  {
-    Serial.println("No command key");
-    return;
-  }
-
-  // ADD WIFI SETTINGS
-  if (strcmp(command, "addWIFI")==0) {
-    const char* data[2];
-    data[0] = json["data"][0];
-    data[1] = json["data"][1];
-
-    if (!modifyconfig(eWIFI,data)) DPRINTPLN("[INFO]\tFailed to save wifi config");
-    else  DPRINTPLN("[INFO]\tWifi config saved");
-    
-  }
-
-  // SET WIFI SETTINGS
-  else if (strcmp(command, "setWIFI")==0) {
-        
-    if (setconfig(eWIFI,{})) DPRINTPLN("[INFO]\tReset wifi config");
-  }
-
-  // GET CURRENT WIFI SSID
-  else if (strcmp(command, "getSSID")==0) {
-    Serial.println(WiFi.SSID());
-  }
-
-  // SET THINGSPEAK KEY
-  else if (strcmp(command, "setTS")==0) {
-
-    const char* data[1]; 
-    charts.TSwriteKey = json["data"][0].asString();
-    charts.TShttpKey = json["data"][1].asString();
-    charts.TSchID = json["data"][2].asString();
-    
-    if (!setconfig(eTHING,{})) DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
-    else DPRINTPLN("[INFO]\tThingspeak config saved");
-    
-  }
-
-  // GET THINGSPEAK KEY
-  else if (strcmp(command, "getTS")==0) {
-    Serial.println(charts.TSwriteKey);
-    Serial.println(charts.TShttpKey);
-    Serial.println(charts.TSchID);
-  }
-
-  // AUTOTUNE
-  else if (strcmp(command, "autotune")==0) {
-    startautotunePID(json["data"][0], json["data"][1]);
-  }
-
-  // RESTART SYSTEM
-  else if (strcmp(command, "restart")==0) {
-    ESP.restart();
-  }
-
-  // LET ESP SLEEP
-  else if (strcmp(command, "sleep")==0) {
-    display.displayOff();
-    ESP.deepSleep(0);
-    delay(100); // notwendig um Prozesse zu beenden
-  }
-
-  // GET FIRMWAREVERSION
-  else if (strcmp(command, "getVersion")==0) {
-    Serial.println(FIRMWAREVERSION);
-  }
-
-  // ADD PITMASTER PID
-  else if (strcmp(command, "addPID")==0) {
-
-    if (pidsize < PITMASTERSIZE) {
-
-      pid[pidsize].name =    json["data"][0].asString();
-      pid[pidsize].aktor =   json["data"][1];
-      pid[pidsize].Kp =      json["data"][2];  
-      pid[pidsize].Ki =      json["data"][3];    
-      pid[pidsize].Kd =      json["data"][4];                     
-      pid[pidsize].Kp_a =    json["data"][5];                   
-      pid[pidsize].Ki_a =    json["data"][6];                   
-      pid[pidsize].Kd_a =    json["data"][7];                   
-      pid[pidsize].Ki_min =  json["data"][8];                   
-      pid[pidsize].Ki_max =  json["data"][9];                  
-      pid[pidsize].pswitch = json["data"][10];                   
-      pid[pidsize].reversal =json["data"][11];                   
-      //pid[pidsize].DCmin =   json["data"][12];                   
-      //pid[pidsize].DCmax =   json["data"][13];                   
-      //pid[pidsize].SVmim =   json["data"][14];                  
-      //pid[pidsize].SVmax =   json["data"][15];               
-       
-      pid[pidsize].esum =    0;             
-      pid[pidsize].elast =   0;    
-      pid[pidsize].id = pidsize;
-      
-      if (!modifyconfig(ePIT,{})) DPRINTPLN("[INFO]\tFailed to save pitmaster config");
-      else {
-        DPRINTPLN("[INFO]\tPitmaster config saved");
-        pidsize++;   // Erhöhung von pidsize nur wenn auch gespeichert wurde
-      }
-    } else DPRINTPLN("[INFO]\tTo many pitmaster");
-  }
-
-  // SET PITMASTER PID
-  else if (strcmp(command, "setPID")==0) {
-    set_pid();  // Default PID-Settings
-    if (setconfig(ePIT,{})) DPRINTPLN("[INFO]\tReset pitmaster config");
-  }
-
-  // SET PITMASTER MANUEL
-  else if (strcmp(command, "setManuel")==0) {
-    pitmaster.active = true;
-    pitmaster.manuel = true;
-    pitmaster.value = json["data"][0];
-    
-  }
-
-  else Serial.println("Unkwown command");     // Befehl nicht erkannt
-    
+  DPRINTPLN("[INFO]\tUnkwown command");     // Befehl nicht erkannt  
 }
 
 
