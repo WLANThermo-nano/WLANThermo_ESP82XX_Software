@@ -2412,19 +2412,7 @@ fieldset {
 												F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width="130"> </a>
             <ul class="pure-menu-list">
                 <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
-                <li class="pure-menu-item pure-menu-has-children">
-					<a href="#" id="menuChannel" class="pure-menu-link">Kanal</a>
-					<ul class="pure-menu-children">
-						<li class="pure-menu-item" id="menuChannel0"><a class="pure-menu-link" href="javascript:showSetChannel('0')">Kanal 1</a></li>
-						<li class="pure-menu-item" id="menuChannel1"><a class="pure-menu-link" href="javascript:showSetChannel('1')">Kanal 2</a></li>
-						<li class="pure-menu-item" id="menuChannel2"><a class="pure-menu-link" href="javascript:showSetChannel('2')">Kanal 3</a></li>
-						<li class="pure-menu-item" id="menuChannel3"><a class="pure-menu-link" href="javascript:showSetChannel('3')">Kanal 4</a></li>
-						<li class="pure-menu-item" id="menuChannel4"><a class="pure-menu-link" href="javascript:showSetChannel('4')">Kanal 5</a></li>
-						<li class="pure-menu-item" id="menuChannel5"><a class="pure-menu-link" href="javascript:showSetChannel('5')">Kanal 6</a></li>
-						<li class="pure-menu-item" id="menuChannel6"><a class="pure-menu-link" href="javascript:showSetChannel('6')">Kanal 7</a></li>
-						<li class="pure-menu-item" id="menuChannel7"><a class="pure-menu-link" href="javascript:showSetChannel('7')">Kanal 8</a></li>
-					</ul>
-				</li>
+                <!-- <li class="pure-menu-item pure-menu-has-children"><a href="#" id="menuChannel" class="pure-menu-link">Kanal</a></li> -->
 				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
 				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
 				<li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
@@ -2548,12 +2536,6 @@ fieldset {
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box wlan_conf">
-							<label class="switch">
-								<input type="checkbox">
-								<div class="slider round"></div>
-								<div class="checkbox_title">WLAN</div>
-							</label>
-							<hr />
 							<table id="networkconnect" class="wlantable" width="100%">
 								<!--Netzwerkliste -->
 							</table> 
@@ -2819,14 +2801,6 @@ fieldset {
 			menuWlan = document.getElementById('menuWlan'),
 			menuSystem = document.getElementById('menuSystem'),
 			menuThingspeak = document.getElementById('menuThingspeak'),
-			menuChannel0 = document.getElementById('menuChannel0'),
-			menuChannel1 = document.getElementById('menuChannel1'),
-			menuChannel2 = document.getElementById('menuChannel2'),
-			menuChannel3 = document.getElementById('menuChannel3'),
-			menuChannel4 = document.getElementById('menuChannel4'),
-			menuChannel5 = document.getElementById('menuChannel5'),
-			menuChannel6 = document.getElementById('menuChannel6'),
-			menuChannel7 = document.getElementById('menuChannel7'),
 			menuAbout = document.getElementById('menuAbout'),
 			content  = document.getElementById('main');
 		function toggleClass(element, className) {
@@ -2881,54 +2855,6 @@ fieldset {
 			if (menu.className.indexOf('active') !== -1) {
 				toggleAll(e);
 				showSystem();
-			}
-		};
-		menuChannel0.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('0');
-			}
-		};
-		menuChannel1.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('1');
-			}
-		};
-		menuChannel2.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('2');
-			}
-		};
-		menuChannel3.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('3');
-			}
-		};
-		menuChannel4.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('4');
-			}
-		};
-		menuChannel5.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('5');
-			}
-		};
-		menuChannel6.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('6');
-			}
-		};
-		menuChannel7.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('7');
 			}
 		};
 		menuAbout.onclick = function (e) {
@@ -3245,7 +3171,7 @@ fieldset {
 			rows[i].onclick = (function() { // closure
 				var cnt = i; // save the counter to use in the function
 				return function() {
-				  alert("row"+cnt+" data="+this.cells[1].innerHTML);
+				  //alert("row"+cnt+" data="+this.cells[1].innerHTML);
 				}    
 			})(i);
 		}
