@@ -3090,7 +3090,11 @@ fieldset {
 				x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jsonresponse.channel[i].number;
 				x[i].getElementsByClassName('tempmin')[0].innerHTML = jsonresponse.channel[i].min + "°";
 				x[i].getElementsByClassName('tempmax')[0].innerHTML = jsonresponse.channel[i].max + "°";
-				x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;					
+				if (jsonresponse.channel[i].temp == '999'){
+					x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';					
+				}else{
+					x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;
+				}
 			}
 
 		})
