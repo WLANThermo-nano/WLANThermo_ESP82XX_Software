@@ -2913,7 +2913,7 @@ fieldset {
 			document.getElementById('TSwrite').value = jsonresponse.charts.TSwrite;
 			document.getElementById('TShttp').value = jsonresponse.charts.TShttp;
 			document.getElementById('TSchID').value = jsonresponse.charts.TSchID;
-			document.getElementById('TSshow8').value = jsonresponse.charts.TSshow8;
+			document.getElementById('TSshow8').checked = jsonresponse.charts.TSshow8;
 		})
 		document.getElementById("thingspeak").style.display = "inline";
 	}	
@@ -2924,7 +2924,7 @@ fieldset {
 			jsonresponse.charts.TSwrite = document.getElementById('TSwrite').value;
 			jsonresponse.charts.TShttp = document.getElementById('TShttp').value;
 			jsonresponse.charts.TSchID = document.getElementById('TSchID').value;
-			jsonresponse.charts.TSshow8 = document.getElementById('TSshow8').value;
+			jsonresponse.charts.TSshow8 = document.getElementById('TSshow8').checked;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
 			loadJSON('setcharts', data, '60000', function (response) {
