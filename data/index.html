@@ -115,7 +115,7 @@
 		}
 
 		button,input,optgroup,select,textarea {
-		color:inherit;
+		color:#565656;
 		font:inherit;
 		margin:0
 		}
@@ -518,7 +518,8 @@
 		width:100%;
 		padding:.3em 0;
 		margin-bottom:.3em;
-		color:#333;
+
+		color:#fff;
 		border-bottom:1px solid #e5e5e5
 		}
 
@@ -1522,14 +1523,17 @@
 		}
 
 		.headmenu {
-		background-color:#404040;
+
+		background-color:#333;
+		border-bottom:4px solid #2F2F2F;
 		color:#ccc;
 		height:44px;
 		}
 
-		.loginname {
+
+		#thermoname {
 		padding:14px 5px;
-		float:left
+		float:left;
 		}
 
 		.wifi {
@@ -1537,6 +1541,7 @@
 		padding:14px 5px;
 		float:right;
 		border-left:2px solid #333
+
 		}
 
 		.battery {
@@ -1618,6 +1623,14 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		}
+		 
+		.wlantable tr {
+		cursor: pointer;	 
+		}
+
+		.wlantable tr:hover {
+		background-color: #333;	 
 		}
 
 		.row-Check{
@@ -1740,19 +1753,20 @@
 		  transition: .4s;
 		}
 
-		input:checked + .slider {
-		  background-color: #49D866;
-		}
+		<!-- input:checked + .slider { -->
+		  <!-- background-color: #49D866; -->
+		<!-- } -->
 
-		input:focus + .slider {
-		  box-shadow: 0 0 1px #49D866;
-		}
+		<!-- input:focus + .slider { -->
+		  <!-- box-shadow: 0 0 1px #49D866; -->
+		<!-- } -->
 
-		input:checked + .slider:before {
-		  -webkit-transform: translateX(17px);
-		  -ms-transform: translateX(17px);
-		  transform: translateX(17px);
-		}
+		<!-- input:checked + .slider:before { -->
+		  <!-- -webkit-transform: translateX(17px); -->
+		  <!-- -ms-transform: translateX(17px); -->
+		  <!-- transform: translateX(17px); -->
+		<!-- } -->
+
 
 		/* Rounded sliders */
 		.slider.round {
@@ -1820,17 +1834,18 @@
 		display:block;
 		top:0;
 		left:0;
-		background:#000;
+		background:#333;
 		font-size:10px;
 		z-index:10;
 		width:2em;
 		height:auto;
 		padding:2.1em 1.6em;
-		float:left
+
+		float:left;
 		}
 
 		.menu-link:hover,.menu-link:focus {
-		background:#000
+		background:#333;
 		}
 
 		.menu-link span {
@@ -1878,6 +1893,10 @@
 		}
 		}
 
+		.channel:hover{
+		cursor: pointer;
+		}
+
 		@media (max-width: 48em) {
 		#layout.active {
 		position:relative;
@@ -1894,7 +1913,7 @@
 			display: block; /* show this only on small screens */
 			top: 0;
 			left: 0; /* "#menu width" */
-			background: #000;
+			background: #333;			
 			font-size: 10px; /* change this value to increase/decrease button size */
 			z-index: 10;
 			width: 2em;
@@ -1905,7 +1924,7 @@
 
 			.menu-link:hover,
 			.menu-link:focus {
-				background: #000;
+				background: #333;
 			}
 
 			.menu-link span {
@@ -1932,7 +1951,393 @@
 					margin-top: 0.6em;
 				}
 
+<!-- select{ -->
+	<!-- -moz-appearance:none; -->
+	<!-- -webkit-appearance:none; -->
+	<!-- appearance:none; -->
+	<!-- border:none; -->
+<!-- } -->
+<!-- select::ms-expand{ -->
+	<!-- display:none; -->
+<!-- }				 -->
+select option{
+	background-color:#4A4A4A;
+}
+input,
+select,
+textarea * {
+  box-sizing: border-box;
+}
+body::after, body::before,
+input::after,
+input::before,
+select::after,
+select::before,
+textarea::after,
+textarea::before,
+body *::after,
+body *::before {
+  box-sizing: border-box;
+}
 
+h1 {
+  font-size: 2rem;
+  text-align: center;
+  margin: 0 0 2em;
+}
+
+
+.button-container {
+  text-align: center;
+}
+
+fieldset {
+  margin: 0 0 3rem;
+  padding: 0;
+  border: none;
+}
+
+.form-radio,
+.form-group {
+  position: relative;
+  margin-top: 2.25rem;
+  margin-bottom: 2.25rem;
+}
+
+.form-inline > .form-group,
+.form-inline > .btn {
+  display: inline-block;
+  margin-bottom: 0;
+}
+
+.form-help {
+  margin-top: 0.125rem;
+  margin-left: 0.125rem;
+  color: #b3b3b3;
+  font-size: 0.8rem;
+}
+.checkbox .form-help, .form-radio .form-help, .form-group .form-help {
+  position: absolute;
+  width: 100%;
+}
+.checkbox .form-help {
+  position: relative;
+  margin-bottom: 1rem;
+}
+.form-radio .form-help {
+  padding-top: 0.25rem;
+  margin-top: -1rem;
+}
+
+.form-group input {
+  height: 1.9rem;
+}
+.form-group textarea {
+  resize: none;
+}
+.form-group select {
+  width: 100%;
+  font-size: 1rem;
+  height: 1.6rem;
+  padding: 0.125rem 0.125rem 0.0625rem;
+  background: none;
+  border: none;
+  line-height: 1.6;
+  box-shadow: none;
+}
+.form-group .control-label {
+  position: absolute;
+  top: 0.25rem;
+  pointer-events: none;
+  padding-left: 0.125rem;
+  z-index: 1;
+  color: #b3b3b3;
+  font-size: 1rem;
+  font-weight: normal;
+  -webkit-transition: all 0.28s ease;
+  transition: all 0.28s ease;
+}
+.form-group .bar {
+  position: relative;
+  border-bottom: 0.0625rem solid #999;
+  display: block;
+}
+.form-group .bar::before {
+  content: '';
+  height: 0.125rem;
+  width: 0;
+  left: 50%;
+  bottom: -0.0625rem;
+  position: absolute;
+  background: #337ab7;
+  -webkit-transition: left 0.28s ease, width 0.28s ease;
+  transition: left 0.28s ease, width 0.28s ease;
+  z-index: 2;
+}
+.form-group input,
+.form-group textarea {
+  display: block;
+  background: none;
+  padding: 0.125rem 0.125rem 0.0625rem;
+  font-size: 1rem;
+  border-width: 0;
+  border-color: transparent;
+  line-height: 1.9;
+  width: 100%;
+  color: transparent;
+  -webkit-transition: all 0.28s ease;
+  transition: all 0.28s ease;
+  box-shadow: none;
+}
+.form-group input[type="file"] {
+  line-height: 1;
+}
+.form-group input[type="file"] ~ .bar {
+  display: none;
+}
+.form-group select,
+.form-group input:focus,
+.form-group input:valid,
+.form-group input.form-file,
+.form-group input.has-value,
+.form-group textarea:focus,
+.form-group textarea:valid,
+.form-group textarea.form-file,
+.form-group textarea.has-value {
+  color: #fff;
+}
+.form-group select ~ .control-label,
+.form-group input:focus ~ .control-label,
+.form-group input:valid ~ .control-label,
+.form-group input.form-file ~ .control-label,
+.form-group input.has-value ~ .control-label,
+.form-group textarea:focus ~ .control-label,
+.form-group textarea:valid ~ .control-label,
+.form-group textarea.form-file ~ .control-label,
+.form-group textarea.has-value ~ .control-label {
+  font-size: 0.8rem;
+  color: gray;
+  top: -1rem;
+  left: 0;
+}
+.form-group select:focus,
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+}
+.form-group select:focus ~ .control-label,
+.form-group input:focus ~ .control-label,
+.form-group textarea:focus ~ .control-label {
+  color: #337ab7;
+}
+.form-group select:focus ~ .bar::before,
+.form-group input:focus ~ .bar::before,
+.form-group textarea:focus ~ .bar::before {
+  width: 100%;
+  left: 0;
+}
+
+.checkbox label,
+.form-radio label {
+  position: relative;
+  cursor: pointer;
+  padding-left: 2rem;
+  text-align: left;
+  color: #fff;
+  display: block;
+}
+.checkbox input,
+.form-radio input {
+  width: auto;
+  opacity: 0.00000001;
+  position: absolute;
+  left: 0;
+}
+
+.radio {
+  margin-bottom: 1rem;
+}
+.radio .helper {
+  position: absolute;
+  top: -0.25rem;
+  left: -0.25rem;
+  cursor: pointer;
+  display: block;
+  font-size: 1rem;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  color: #999;
+}
+.radio .helper::before, .radio .helper::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+  -webkit-transition: -webkit-transform 0.28s ease;
+  transition: -webkit-transform 0.28s ease;
+  transition: transform 0.28s ease;
+  transition: transform 0.28s ease, -webkit-transform 0.28s ease;
+  border-radius: 50%;
+  border: 0.125rem solid currentColor;
+}
+.radio .helper::after {
+  -webkit-transform: scale(0);
+          transform: scale(0);
+  background-color: #fcfcfc;
+  border-color: #fcfcfc;
+}
+.radio label:hover .helper {
+  color: #fcfcfc;
+}
+.radio input:checked ~ .helper::after {
+  -webkit-transform: scale(0.5);
+          transform: scale(0.5);
+}
+.radio input:checked ~ .helper::before {
+  color: #fcfcfc;
+}
+
+.checkbox {
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+}
+.checkbox .helper {
+  color: #999;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1rem;
+  height: 1rem;
+  z-index: 0;
+  border: 0.125rem solid currentColor;
+  border-radius: 0.0625rem;
+  -webkit-transition: border-color 0.28s ease;
+  transition: border-color 0.28s ease;
+}
+.checkbox .helper::before, .checkbox .helper::after {
+  position: absolute;
+  height: 0;
+  width: 0.2rem;
+  background-color: #fcfcfc;
+  display: block;
+  -webkit-transform-origin: left top;
+          transform-origin: left top;
+  border-radius: 0.25rem;
+  content: '';
+  -webkit-transition: opacity 0.28s ease, height 0s linear 0.28s;
+  transition: opacity 0.28s ease, height 0s linear 0.28s;
+  opacity: 0;
+}
+.checkbox .helper::before {
+  top: 0.65rem;
+  left: 0.38rem;
+  -webkit-transform: rotate(-135deg);
+          transform: rotate(-135deg);
+  box-shadow: 0 0 0 0.0625rem #fff;
+}
+.checkbox .helper::after {
+  top: 0.3rem;
+  left: 0;
+  -webkit-transform: rotate(-45deg);
+          transform: rotate(-45deg);
+}
+.checkbox label:hover .helper {
+  color: #fcfcfc;
+}
+.checkbox input:checked ~ .helper {
+  color: #fcfcfc;
+}
+.checkbox input:checked ~ .helper::after, .checkbox input:checked ~ .helper::before {
+  opacity: 1;
+  -webkit-transition: height 0.28s ease;
+  transition: height 0.28s ease;
+}
+.checkbox input:checked ~ .helper::after {
+  height: 0.5rem;
+}
+.checkbox input:checked ~ .helper::before {
+  height: 1.2rem;
+  -webkit-transition-delay: 0.28s;
+          transition-delay: 0.28s;
+}
+
+.radio + .radio,
+.checkbox + .checkbox {
+  margin-top: 1rem;
+}
+
+.has-error .legend.legend, .has-error.form-group .control-label.control-label {
+  color: #d9534f;
+}
+.has-error.form-group .form-help,
+.has-error.form-group .helper, .has-error.checkbox .form-help,
+.has-error.checkbox .helper, .has-error.radio .form-help,
+.has-error.radio .helper, .has-error.form-radio .form-help,
+.has-error.form-radio .helper {
+  color: #d9534f;
+}
+.has-error .bar::before {
+  background: #d9534f;
+  left: 0;
+  width: 100%;
+}
+
+.button {
+  position: relative;
+  background: currentColor;
+  border: 1px solid currentColor;
+  font-size: 1.1rem;
+  color: #4f93ce;
+  margin: 3rem 0;
+  padding: 0.75rem 3rem;
+  cursor: pointer;
+  -webkit-transition: background-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease;
+  transition: background-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease;
+  overflow: hidden;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+}
+.button span {
+  color: #fff;
+  position: relative;
+  z-index: 1;
+}
+.button::before {
+  content: '';
+  position: absolute;
+  background: #071017;
+  border: 50vh solid #1d4567;
+  width: 30vh;
+  height: 30vh;
+  border-radius: 50%;
+  display: block;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  opacity: 1;
+  -webkit-transform: translate(-50%, -50%) scale(0);
+          transform: translate(-50%, -50%) scale(0);
+}
+.button:hover {
+  color: #fcfcfc;
+  box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
+}
+.button:active::before, .button:focus::before {
+  -webkit-transition: opacity 0.28s ease 0.364s, -webkit-transform 1.12s ease;
+  transition: opacity 0.28s ease 0.364s, -webkit-transform 1.12s ease;
+  transition: transform 1.12s ease, opacity 0.28s ease 0.364s;
+  transition: transform 1.12s ease, opacity 0.28s ease 0.364s, -webkit-transform 1.12s ease;
+  -webkit-transform: translate(-50%, -50%) scale(1);
+          transform: translate(-50%, -50%) scale(1);
+  opacity: 0;
+}
+.button:focus {
+  outline: none;
+}
 		/* -- Responsive Styles (Media Queries) ------------------------------------- */
 
 		@media screen and (min-width:35.5em){
@@ -1944,39 +2349,81 @@
 
 <div id="layout">
 	<div class="headmenu">
-    <!-- Menu toggle -->
-    <a href="#menu" id="menuLink" class="menu-link">
-        <!-- Hamburger icon -->
-        <span></span>
-    </a>
-	<div class="loginname">N.C.</div>
-	<div class="battery">N.C.</div>
-	<div class="wifi">N.C.</div>
+		<!-- Menu toggle -->
+		<a href="#menu" id="menuLink" class="menu-link">
+			<!-- Hamburger icon -->
+			<span></span>
+		</a>
+		<div id="thermoname">N.C.</div>
+		<div class="battery">N.C.</div>
+		<div class="wifi">N.C.</div>
 	</div>
 	<div class="clear"></div>
     <div id="menu">
         <div class="pure-menu custom-restricted-width">
-		<a class="pure-menu-heading" href="javascript:showIndex()"><img src="nano.png" alt="WLANThermo" height="58" width="130"> </a>
+				<a class="pure-menu-heading" href="javascript:showIndex()"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAAA+CAMAAADOHANyAAABy1BMVEVHcEz////LtrjCo6T+/v67
+												srLmGSX18/Pk5OT////////////19fX9/f3+/v76+vrs7Oz7+/vkMDr+/v77+/vkCxj///+8vLzc
+												3Nz8/Pzx8fH8/Pz9/f3v7+/+/v77+/vp6en6+vrk5OTt7e3////7+/vx8fH39/f7+/v8/Pzv7+/0
+												9PTkDxzb29vz8fH7+/v+/v74+Pjy8vL7+/v6+vr9/f3a2tr////+/v76+fn8/Pz5+fnkCRb4+Pj8
+												/Pz19fX8/Pz9/f3kCxjlEh75+fnu7u7kChb7+/vkDRr5+fn09PT8/Pz29vba2tr6+vr8/Pzs7Oz8
+												/Pz39/f9/f37+/vkDBnkCRblER3v7+/v7+/+/v7kBxT6+vrpOELz8/P8/PzlDxz6+vroLDfq6ur5
+												+fn39/f29vb8/Pz////kEyDrRlDnIy/lDRr////////kDBj////kBxToMz3z8/PlEyDlGCPkChf3
+												9/f////lEh/lFSH4+PjlFSHnIS3kDRrkCxjkChflEBz////lDhrkDBjlHyvkCxj39/flFyPu7u7m
+												GyfkDRnlEyDlFSH////oc3r////pXGTnKTTywcTzxMfrT1jsgIb////kBhPe/hkIAAAAl3RSTlMA
+												zQMC/QE8SBT+fPpg5PhSDB/L3XPKkBsH3i6W7WqBohqTKDIUvhxkr8kOTXQJN7P0cDSqiPEEjraP
+												23nsa+OqzOnglJ0k8qWofUS7UAuFxBHPV9a4tfhbKidL/vkLO9R+ixYXgklB2Z6EBxyuSFXGKfsR
+												PW5C2j50Y0xbVyac1OaMXKK7NszGRzwsv1NQyl7LiDN1jxiQLUfRqQAACeRJREFUeF7tmGlXG0cW
+												hu9IaiMs1IiEZATSBBQCSGBAGKQZNgWZfbMABIYQA9gYAraTeMGOl3gZL4m3yWS2l587fau6qlsg
+												nUM44VueD5xbatT16tbduunUub1/7sm7e/2rBweroxe+G994f51KUh25qUyjaZoUVyOREBF9FjlP
+												RzD6PORiIEwuvJHIVVIYr3Zf3zo4zIUXjy9TUbqR1/bWuqHMZvSSxceopCNsF374jzGDHNLl+Jwk
+												1zfuHZRgaXzfoGJ3Trap+2TQTjZdiJUUk0fCcIvBVjExP75gn5Tm6SUPHSacQhlJWoFhdcsorpUS
+												01AObBeIKa84Iub6Eynlwo3ndy89fnzp7u7409VDcu49pMPE0aMtpELSvMP+KiGmC0C+QAwCk4Vi
+												vHdHrc1Gxy9dKQjlD0/6C+UsHg7mASxIoz4AE83Svog8lRAz4kMMvlq3GBOpZbeY6++sjV4/KBKl
+												ex9eFvin//2hmwNNxPShZhM5Esyhs5SYCHY8CdS5xXQv4OOrjphfrN//yc9UgleLbjWrzwsjp1e6
+												w1uDiZVyLAsn+bBSQkw9e68SgSaXmB+qskjMaDEfHfRfMshFW3S9q+++rgA/FyTZjT1yEUOcLCZ5
+												g0YZQBWooRJiuhEMk2cHPW4x1J5El1eLuaFCRdUvMKmu6TQJLg+5z2rRraYV0bSIyw5WkQ0LO1JC
+												zGwK1aIMJf1uMVTpw6Y8BeuY6BDnYZOpthPkAwe4YtxLmhkTa0R+E62WncK8SOzWEmL6EOX7hYOY
+												KBBD1cAAEb1/qYuewzVosgPSO28vuNRskEMjtvhmwbQIzzzRGpKh4mLasrhITDWyMwViKIbANXq7
+												VExM2Y4JzaBMxOuuwLm1T5pqJMhYwJb0qK+KLmKKiooxmhFor2JqTQwUikl3INV+r/+VFuMmXTvQ
+												oQSZA4ZQ4/LNBacK1MLnv8MimDls0SCqi4tJ98Kh11MghkKDCH60L4peUWY71beHw6JfuCrgLimM
+												IB7VIa9qYKaeE7yomHm4mS8UQ/UZzIVKiWE8FUEI8uKI953mteSU4mHEk2rXWRNfIkNFxRiDGAsp
+												6jBoFIqhX1PoCBcRk9ZWKOYDMyWazcaBZqjgB2fVN8YARIqLKUO50waWyzFZKObMhbIAIkXEzAWn
+												Js4bdmZFwYiq5PnOcY0uTX4f0O3MFMB0cTGN6CjosPlCMYsPqRnAUTHicHY6ZfqNfAxmSyT4rSLp
+												nUD5irK9vTBDRcW0A3fIvSxvcIu5foM7bBExhglBsMIQobXDC59w63Mt5pnuUVtoJE0fL7SYRy2S
+												NnZFjtw0Yswt5txb3njsqBg/FHnRTquEpzItPFU4lVgPN2syM9QoUe0SoximZR9aSSO7WZUjxrhL
+												TFvuiJj6XBY2mVrhUxOA7G67TlNw6kcbOXTUFhUzjDkvuTESiDliLv+LBF/0Hk1tY3miBoJogyyz
+												FuYIEV1ZUmJGdeGbJRcthjabqhR+y56lQmarmsT/sMMNfa+WNBUh3Szdk2UJngQAORONu87p98Og
+												ovjXbk6OGMLqADPHh9DuAxCo5+HGXWoG/6T5nGqtv5+S4AfL5BDxO9dzXqIGYSU6NifV5tvWWg83
+												fDlCmlDnnE+4I8bB5Y2B6bbnbYjGv6ebwlMiHzQN9AbA30jwVwA89P8Zmq+9RG+gmPKrNguk2vTo
+												BWRIMR2EwuzzEhl1bAZWRMpY9PIPeqEn0NsnF4Mp6Zs6uKokh6lPVamJcrjoChOF5wCIgmAIizPl
+												wYFin742zQDLNU2zpJhyU5BiMWIZACMTXd9fj3TtymXMwvDFWEKoqjOIGnSs9MGimpu3FiNqw18A
+												fMZGKTE/EaP/40sjPBJX2eBJwjmnbjDNUhgrrpmUoZRQn48pDbVsxDmSRnUEn0gM568Psh6vAPqc
+												jF7oakY5zhxVDMKcSdkW0VLkF42oCq9P9GR+UjFhE0iQRSUEdc4pIa/s5AiR5+HGg9tEIdY5YEeV
+												yX5sVOGlK83ro2Jy3wu+cYmpqRZ0GlpMyyaHpIhSvieQ4uFtU9oZdWI9RLd5SujfJ3oEiJ43LFOF
+												KAJADHFDevg8IkZTOpuSwazIwUfqyZs3uEZk1ADBPICQ/cPXVOL2X+ZnEKQMok5YVNq/AvddI9Zq
+												/wnEKBKi7K8DqVoWJE8mtmmnEx/LLO3ZreexzDo/0bwK5U6VkOd0dzq5mLxfRGYAyLGiaFiczJ0K
+												e68g4Guj/zpZm4N4qG+FxYC9K6ZdYlaXjooJfiNYcInZ+VZQaceMCQtrwUinbAEoE6fkYff0SI/h
+												KnmfyY3OSFftLp77pS4DVKgyVOb2TP+JsikPyGc5GZedUpI4JZrxyXSKy0N4oJL2qg/I3uAtx3/9
+												T609E6LdPe09O5EYrqPJel3mJsnYAaI9fEoidzN2SMS52j87WHpyWcZrvF/lzZPHVyaS8tzoie6U
+												JxJDXfoJooNPQ/5ME8h4xSe+FqKmgB2f3it7XBt563+/dKbM1adD/+v5iXPgpfro3cnErATkoCb8
+												kOV6D0HM9tUbu6Ak1Zy6UsOhlybvjw+GXuvh7tZ3u2f2SD/mvjiWmPWvBNecohexm2PIBzQ6jWCN
+												o8hOJ38QQHldg0FU38d+8W2T5PKZc+Naweji0NC4DPONY4nRqa3FNJkQ7/XahTtUOPIpUYPqTmtJ
+												MNGFDASd5ObKw92XKoT6x4eGFkcP3p9MjKz8HUTNqkk3QGloCwBTxNyPwiGgtTh4f7w09MmSem0+
+												dOWkYvwpoPwO9YgAYXodSw97TXEo5u5QCfZe3X1xb1W1Jmo4e/bstvy2ZX1LgmuWyeVg5qymz5D/
+												IcaFryzjK5q3/oaImbaue2XpsT7zkKS2O5dNptaHy8Sl0tz+eWPxOZ0if/AH8X/a1DXxsiqWEKsx
+												rsTD6lqXfMPek1Cr06HFB0VvmGg7BZvMDHn0AtlZovNZvfLTqbANRD5lEjwtzkaxLlY5bofLwDdi
+												1QjM00wQNWI1xaPpqdCHjJ6n7tMAUi3ENPH4W4Fkmhg/i5mHWU/MzG8V88Vx4H3jiJNgmkeEOkyl
+												xaVK+Oopgpxu6iPUg0H9gLlM1PbFcSEcB246GfSph/t1ogVcbAlAkCEaRIwEncgalLNnHXafh8eq
+												43I8MfNE9epNK02hjqN5mnIQxClsquMYQ57SSTSTYFiMFx04LnTzOLTYh8N4UxigSaCevudLSVRT
+												Ox+OoBdb3MDtjF5HNzfvm8eFjstFLEhjBTjvRHOVjOaoXM3yO8hmmHY0BzBNpwIfDsOZE3aiuVJG
+												c16/Qr9KncDW35kcoiE6DbxRDEgrhoQrmjc5mnfUg8sEauQ7GInZSqfCin4HlEDMFc2NGJbRLOhA
+												F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" alt="WLANThermo" height="58" width="130"> </a>
             <ul class="pure-menu-list">
                 <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
-				<!--<li id="menuPlot" class="pure-menu-item"><a href="javascript:showPlot()" class="pure-menu-link">Plot</a></li> -->
-                <li class="pure-menu-item pure-menu-has-children">
-					<a href="#" id="menuChannel" class="pure-menu-link">Kanal</a>
-					<ul class="pure-menu-children">
-						<li class="pure-menu-item" id="menuChannel0"><a class="pure-menu-link" href="javascript:showSetChannel('0')">Kanal 1</a></li>
-						<li class="pure-menu-item" id="menuChannel1"><a class="pure-menu-link" href="javascript:showSetChannel('1')">Kanal 2</a></li>
-						<li class="pure-menu-item" id="menuChannel2"><a class="pure-menu-link" href="javascript:showSetChannel('2')">Kanal 3</a></li>
-						<li class="pure-menu-item" id="menuChannel3"><a class="pure-menu-link" href="javascript:showSetChannel('3')">Kanal 4</a></li>
-						<li class="pure-menu-item" id="menuChannel4"><a class="pure-menu-link" href="javascript:showSetChannel('4')">Kanal 5</a></li>
-						<li class="pure-menu-item" id="menuChannel5"><a class="pure-menu-link" href="javascript:showSetChannel('5')">Kanal 6</a></li>
-						<li class="pure-menu-item" id="menuChannel6"><a class="pure-menu-link" href="javascript:showSetChannel('6')">Kanal 7</a></li>
-						<li class="pure-menu-item" id="menuChannel7"><a class="pure-menu-link" href="javascript:showSetChannel('7')">Kanal 8</a></li>
-					</ul>
-				</li>
-				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
-				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
-				<!-- <li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li> -->
-				<!-- <li id="menuChart" class="pure-menu-item"><a href="javascript:showChart()" class="pure-menu-link">Chart Dienste</a></li> -->
+                <!-- <li class="pure-menu-item pure-menu-has-children"><a href="#" id="menuChannel" class="pure-menu-link">Kanal</a></li> -->
+				        <li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
+				        <li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
+				        <li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>
         </div>
@@ -2095,14 +2542,8 @@
 			</div>
 			<h3 class="headtitle">WLAN Einstellungen</h3>
 			<div class="pure-g">
-				<div class="pure-u-1-1 pure-u-lg-1-3">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box wlan_conf">
-							<label class="switch">
-								<input type="checkbox">
-								<div class="slider round"></div>
-								<div class="checkbox_title">WLAN</div>
-							</label>
-							<hr />
 							<table id="networkconnect" class="wlantable" width="100%">
 								<!--Netzwerkliste -->
 							</table> 
@@ -2125,7 +2566,7 @@
 			<hr />
 			<h3 class="headtitle">WLAN Einstellungen</h3>
 			<div class="pure-g">
-				<div class="pure-u-1-1 pure-u-lg-1-3">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box wlan_conf">
 						<h3>Netzwerk Verbinden</h3>
 						<input name="ssidInput" type="text" maxlength="32" placeholder="SSID" readonly>
@@ -2143,53 +2584,48 @@
 			</div>
 			<h3 id="channel_settings_headtitle" class="headtitle">N.C.</h3>
             <div class="pure-g">
-				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-5">
+				<div class="pure-u-1-1 pure-u-md-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
-					<form class="pure-form pure-form-stacked">
-						<fieldset>
-							<table>
-								<tr>
-									<td><label for="ChannelName">Kanal Name:&nbsp;&nbsp;</label></td>
-									<td><input class="temp_input" id="channel_name" type="text" maxlength="10" placeholder="Kanal Name"></td>
-								</tr>
-								<tr>
-									<td><label for="CH1TMin">Temp Min:</label></td>
-									<td><input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this);" placeholder="Temp Min"></td>
-								</tr>
-								<tr>
-									<td><label for="CH1TMax">Temp Max:</label></td>
-									<td><input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this);" placeholder="Temp Max"></td>
-								</tr>
-								<tr>
-									<td><label for="sensor">Fühler:</label></td>
-									<td>
-										<select id="sensor">
-											<!-- Placeholder -->
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td><label for="color">Farbe:</label></td>
-									<td>
-										<select style="width:8.6em" id="color">
-											<option>rot</option>
-											<option>blau</option>
-											<option>gelb</option>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td>Webalarm&nbsp;&nbsp;</td>
-									<td>
-										<label class="switch">
-											<input id="webalarm" type="checkbox">
-											<div class="slider round"></div>
-										</label>
-									</td>
-								</tr>
-							</table>
-						</fieldset>
-					</form>
+						<form>							
+							<div class="form-group">
+							  <input type="text" class="temp_input" id="channel_name" maxlength="13" required="required"/>
+							  <label class="control-label" for="input">Kanal Name</label><i class="bar"></i>
+							</div>			
+							<div class="form-group">
+							  <input class="temp_input" id="temp_min" type="number" step="0.1" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
+							  <label class="control-label" for="input">Temp Min</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input class="temp_input" id="temp_max" type="number" step="0.1" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
+							  <label class="control-label" for="input">Temp Max</label><i class="bar"></i>
+							</div>													
+							<div class="form-group">
+							  <select id="sensor">
+									<!-- Placeholder -->
+							  </select>
+							  <label class="control-label" for="select">Fühler</label><i class="bar"></i>
+							</div>	
+							<div class="form-group">
+							  <select id="color">
+								<option value="#5587A2">Niagara</option>
+								<option value="#FFAEC9">Rosa</option>
+								<option value="#0C4C88">Lapis Blue</option>
+								<option value="#EF562D">Orange</option>
+								<option value="#A349A4">Lila</option>
+								<option value="#ED1C24">Red</option>
+								<option value="#22B14C">Green</option>
+								<option value="#FFC100">Gold</option>
+								<option value="#5C7148">Kale</option>
+								<option value="#804000">Brown</option>
+							  </select>
+							  <label class="control-label" for="select">Farbe</label><i class="bar"></i>
+							</div>	
+							<div class="checkbox">
+							  <label>
+								<input id="webalarm" type="checkbox" checked="checked"/><i class="helper"></i>Temperatur Alarm
+							  </label>
+							</div>
+						</form>
 					</div>
 				</div>
 			</div>
@@ -2204,86 +2640,115 @@
 			</div>
 			<h3 class="headtitle">System Einstellungen</h3>
 			<div class="pure-g">
-				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-5">
+				<div class="pure-u-1-1 pure-u-md-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
-						<form class="pure-form pure-form-stacked">
-							<fieldset>
-								<table>
-									<tr>
-										<td><label for="hostname">Hostname</label></td>
-										<td><input style="width:8em" id="hostname" type="hostname" placeholder="Hostname"></td>
-									</tr>
-									<tr>
-										<td><label for="timezone">Zeitzone</label></td>
-										<td>
-											<select style="width:8.4em" id="timezone">
-												<option value="0">MEZ</option>
-												<option value="1">MEZ+1</option>
-												<option value="-1">MEZ-1</option>
-											</select>
-										</td>
-									</tr>
-									<tr>
-										<td><label for="language">Sprache</label></td>
-										<td>
-											<select style="width:8.4em" id="language">
-												<option value="de">Deutsch</option>
-												<option value="en">Englisch</option>
-												<option value="fr">Französisch</option>
-											</select>
-										</td>
-									</tr>
-									<tr>
-										<td><label for="unit">Einheit</label></td>
-										<td>
-											<select style="width:8.4em" id="unit">
-												<option value="C">Celsius</option>
-												<option value="F">Fahrenheit</option>
-											</select>
-										</td>
-									</tr>
-									<tr>
-										<td><label for="hardwarealert">Hardwarealarm</label></td>
-										<td>
-											<label class="switch">
-												<input id="hwalarm" type="checkbox">
-												<div class="slider round"></div>
-											</label>
-										</td>
-									</tr>
-								</table>
-							</fieldset>
+						<form>							
+							<div class="form-group">
+							  <input type="text" id="hostname" maxlength="13" required="required"/>
+							  <label class="control-label" for="input">Hostname</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="apname" maxlength="13" required="required"/>
+							  <label class="control-label" for="input">AP-Name</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <select id="timezone">
+								<option value="-12">MEZ-12</option>
+								<option value="-11">MEZ-11</option>
+								<option value="-10">MEZ-10</option>
+								<option value="-9">MEZ-9</option>
+								<option value="-8">MEZ-8</option>
+								<option value="-7">MEZ-7</option>
+								<option value="-6">MEZ-6</option>
+								<option value="-5">MEZ-5</option>
+								<option value="-4">MEZ-4</option>
+								<option value="-3">MEZ-3</option>
+								<option value="-2">MEZ-2</option>
+								<option value="-1">MEZ-1</option>
+								<option value="0">MEZ</option>
+								<option value="1">MEZ+1</option>
+								<option value="2">MEZ+2</option>
+								<option value="3">MEZ+3</option>
+								<option value="4">MEZ+4</option>
+								<option value="5">MEZ+5</option>
+								<option value="6">MEZ+6</option>
+								<option value="7">MEZ+7</option>
+								<option value="8">MEZ+8</option>
+								<option value="9">MEZ+9</option>
+								<option value="10">MEZ+10</option>
+								<option value="11">MEZ+11</option>
+								<option value="12">MEZ+12</option>
+							  </select>
+							  <label class="control-label" for="select">Zeitzone</label><i class="bar"></i>
+							</div>											
+							<div class="form-group">
+							  <select id="language">
+								<option value="de">Deutsch</option>
+							  </select>
+							  <label class="control-label" for="select">Sprache</label><i class="bar"></i>
+							</div>							
+							<div class="form-group">
+							  <select id="unit">
+								<option value="C">Celsius</option>
+								<option value="F">Fahrenheit</option>
+							  </select>
+							  <label class="control-label" for="select">Einheit</label><i class="bar"></i>
+							</div>	
+							<div class="form-group">
+							  <select id="hwversion">
+								<!-- Placeholder -->
+							  </select>
+							  <label class="control-label" for="select">Hardwareversion</label><i class="bar"></i>
+							</div>
+							<div class="checkbox">
+							  <label>
+								<input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i>Hardwarealarm
+							  </label>
+							</div>
+							<div class="checkbox">
+							  <label>
+								<input id="summer" type="checkbox"/><i class="helper"></i>Sommerzeit
+							  </label>
+							</div>
+							<div class="checkbox">
+							  <label>
+								<input id="fastmode" type="checkbox"/><i class="helper"></i>Schnelllauf
+							  </label>
+							</div>	
 						</form>
 					</div>
 				</div>
 			</div>
         </div>
 		<!-- ################################################### -->
-		<div id="pitmaster_config" class="content" style="display:none">
-			<!-- html for about-Site -->
-			<h3 class="headtitle">Pitmaster Einstellungen</h3>
+		<div id="thingspeak" class="content" style="display:none">
+			<!-- html for thingspeak-Site -->
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">Thingspeak</button>
+				<button class="pure-button" onclick="setThingspeak()">Speichern</button>
+			</div>
+			<h3 class="headtitle">Thingspeak</h3>
 			<div class="pure-g">
-				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
+						<form>							
+							<div class="form-group">
+							  <input type="text" id="TSwrite" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Channel Write API Key</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="TShttp" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">ThingHTTP API Key</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="TSchID" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Channel ID</label><i class="bar"></i>
+							</div>
+						</form>
 					</div>
 				</div>
 			</div>
-        </div>
-		<!-- ################################################### -->
-		<div id="chart_config" class="content" style="display:none">
-			<!-- html for about-Site -->
-			<h3 class="headtitle">Chart Dienste</h3>
-			<div class="pure-g">
-				<div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4">
-					<div class="1-box channel_conf">
-					</div>
-				</div>
-			</div>
-        </div>
-		<!-- ################################################### -->
-		<div id="plot" class="content" style="display:none">
-			<!-- html for config-Site -->
-			<h1>WLANThermo - plot site</h1>
         </div>
 		<!-- ################################################### -->
 		<div id="about" class="content" style="display:none">
@@ -2292,7 +2757,7 @@
 			</div>
 			<h3 class="headtitle">WlanThermo Team</h3>
 			<div class="pure-g">
-				<div class="pure-u-1-1  pure-u-md-1-2 pure-u-lg-1-5">
+				<div class="pure-u-1-1  pure-u-md-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
 						<table>
 							<tr>
@@ -2341,19 +2806,9 @@
 			menu     = document.getElementById('menu'),
 			menuLink = document.getElementById('menuLink'),
 			menuHome = document.getElementById('menuHome'),
-			menuPlot = document.getElementById('menuPlot'),
 			menuWlan = document.getElementById('menuWlan'),
 			menuSystem = document.getElementById('menuSystem'),
-			menuPitmaster = document.getElementById('menuPitmaster'),
-			menuChart = document.getElementById('menuChart'),
-			menuChannel0 = document.getElementById('menuChannel0'),
-			menuChannel1 = document.getElementById('menuChannel1'),
-			menuChannel2 = document.getElementById('menuChannel2'),
-			menuChannel3 = document.getElementById('menuChannel3'),
-			menuChannel4 = document.getElementById('menuChannel4'),
-			menuChannel5 = document.getElementById('menuChannel5'),
-			menuChannel6 = document.getElementById('menuChannel6'),
-			menuChannel7 = document.getElementById('menuChannel7'),
+			menuThingspeak = document.getElementById('menuThingspeak'),
 			menuAbout = document.getElementById('menuAbout'),
 			content  = document.getElementById('main');
 		function toggleClass(element, className) {
@@ -2392,82 +2847,22 @@
 				showIndex();
 			}
 		};
-		//menuPlot.onclick = function (e) {
-		//    if (menu.className.indexOf('active') !== -1) {
-		//        toggleAll(e);
-		//		showPlot();
-		//    }
-		//};
 		menuWlan.onclick = function (e) {
 			if (menu.className.indexOf('active') !== -1) {
 				toggleAll(e);
 				showWLAN();
 			}
 		};
+		menuThingspeak.onclick = function (e) {
+			if (menu.className.indexOf('active') !== -1) {
+				toggleAll(e);
+				showThingspeak();
+			}
+		};
 		menuSystem.onclick = function (e) {
 			if (menu.className.indexOf('active') !== -1) {
 				toggleAll(e);
 				showSystem();
-			}
-		};
-		//menuPitmaster.onclick = function (e) {
-		//    if (menu.className.indexOf('active') !== -1) {
-		//        toggleAll(e);
-		//		showPitmaster();
-		//    }
-		//};
-		//menuChart.onclick = function (e) {
-		//    if (menu.className.indexOf('active') !== -1) {
-		//        toggleAll(e);
-		//		showChart();
-		//    }
-		//};
-		menuChannel0.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('0');
-			}
-		};
-		menuChannel1.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('1');
-			}
-		};
-		menuChannel2.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('2');
-			}
-		};
-		menuChannel3.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('3');
-			}
-		};
-		menuChannel4.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('4');
-			}
-		};
-		menuChannel5.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('5');
-			}
-		};
-		menuChannel6.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('6');
-			}
-		};
-		menuChannel7.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSetChannel('7');
 			}
 		};
 		menuAbout.onclick = function (e) {
@@ -2487,6 +2882,7 @@
 
 	document.addEventListener("DOMContentLoaded", function(event) { 
 		//loadjscssfile('style.css','css');
+		setThermoName();
 		setInterval("readTemp();", 2000);
 	//your code to run since DOM is loaded and ready
 	});
@@ -2505,6 +2901,31 @@
 		document.getElementById("plot").style.display = "inline";
 	}	
 
+	function showThingspeak(){
+		hideAll();
+		loadJSON('settings', '', '3000', function (response) {
+			jsonresponse = JSON.parse(response);
+			document.getElementById('TSwrite').value = jsonresponse.charts.TSwrite;
+			document.getElementById('TShttp').value = jsonresponse.charts.TShttp;
+			document.getElementById('TSchID').value = jsonresponse.charts.TSchID;
+		})
+		document.getElementById("thingspeak").style.display = "inline";
+	}	
+
+	function setThingspeak(){
+		loadJSON('settings', '', '3000', function (response){
+			jsonresponse = JSON.parse(response);
+			jsonresponse.charts.TSwrite = document.getElementById('TSwrite').value;
+			jsonresponse.charts.TShttp = document.getElementById('TShttp').value;
+			jsonresponse.charts.TSchID = document.getElementById('TSchID').value;
+			var data = JSON.stringify(jsonresponse.charts);
+			//alert(data);
+			loadJSON('setcharts', data, '60000', function (response) {
+				showIndex();
+			})		
+		})
+	}
+	
 	function showSetWLAN(){
 		hideAll();
 		document.getElementById("wlan_set").style.display = "inline";
@@ -2513,37 +2934,39 @@
 	function showSetChannel(channel){
 		hideAll();
 		document.getElementById("channel_settings").style.display = "inline";
-		loadJSON('settings', '', function (response) {
+		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			clearOption('sensor');
 			for (var i = 0; i < jsonresponse.sensors.length; i++) {
 				document.getElementById('sensor').options[document.getElementById('sensor').options.length] = new Option(jsonresponse.sensors[i], i);
 			}
 		})
-		loadJSON('data', '', function (response) {
+		loadJSON('data', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('channel_settings_save').setAttribute('onclick','setChannel(' + channel + ');');
 			document.getElementById('channel_settings_headtitle').innerHTML  = jsonresponse.channel[channel].name;
 			document.getElementById('channel_name').value  = jsonresponse.channel[channel].name;
 			document.getElementById('temp_max').value  = jsonresponse.channel[channel].max;
 			document.getElementById('temp_min').value  = jsonresponse.channel[channel].min;
+			document.getElementById('color').value = jsonresponse.channel[channel].color;
 			document.getElementById('sensor').value = jsonresponse.channel[channel].typ;
 			document.getElementById('webalarm').checked = jsonresponse.channel[channel].alarm;
 		})
 	}
 
 	function setChannel(channel){
-		loadJSON('data', '', function (response) {
+		loadJSON('data', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			jsonresponse.channel[channel].min = document.getElementById('temp_min').value;
 			jsonresponse.channel[channel].max = document.getElementById('temp_max').value;
 			jsonresponse.channel[channel].name = document.getElementById('channel_name').value;
 			jsonresponse.channel[channel].typ = document.getElementById('sensor').value;
 			jsonresponse.channel[channel].alarm = document.getElementById('webalarm').checked;
+			jsonresponse.channel[channel].color = document.getElementById('color').value;
 			//alert(jsonresponse.channel[channel].min);
 			var data = JSON.stringify(jsonresponse.channel[channel]);
 				//alert(data);
-				loadJSON('setchannels', data, function (response) {
+			loadJSON('setchannels', data, '60000', function (response) {
 				showIndex();
 			})		
 		})	
@@ -2560,39 +2983,62 @@
 	
 	function setWLAN(ssid, passwd){
 		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
-		loadJSON('setnetwork', data, function (response) {
+		loadJSON('setnetwork', data, '60000', function (response) {
 			showWLAN();
 		})
 		
 	}	
 	
+	function setThermoName(){
+		loadJSON('settings', '', '3000', function (response) {
+			jsonresponse = JSON.parse(response);
+			document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
+		})
+	}
+		
 	function showSystem(){
 		hideAll();
-		loadJSON('settings', '', function (response) {
+		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('timezone').value = jsonresponse.system.utc;
 			document.getElementById('language').value = jsonresponse.system.language;
 			document.getElementById('hostname').value = jsonresponse.system.host;
+			document.getElementById('apname').value = jsonresponse.system.ap;
+			document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 			document.getElementById('unit').value = jsonresponse.system.unit;
 			document.getElementById('hwalarm').checked = jsonresponse.system.hwalarm;
+			document.getElementById('summer').checked = jsonresponse.system.summer;
+			document.getElementById('fastmode').checked = jsonresponse.system.fastmode;
+			clearOption('hwversion');
+			for (var i = 0; i < jsonresponse.hardware.length; i++) {
+				document.getElementById('hwversion').options[document.getElementById('hwversion').options.length] = new Option(jsonresponse.hardware[i], jsonresponse.hardware[i]);
+			}
+			document.getElementById('hwversion').value = jsonresponse.system.hwversion;
 		})
 		document.getElementById("system_config").style.display = "inline";
-	}	
+	}
 	
 	function setSystem(){
-		host = document.getElementById('hostname').value;
-		utc = document.getElementById('timezone').value;
-		language = document.getElementById('language').value;
-		unit = document.getElementById('unit').value;
-		hwalarm = document.getElementById('hwalarm').checked;
-		var data='{"hwalarm":"' + hwalarm + '","host":"' + host + '","utc":' + utc + ',"language":"' + language + '","unit":"' + unit + '"}';
-		
-		//alert(data);
-		loadJSON('setsystem', data, function (response) {
-			showIndex();
-		})
-		
+		loadJSON('settings', '', '3000', function (response) {
+			jsonresponse = JSON.parse(response);
+			jsonresponse.system.host = document.getElementById('hostname').value.replace(/ /g, '_');
+			jsonresponse.system.ap = document.getElementById('apname').value.replace(/ /g, '_');
+			jsonresponse.system.hwversion = document.getElementById('hwversion').value;
+			jsonresponse.system.utc = document.getElementById('timezone').value;
+			jsonresponse.system.language = document.getElementById('language').value;
+			jsonresponse.system.unit = document.getElementById('unit').value;
+			jsonresponse.system.hwalarm = document.getElementById('hwalarm').checked;
+			jsonresponse.system.summer = document.getElementById('summer').checked;
+			jsonresponse.system.fastmode = document.getElementById('fastmode').checked;			
+			var data = JSON.stringify(jsonresponse.system);
+			loadJSON('setsystem', data, '60000', function (response) {
+				//alert(data);
+				document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
+				showIndex();
+			})		
+		})	
 	}
+	
 	function showPitmaster(){
 		hideAll();
 		document.getElementById("pitmaster_config").style.display = "inline";
@@ -2606,7 +3052,8 @@
 	function showIndex(){
 		hideAll();
 		document.getElementById("index").style.display = "inline";
-	}	
+	}
+	
 	function showAbout(){
 		hideAll();
 		document.getElementById("about").style.display = "inline";
@@ -2616,19 +3063,19 @@
 		document.getElementById("index").style.display = "none";
 		document.getElementById("wlan_config").style.display = "none";
 		document.getElementById("system_config").style.display = "none";
-		document.getElementById("pitmaster_config").style.display = "none";
-		document.getElementById("chart_config").style.display = "none";
-		document.getElementById("plot").style.display = "none";
 		document.getElementById("about").style.display = "none";
 		document.getElementById("wlan_set").style.display = "none";
+		document.getElementById("thingspeak").style.display = "none";
 		document.getElementById("channel_settings").style.display = "none";
 	}
-    function loadJSON(url, data, callback) {
+	
+    function loadJSON(url, data, timeout, callback) {
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
 		xobj.timeout = 1000;
         xobj.open('POST', url, true);
         xobj.setRequestHeader("Content-Type", "application/json");
+		xobj.timeout = timeout;
         xobj.onreadystatechange = function () {
             if (xobj.readyState == 4 && xobj.status == "200") {
                 // .open will NOT return a value but simply returns undefined in async mode so use a callback
@@ -2639,7 +3086,7 @@
     }
 	
 	function readTemp(){
-		loadJSON('data', '', function (response) {
+		loadJSON('data', '', '3000', function (response) {
 		//loadJSON(function(response) {	
 			jsonresponse = JSON.parse(response);
 			document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%";
@@ -2652,43 +3099,26 @@
 				x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jsonresponse.channel[i].number;
 				x[i].getElementsByClassName('tempmin')[0].innerHTML = jsonresponse.channel[i].min + "°";
 				x[i].getElementsByClassName('tempmax')[0].innerHTML = jsonresponse.channel[i].max + "°";
-				x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;					
+				if (jsonresponse.channel[i].temp == '999'){
+					x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';					
+				}else{
+					x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;
+				}
 			}
 
 		})
 	}
 	
-	function readSettings(){
-		loadJSON('settings', '', function (response) {
-			jsonresponse = JSON.parse(response);
-		})
-	}
-	
-   function loadjscssfile(filename, filetype) {
-                if (filetype == "js") { //if filename is a external JavaScript file
-                    var fileref = document.createElement('script')
-                    fileref.setAttribute("type", "text/javascript")
-                    fileref.setAttribute("src", filename)
-                    alert('called');
-                }
-                else if (filetype == "css") { //if filename is an external CSS file
-                    var fileref = document.createElement("link")
-                    fileref.setAttribute("rel", "stylesheet")
-                    fileref.setAttribute("type", "text/css")
-                    fileref.setAttribute("href", filename)
-                }
-                if (typeof fileref != "undefined")
-                    document.getElementsByTagName("head")[0].appendChild(fileref)
-    }
 	function networkscan(){
-		loadJSON('networkscan', '', function (response) {
+		loadJSON('networkscan', '', '3000', function (response) {
 			if (response == "OK"){
 				setTimeout("networklist();", 3000);
 			}
 		})
 	}
+	
 	function networklist(){
-		loadJSON('networklist', '', function (response) {
+		loadJSON('networklist', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById("networklist").innerHTML = '';
 			document.getElementById("networkconnect").innerHTML = '';
@@ -2754,7 +3184,7 @@
 			rows[i].onclick = (function() { // closure
 				var cnt = i; // save the counter to use in the function
 				return function() {
-				  alert("row"+cnt+" data="+this.cells[1].innerHTML);
+				  //alert("row"+cnt+" data="+this.cells[1].innerHTML);
 				}    
 			})(i);
 		}

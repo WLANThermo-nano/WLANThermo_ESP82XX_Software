@@ -78,27 +78,53 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   JsonObject& root = response->getRoot();
   JsonObject& _system = root.createNestedObject("system");
 
-  _system["time"] = String(now());
-  _system["utc"] = timeZone;
-  _system["ap"] = APNAME;
-  _system["host"] = host;
-  _system["language"] = language;
-  _system["unit"] = temp_unit;
-  _system["hwalarm"] = doAlarm;
-  _system["version"] = FIRMWAREVERSION;
+  _system["time"] =       String(mynow());
+  _system["utc"] =        sys.timeZone;
+  _system["summer"] =     sys.summer;
+  _system["ap"] =         sys.apname;
+  _system["host"] =       sys.host;
+  _system["language"] =   sys.language;
+  _system["unit"] =       temp_unit;
+  _system["hwalarm"] =    sys.hwalarm;
+  _system["fastmode"] =   sys.fastmode;
+  _system["version"] =    FIRMWAREVERSION;
+  _system["hwversion"] =  String("V")+String(sys.hwversion);
   
   JsonArray& _typ = root.createNestedArray("sensors");
   for (int i = 0; i < SENSORTYPEN; i++) {
     _typ.add(ttypname[i]);
   }
 
-  JsonArray& _pit = root.createNestedArray("pitmaster");
-  for (int j = 0; j < pidsize; j++) {
-    _pit.add(pid[j].name);
+  JsonArray& _pit = root.createNestedArray("pid");
+  for (int i = 0; i < pidsize; i++) {
+    JsonObject& _pid = _pit.createNestedObject();
+    _pid["name"] = pid[i].name;
+    _pid["id"] = pid[i].id;
+    _pid["aktor"] = pid[i].aktor;
+    _pid["Kp"] = pid[i].Kp;
+    _pid["Ki"] = pid[i].Ki;
+    _pid["Kd"] = pid[i].Kd;
+    _pid["Kp_a"] = pid[i].Kp_a;
+    _pid["Ki_a"] = pid[i].Ki_a;
+    _pid["Kd_a"] = pid[i].Kd_a;
+    _pid["reversal"] = pid[i].reversal;
+    _pid["DCmmin"] = pid[i].DCmin;
+    _pid["DCmmax"] = pid[i].DCmax;
   }
 
+  JsonArray& _aktor = root.createNestedArray("aktor");
+  _aktor.add("SSR");
+  _aktor.add("FAN");
+
   JsonObject& _chart = root.createNestedObject("charts");
-  _chart["thingspeak"] = THINGSPEAK_KEY;
+  _chart["TSwrite"] = charts.TSwriteKey; 
+  _chart["TShttp"] = charts.TShttpKey;
+  _chart["TSchID"] = charts.TSchID;
+  _chart["TSshow8"] = charts.TSshow8;
+
+  JsonArray& _hw = root.createNestedArray("hardware");
+  _hw.add(String("V")+String(1));
+  _hw.add(String("V")+String(2));
     
   if (www) {
     response->setLength();
@@ -117,8 +143,8 @@ void handleData(AsyncWebServerRequest *request, bool www) {
   JsonObject& root = response->getRoot();
   JsonObject& system = root.createNestedObject("system");
 
-  system["time"] = String(now());
-  system["utc"] = timeZone;
+  system["time"] = String(mynow());
+  system["utc"] = sys.timeZone;
   system["soc"] = battery.percentage;
   system["charge"] = !battery.charge;
   system["rssi"] = rssi;
@@ -128,11 +154,10 @@ void handleData(AsyncWebServerRequest *request, bool www) {
 
   for (int i = 0; i < CHANNELS; i++) {
   JsonObject& data = channel.createNestedObject();
-    int ctemp = ch[i].temp * 10;
     data["number"]= i+1;
     data["name"]  = ch[i].name;
     data["typ"]   = ch[i].typ;
-    data["temp"]  = (float) ctemp/10.0;
+    data["temp"]  = limit_float(ch[i].temp, i);
     data["min"]   = ch[i].min;
     data["max"]   = ch[i].max;
     data["alarm"] = ch[i].alarm;
@@ -142,10 +167,11 @@ void handleData(AsyncWebServerRequest *request, bool www) {
   JsonObject& master = root.createNestedObject("pitmaster");
 
   master["channel"] = pitmaster.channel;
-  master["typ"] = pitmaster.typ;
+  master["pid"] = pitmaster.pid;
   master["value"] = pitmaster.value;
   master["set"] = pitmaster.set;
   master["active"] = pitmaster.active;
+  master["manuel"] = pitmaster.manuel;
   
   if (www) {
     response->setLength();
@@ -622,7 +648,7 @@ bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
     if (_limit > LIMITUNTERGRENZE && _limit < LIMITOBERGRENZE) ch[num].max = _limit;
     ch[num].alarm = _cha["alarm"];                           // ALARM
     ch[num].color = _cha["color"].asString();                // COLOR
-  }
+  } else return 0;
   
   modifyconfig(eCHANNEL,{});                                      // SPEICHERN
   return 1;
@@ -638,10 +664,45 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   JsonObject& _pitmaster = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_pitmaster.success()) return 0;
   
-  pitmaster.channel = _pitmaster["channel"]; // 0
-  pitmaster.typ = _pitmaster["typ"]; // ""
-  pitmaster.set = _pitmaster["value"]; // 100
-  pitmaster.active = _pitmaster["active"];
+  if (_pitmaster.containsKey("channel")) pitmaster.channel = _pitmaster["channel"];
+  else return 0;
+  if (_pitmaster.containsKey("pid")) pitmaster.pid = _pitmaster["pid"]; // ""
+  else return 0;
+  if (_pitmaster.containsKey("active")) pitmaster.active = _pitmaster["active"];
+  else return 0;
+  if (_pitmaster.containsKey("set")) pitmaster.set = _pitmaster["set"];
+  else return 0;
+  bool manuel;
+  if (_pitmaster.containsKey("manuel")) manuel = _pitmaster["manuel"];
+  else return 0;
+  pitmaster.manuel = manuel;
+  if (_pitmaster.containsKey("value") && manuel) pitmaster.value = _pitmaster["value"];
+  else return 0;
+  
+  
+  JsonObject& _pid = _pitmaster["setting"];
+  
+  byte id;
+  if (_pid.containsKey("id")) id = _pid["id"];
+  else return 0;
+  if (id >= pidsize) return 0;
+  pid[id].name = _pid["name"].asString();
+  pid[id].aktor =  _pid["aktor"];
+  pid[id].Kp =  _pid["Kp"];
+  pid[id].Ki =  _pid["Ki"];
+  pid[id].Kd =  _pid["Kd"];
+  pid[id].Kp_a =  _pid["Kp_a"];
+  pid[id].Ki_a =  _pid["Ki_a"];
+  pid[id].Kd_a =  _pid["Kd_a"];
+  pid[id].reversal =  _pid["reversal"];
+  pid[id].DCmin =  _pid["DCmmin"];
+  pid[id].DCmax =  _pid["DCmmax"];
+
+  if (!setconfig(ePIT,{})) {
+    DPRINTPLN("[INFO]\tFailed to save Pitmaster config");
+    return 0;
+  }
+  else  DPRINTPLN("[INFO]\tPitmaster config saved");
   return 1;
 }
 
@@ -674,12 +735,23 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _system = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_system.success()) return 0;
+
+  String unit;
   
-  doAlarm = _system["hwalarm"];
-  host = _system["host"].asString();
-  timeZone = _system["utc"];
-  language = _system["language"].asString();
-  String unit = _system["unit"].asString();
+  if (_system.containsKey("hwalarm")) sys.hwalarm = _system["hwalarm"];
+  if (_system.containsKey("host")) sys.host = _system["host"].asString();
+  if (_system.containsKey("utc")) sys.timeZone = _system["utc"];
+  if (_system.containsKey("language")) sys.language = _system["language"].asString();
+  if (_system.containsKey("unit"))  unit = _system["unit"].asString();
+  
+  if (_system.containsKey("summer")) sys.summer = _system["summer"];
+  if (_system.containsKey("fastmode")) sys.fastmode = _system["fastmode"];
+  if (_system.containsKey("ap")) sys.apname = _system["ap"].asString();
+  if (_system.containsKey("hwversion")) {
+    String ver = _system["hwversion"].asString();
+    ver.replace("V","");
+    sys.hwversion = ver.toInt();
+  }
 
   modifyconfig(eSYSTEM,{});                                      // SPEICHERN
   
@@ -688,11 +760,11 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
     transform_limits();                             // Transform Limits
     modifyconfig(eCHANNEL,{});                      // Save Config
     get_Temperature();                              // Update Temperature
-    #ifdef DEBUG
-      DPRINTPLN("[INFO]\tEinheitenwechsel");
-    #endif
+    DPRINTPLN("[INFO]\tEinheitenwechsel");
   }
   
+  DPRINTP("[INFO]\t");
+  DPRINTLN(digitalClockDisplay(mynow()));
   return 1;
 }
 
@@ -705,23 +777,73 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _chart = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_chart.success()) return 0;
+
+  if (_chart.containsKey("TSwrite"))  charts.TSwriteKey = _chart["TSwrite"].asString();  
+  else return 0;
+  if (_chart.containsKey("TShttp")) charts.TShttpKey = _chart["TShttp"].asString(); 
+  else return 0;
+  if (_chart.containsKey("TSchID")) charts.TSchID = _chart["TSchID"].asString();
+  else return 0;
+  if (_chart.containsKey("TSshow8")) charts.TSshow8 = _chart["TSshow8"];
+  else return 0;
   
-  const char* data[2];
-  data[0] = _chart["thingspeak"];
-  
-  if (!setconfig(eTHING,data)) {
-      #ifdef DEBUG
-        DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
-      #endif
-    } else {
-      #ifdef DEBUG
-        DPRINTPLN("[INFO]\tThingspeak config saved");
-      #endif
-    }
-  
+  if (!setconfig(eTHING,{})) {
+    DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
+    return 0;
+  }
+  else  DPRINTPLN("[INFO]\tThingspeak config saved");    
   return 1;
 }
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+bool handleAddPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& _pid = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_pid.success()) return 0;
+
+  if (pidsize < PITMASTERSIZE) {
+    
+    pid[pidsize].name =     _pid["name"].asString();
+    pid[pidsize].aktor =    _pid["aktor"];
+    pid[pidsize].Kp =       _pid["Kp"];  
+    pid[pidsize].Ki =       _pid["Ki"];    
+    pid[pidsize].Kd =       _pid["Kd"];                     
+    pid[pidsize].Kp_a =     _pid["Kpa"];                   
+    pid[pidsize].Ki_a =     _pid["Kia"];                   
+    pid[pidsize].Kd_a =     _pid["Kda"];                   
+    pid[pidsize].Ki_min =   _pid["Kimin"];                   
+    pid[pidsize].Ki_max =   _pid["Kimax"];                  
+    pid[pidsize].pswitch =  _pid["switch"];                   
+    pid[pidsize].reversal = _pid["rev"];                   
+    pid[pidsize].DCmin =    _pid["DCmin"];                   
+    pid[pidsize].DCmax =    _pid["DCmax"];                   
+    pid[pidsize].SVmin =    _pid["SVmin"];                  
+    pid[pidsize].SVmax =    _pid["SVmax"];               
+       
+    pid[pidsize].esum =    0;             
+    pid[pidsize].elast =   0;    
+    pid[pidsize].id = pidsize;
+  
+    if (!modifyconfig(ePIT,{})) {
+      DPRINTPLN("[INFO]\tFailed to save pitmaster config");
+      return 0;
+    }
+    else {
+      DPRINTPLN("[INFO]\tPitmaster config saved");
+      pidsize++;   // Erhöhung von pidsize nur wenn auch gespeichert wurde
+    }
+  } else {
+    DPRINTPLN("[INFO]\tTo many pitmaster");   
+    return 0; 
+  }
+  return 1;
+}
+ 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
@@ -741,9 +863,9 @@ String getMacAddress()  {
 // 
 void server_setup() {
 
-    MDNS.begin(host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);
+    MDNS.begin(sys.host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);
     DPRINTP("[INFO]\tOpen http://");
-    DPRINT(host);
+    DPRINT(sys.host);
     DPRINTPLN("/data to see the current temperature");
 
     server.on("/help",HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -778,7 +900,7 @@ void server_setup() {
     // REQUEST: /settings
     server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handleSettings(request, true);
-    });
+    });    
     
     // REQUEST: /networkscan
     server.on("/networkscan", HTTP_POST, [](AsyncWebServerRequest *request) { 
@@ -795,6 +917,18 @@ void server_setup() {
       handleWifiResult(request, true);
     });
 
+    // REQUEST: /stop wifi
+    server.on("/stopwifi", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      isAP = 3; // Turn Wifi off
+      request->send(200, "text/json", "OK");
+    });
+    
+    // REQUEST: /clear wifi
+    server.on("/clearwifi", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      setconfig(eWIFI,{}); // clear Wifi settings
+      request->send(200, "text/json", "OK");
+    });
+
     // REQUEST: /configreset
     server.on("/configreset", HTTP_GET, [](AsyncWebServerRequest *request) { 
       setconfig(eCHANNEL,{});
@@ -802,82 +936,16 @@ void server_setup() {
       set_Channels();
     });
     
-    // REQUEST: /deletenetworkstore
-    server.on("/deletenetworkstore", HTTP_POST, [](AsyncWebServerRequest *request) { 
-      if (setconfig(eWIFI,{})) {  
-        #ifdef DEBUG
-          DPRINTPLN("[INFO]\tReset wifi config");
-        #endif
-        request->send(200, "text/plain", "1");
-      } 
-      request->send(200, "text/plain", "0");
-    });
-
-    // REQUEST: /deletenetworkstore
-    server.on("/deletenetworkstore", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      if (setconfig(eWIFI,{})) {  
-        #ifdef DEBUG
-          DPRINTPLN("[INFO]\tReset wifi config");
-        #endif
-        request->send(200, "text/plain", "1");
-      } 
-      request->send(200, "text/plain", "0");
-    });
-
-
-    server.on("/alex", HTTP_GET, [](AsyncWebServerRequest *request){
-      
-      int params = request->params();
-      for(int i=0;i<params;i++){
-        AsyncWebParameter* p = request->getParam(i);
-        const char* data[2];
-        data[i] = p->value().c_str();
-        setconfig(eTHING,data);
-      }
-      request->send(200, "text/plain", "OK");
-    });
 
     /*  
-    // REQUEST: /setnetwork
-    server.on("/setnetwork", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      
-      DPRINTLN("SSID übermittelt");
-      DPRINTLN(request->method());
-      DPRINTLN(request->contentType());
-      DPRINTLN(request->url());
-      DPRINTLN(request->host());
-      int params = request->params();
-      DPRINTLN(params);
-      
-      request->send(200, "text/plain", "OK");
-    });
-
-
-
-    server.on("/setchannels", HTTP_POST, handleSetChannels);
-
- 
-    // REQUEST: /setchannels
-    server.on("/setchannels", [](AsyncWebServerRequest *request) { 
-           
-      if(!handleSetChannels) request->send(200, "text/plain", "0");
-        request->send(200, "text/plain", "1");
-      
-    });
-  
-    
-
-    // REQUEST: /setchannels
-    server.on("/setchannels", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      if(!request->authenticate(www_username, www_password))
-        return request->requestAuthentication();
-              
-        if(!handleSetChannels(request)) request->send(200, "text/plain", "0");
-          request->send(200, "text/plain", "1");
-      
     });
     server.on("/index.html",HTTP_GET, [](AsyncWebServerRequest *request) {
       if (!handleFileRead("/index.html", request))
+        request->send(404, "text/plain", "FileNotFound");
+    });
+
+    server.on("/", [](AsyncWebServerRequest *request){
+      if(!handleFileRead("/", request))
         request->send(404, "text/plain", "FileNotFound");
     });
     */
@@ -891,12 +959,6 @@ void server_setup() {
     //server.serveStatic("/css",  SPIFFS, "/css" ,"max-age=86400");
     //server.serveStatic("/png",  SPIFFS, "/png" ,"max-age=86400");
 
-    /*
-    server.on("/", [](AsyncWebServerRequest *request){
-      if(!handleFileRead("/", request))
-        request->send(404, "text/plain", "FileNotFound");
-    });
-    */
 
     // Eventuell andere Lösung zum Auslesen des Body-Inhalts
     // https://github.com/me-no-dev/ESPAsyncWebServer/issues/123
@@ -925,7 +987,7 @@ void server_setup() {
         if(!handleSetPitmaster(request, data)) request->send(200, "text/plain", "false");
           request->send(200, "text/plain", "true");
       }
-      else if (request->url() =="/setchart") { 
+      else if (request->url() =="/setcharts") { 
         if(!request->authenticate(www_username, www_password))
           return request->requestAuthentication();    
         if(!handleSetChart(request, data)) request->send(200, "text/plain", "false");

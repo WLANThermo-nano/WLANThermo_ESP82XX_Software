@@ -35,10 +35,10 @@ void set_wifi() {
   IPAddress gateway(192,168,66,1);
   IPAddress subnet(255,255,255,0);
 
-  WiFi.hostname(host);
+  WiFi.hostname(sys.host);
   WiFi.mode(WIFI_STA);
   
-  DPRINTLN("[INFO]\tHostname: " + host);
+  DPRINTLN("[INFO]\tHostname: " + sys.host);
   DPRINTP("[INFO]\tConnecting");
   
   holdssid.hold = false;
@@ -113,6 +113,7 @@ void sendNTPpacket(IPAddress& address) {
   
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
+  
   // Initialize values needed to form NTP request
   // (see URL above for details on the packets)
   packetBuffer[0] = 0b11100011;   // LI, Version, Mode
@@ -125,8 +126,6 @@ void sendNTPpacket(IPAddress& address) {
   packetBuffer[14]  = 49;
   packetBuffer[15]  = 52;
 
-  // all NTP fields have been given values, now
-  // you can send a packet requesting a timestamp:
   udp.beginPacket(address, 123); //NTP requests are to port 123
   udp.write(packetBuffer, NTP_PACKET_SIZE);
   udp.endPacket();
@@ -136,16 +135,12 @@ void sendNTPpacket(IPAddress& address) {
 // Get NTP time
 time_t getNtpTime() {
 
-  // Initialize NTP
-  IPAddress timeServerIP;                       // time.nist.gov NTP server address
-  const char* ntpServerName = "time.nist.gov";
-  
-  //get a random server from the pool
-  WiFi.hostByName(ntpServerName, timeServerIP); 
+  IPAddress timeServerIP;   
+  WiFi.hostByName("time.nist.gov", timeServerIP); 
 
   while (udp.parsePacket() > 0) ; // discard any previously received packets
-  
   sendNTPpacket(timeServerIP);
+  
   uint32_t beginWait = millis();
   while (millis() - beginWait < 4000) {
     int size = udp.parsePacket();
@@ -158,7 +153,7 @@ time_t getNtpTime() {
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
-      return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
+      return secsSince1900 - 2208988800UL;
     }
   }
   DPRINTPLN("[INFO]\tNo NTP Response!");
@@ -223,6 +218,8 @@ void wifimonitoring() {
       WIFI_Connect();
       holdssid.connect = false;
     }
+  } else if (isAP == 3) {
+    stop_wifi();
   } else if (WiFi.status() == WL_CONNECTED & isAP > 0) {
     // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
     if (isAP == 1) disconnectAP = true;
@@ -267,7 +264,7 @@ void wifimonitoring() {
         WiFi.mode(WIFI_STA);
         DPRINTPLN("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
       }
-  } //else if (isAP == 1)
+  }
 }
 
 
@@ -305,11 +302,13 @@ void stop_wifi() {
   
   DPRINTPLN("[INFO]\tStop Wifi");
   
-  wifi_station_disconnect();
-  wifi_set_opmode(NULL_MODE);
-  wifi_set_sleep_type(MODEM_SLEEP_T);
-  wifi_fpm_open();
-  wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+  //wifi_station_disconnect();
+  //wifi_set_opmode(NULL_MODE);
+  //wifi_set_sleep_type(MODEM_SLEEP_T);
+  //wifi_fpm_open();
+  //wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+  WiFi.disconnect();
+  WiFi.mode(WIFI_OFF);
   delay(100); // leider notwendig
 
   isAP = 2;
@@ -318,9 +317,14 @@ void stop_wifi() {
 void reconnect_wifi() {
 
   // wake up to use WiFi again
-  wifi_fpm_do_wakeup();
-  wifi_fpm_close();
-  wifi_set_opmode(STATION_MODE);
+  //wifi_fpm_do_wakeup();
+  //wifi_fpm_close();
+  //wifi_set_opmode(STATION_MODE);
+  //wifi_station_connect();
+
+  WiFi.forceSleepWake();
+  WiFi.mode(WIFI_STA);  
   wifi_station_connect();
+  //WiFi.begin(ssid, password); 
 }
 

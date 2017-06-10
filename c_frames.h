@@ -159,7 +159,9 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
   if (pitmaster.active)
     if (autotune.initialized)
       display->drawString(33,0, "A  " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
-    else
+    else if (pitmaster.manuel)
+      display->drawString(33,0, "M  " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
+    else  
       display->drawString(33,0, "P  " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
   else  display->drawString(24,0,String(battery.percentage)); 
   
@@ -179,7 +181,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
 
   //display->drawString(80,0,String(map(pit_y,0,pit_pause,0,100)) + "%");
 
-  if (!INACTIVESHOW) display->drawString(100,0,"F");
+  if (sys.fastmode) display->drawString(100,0,"F");
   
   if (flash && battery.percentage < 10) {} // nothing for flash effect
   else if (!battery.charge) {
@@ -293,40 +295,40 @@ void drawalarm(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16
 }
 
 void drawpit1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork) display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);           // Symbol
+  if (flashinwork) display->drawXbm(x+15,20+y,pit_width,pit_height,xbmpit);           // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(114+x, 20+y, "PITMASTER:");           
-  if (inWork) display->drawString(114+x, 36+y, pid[(int) tempor].name);
-  else display->drawString(114+x, 36+y, pid[pitmaster.typ].name);
+  display->drawString(116+x, 20+y, "PITMASTER:");           
+  if (inWork) display->drawString(116+x, 36+y, pid[(int) tempor].name);
+  else display->drawString(116+x, 36+y, pid[pitmaster.pid].name);
 }
 
 void drawpit2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork)  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);          // Symbol
+  if (flashinwork)  display->drawXbm(x+15,20+y,pit_width,pit_height,xbmpit);          // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(114+x, 20+y, "CHANNEL:");           
-  if (inWork) display->drawString(114+x, 36+y, String((int)tempor +1));
-  else  display->drawString(114+x, 36+y, String(pitmaster.channel+1));
+  display->drawString(116+x, 20+y, "CHANNEL:");           
+  if (inWork) display->drawString(116+x, 36+y, String((int)tempor +1));
+  else  display->drawString(116+x, 36+y, String(pitmaster.channel+1));
 }
 
 void drawpit3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork)  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);          // Symbol
+  if (flashinwork)  display->drawXbm(x+15,20+y,pit_width,pit_height,xbmpit);          // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(114+x, 20+y, "SET:");           
-  if (inWork) display->drawString(114+x, 36+y, String(tempor,1)+ " °" + temp_unit);
-  else  display->drawString(114+x, 36+y, String(pitmaster.set,1)+ " °" + temp_unit);
+  display->drawString(116+x, 20+y, "SET:");           
+  if (inWork) display->drawString(116+x, 36+y, String(tempor,1)+ " °" + temp_unit);
+  else  display->drawString(116+x, 36+y, String(pitmaster.set,1)+ " °" + temp_unit);
 }
 
 void drawpit4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork)   display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);         // Symbol
+  if (flashinwork)   display->drawXbm(x+15,20+y,pit_width,pit_height,xbmpit);         // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(114+x, 20+y, "ACTIVE:");           
-  if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
-  else if (!inWork && pitmaster.active) display->drawString(114+x, 36+y, "YES");
-  else display->drawString(114+x, 36+y, "NO");  
+  display->drawString(116+x, 20+y, "ACTIVE:");           
+  if (inWork && tempor) display->drawString(116+x, 36+y, "YES");
+  else if (!inWork && pitmaster.active) display->drawString(116+x, 36+y, "YES");
+  else display->drawString(116+x, 36+y, "NO");  
 }
 
 void drawsys1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -337,7 +339,7 @@ void drawsys1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   
   if (isAP == 1) {
     display->drawString(120, 20, "AP-SSID:");
-    display->drawString(120, 36, APNAME);
+    display->drawString(120, 36, sys.apname);
   }
   else if (isAP == 0) {
     display->drawString(120, 20, "SSID:");
@@ -367,7 +369,7 @@ void drawsys3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(120, 20, "HOST-NAME:");
-  display->drawString(120, 36, host);
+  display->drawString(120, 36, sys.host);
 }
 
 void drawsys4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -386,11 +388,23 @@ void drawsys5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setFont(ArialMT_Plain_10);
   display->drawString(114+x, 20+y, "HW-ALARM:");
   if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
-  else if (!inWork && doAlarm) display->drawString(114+x, 36+y, "YES");
+  else if (!inWork && sys.hwalarm) display->drawString(114+x, 36+y, "YES");
   else display->drawString(114+x, 36+y, "NO");
 }
 
 void drawsys6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  if (flashinwork)   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->setFont(ArialMT_Plain_10);
+  
+  // Draw Fastmode
+  display->drawString(114+x, 20+y, "FASTMODE:");
+  if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
+  else if (!inWork && sys.fastmode) display->drawString(114+x, 36+y, "YES");
+  else display->drawString(114+x, 36+y, "NO");
+}
+
+void drawsys7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   
   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
@@ -399,18 +413,6 @@ void drawsys6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   // Draw Version
   display->drawString(114+x, 20+y, "FIRMWARE:");
   display->drawString(114+x,36+y,FIRMWAREVERSION);
-}
-
-void drawsys7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork)   display->drawXbm(x+5,22+y,sys_width,sys_height,xbmsys);
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  display->setFont(ArialMT_Plain_10);
-  
-  // Draw Fastmode
-  display->drawString(114+x, 20+y, "FASTMODE:");
-  if (inWork && tempor) display->drawString(114+x, 36+y, "NO");
-  else if (!inWork && INACTIVESHOW) display->drawString(114+x, 36+y, "NO");
-  else display->drawString(114+x, 36+y, "YES");
 }
 
 void drawback(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {

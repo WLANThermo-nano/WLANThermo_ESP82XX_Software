@@ -114,7 +114,7 @@ String generateDigestHash(const char * username, const char * password, const ch
 String requestDigestAuthentication(const char * realm){
   String header = "realm=\"";
   if(realm == NULL)
-    header.concat("asyncesp");
+    header.concat("WLANThermo Nano");
   else
     header.concat(realm);
   header.concat( "\", qop=\"auth\", nonce=\"");

@@ -274,7 +274,7 @@ static inline void button_event() {
           break;
 
         case TEMPSUB:                     // Temperaturen durchwandern
-          if (INACTIVESHOW) {
+          if (!sys.fastmode) {
             current_ch++;
             if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
           }
@@ -355,7 +355,7 @@ static inline void button_event() {
           break;
         
         case TEMPSUB: 
-          if (INACTIVESHOW) {
+          if (!sys.fastmode) {
             current_ch--;
             if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
           } else {
@@ -454,11 +454,11 @@ static inline void button_event() {
         
       case 6:  // Pitmaster Typ
         if (mupi == 10) mupi = 1;
-        if (event[1]) tempor = pitmaster.typ; 
+        if (event[1]) tempor = pitmaster.pid; 
         tempor += mupi;
         if (tempor > pidsize-1) tempor = 0;
         else if (tempor < 0) tempor = pidsize-1;
-        if (event[2]) pitmaster.typ = tempor;
+        if (event[2]) pitmaster.pid = tempor;
         break;
         
       case 7:  // Pitmaster Channel
@@ -504,15 +504,28 @@ static inline void button_event() {
         break;
         
       case 15:  // Hardware Alarm
-        if (event[1]) tempor = doAlarm;
+        if (event[1]) tempor = sys.hwalarm;
         if (mupi) tempor = !tempor;
-        if (event[2]) doAlarm = tempor;
+        if (event[2]) {
+          if(sys.hwalarm != tempor) {
+            sys.hwalarm = tempor;
+            modifyconfig(eSYSTEM,{});
+          }
+        }
         break;
       
-      case 17:  // Fastmode
-        if (event[1]) tempor = INACTIVESHOW;
+      case 16:  // Fastmode
+        if (event[1]) tempor = sys.fastmode;
         if (mupi) tempor = !tempor;
-        if (event[2]) INACTIVESHOW = tempor;
+        if (event[2]) {
+          if (sys.fastmode != tempor);
+          sys.fastmode = tempor;
+          modifyconfig(eSYSTEM,{});
+        }
+        break;
+
+      default:
+        if (event[1]) inWork = false;     // kein bearbeitbares Attribut
         break;
      
     }

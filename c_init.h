@@ -106,7 +106,17 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
-#define EEPROM_SIZE 1792            // EEPROM SIZE
+#define EEPROM_SIZE 1920            // EEPROM SIZE
+#define EEWIFIBEGIN         0
+#define EEWIFI              300
+#define EESYSTEMBEGIN       EEWIFIBEGIN+EEWIFI
+#define EESYSTEM            250
+#define EECHANNELBEGIN      EESYSTEMBEGIN+EESYSTEM
+#define EECHANNEL           500
+#define EETHINGBEGIN        EECHANNELBEGIN+EECHANNEL
+#define EETHING             150
+#define EEPITMASTERBEGIN    EETHINGBEGIN+EETHING
+#define EEPITMASTER         700
 
 // PITMASTER
 #define PITMASTER1 15               // PITMASTER PIN
@@ -149,11 +159,12 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
 
 
 String  temp_unit = "C";
-String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
+//String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
+String colors[8] = {"#0C4C88","#22B14C","#EF562D","#FFC100","#A349A4","#804000","#5587A2","#5C7148"};
 
 // PITMASTER
 struct Pitmaster {
-   byte typ;           // PITMASTER NAME/TYP
+   byte pid;           // PITMASTER PID-Setting
    float set;            // SET-TEMPERATUR
    bool  active;           // IS PITMASTER ACTIVE
    byte  channel;         // PITMASTER CHANNEL
@@ -162,10 +173,12 @@ struct Pitmaster {
    bool event;
    int16_t msec;          // PITMASTER VALUE IN MILLISEC
    unsigned long last;
+   int pause;             // PITMASTER PAUSE
 };
 
 Pitmaster pitmaster;
 int pidsize;
+
 
 // DATALOGGER
 struct datalogger {
@@ -183,12 +196,25 @@ uint32_t log_sector;                // erster Sector von APP2
 uint32_t freeSpaceStart;            // First Sector of OTA
 uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
-// SYSTEM
-bool stby = false;                // USB POWER SUPPLY?
-bool doAlarm = false;             // HARDWARE ALARM           
-byte pulsalarm = 1;
-String language;
 
+// SYSTEM
+struct System {
+   byte hwversion;           // HARDWARE VERSION
+   bool fastmode;              // FAST DISPLAY MODE
+   String apname;             // AP NAME
+   bool summer;              // SUMMER TIME
+   String host;                     // HOST NAME
+   String language;           // SYSTEM LANGUAGE
+   int timeZone;              // TIMEZONE
+   bool hwalarm;              // HARDWARE ALARM 
+};
+
+System sys;
+bool stby = false;                // USB POWER SUPPLY?            
+byte pulsalarm = 1;
+
+
+// BATTERY
 struct Battery {
   int voltage;                    // CURRENT VOLTAGE
   bool charge;                    // CHARGE DETECTION
@@ -202,10 +228,19 @@ Battery battery;
 uint32_t vol_sum = 0;
 int vol_count = 0;
 
+// CHARTS
+struct Charts {
+   String TSwriteKey;           // THINGSPEAK WRITE API KEY
+   String TShttpKey;            // THINGSPEAK HTTP API KEY 
+   String TSchID;                // THINGSPEAK CHANNEL ID 
+   bool TSshow8;
+};
+
+Charts charts;
+
 // OLED
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL       
 bool LADENSHOW = false;           // LOADING INFORMATION?
-bool INACTIVESHOW = true;         // SHOW INACTIVE CHANNELS
 bool displayblocked = false;                     // No OLED Update
 enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM};
 
@@ -220,16 +255,14 @@ MyQuestion question;
 enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
 // WIFI
-byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO)
+byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO, 3 = Turn off)
 String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;
 long rssi = 0;                   // Buffer rssi
-String THINGSPEAK_KEY;
+
 long scantime;
 bool disconnectAP;
-int timeZone;                     // Central European Time
-String host;
 struct HoldSSID {
    unsigned long connect;
    bool hold;             
@@ -258,6 +291,14 @@ int frameCount = 19;
 bool flashinwork = true;
 float tempor;                       // Zwischenspeichervariable
 
+// TIMER
+unsigned long lastUpdateBatteryMode;
+unsigned long lastUpdateSensor;
+unsigned long lastUpdatePiepser;
+unsigned long lastUpdateCommunication;
+unsigned long lastUpdateDatalog;
+unsigned long lastFlashInWork;
+unsigned long lastUpdateRSSI;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -311,6 +352,7 @@ bool modifyconfig(byte count, const char* data[12]);
 void start_fs();                                  // Initialize FileSystem
 void read_serial(char *buffer);                   // React to Serial Input 
 int readline(int readch, char *buffer, int len);  // Put together Serial Input
+void write_flash(uint32_t _sector);
 
 // MEDIAN
 void median_add(int value);                       // add Value to Buffer
@@ -326,12 +368,19 @@ void get_rssi();
 void reconnect_wifi();
 void stop_wifi();
 void check_wifi();
+time_t getNtpTime();
 
 // SERVER
 void handleSettings(AsyncWebServerRequest *request, bool www);
 void handleData(AsyncWebServerRequest *request, bool www);
 void handleWifiResult(AsyncWebServerRequest *request, bool www);
 void handleWifiScan(AsyncWebServerRequest *request, bool www);
+bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas);
+bool handleAddPitmaster(AsyncWebServerRequest *request, uint8_t *datas);
 
 // EEPROM
 void setEE();
@@ -341,7 +390,13 @@ void clearEE(int startP, int endP);
 
 // PITMASTER
 void startautotunePID(int maxCycles, bool storeValues);
+void pitmaster_control();
 
+// BOT
+#ifdef THINGSPEAK
+void sendMessage(int ch, int count);
+void sendData();
+#endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
@@ -349,6 +404,106 @@ void set_serial() {
   Serial.begin(115200);
   DPRINTLN();
   DPRINTLN();
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Temperature and Battery Measurement Timer
+void timer_sensor() {
+  
+  if (millis() - lastUpdateSensor > INTERVALSENSOR) {
+    get_Temperature();
+    get_Vbat();
+    lastUpdateSensor = millis();
+  }
+
+  if (millis() - lastUpdateRSSI > INTERVALCOMMUNICATION) {
+    get_rssi(); 
+    cal_soc();
+    lastUpdateRSSI = millis();
+  }
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Temperature Alarm Timer
+void timer_alarm() {
+  
+  if (millis() - lastUpdatePiepser > INTERVALSENSOR/4) {
+    controlAlarm(pulsalarm);
+    pulsalarm = !pulsalarm;
+    lastUpdatePiepser = millis();
+  }
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Charts Timer
+void timer_charts() {
+  
+  if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
+
+    if (!isAP) {
+      #ifdef THINGSPEAK
+        if (charts.TSwriteKey != "") sendData();
+      #endif
+    }
+    lastUpdateCommunication = millis();
+  }
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// DataLog Timer
+void timer_datalog() {  
+  
+  if (millis() - lastUpdateDatalog > 60000) {
+
+    //Serial.println(sizeof(datalogger));
+    //Serial.println(sizeof(mylog));
+
+    int logc;
+    if (log_count < MAXLOGCOUNT) logc = log_count;
+    else {
+      logc = MAXLOGCOUNT-1;
+      memcpy(&mylog[0], &mylog[1], (MAXLOGCOUNT-1)*sizeof(*mylog));
+    }
+
+    for (int i=0; i < CHANNELS; i++)  {
+      mylog[logc].tem[i] = (uint16_t) (ch[i].temp * 10);       // 8 * 16 bit  // 8 * 2 byte
+    }
+    mylog[logc].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
+    mylog[logc].soll = (uint8_t) pitmaster.set;           // 8 bit  // 1 byte
+    mylog[logc].timestamp = now();     // 64 bit // 8 byte
+
+    log_count++;
+    // 2*8 + 2 + 8 = 26
+    if (log_count%MAXLOGCOUNT == 0 && log_count != 0) {
+        
+      if (log_sector > freeSpaceEnd/SPI_FLASH_SEC_SIZE) 
+        log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
+        
+      write_flash(log_sector);
+      log_sector++;
+      modifyconfig(eSYSTEM,{});
+
+        //getLog(3);
+        
+    }
+    lastUpdateDatalog = millis();
+  }
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Flash
+void flash_control() { 
+  if (inWork) {
+    if (millis() - lastFlashInWork > FLASHINWORK) {
+      flashinwork = !flashinwork;
+      lastFlashInWork = millis();
+    }
+  }
 }
 
 
@@ -402,6 +557,34 @@ String newDate(time_t t){
   return zeit;
 }
 
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// SYSTEM TIME based on UTC
+time_t mynow() {
+
+  if (sys.summer) return now() + (sys.timeZone+1) * SECS_PER_HOUR;
+  else return now() + sys.timeZone * SECS_PER_HOUR;
+  
+}
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Update Time
+void set_time() {
+  if (!isAP) {
+    time_t present = 0;
+    int ii = 0;
+    while (present == 0 && ii < 3) {
+      present = getNtpTime(); 
+      ii++;
+    }
+    setTime(present);
+  }
+  //setSyncProvider(getNtpTime);
+  DPRINTP("[INFO]\t");
+  DPRINTLN(digitalClockDisplay(mynow()));
+}
+
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Standby oder Mess-Betrieb
 bool standby_control() {
@@ -428,6 +611,18 @@ bool standby_control() {
     return 1;
   }
   return 0;
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Nachkommastellen limitieren
+float limit_float(float f, int i) {
+  if (ch[i].temp!=INACTIVEVALUE) {
+    f = f + 0.05;                   // damit er "richtig" rundet, bei 2 nachkommastellen 0.005 usw.
+    f = (int)(f*10);               // hier wird der float *10 gerechnet und auf int gecastet, so fallen alle weiteren Nachkommastellen weg
+    f = f/10;
+  } else f = 999;
+  return f;
 }
 
 

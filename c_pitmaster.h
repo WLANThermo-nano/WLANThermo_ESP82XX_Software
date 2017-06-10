@@ -27,19 +27,26 @@ int pidMax = 100;      // Maximum (PWM) value, the heater should be set
 
 struct PID {
   String name;
-  float Kp;                     // P-Konstante oberhalb pid_switch
-  float Ki;                     // I-Konstante oberhalb pid_switch
-  float Kd;                     // D-Konstante oberhalb pid_switch
-  float Kp_a;                   // P-Konstante unterhalb pid_switch
-  float Ki_a;                   // I-Konstante unterhalb pid_switch
-  float Kd_a;                   // D-Konstante unterhalb pid_switch
+  byte id;
+  byte aktor;                     // 0: SSR, 1:FAN, 2:Servo
+  //byte port;                  // IO wird über typ bestimmt
+  float Kp;                     // P-Konstante oberhalb pswitch
+  float Ki;                     // I-Konstante oberhalb pswitch
+  float Kd;                     // D-Konstante oberhalb pswitch
+  float Kp_a;                   // P-Konstante unterhalb pswitch
+  float Ki_a;                   // I-Konstante unterhalb pswitch
+  float Kd_a;                   // D-Konstante unterhalb pswitch
   int Ki_min;                   // Minimalwert I-Anteil
   int Ki_max;                   // Maximalwert I-Anteil
   float pswitch;                // Umschaltungsgrenze
-  int pause;                    // Regler Intervall
-  bool freq;
+  bool reversal;                // VALUE umkehren
+  int DCmin;                    // Duty Cycle Min
+  int DCmax;                    // Duty Cycle Max
+  int SVmin;                    // SERVO IMPULS MIN
+  int SVmax;                    // SERVO IMPULS MAX
   float esum;                   // Startbedingung I-Anteil
   float elast;                  // Startbedingung D-Anteil
+  
 };
 
 PID pid[PITMASTERSIZE];
@@ -86,14 +93,27 @@ void set_pitmaster() {
   pinMode(PITMASTER2, OUTPUT);
   digitalWrite(PITMASTER2, LOW);
   
-  pitmaster.typ = 0;
+  pitmaster.pid = 0;
   pitmaster.channel = 0;
   pitmaster.set = ch[pitmaster.channel].min;
   pitmaster.active = false;
   pitmaster.value = 0;
-  pitmaster.manuel = 0;
+  pitmaster.manuel = false;
   pitmaster.event = false;
   pitmaster.msec = 0;
+  pitmaster.pause = 1000;
+
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Set Default PID-Settings
+void set_pid() {
+  
+  pidsize = 3;
+  pid[0] = {"SSR SousVide", 0, 0, 165, 0.591, 1000, 100, 0.08, 5, 0, 95, 0.9, 0, 0, 80, 0, 0, 0, 0};
+  pid[1] = {"TITAN 50x50", 1, 1, 3.8, 0.01, 128, 6.0, 0.001, 10, 0, 95, 0.9, 0, 22, 100, 0, 0, 0, 0};
+  pid[2] = {"TITAN 60x60", 2, 1, 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 0, 33, 100, 0, 0, 0, 0};
 
 }
 
@@ -106,7 +126,7 @@ float PID_Regler(){
 
   float x = ch[pitmaster.channel].temp;         // IST
   float w = pitmaster.set;                      // SOLL
-  byte ii = pitmaster.typ;
+  byte ii = pitmaster.pid;
   
   // PID Parameter
   float kp, ki, kd;
@@ -129,14 +149,14 @@ float PID_Regler(){
   float p_out = kp * e;                     
   
   // Differential-Anteil
-  float edif = (e - pid[ii].elast)/(pid[ii].pause/1000.0);   
+  float edif = (e - pid[ii].elast)/(pitmaster.pause/1000.0);   
   pid[ii].elast = e;
   float d_out = kd * edif;                  
 
   // Integral-Anteil
   // Anteil nur erweitert, falls Bregrenzung nicht bereits erreicht
   if ((p_out + d_out) < PITMAX) {
-    pid[ii].esum += e * (pid[ii].pause/1000.0);             
+    pid[ii].esum += e * (pitmaster.pause/1000.0);             
   }
   // ANTI-WIND-UP (sonst Verzögerung)
   // Limits an Ki anpassen: Ki*limit muss y_limit ergeben können
@@ -241,7 +261,7 @@ float autotunePID() {
   unsigned long time = millis();
 
   if (autotune.cycles == 0) { 
-    float TP = (currentTemp - autotune.previousTemp)/ (float)pid[pitmaster.typ].pause;
+    float TP = (currentTemp - autotune.previousTemp)/ (float)pitmaster.pause;
     if (autotune.maxTP < TP) {
       autotune.maxTP = TP;
       autotune.tWP = time;
@@ -396,14 +416,14 @@ float autotunePID() {
             
     if (autotune.storeValues)  {
       
-      pid[pitmaster.typ].Kp = autotune.Kp;
-      pid[pitmaster.typ].Ki = autotune.Ki;
-      pid[pitmaster.typ].Kd = autotune.Kd;
+      pid[pitmaster.pid].Kp = autotune.Kp;
+      pid[pitmaster.pid].Ki = autotune.Ki;
+      pid[pitmaster.pid].Kd = autotune.Kd;
 
       
-      pid[pitmaster.typ].Kp_a = autotune.Kp_a;
-      pid[pitmaster.typ].Ki_a = autotune.Ki_a;
-      pid[pitmaster.typ].Kd_a = autotune.Kd_a;
+      pid[pitmaster.pid].Kp_a = autotune.Kp_a;
+      pid[pitmaster.pid].Ki_a = autotune.Ki_a;
+      pid[pitmaster.pid].Kd_a = autotune.Kd_a;
       DPRINTLN("[AUTOTUNE]\tParameters saved!");
     }
     return 0;
@@ -427,22 +447,20 @@ void pitmaster_control() {
     }
 
     // neuen Stellwert bestimmen und ggf HIGH-Intervall einleiten
-    if (millis() - pitmaster.last > pid[pitmaster.typ].pause) {
+    if (millis() - pitmaster.last > pitmaster.pause) {
   
       float y;
 
-      if (autotune.initialized)       y = autotunePID();
-      else if (pitmaster.manuel > 0)  y = pitmaster.manuel;
-      else                            y = PID_Regler();
+      if (autotune.initialized)       pitmaster.value = autotunePID();
+      else if (!pitmaster.manuel)     pitmaster.value = PID_Regler();
+      // falls manuel wird value vorgegeben
       
-      pitmaster.value = y;
-
-      if (pid[pitmaster.typ].freq)
-        analogWrite(PITMASTER1,map(y,0,100,0,1024));
-      else {
-        pitmaster.msec = map(y,0,100,0,pid[pitmaster.typ].pause); 
+      if (pid[pitmaster.pid].aktor == 1)                // FAN
+        analogWrite(PITMASTER1,map(pitmaster.value,0,100,0,1024));
+      else if (pid[pitmaster.pid].aktor == 0){          // SSR
+        pitmaster.msec = map(pitmaster.value,0,100,0,pitmaster.pause); 
         if (pitmaster.msec > 0) digitalWrite(PITMASTER1, HIGH);
-        if (pitmaster.msec < pid[pitmaster.typ].pause) pitmaster.event = true;  // außer bei 100%
+        if (pitmaster.msec < pitmaster.pause) pitmaster.event = true;  // außer bei 100%
       }
     
       pitmaster.last = millis();
