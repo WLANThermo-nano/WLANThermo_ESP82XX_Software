@@ -2747,7 +2747,7 @@ fieldset {
 							</div>
 							<div class="checkbox">
 							  <label>
-								<input id="TS8show" type="checkbox" checked="checked"/><i class="helper"></i>Tausche CH8 mit Batterie
+								<input id="TSshow8" type="checkbox" checked="checked"/><i class="helper"></i>Batterieladezustand anstatt CH8
 							  </label>
 							</div>
 						</form>
@@ -2913,7 +2913,7 @@ fieldset {
 			document.getElementById('TSwrite').value = jsonresponse.charts.TSwrite;
 			document.getElementById('TShttp').value = jsonresponse.charts.TShttp;
 			document.getElementById('TSchID').value = jsonresponse.charts.TSchID;
-			document.getElementById('TS8show').value = jsonresponse.charts.TS8show;
+			document.getElementById('TSshow8').value = jsonresponse.charts.TSshow8;
 		})
 		document.getElementById("thingspeak").style.display = "inline";
 	}	
@@ -2924,7 +2924,7 @@ fieldset {
 			jsonresponse.charts.TSwrite = document.getElementById('TSwrite').value;
 			jsonresponse.charts.TShttp = document.getElementById('TShttp').value;
 			jsonresponse.charts.TSchID = document.getElementById('TSchID').value;
-			jsonresponse.charts.TS8show = document.getElementById('TS8show').value;
+			jsonresponse.charts.TSshow8 = document.getElementById('TSshow8').value;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
 			loadJSON('setcharts', data, '60000', function (response) {
