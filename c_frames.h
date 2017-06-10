@@ -295,40 +295,40 @@ void drawalarm(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16
 }
 
 void drawpit1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork) display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);           // Symbol
+  if (flashinwork) display->drawXbm(x+15,20+y,pit_width,pit_height,xbmpit);           // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(114+x, 20+y, "PITMASTER:");           
-  if (inWork) display->drawString(114+x, 36+y, pid[(int) tempor].name);
-  else display->drawString(114+x, 36+y, pid[pitmaster.pid].name);
+  display->drawString(116+x, 20+y, "PITMASTER:");           
+  if (inWork) display->drawString(116+x, 36+y, pid[(int) tempor].name);
+  else display->drawString(116+x, 36+y, pid[pitmaster.pid].name);
 }
 
 void drawpit2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork)  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);          // Symbol
+  if (flashinwork)  display->drawXbm(x+15,20+y,pit_width,pit_height,xbmpit);          // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(114+x, 20+y, "CHANNEL:");           
-  if (inWork) display->drawString(114+x, 36+y, String((int)tempor +1));
-  else  display->drawString(114+x, 36+y, String(pitmaster.channel+1));
+  display->drawString(116+x, 20+y, "CHANNEL:");           
+  if (inWork) display->drawString(116+x, 36+y, String((int)tempor +1));
+  else  display->drawString(116+x, 36+y, String(pitmaster.channel+1));
 }
 
 void drawpit3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork)  display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);          // Symbol
+  if (flashinwork)  display->drawXbm(x+15,20+y,pit_width,pit_height,xbmpit);          // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(114+x, 20+y, "SET:");           
-  if (inWork) display->drawString(114+x, 36+y, String(tempor,1)+ " °" + temp_unit);
-  else  display->drawString(114+x, 36+y, String(pitmaster.set,1)+ " °" + temp_unit);
+  display->drawString(116+x, 20+y, "SET:");           
+  if (inWork) display->drawString(116+x, 36+y, String(tempor,1)+ " °" + temp_unit);
+  else  display->drawString(116+x, 36+y, String(pitmaster.set,1)+ " °" + temp_unit);
 }
 
 void drawpit4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  if (flashinwork)   display->drawXbm(x+21,20+y,pit_width,pit_height,xbmpit);         // Symbol
+  if (flashinwork)   display->drawXbm(x+15,20+y,pit_width,pit_height,xbmpit);         // Symbol
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(114+x, 20+y, "ACTIVE:");           
-  if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
-  else if (!inWork && pitmaster.active) display->drawString(114+x, 36+y, "YES");
-  else display->drawString(114+x, 36+y, "NO");  
+  display->drawString(116+x, 20+y, "ACTIVE:");           
+  if (inWork && tempor) display->drawString(116+x, 36+y, "YES");
+  else if (!inWork && pitmaster.active) display->drawString(116+x, 36+y, "YES");
+  else display->drawString(116+x, 36+y, "NO");  
 }
 
 void drawsys1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
