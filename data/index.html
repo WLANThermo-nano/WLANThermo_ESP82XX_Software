@@ -518,6 +518,7 @@
 		width:100%;
 		padding:.3em 0;
 		margin-bottom:.3em;
+
 		color:#fff;
 		border-bottom:1px solid #e5e5e5
 		}
@@ -1522,11 +1523,13 @@
 		}
 
 		.headmenu {
+
 		background-color:#333;
 		border-bottom:4px solid #2F2F2F;
 		color:#ccc;
 		height:44px;
 		}
+
 
 		#thermoname {
 		padding:14px 5px;
@@ -1537,6 +1540,8 @@
 		text-align:center;
 		padding:14px 5px;
 		float:right;
+		border-left:2px solid #333
+
 		}
 
 		.battery {
@@ -1627,6 +1632,7 @@
 		.wlantable tr:hover {
 		background-color: #333;	 
 		}
+
 		.row-Check{
 		min-width: 6%;
 		}
@@ -1761,6 +1767,7 @@
 		  <!-- transform: translateX(17px); -->
 		<!-- } -->
 
+
 		/* Rounded sliders */
 		.slider.round {
 		  border-radius: 26px;
@@ -1833,6 +1840,7 @@
 		width:2em;
 		height:auto;
 		padding:2.1em 1.6em;
+
 		float:left;
 		}
 
@@ -1884,7 +1892,7 @@
 		left:150px
 		}
 		}
-		
+
 		.channel:hover{
 		cursor: pointer;
 		}
@@ -2413,9 +2421,9 @@ fieldset {
             <ul class="pure-menu-list">
                 <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
                 <!-- <li class="pure-menu-item pure-menu-has-children"><a href="#" id="menuChannel" class="pure-menu-link">Kanal</a></li> -->
-				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
-				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
-				<li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
+				        <li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
+				        <li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
+				        <li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>
         </div>
@@ -3064,6 +3072,7 @@ fieldset {
     function loadJSON(url, data, timeout, callback) {
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
+		xobj.timeout = 1000;
         xobj.open('POST', url, true);
         xobj.setRequestHeader("Content-Type", "application/json");
 		xobj.timeout = timeout;
