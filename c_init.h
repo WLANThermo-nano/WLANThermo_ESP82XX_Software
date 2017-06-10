@@ -614,6 +614,16 @@ bool standby_control() {
 }
 
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Nachkommastellen limitieren
+float limit_float(float f, int i) {
+  if (ch[i].temp!=INACTIVEVALUE) {
+    f = f + 0.05;                   // damit er "richtig" rundet, bei 2 nachkommastellen 0.005 usw.
+    f = (int)(f*10);               // hier wird der float *10 gerechnet und auf int gecastet, so fallen alle weiteren Nachkommastellen weg
+    f = f/10;
+  } else f = 999;
+  return f;
+}
 
 
 

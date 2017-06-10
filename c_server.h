@@ -154,11 +154,10 @@ void handleData(AsyncWebServerRequest *request, bool www) {
 
   for (int i = 0; i < CHANNELS; i++) {
   JsonObject& data = channel.createNestedObject();
-    int ctemp = ch[i].temp * 10;
     data["number"]= i+1;
     data["name"]  = ch[i].name;
     data["typ"]   = ch[i].typ;
-    data["temp"]  = (float) ctemp/10.0;
+    data["temp"]  = limit_float(ch[i].temp, i);
     data["min"]   = ch[i].min;
     data["max"]   = ch[i].max;
     data["alarm"] = ch[i].alarm;
