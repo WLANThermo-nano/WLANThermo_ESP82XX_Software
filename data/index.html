@@ -2745,6 +2745,11 @@ fieldset {
 							  <input type="text" id="TSchID" maxlength="26" required="required"/>
 							  <label class="control-label" for="input">Channel ID</label><i class="bar"></i>
 							</div>
+							<div class="checkbox">
+							  <label>
+								<input id="TS8show" type="checkbox" checked="checked"/><i class="helper"></i>Tausche CH8 mit Batterie
+							  </label>
+							</div>
 						</form>
 					</div>
 				</div>
@@ -2908,6 +2913,7 @@ fieldset {
 			document.getElementById('TSwrite').value = jsonresponse.charts.TSwrite;
 			document.getElementById('TShttp').value = jsonresponse.charts.TShttp;
 			document.getElementById('TSchID').value = jsonresponse.charts.TSchID;
+			document.getElementById('TS8show').value = jsonresponse.charts.TS8show;
 		})
 		document.getElementById("thingspeak").style.display = "inline";
 	}	
@@ -2918,6 +2924,7 @@ fieldset {
 			jsonresponse.charts.TSwrite = document.getElementById('TSwrite').value;
 			jsonresponse.charts.TShttp = document.getElementById('TShttp').value;
 			jsonresponse.charts.TSchID = document.getElementById('TSchID').value;
+			jsonresponse.charts.TS8show = document.getElementById('TS8show').value;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
 			loadJSON('setcharts', data, '60000', function (response) {
