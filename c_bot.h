@@ -43,7 +43,6 @@
         }
       }
 
-      
       if (charts.TSshow8) {
         postStr +="&8=";  
         postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
