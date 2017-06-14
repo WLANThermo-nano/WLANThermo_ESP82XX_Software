@@ -77,5 +77,34 @@
 
 #endif
 
+#include <ESP8266HTTPClient.h>
+#include <ESP8266httpUpdate.h>
+
+void check_http_update() {
+  
+  if((wifiMulti.run() == WL_CONNECTED)) {
+
+    DPRINTPLN("[INFO]\tCheck Firmware Update");
+    t_httpUpdate_return ret = ESPhttpUpdate.update("http://86.56.219.224:8080/update.php");
+    
+      switch(ret) {
+        case HTTP_UPDATE_FAILED:
+          DPRINTF("[INFO]\tHTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+          DPRINTPLN("");
+          displayblocked = false;
+          break;
+
+        case HTTP_UPDATE_NO_UPDATES:
+          DPRINTPLN("[INFO]\tHTTP_UPDATE_NO_UPDATES");
+          displayblocked = false;
+          break;
+
+        case HTTP_UPDATE_OK:
+          DPRINTPLN("[INFO]\tHTTP_UPDATE_OK");
+          break;
+      }
+  }
+}
+
 
 

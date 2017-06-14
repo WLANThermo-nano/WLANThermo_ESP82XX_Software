@@ -19,10 +19,6 @@
  ****************************************************/
 
 
-ESP8266WiFiMulti wifiMulti;               // MULTIWIFI instance
-WiFiUDP udp;                              // UDP instance
-
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Connect WiFi
 

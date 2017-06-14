@@ -104,6 +104,21 @@ void drawQuestion(int counter) {
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Frame while Update
+void drawUpdate() {
+    
+    display.clear();
+    display.setColor(WHITE);
+    
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
+    display.setFont(ArialMT_Plain_16);
+
+    display.drawString(30,22,"UPDATE!");
+        
+    display.display();
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Frame while Menu
 void drawMenu() {
     

@@ -97,7 +97,7 @@ void read_serial(char *buffer) {
       String val(buffer);
       pitmaster.value = val.toInt();
       return;
-    }
+    }    
   
   } else {
   
@@ -207,6 +207,12 @@ void read_serial(char *buffer) {
     else if (str == "setPID") {
       set_pid();  // Default PID-Settings
       if (setconfig(ePIT,{})) DPRINTPLN("[INFO]\tReset pitmaster config");
+    }
+
+    // FIRMWARE UPDATE
+    else if (str == "fwupdate") {
+      sys.fwupdate = true;
+      return;
     }
   }
 

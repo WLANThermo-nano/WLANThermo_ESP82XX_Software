@@ -139,6 +139,13 @@ void loop() {
   #ifdef OTA
     ArduinoOTA.handle();
   #endif
+
+  if (sys.fwupdate) {
+    
+    displayblocked = true;
+    drawUpdate();
+    check_http_update();
+  }
   
   // Detect Button Event
   if (button_input()) button_event();

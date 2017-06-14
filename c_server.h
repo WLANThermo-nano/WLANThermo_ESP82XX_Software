@@ -934,6 +934,19 @@ void server_setup() {
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
       set_Channels();
+      request->send(200, "text/json", "OK");
+    });
+
+    // REQUEST: /fwupdate
+    server.on("/fwupdate", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      sys.fwupdate = true;
+      request->send(200, "text/json", "OK");
+    });
+
+    // REQUEST: /fwupdate
+    server.on("/fwupdate", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      sys.fwupdate = true;
+      request->send(200, "text/json", "OK");
     });
     
 

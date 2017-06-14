@@ -48,7 +48,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "V0.3"
+#define FIRMWAREVERSION "V0.3.2"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -207,6 +207,7 @@ struct System {
    String language;           // SYSTEM LANGUAGE
    int timeZone;              // TIMEZONE
    bool hwalarm;              // HARDWARE ALARM 
+   bool fwupdate;           // DO FIRMWARE UPDATE
 };
 
 System sys;
@@ -255,6 +256,8 @@ MyQuestion question;
 enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
 // WIFI
+ESP8266WiFiMulti wifiMulti;               // MULTIWIFI instance
+WiFiUDP udp;                              // UDP instance
 byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO, 3 = Turn off)
 String wifissid[5];
 String wifipass[5];
