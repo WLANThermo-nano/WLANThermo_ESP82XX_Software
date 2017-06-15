@@ -93,7 +93,9 @@ void check_sector() {
   freeSpaceStart = (ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));
   freeSpaceEnd = (uint32_t)&_SPIFFS_start - 0x40200000 - FLASH_SECTOR_SIZE;
   log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
-  
+
+  DPRINTP("[INFO]\tFirmwareversion: ");
+  DPRINTLN(FIRMWAREVERSION);
   DPRINTP("[INFO]\tInitalize SKETCH at Sector: 0x01 (");
   DPRINT((ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1)/1024);
   DPRINTPLN("K)");

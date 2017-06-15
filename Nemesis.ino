@@ -115,6 +115,9 @@ void setup() {
     
     // Initialize Pitmaster
     set_pitmaster(); 
+
+    // Check HTTP Update
+    check_http_update();
   }
 }
 
@@ -140,12 +143,9 @@ void loop() {
     ArduinoOTA.handle();
   #endif
 
-  if (sys.fwupdate) {
-    
-    displayblocked = true;
-    drawUpdate();
-    check_http_update();
-  }
+  // HTTP Update
+  if (sys.update > 0) do_http_update();
+  else if (sys.update == -1) check_http_update();
   
   // Detect Button Event
   if (button_input()) button_event();

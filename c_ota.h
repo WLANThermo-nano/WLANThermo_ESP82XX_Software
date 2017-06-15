@@ -80,29 +80,109 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Check if there is http update
 void check_http_update() {
+
+  if((wifiMulti.run() == WL_CONNECTED)) {
+    HTTPClient http;
+
+    String adress = F("http://86.56.219.224:8080/update.php?software=");
+    adress += FIRMWAREVERSION;
+    adress += F("&hardware=v");
+    adress += String(sys.hwversion);
+    adress += F("&serial=");
+    adress += String(ESP.getChipId(), HEX);
+    adress += F("&checkUpdate=true");
+
+    DPRINTPLN("[INFO]\tCheck HTTP Update");
+
+    http.begin(adress); //HTTP
+       
+    int httpCode = http.GET();
+
+    // httpCode will be negative on error
+    if(httpCode > 0) {
+      // HTTP header has been send and Server response header has been handled
+      DPRINTF("[HTTP]\tGET... code: %d\n", httpCode);
+
+      // file found at server
+      if(httpCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+        DPRINTP("[HTTP]\tReceive: ");
+        DPRINTLN(payload);
+        sys.getupdate = payload;
+      }
+    } else {
+      DPRINTF("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      sys.getupdate = "false";
+    }
+    http.end();
+  }
+  if (sys.update == -1) sys.update = 0;
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Do http update
+void do_http_update() {
   
   if((wifiMulti.run() == WL_CONNECTED)) {
 
-    DPRINTPLN("[INFO]\tCheck Firmware Update");
-    t_httpUpdate_return ret = ESPhttpUpdate.update("http://86.56.219.224:8080/update.php");
+    String adress = F("http://86.56.219.224:8080/update.php?software=");
+    adress += FIRMWAREVERSION;
+    adress += F("&hardware=v");
+    adress += String(sys.hwversion);
+    adress += F("&serial=");
+    adress += String(ESP.getChipId(), HEX);
+
+    if (sys.updatecount < 2) sys.updatecount++;   // eine Wiederholung
+    else  {
+      sys.update = 0;
+      modifyconfig(eSYSTEM,{});
+      DPRINTPLN("[INFO]\tUPDATE_CANCELED");
+      displayblocked = false;
+      sys.updatecount = 0;
+      return;
+    }
+
+    displayblocked = true;
+    t_httpUpdate_return ret;
     
-      switch(ret) {
+    if (sys.update == 1) {
+      sys.update = 2;
+      drawUpdate("Webinterface");
+      modifyconfig(eSYSTEM,{});                                      // SPEICHERN
+      DPRINTPLN("[INFO]\tDo SPIFFS Update ...");
+      ret = ESPhttpUpdate.updateSpiffs(adress + "&getcurrentSpiffs=true");
+    
+    } else if(sys.update == 2) {
+      sys.update = 0;
+      drawUpdate("Firmware");
+      modifyconfig(eSYSTEM,{});                                      // SPEICHERN
+      DPRINTPLN("[INFO]\tDo Firmware Update ...");
+      ret = ESPhttpUpdate.update(adress + "&getcurrentFirmware=true");
+    } 
+    
+    switch(ret) {
         case HTTP_UPDATE_FAILED:
-          DPRINTF("[INFO]\tHTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+          DPRINTF("[HTTP]\tUPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
           DPRINTPLN("");
-          displayblocked = false;
+          if (sys.update == 2) sys.update = 1;
+          else  sys.update = 2;
+          //modifyconfig(eSYSTEM,{});
+          drawUpdate("error");
           break;
 
         case HTTP_UPDATE_NO_UPDATES:
-          DPRINTPLN("[INFO]\tHTTP_UPDATE_NO_UPDATES");
+          DPRINTPLN("[HTTP]\tNO_UPDATES");
           displayblocked = false;
           break;
 
         case HTTP_UPDATE_OK:
-          DPRINTPLN("[INFO]\tHTTP_UPDATE_OK");
+          DPRINTPLN("[HTTP]\tUPDATE_OK");
           break;
-      }
+     }
   }
 }
 

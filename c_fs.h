@@ -229,6 +229,8 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("hwversion")) sys.hwversion = json["hwversion"];
       else return false;
+      if (json.containsKey("update")) sys.update = json["update"];
+      else return false;
     }
     break;
     
@@ -383,6 +385,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["summer"] =      false;
       json["fast"] =        false;
       json["hwversion"] =   1;
+      json["update"] =      0;
       json["batmax"] =      BATTMAX;
       json["batmin"] =      BATTMIN;
       json["logsec"] =      log_sector;
@@ -555,6 +558,7 @@ bool modifyconfig(byte count, const char* data[12]) {
       json["summer"] =      sys.summer;
       json["fast"] =        sys.fastmode;
       json["hwversion"] =   sys.hwversion;
+      json["update"] =      sys.update;
       json["batmax"] =      battery.max;
       json["batmin"] =      battery.min;
       json["logsec"] =      log_sector;

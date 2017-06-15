@@ -209,9 +209,15 @@ void read_serial(char *buffer) {
       if (setconfig(ePIT,{})) DPRINTPLN("[INFO]\tReset pitmaster config");
     }
 
-    // FIRMWARE UPDATE
-    else if (str == "fwupdate") {
-      sys.fwupdate = true;
+    // HTTP UPDATE
+    else if (str == "update") {
+      sys.update = 1;
+      return;
+    }
+
+    // CHECK HTTP UPDATE
+    else if (str == "checkupdate") {
+      sys.update = -1;
       return;
     }
   }

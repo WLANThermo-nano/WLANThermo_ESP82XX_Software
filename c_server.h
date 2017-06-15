@@ -88,6 +88,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   _system["hwalarm"] =    sys.hwalarm;
   _system["fastmode"] =   sys.fastmode;
   _system["version"] =    FIRMWAREVERSION;
+  _system["getupdate"] =  sys.getupdate;
   _system["hwversion"] =  String("V")+String(sys.hwversion);
   
   JsonArray& _typ = root.createNestedArray("sensors");
@@ -937,15 +938,27 @@ void server_setup() {
       request->send(200, "text/json", "OK");
     });
 
-    // REQUEST: /fwupdate
-    server.on("/fwupdate", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      sys.fwupdate = true;
+    // REQUEST: /update
+    server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      sys.update = 1;
       request->send(200, "text/json", "OK");
     });
 
-    // REQUEST: /fwupdate
-    server.on("/fwupdate", HTTP_POST, [](AsyncWebServerRequest *request) { 
-      sys.fwupdate = true;
+    // REQUEST: /update
+    server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      sys.update = 1;
+      request->send(200, "text/json", "OK");
+    });
+    
+    // REQUEST: /checkupdate
+    server.on("/checkupdate", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      sys.update = -1;
+      request->send(200, "text/json", "OK");
+    });
+
+    // REQUEST: /checkupdate
+    server.on("/checkupdate", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      sys.update = -1;
       request->send(200, "text/json", "OK");
     });
     

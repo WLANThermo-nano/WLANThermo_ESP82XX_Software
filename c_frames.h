@@ -105,15 +105,18 @@ void drawQuestion(int counter) {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Frame while Update
-void drawUpdate() {
+void drawUpdate(String txt) {
     
     display.clear();
     display.setColor(WHITE);
     
     display.setTextAlignment(TEXT_ALIGN_LEFT);
-    display.setFont(ArialMT_Plain_16);
+    display.setFont(ArialMT_Plain_10);
 
-    display.drawString(30,22,"UPDATE!");
+    display.drawString(3,3,"Update: " + txt);
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.setFont(ArialMT_Plain_16);
+    display.drawString(64,28,"Bitte warten!");
         
     display.display();
 }

@@ -48,7 +48,6 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "V0.3.2"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -207,7 +206,9 @@ struct System {
    String language;           // SYSTEM LANGUAGE
    int timeZone;              // TIMEZONE
    bool hwalarm;              // HARDWARE ALARM 
-   bool fwupdate;           // DO FIRMWARE UPDATE
+   byte updatecount;           // 
+   int update;             // FIRMWARE UPDATE -1 = check, 0 = no, 1 = spiffs, 2 = firmware
+   String getupdate;
 };
 
 System sys;
