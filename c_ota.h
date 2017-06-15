@@ -87,7 +87,7 @@ void check_http_update() {
   if((wifiMulti.run() == WL_CONNECTED)) {
     HTTPClient http;
 
-    String adress = F("http://86.56.219.224:8080/update.php?software=");
+    String adress = F("http://nano.wlanthermo.de/update.php?software=");
     adress += FIRMWAREVERSION;
     adress += F("&hardware=v");
     adress += String(sys.hwversion);
@@ -129,7 +129,7 @@ void do_http_update() {
   
   if((wifiMulti.run() == WL_CONNECTED)) {
 
-    String adress = F("http://86.56.219.224:8080/update.php?software=");
+    String adress = F("http://nano.wlanthermo.de/update.php?software=");
     adress += FIRMWAREVERSION;
     adress += F("&hardware=v");
     adress += String(sys.hwversion);
