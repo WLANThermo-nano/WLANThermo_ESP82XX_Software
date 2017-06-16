@@ -52,15 +52,9 @@ void set_wifi() {
     DPRINTP(".");
     counter++;
   }
-
-  DPRINTLN();
+  
   
   if (WiFi.status() == WL_CONNECTED) {
-
-    DPRINTP("[INFO]\tWiFi connected to: ");
-    DPRINTLN(WiFi.SSID());
-    DPRINTP("[INFO]\tIP address: ");
-    DPRINTLN(WiFi.localIP());
         
     isAP = 0;
 

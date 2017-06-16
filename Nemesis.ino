@@ -81,6 +81,9 @@ void setup() {
     check_sector();
     setEE(); start_fs();
 
+    // Initalize MQTT
+    set_mqtt();
+    
     // Initialize Wifi
     set_wifi();
 
