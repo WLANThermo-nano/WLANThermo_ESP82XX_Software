@@ -3044,15 +3044,19 @@
 				x[i].getElementsByClassName('tempmax')[0].innerHTML = jsonresponse.channel[i].max + "°";
 				if (jsonresponse.channel[i].temp == '999'){
 					x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
-					x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";					
+					x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
+					x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
 				}else{
 					x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;
 					if (jsonresponse.channel[i].temp < jsonresponse.channel[i].min){
 						x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
+						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
 					}else if (jsonresponse.channel[i].temp > jsonresponse.channel[i].max){
 						x[i].getElementsByClassName('temp')[0].style.color = "red";
+						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
 					}else{
 						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";
+						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
 					}
 				}
 			}
