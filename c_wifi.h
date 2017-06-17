@@ -260,6 +260,34 @@ void wifimonitoring() {
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// MQTT
+void connectToMqtt() {
+  DPRINTLN();
+  DPRINTP("[INFO]\tWiFi connected to: ");
+  DPRINTLN(WiFi.SSID());
+  DPRINTP("[INFO]\tIP address: ");
+  DPRINTLN(WiFi.localIP());
+  DPRINTPLN("[INFO]\tConnecting to MQTT...");
+  mqttClient.connect();
+}
+
+void onWifiConnect(const WiFiEventStationModeGotIP& event) {
+  connectToMqtt();
+}
+
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+  DPRINTPLN("[INFO]\tDisconnected from MQTT.");
+  if (WiFi.isConnected()) connectToMqtt;
+}
+
+void set_mqtt() {
+  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+  mqttClient.onDisconnect(onMqttDisconnect);
+  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Test
 struct station_info *stat_info;
 struct ip_addr *IPaddress;

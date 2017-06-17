@@ -32,7 +32,7 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
 #include "AsyncJson.h"
-
+#include <AsyncMqttClient.h>
 #include <StreamString.h>
 
 extern "C" {
@@ -44,13 +44,6 @@ extern "C" {
 extern "C" uint32_t _SPIFFS_start;      // START ADRESS FS
 extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
-
-#include <AsyncMqttClient.h>
-#define MQTT_HOST "mqtt.thingspeak.com"
-#define MQTT_PORT 1883
-
-AsyncMqttClient mqttClient;
-WiFiEventHandler wifiConnectHandler;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
@@ -111,6 +104,8 @@ WiFiEventHandler wifiConnectHandler;
 #define APPASSWORD "12345678"
 #define HOSTNAME "NANO-"
 #define NTP_PACKET_SIZE 48          // NTP time stamp is in the first 48 bytes of the message
+#define MQTT_HOST "mqtt.thingspeak.com"
+#define MQTT_PORT 1883
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
@@ -163,7 +158,7 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
                       "SMD NTC",
                       "5K3A1B",
                       "MOUSER47K",
-                      "Typ K"};
+                      "iGrill2"};
 
 
 String  temp_unit = "C";
@@ -332,7 +327,6 @@ void piepserON();
 // SENSORS
 byte set_sensor();                                // Initialize Sensors
 int  get_adc_average (byte ch);                   // Reading ADC-Channel Average
-double get_thermocouple(void);                    // Reading Temperature KTYPE
 void get_Vbat();                                   // Reading Battery Voltage
 void cal_soc();
 
@@ -382,6 +376,10 @@ void reconnect_wifi();
 void stop_wifi();
 void check_wifi();
 time_t getNtpTime();
+WiFiEventHandler wifiConnectHandler;
+
+//MQTT
+AsyncMqttClient mqttClient;
 
 // SERVER
 void handleSettings(AsyncWebServerRequest *request, bool www);
@@ -408,7 +406,6 @@ void pitmaster_control();
 // BOT
 #ifdef THINGSPEAK
 void sendMessage(int ch, int count);
-void sendData();
 void sendTS();
 #endif
 

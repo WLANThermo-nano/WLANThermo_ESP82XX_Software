@@ -169,7 +169,7 @@ void loop() {
     timer_datalog();          // Datalog
     flash_control();          // Flash
     
-    delay(1);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
+    delay(5);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
   }
   
 }

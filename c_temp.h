@@ -54,6 +54,9 @@ float calcT(int r, byte typ){
   case 6: // NTC 47K MOUSER aus B25/50 = 4050
     Rn = 47; a = 0.003354; b = 0.0002469; c = 0;
     break;
+  case 7: // iGrill2
+    Rn = 99.61 ; a = 3.3562424e-03; b = 2.5319218e-04; c = 2.7988397e-06;
+    break;
    
   default:  
     return INACTIVEVALUE;
@@ -83,12 +86,6 @@ void get_Temperature() {
     //else  {
       value = calcT(get_adc_average(i),ch[i].typ);
     //}
- 
-    // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
-    // KTYPE wandert dann auf Kanal 5
-    #ifdef KTYPE
-    if (i == 4) value = get_thermocouple();
-    #endif
 
     // Umwandlung C/F
     if ((temp_unit == "F") && value!=INACTIVEVALUE) {  // Vorsicht mit INACTIVEVALUE
@@ -125,11 +122,6 @@ void set_Channels() {
     ch[i].showalarm = false;
     ch[i].show = false;
   }
-
-  // Wenn KTYPE muss Kanal 5 auch KTYPE sein
-  #ifdef KTYPE
-  ch[4].typ = 6;
-  #endif
 
 }
 
