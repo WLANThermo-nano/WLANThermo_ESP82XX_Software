@@ -291,14 +291,15 @@ void dumpClients()
 void stop_wifi() {
   
   DPRINTPLN("[INFO]\tStop Wifi");
-  
-  //wifi_station_disconnect();
-  //wifi_set_opmode(NULL_MODE);
-  //wifi_set_sleep_type(MODEM_SLEEP_T);
-  //wifi_fpm_open();
-  //wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
-  WiFi.disconnect();
-  WiFi.mode(WIFI_OFF);
+  mqttClient.disconnect();
+  wifi_station_disconnect();
+  wifi_set_opmode(NULL_MODE);
+  wifi_set_sleep_type(MODEM_SLEEP_T);
+  wifi_fpm_open();
+  wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+  //WiFi.disconnect();
+  //delay(100); // leider notwendig
+  //WiFi.mode(WIFI_OFF);
   delay(100); // leider notwendig
 
   isAP = 2;

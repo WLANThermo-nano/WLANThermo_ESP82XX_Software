@@ -92,12 +92,6 @@
 
 
 
-#include <AsyncMqttClient.h>
-#define MQTT_HOST "mqtt.thingspeak.com"
-#define MQTT_PORT 1883
-
-AsyncMqttClient mqttClient;
-WiFiEventHandler wifiConnectHandler;
 
 
 void connectToMqtt() {

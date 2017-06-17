@@ -44,6 +44,14 @@ extern "C" {
 extern "C" uint32_t _SPIFFS_start;      // START ADRESS FS
 extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
+
+#include <AsyncMqttClient.h>
+#define MQTT_HOST "mqtt.thingspeak.com"
+#define MQTT_PORT 1883
+
+AsyncMqttClient mqttClient;
+WiFiEventHandler wifiConnectHandler;
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
 
