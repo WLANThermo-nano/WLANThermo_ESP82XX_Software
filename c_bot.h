@@ -51,6 +51,9 @@
       postStr +="&8="; 
       postStr += String(ch[7].temp,1);
     }
+    
+    //postStr += "&metadata=";
+    //postStr += "{\"officeTemp\":73}";
 
     String adress = F("channels/");
     adress += charts.TSchID;

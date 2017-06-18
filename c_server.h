@@ -115,7 +115,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
 
   JsonArray& _aktor = root.createNestedArray("aktor");
   _aktor.add("SSR");
-  _aktor.add("FAN");
+  //_aktor.add("FAN");
 
   JsonObject& _chart = root.createNestedObject("charts");
   _chart["TSwrite"] = charts.TSwriteKey; 
@@ -125,12 +125,13 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
 
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
-  _hw.add(String("V")+String(2));
+  //_hw.add(String("V")+String(2));
     
   if (www) {
     response->setLength();
     request->send(response);
   } else root.printTo(Serial);
+   
 }
 
 

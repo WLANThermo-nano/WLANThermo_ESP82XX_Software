@@ -181,6 +181,7 @@ void do_http_update() {
 
         case HTTP_UPDATE_OK:
           DPRINTPLN("[HTTP]\tUPDATE_OK");
+          if (sys.update == 2) ESP.restart();   // falls nach spiffs kein automatischer Restart durchgeführt wird
           break;
      }
   }
