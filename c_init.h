@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.4.0"
+#define FIRMWAREVERSION "v0.4.1"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -214,6 +214,7 @@ struct System {
    byte updatecount;           // 
    int update;             // FIRMWARE UPDATE -1 = check, 0 = no, 1 = spiffs, 2 = firmware
    String getupdate;
+   bool autoupdate;
 };
 
 System sys;

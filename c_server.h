@@ -89,6 +89,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   _system["fastmode"] =   sys.fastmode;
   _system["version"] =    FIRMWAREVERSION;
   _system["getupdate"] =  sys.getupdate;
+  _system["autoupd"] =    sys.autoupdate;
   _system["hwversion"] =  String("V")+String(sys.hwversion);
   
   JsonArray& _typ = root.createNestedArray("sensors");
@@ -745,7 +746,7 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
   if (_system.containsKey("utc")) sys.timeZone = _system["utc"];
   if (_system.containsKey("language")) sys.language = _system["language"].asString();
   if (_system.containsKey("unit"))  unit = _system["unit"].asString();
-  
+  if (_system.containsKey("autoupd"))  sys.autoupdate = _system["autoupd"];
   if (_system.containsKey("summer")) sys.summer = _system["summer"];
   if (_system.containsKey("fastmode")) sys.fastmode = _system["fastmode"];
   if (_system.containsKey("ap")) sys.apname = _system["ap"].asString();
@@ -964,6 +965,12 @@ void server_setup() {
     });
     
 
+    // REQUEST: /updateStatus
+    server.on("/updateStatus", HTTP_POST, [](AsyncWebServerRequest *request) { 
+        if(sys.update > 0) request->send(200, "text/plain", "true");
+        request->send(200, "text/plain", "false");
+    });
+    
     /*  
     });
     server.on("/index.html",HTTP_GET, [](AsyncWebServerRequest *request) {

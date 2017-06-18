@@ -231,6 +231,9 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("update")) sys.update = json["update"];
       else return false;
+      if (json.containsKey("autoupd")) sys.autoupdate = json["autoupd"];
+      else return false;
+      
     }
     break;
     
@@ -386,6 +389,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["fast"] =        false;
       json["hwversion"] =   1;
       json["update"] =      0;
+      json["autoupd"] =     1;
       json["batmax"] =      BATTMAX;
       json["batmin"] =      BATTMIN;
       json["logsec"] =      log_sector;
@@ -559,6 +563,7 @@ bool modifyconfig(byte count, const char* data[12]) {
       json["fast"] =        sys.fastmode;
       json["hwversion"] =   sys.hwversion;
       json["update"] =      sys.update;
+      json["autoupd"] =     sys.autoupdate;
       json["batmax"] =      battery.max;
       json["batmin"] =      battery.min;
       json["logsec"] =      log_sector;

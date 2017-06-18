@@ -84,7 +84,7 @@
 // Check if there is http update
 void check_http_update() {
 
-  if((wifiMulti.run() == WL_CONNECTED)) {
+  if((wifiMulti.run() == WL_CONNECTED && sys.autoupdate)) {
     HTTPClient http;
 
     String adress = F("http://nano.wlanthermo.de/update.php?software=");
@@ -118,7 +118,7 @@ void check_http_update() {
       sys.getupdate = "false";
     }
     http.end();
-  }
+  } else sys.getupdate = "false";
   if (sys.update == -1) sys.update = 0;
 }
 
@@ -128,6 +128,12 @@ void check_http_update() {
 void do_http_update() {
   
   if((wifiMulti.run() == WL_CONNECTED)) {
+
+    if (sys.update == 3){
+      sys.update = 0;
+      DPRINTPLN("[INFO]\tUPDATE FINISHED");
+      return;
+    }
 
     String adress = F("http://nano.wlanthermo.de/update.php?software=");
     adress += FIRMWAREVERSION;
@@ -150,26 +156,27 @@ void do_http_update() {
     t_httpUpdate_return ret;
     
     if (sys.update == 1) {
-      sys.update = 2;
+      sys.update = 2;  // Nächster Updatestatus
       drawUpdate("Webinterface");
       modifyconfig(eSYSTEM,{});                                      // SPEICHERN
       DPRINTPLN("[INFO]\tDo SPIFFS Update ...");
       ret = ESPhttpUpdate.updateSpiffs(adress + "&getcurrentSpiffs=true");
     
-    } else if(sys.update == 2) {
-      sys.update = 0;
+    } else if (sys.update == 2) {
+      sys.update = 3;
       drawUpdate("Firmware");
       modifyconfig(eSYSTEM,{});                                      // SPEICHERN
       DPRINTPLN("[INFO]\tDo Firmware Update ...");
       ret = ESPhttpUpdate.update(adress + "&getcurrentFirmware=true");
+    
     } 
     
     switch(ret) {
         case HTTP_UPDATE_FAILED:
           DPRINTF("[HTTP]\tUPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
           DPRINTPLN("");
-          if (sys.update == 2) sys.update = 1;
-          else  sys.update = 2;
+          if (sys.update == 2) sys.update = 1;  // Spiffs wiederholen
+          else  sys.update = 2;                 // Firmware wiederholen
           //modifyconfig(eSYSTEM,{});
           drawUpdate("error");
           break;
