@@ -2310,6 +2310,8 @@
 			border: 8px solid #fff;
 			border-right-color: transparent;
 			border-radius: 50%; 
+			-webkit-transition-delay: 1s; /* Safari */
+			transition-delay: 1s;
 		}
 		
 		@keyframes rotate {
@@ -3002,7 +3004,7 @@
 	}
 	
 	function showLoader(show){
-		if (show == true) {
+		if (show == 'true') {
 			document.getElementById("cover").classList.add("cover_active");
 			document.getElementById("spinner").classList.add("spinner");		
 		}else{
@@ -3113,6 +3115,9 @@
                 callback(xobj.responseText);
             }
         }
+		xobj.ontimeout = function (e) {
+			showLoader('false');
+		};
         xobj.send(data);
     }
 	
