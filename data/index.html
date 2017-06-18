@@ -1536,12 +1536,18 @@
 
 		#thermoname {
 			padding:14px 5px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 			float:left;
 		}
-
-		.wifi {
+		.notification{
+			color:#FFFF00;
+		}
+		.wifi, .notification {
 			text-align:center;
 			padding:14px 5px;
+			overflow: hidden;;
 			float:right;
 			border-left:2px solid #333;
 		}
@@ -2295,6 +2301,7 @@
 		<div id="thermoname">N.C.</div>
 		<div class="battery">N.C.</div>
 		<div class="wifi">N.C.</div>
+		<div class="notification" style="display:none" onclick="update();">(!)</div>
 	</div>
 	<div class="clear"></div>
     <div id="menu">
@@ -2937,7 +2944,26 @@
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
+			if(jsonresponse.system.getupdate == 'false'){
+				document.getElementsByClassName("notification")[0].style.display = "none";
+			}else{
+				document.getElementsByClassName("notification")[0].style.display = "inline";
+			}
 		})
+	}
+	
+	function update(){
+		loadJSON('settings', '', '3000', function (response) {
+			jsonresponse = JSON.parse(response);
+			txt = 'Wollen Sie das aktuelle Update Installieren?\n\nAktuelle Version:' + jsonresponse.system.version + '\nNeue Version:' + jsonresponse.system.getupdate;
+			if (confirm(txt) == true) {
+				loadJSON('update', '', '60000', function (response) {
+					document.getElementsByClassName("notification")[0].style.display = "none";
+				})
+			} else {
+			
+			}						
+		})	
 	}
 		
 	function showSystem(){
