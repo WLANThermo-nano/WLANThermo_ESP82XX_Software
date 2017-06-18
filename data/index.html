@@ -2298,6 +2298,26 @@
 			display:block; 
 			opacity:2; 
 		}
+		.spinner{
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			height: 28px;
+			width: 28px;
+			margin-left: -14px;
+			margin-top: -14px;
+			animation: rotate 0.8s infinite linear;
+			border: 8px solid #fff;
+			border-right-color: transparent;
+			border-radius: 50%; 
+		}
+		
+		@keyframes rotate {
+			0%    { transform: rotate(0deg); }
+			100%  { transform: rotate(360deg); }
+		}
+
+
     </style>
 </head>
 <body>
@@ -2759,7 +2779,8 @@
 		<!-- ################################################### -->
     </div>
 </div>
-<div id="cover"> 
+<div id="cover">
+	<div id="spinner"></div>
 </div>
 <script> 
 	(function (window, document) {
@@ -2970,6 +2991,7 @@
 			jsonresponse = JSON.parse(response);
 			if(jsonresponse.system.version == jsonresponse.system.getupdate){
 				document.getElementById("cover").classList.remove("cover_active");
+				document.getElementById("spinner").classList.remove("spinner");
 				updateActivated = 'false';
 			}		
 		})	
@@ -2982,6 +3004,7 @@
 			if (confirm(txt) == true) {
 				loadJSON('update', '', '60000', function (response) {
 					document.getElementById("cover").classList.add("cover_active");
+					document.getElementById("spinner").classList.add("spinner");
 					updateActivated = 'true';
 				});
 			} else {
