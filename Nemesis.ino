@@ -81,6 +81,9 @@ void setup() {
     check_sector();
     setEE(); start_fs();
 
+    // Initalize MQTT
+    set_mqtt();
+    
     // Initialize Wifi
     set_wifi();
 
@@ -115,6 +118,9 @@ void setup() {
     
     // Initialize Pitmaster
     set_pitmaster(); 
+
+    // Check HTTP Update
+    check_http_update();
   }
 }
 
@@ -139,6 +145,10 @@ void loop() {
   #ifdef OTA
     ArduinoOTA.handle();
   #endif
+
+  // HTTP Update
+  if (sys.update > 0) do_http_update();
+  else if (sys.update == -1) check_http_update();
   
   // Detect Button Event
   if (button_input()) button_event();
@@ -159,7 +169,7 @@ void loop() {
     timer_datalog();          // Datalog
     flash_control();          // Flash
     
-    delay(1);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
+    delay(5);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
   }
   
 }

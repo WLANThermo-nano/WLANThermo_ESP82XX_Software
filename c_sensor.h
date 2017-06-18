@@ -32,13 +32,6 @@
 // Initialize Sensors
 byte set_sensor() {
 
-  // THERMOCOUPLE
-  #ifdef KTYPE
-    // CS notwendig, da nur bei CS HIGH neue Werte im Chip gelesen werden
-    pinMode(THERMOCOUPLE_CS, OUTPUT);
-    digitalWrite(THERMOCOUPLE_CS, HIGH);
-  #endif
-
   // Piepser
   pinMode(MOSI, OUTPUT);
   analogWriteFreq(4000);
@@ -83,46 +76,6 @@ int get_adc_average (byte ch) {
 
   return regdata & 4095;
 }
-
-
-#ifdef KTYPE
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Reading Temperature KTYPE
-double get_thermocouple(void) {
-
-  long dd = 0;
-  
-  // Communication per I2C Pins but with CS
-  digitalWrite(THERMOCOUPLE_CS, LOW);                    // START
-  for (uint8_t i=32; i; i--){
-    dd = dd <<1;
-    if (twi_read_bit())  dd |= 0x01;
-  }
-  digitalWrite(THERMOCOUPLE_CS, HIGH);                   // END
-
-  // Invalid Measurement
-  if (dd & 0x7) {
-    //DPRINTPLN("No thermocouple!");
-    return INACTIVEVALUE; 
-  }
-
-  if (dd & 0x80000000) {
-    // Negative value, drop the lower 18 bits and explicitly extend sign bits.
-    dd = 0xFFFFC000 | ((dd >> 18) & 0x00003FFFF);
-  }
-  else {
-    // Positive value, just drop the lower 18 bits.
-    dd >>= 18;
-  }
-
-  // Temperature in Celsius
-  double vv = dd;
-  vv *= 0.25;
-  return vv;
-}
-
-#endif
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

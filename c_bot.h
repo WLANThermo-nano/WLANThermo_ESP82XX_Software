@@ -25,41 +25,46 @@
 
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
   // Send data to Thingspeak
-  void sendData() {
-
+  void sendTS() {
+    
+  if (mqttClient.connected()) {
+    
     unsigned long vorher = millis();
-  
+    //mqttClient.connect();
     // Sendedauer: ~120ms  
-    if (THINGclient.connect(SERVER1,80)) {
 
-      String postStr = charts.TSwriteKey;
+    String postStr = "";
 
-      for (int i = 0; i < 7; i++)  {
-        if (ch[i].temp != INACTIVEVALUE) {
-          postStr += "&";
-          postStr += String(i+1);
-          postStr += "=";
-          postStr += String(ch[i].temp,1);
-        }
+    for (int i = 0; i < 7; i++)  {
+      if (ch[i].temp != INACTIVEVALUE) {
+        postStr += "&";
+        postStr += String(i+1);
+        postStr += "=";
+        postStr += String(ch[i].temp,1);
       }
-
-      
-      if (charts.TSshow8) {
-        postStr +="&8=";  
-        postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
-      } else if (ch[7].temp != INACTIVEVALUE) {
-        postStr +="&8="; 
-        postStr += String(ch[7].temp,1);
-      }
-
-      THINGclient.print("POST /update HTTP/1.1\nHost: api.thingspeak.com\nConnection: close\nX-THINGSPEAKAPIKEY: "
-                        +charts.TSwriteKey+"\nContent-Type: application/x-www-form-urlencoded\nContent-Length: "
-                        +postStr.length()+"\n\n"+postStr);
-
-      DPRINTF("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
     }
 
-    THINGclient.stop();      
+    if (charts.TSshow8) {
+      postStr +="&8=";  
+      postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
+    } else if (ch[7].temp != INACTIVEVALUE) {
+      postStr +="&8="; 
+      postStr += String(ch[7].temp,1);
+    }
+    
+    //postStr += "&metadata=";
+    //postStr += "{\"officeTemp\":73}";
+
+    String adress = F("channels/");
+    adress += charts.TSchID;
+    adress += F("/publish/");
+    adress += charts.TSwriteKey;
+
+    mqttClient.publish(adress.c_str(), 0, false, postStr.c_str());
+    
+    //mqttClient.disconnect();
+    DPRINTF("[INFO]\tPublish to Thingspeak at QoS 0: %ums\r\n", millis()-vorher); 
+  }
   }
 
 
@@ -90,4 +95,6 @@
   }
 
 #endif
+
+
 

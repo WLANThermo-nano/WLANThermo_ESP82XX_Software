@@ -19,10 +19,6 @@
  ****************************************************/
 
 
-ESP8266WiFiMulti wifiMulti;               // MULTIWIFI instance
-WiFiUDP udp;                              // UDP instance
-
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Connect WiFi
 
@@ -56,15 +52,9 @@ void set_wifi() {
     DPRINTP(".");
     counter++;
   }
-
-  DPRINTLN();
+  
   
   if (WiFi.status() == WL_CONNECTED) {
-
-    DPRINTP("[INFO]\tWiFi connected to: ");
-    DPRINTLN(WiFi.SSID());
-    DPRINTP("[INFO]\tIP address: ");
-    DPRINTLN(WiFi.localIP());
         
     isAP = 0;
 
@@ -270,6 +260,34 @@ void wifimonitoring() {
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// MQTT
+void connectToMqtt() {
+  DPRINTLN();
+  DPRINTP("[INFO]\tWiFi connected to: ");
+  DPRINTLN(WiFi.SSID());
+  DPRINTP("[INFO]\tIP address: ");
+  DPRINTLN(WiFi.localIP());
+  DPRINTPLN("[INFO]\tConnecting to MQTT...");
+  mqttClient.connect();
+}
+
+void onWifiConnect(const WiFiEventStationModeGotIP& event) {
+  connectToMqtt();
+}
+
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+  DPRINTPLN("[INFO]\tDisconnected from MQTT.");
+  if (WiFi.isConnected()) connectToMqtt;
+}
+
+void set_mqtt() {
+  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+  mqttClient.onDisconnect(onMqttDisconnect);
+  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Test
 struct station_info *stat_info;
 struct ip_addr *IPaddress;
@@ -301,14 +319,15 @@ void dumpClients()
 void stop_wifi() {
   
   DPRINTPLN("[INFO]\tStop Wifi");
-  
-  //wifi_station_disconnect();
-  //wifi_set_opmode(NULL_MODE);
-  //wifi_set_sleep_type(MODEM_SLEEP_T);
-  //wifi_fpm_open();
-  //wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
-  WiFi.disconnect();
-  WiFi.mode(WIFI_OFF);
+  mqttClient.disconnect();
+  wifi_station_disconnect();
+  wifi_set_opmode(NULL_MODE);
+  wifi_set_sleep_type(MODEM_SLEEP_T);
+  wifi_fpm_open();
+  wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+  //WiFi.disconnect();
+  //delay(100); // leider notwendig
+  //WiFi.mode(WIFI_OFF);
   delay(100); // leider notwendig
 
   isAP = 2;

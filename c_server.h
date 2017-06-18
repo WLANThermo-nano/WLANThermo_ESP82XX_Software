@@ -88,6 +88,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   _system["hwalarm"] =    sys.hwalarm;
   _system["fastmode"] =   sys.fastmode;
   _system["version"] =    FIRMWAREVERSION;
+  _system["getupdate"] =  sys.getupdate;
   _system["hwversion"] =  String("V")+String(sys.hwversion);
   
   JsonArray& _typ = root.createNestedArray("sensors");
@@ -114,7 +115,7 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
 
   JsonArray& _aktor = root.createNestedArray("aktor");
   _aktor.add("SSR");
-  _aktor.add("FAN");
+  //_aktor.add("FAN");
 
   JsonObject& _chart = root.createNestedObject("charts");
   _chart["TSwrite"] = charts.TSwriteKey; 
@@ -124,12 +125,13 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
 
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
-  _hw.add(String("V")+String(2));
+  //_hw.add(String("V")+String(2));
     
   if (www) {
     response->setLength();
     request->send(response);
   } else root.printTo(Serial);
+   
 }
 
 
@@ -934,6 +936,31 @@ void server_setup() {
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
       set_Channels();
+      request->send(200, "text/json", "OK");
+    });
+
+    // REQUEST: /update
+    server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      sys.update = 1;
+      request->send(200, "text/json", "OK");
+    });
+
+    // REQUEST: /update
+    server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      sys.update = 1;
+      request->send(200, "text/json", "OK");
+    });
+    
+    // REQUEST: /checkupdate
+    server.on("/checkupdate", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      sys.update = -1;
+      request->send(200, "text/json", "OK");
+    });
+
+    // REQUEST: /checkupdate
+    server.on("/checkupdate", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      sys.update = -1;
+      request->send(200, "text/json", "OK");
     });
     
 

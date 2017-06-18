@@ -38,21 +38,26 @@ float calcT(int r, byte typ){
   case 1:  // Fantast-Neu
     Rn = 220; a = 0.00334519; b = 0.000243825; c = 0.00000261726;
     break; 
-  case 2:  // NTC 100K6A1B (lila Kopf)
-    Rn = 100; a = 0.00335639; b = 0.000241116; c = 0.00000243362; 
+  case 2:  // Fantast
+    Rn = 50.08; a = 3.3558340e-03; b = 2.5698192e-04; c = 1.6391056e-06;
     break; 
-  case 3:  // NTC 100K (braun/schwarz/gelb/gold)
-    Rn = 100; a = 0.003354016; b = 0.0002460380; c = 0.00000340538; 
+  case 3:  // iGrill2
+    Rn = 99.61 ; a = 3.3562424e-03; b = 2.5319218e-04; c = 2.7988397e-06;
+    break; 
+  case 4:  // ET-73
+    Rn = 200; a = 0.00335672; b = 0.000291888; c = 0.00000439054; 
     break;
-  case 4:  // SMD NTC 100K (ATC Semitec 104GT-2)
-    Rn = 0.001; a = 0.0006558853; b = 0.0002343567; c = 0.0;  
-    // Rn = 0.001 zur Anpassung der Steinhart-Hart eq.
+  case 5:  // PERFEKTION
+    Rn = 200.1; a =  3.3561990e-03; b = 2.4352911e-04; c = 3.4519389e-06;  
     break; 
-  case 5:  // NTC 5K3A1B (orange Kopf)
+  case 6:  // NTC 5K3A1B (orange Kopf)
     Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243;  
     break; 
-  case 6: // NTC 47K MOUSER aus B25/50 = 4050
+  case 7: // NTC 47K MOUSER aus B25/50 = 4050
     Rn = 47; a = 0.003354; b = 0.0002469; c = 0;
+    break;
+  case 8: // NTC 100K6A1B (lila Kopf)
+    Rn = 100; a = 0.00335639; b = 0.000241116; c = 0.00000243362; 
     break;
    
   default:  
@@ -83,12 +88,6 @@ void get_Temperature() {
     //else  {
       value = calcT(get_adc_average(i),ch[i].typ);
     //}
- 
-    // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
-    // KTYPE wandert dann auf Kanal 5
-    #ifdef KTYPE
-    if (i == 4) value = get_thermocouple();
-    #endif
 
     // Umwandlung C/F
     if ((temp_unit == "F") && value!=INACTIVEVALUE) {  // Vorsicht mit INACTIVEVALUE
@@ -125,11 +124,6 @@ void set_Channels() {
     ch[i].showalarm = false;
     ch[i].show = false;
   }
-
-  // Wenn KTYPE muss Kanal 5 auch KTYPE sein
-  #ifdef KTYPE
-  ch[4].typ = 6;
-  #endif
 
 }
 

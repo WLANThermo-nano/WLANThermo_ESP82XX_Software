@@ -32,7 +32,7 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
 #include "AsyncJson.h"
-
+#include <AsyncMqttClient.h>
 #include <StreamString.h>
 
 extern "C" {
@@ -44,16 +44,17 @@ extern "C" {
 extern "C" uint32_t _SPIFFS_start;      // START ADRESS FS
 extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "V0.3"
+#define FIRMWAREVERSION "v0.4.0"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
-#define SENSORTYPEN    8               // NUMBER OF SENSORS
+#define SENSORTYPEN    9               // NUMBER OF SENSORS
 #define LIMITUNTERGRENZE -20           // MINIMUM LIMIT
 #define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
 #define MAX1161x_ADDRESS 0x33          // MAX11615
@@ -103,6 +104,8 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define APPASSWORD "12345678"
 #define HOSTNAME "NANO-"
 #define NTP_PACKET_SIZE 48          // NTP time stamp is in the first 48 bytes of the message
+#define MQTT_HOST "mqtt.thingspeak.com"
+#define MQTT_PORT 1883
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
@@ -150,12 +153,13 @@ ChannelData ch[CHANNELS];
 
 String  ttypname[SENSORTYPEN] = {"Maverick",
                       "Fantast-Neu",
-                      "100K6A1B",
-                      "100K",
-                      "SMD NTC",
+                      "Fantast",
+                      "iGrill2",
+                      "ET-73",
+                      "Perfektion",
                       "5K3A1B",
                       "MOUSER47K",
-                      "Typ K"};
+                      "100K6A1B"};
 
 
 String  temp_unit = "C";
@@ -207,6 +211,9 @@ struct System {
    String language;           // SYSTEM LANGUAGE
    int timeZone;              // TIMEZONE
    bool hwalarm;              // HARDWARE ALARM 
+   byte updatecount;           // 
+   int update;             // FIRMWARE UPDATE -1 = check, 0 = no, 1 = spiffs, 2 = firmware
+   String getupdate;
 };
 
 System sys;
@@ -255,6 +262,8 @@ MyQuestion question;
 enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
 // WIFI
+ESP8266WiFiMulti wifiMulti;               // MULTIWIFI instance
+WiFiUDP udp;                              // UDP instance
 byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO, 3 = Turn off)
 String wifissid[5];
 String wifipass[5];
@@ -319,7 +328,6 @@ void piepserON();
 // SENSORS
 byte set_sensor();                                // Initialize Sensors
 int  get_adc_average (byte ch);                   // Reading ADC-Channel Average
-double get_thermocouple(void);                    // Reading Temperature KTYPE
 void get_Vbat();                                   // Reading Battery Voltage
 void cal_soc();
 
@@ -369,6 +377,10 @@ void reconnect_wifi();
 void stop_wifi();
 void check_wifi();
 time_t getNtpTime();
+WiFiEventHandler wifiConnectHandler;
+
+//MQTT
+AsyncMqttClient mqttClient;
 
 // SERVER
 void handleSettings(AsyncWebServerRequest *request, bool www);
@@ -395,7 +407,7 @@ void pitmaster_control();
 // BOT
 #ifdef THINGSPEAK
 void sendMessage(int ch, int count);
-void sendData();
+void sendTS();
 #endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -445,8 +457,10 @@ void timer_charts() {
 
     if (!isAP) {
       #ifdef THINGSPEAK
-        if (charts.TSwriteKey != "") sendData();
+       //if (charts.TSwriteKey != "") sendData();
+       if (charts.TSwriteKey != "" && charts.TSchID != "") sendTS();
       #endif
+      
     }
     lastUpdateCommunication = millis();
   }
