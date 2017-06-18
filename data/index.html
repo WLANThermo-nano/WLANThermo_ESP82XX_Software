@@ -2885,14 +2885,17 @@
 
 	function showThingspeak(){
 		hideAll();
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('TSwrite').value = jsonresponse.charts.TSwrite;
 			document.getElementById('TShttp').value = jsonresponse.charts.TShttp;
 			document.getElementById('TSchID').value = jsonresponse.charts.TSchID;
 			document.getElementById('TSshow8').checked = jsonresponse.charts.TSshow8;
+			document.getElementById("thingspeak").style.display = "inline";
+			showLoader('false');
 		})
-		document.getElementById("thingspeak").style.display = "inline";
+		
 	}	
 
 	function setThingspeak(){
@@ -2917,7 +2920,7 @@
 
 	function showSetChannel(channel){
 		hideAll();
-		document.getElementById("channel_settings").style.display = "inline";
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			clearOption('sensor');
@@ -2935,6 +2938,8 @@
 			document.getElementById('color').value = jsonresponse.channel[channel].color;
 			document.getElementById('sensor').value = jsonresponse.channel[channel].typ;
 			document.getElementById('webalarm').checked = jsonresponse.channel[channel].alarm;
+			document.getElementById("channel_settings").style.display = "inline";
+			showLoader('false');
 		})
 	}
 
@@ -2990,11 +2995,20 @@
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			if(jsonresponse.system.version == jsonresponse.system.getupdate){
-				document.getElementById("cover").classList.remove("cover_active");
-				document.getElementById("spinner").classList.remove("spinner");
+				showLoader('false')
 				updateActivated = 'false';
 			}		
 		})	
+	}
+	
+	function showLoader(show){
+		if (show == true) {
+			document.getElementById("cover").classList.add("cover_active");
+			document.getElementById("spinner").classList.add("spinner");		
+		}else{
+			document.getElementById("cover").classList.remove("cover_active");
+			document.getElementById("spinner").classList.remove("spinner");
+		}
 	}
 	
 	function update(){
@@ -3003,8 +3017,7 @@
 			txt = 'Wollen Sie das aktuelle Update Installieren?\n\nAktuelle Version:' + jsonresponse.system.version + '\nNeue Version:' + jsonresponse.system.getupdate;
 			if (confirm(txt) == true) {
 				loadJSON('update', '', '60000', function (response) {
-					document.getElementById("cover").classList.add("cover_active");
-					document.getElementById("spinner").classList.add("spinner");
+					showLoader('true');
 					updateActivated = 'true';
 				});
 			} else {
@@ -3015,6 +3028,7 @@
 	
 	function showSystem(){
 		hideAll();
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('timezone').value = jsonresponse.system.utc;
@@ -3031,8 +3045,9 @@
 				document.getElementById('hwversion').options[document.getElementById('hwversion').options.length] = new Option(jsonresponse.hardware[i], jsonresponse.hardware[i]);
 			}
 			document.getElementById('hwversion').value = jsonresponse.system.hwversion;
+			document.getElementById("system_config").style.display = "inline";
+			showLoader('false');
 		})
-		document.getElementById("system_config").style.display = "inline";
 	}
 	
 	function setSystem(){
