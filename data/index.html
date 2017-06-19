@@ -3138,9 +3138,9 @@
 	function checkUpdateActivated(){
 		loadJSON('updatestatus', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
-			if (jsonresponse == 'true'){
+			if (jsonresponse == true){
 				showLoader('true');
-			}else if (jsonresponse == 'false'){
+			}else if (jsonresponse == false){
 				showLoader('false')
 				updateActivated = 'false';
 			}
