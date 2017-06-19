@@ -10,6 +10,136 @@
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
     <title>WLANThermo - Nano</title>
 	 <style>
+@font-face {
+  font-family: 'nano';
+  src:
+    url('nano.ttf?57g8q9') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'nano' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-fan:before {
+  content: "\e913";
+}
+.icon-wifi-off:before {
+  content: "\e915";
+  color: red;
+}
+.icon-wifi-50:before {
+  content: "\e918";
+}
+.icon-wifi-75:before {
+  content: "\e919";
+}
+.icon-wifi-25:before {
+  content: "\e91a";
+  color: red;
+}
+.icon-wifi-100:before {
+  content: "\e914";
+}
+.icon-ic_wifi_lock_black_24px:before {
+  content: "\e916";
+}
+.icon-ok:before {
+  content: "\f00c";
+}
+.icon-remove:before {
+  content: "\f00d";
+}
+.icon-refresh:before {
+  content: "\f021";
+}
+.icon-lock:before {
+  content: "\f023";
+}
+.icon-question_sign:before {
+  content: "\f059";
+}
+.icon-info_sign:before {
+  content: "\f05a";
+}
+.icon-notification:before {
+  content: "\f06a";
+  color:#FFFF00;
+}
+.icon-unlock:before {
+  content: "\f09c";
+}
+.icon-reorder:before {
+  content: "\f0c9";
+}
+.icon-spinner_2:before {
+  content: "\f110";
+}
+.icon-charger:before {
+  content: "\f1e6";
+}
+.icon-battery-100:before {
+  content: "\f240";
+}
+.icon-battery-75:before {
+  content: "\f241";
+}
+.icon-battery-50:before {
+  content: "\f242";
+}
+.icon-battery-25:before {
+  content: "\f243";
+}
+.icon-battery-0:before {
+  content: "\f244";
+  animation: blinker 2s linear infinite;
+  color: red;
+}
+
+@keyframes blinker {  
+  50% { opacity: 0; }
+}
+
+.icon-stats-dots:before {
+  content: "\e99b";
+}
+.icon-power-cord:before {
+  content: "\e9b7";
+}
+.icon-eye:before {
+  content: "\e9ce";
+}
+.icon-eye-blocked:before {
+  content: "\e9d1";
+}
+.icon-notification_2:before {
+  content: "\ea08";
+}
+.icon-circle-up:before {
+  content: "\ea41";
+}
+.icon-circle-right:before {
+  content: "\ea42";
+}
+.icon-circle-down:before {
+  content: "\ea43";
+}
+.icon-circle-left:before {
+  content: "\ea44";
+}
+	 
 		.pure-button:focus,a:active,a:hover {
 		outline:0
 		}
@@ -1541,9 +1671,7 @@
 			white-space: nowrap;
 			float:left;
 		}
-		.notification{
-			color:#FFFF00;
-		}
+
 		.wifi, .notification {
 			text-align:center;
 			padding:14px 5px;
@@ -2332,9 +2460,9 @@
 			<span></span>
 		</a>
 		<div id="thermoname">N.C.</div>
-		<div class="battery">N.C.</div>
-		<div class="wifi">N.C.</div>
-		<div class="notification" style="display:none" onclick="update();">(!)</div>
+		<div class="battery" onclick="setshowBatteryWlanIcon();">N.C.</div>
+		<div class="wifi" onclick="setshowBatteryWlanIcon();">N.C.</div>
+		<div class="notification" style="display:none" onclick="update();"><span class="icon-notification"> </span></div>
 	</div>
 	<div class="clear"></div>
     <div id="menu">
@@ -3144,14 +3272,79 @@
         xobj.send(data);
     }
 	
+	var showBatteryWlanIcon = true;
+	
+	function setshowBatteryWlanIcon(){
+		showBatteryWlanIcon = false;
+		readTemp();
+		setTimeout(function(){
+			showBatteryWlanIcon = true;
+        }, 10000);
+		//setTimeout(showBatteryWlanIcon = false, 3000)
+	}
+	
+	function getBatteryIcon(percent,charge){
+		data = '';
+		if (showBatteryWlanIcon == true){
+			if(charge == true){
+				data = '<span class="icon-power-cord"> </span>';
+			}else{
+				data = '';
+			}
+			if (percent >= '90'){
+				data = data + '<span class="icon-battery-100"> </span>';
+			}else if (percent >= '75'){
+				data = data + '<span class="icon-battery-75"> </span>';
+			}else if (percent >= '50'){
+				data = data + '<span class="icon-battery-50"> </span>';
+			}else if (percent >= '15'){
+				data = data + '<span class="icon-battery-25"> </span>';
+			}else{
+				data = data + '<span class="icon-battery-0"> </span>';
+			}
+			return data + '&nbsp;';
+		}else{
+			if(charge == true){
+				data = '<span class="icon-power-cord"> </span>';
+			}else{
+				data = '';
+			}
+			data = data + percent + '%';
+			return data + '&nbsp;';
+		}
+	}
+	
+	function getRSSIIcon(dbm){
+		data = '';
+		if (showBatteryWlanIcon == true){
+			if(dbm >= '-70'){
+				data = data + '<span class="icon-wifi-100"> </span>';
+			}else if (dbm >= '-80'){
+				data = data + '<span class="icon-wifi-75"> </span>';
+			}else if (dbm >= '-90'){
+				data = data + '<span class="icon-wifi-50"> </span>';
+			}else if (dbm >= '-100'){
+				data = data + '<span class="icon-wifi-25"> </span>';
+			}
+			return data;	
+		}else{
+			data = dbm + 'dBm';
+			return data;		
+		}
+	}
+	
 	function readTemp(){
 		if (updateActivated == 'true'){
 				checkUpdateActivated();
 		}else{
 			loadJSON('data', '', '3000', function (response) {
 				jsonresponse = JSON.parse(response);
-				document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%";
-				document.getElementsByClassName("wifi")[0].innerHTML = jsonresponse.system.rssi + "dBm";
+				BatteryIcon = getBatteryIcon(jsonresponse.system.soc,jsonresponse.system.charge);
+				document.getElementsByClassName("battery")[0].innerHTML = BatteryIcon;
+				<!-- document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%"; -->
+				RSSIIcon = getRSSIIcon(jsonresponse.system.rssi);
+				document.getElementsByClassName("wifi")[0].innerHTML = RSSIIcon;
+				<!-- document.getElementsByClassName("wifi")[0].innerHTML = jsonresponse.system.rssi + "dBm"; -->
 				var x = document.getElementsByClassName("pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index");
 				var i;
 				for (i = 0; i < x.length; i++) {
