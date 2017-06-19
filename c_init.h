@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.4.1"
+#define FIRMWAREVERSION "v0.4.2"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -409,6 +409,7 @@ void pitmaster_control();
 #ifdef THINGSPEAK
 void sendMessage(int ch, int count);
 void sendTS();
+void sendMetadata();
 #endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -460,6 +461,7 @@ void timer_charts() {
       #ifdef THINGSPEAK
        //if (charts.TSwriteKey != "") sendData();
        if (charts.TSwriteKey != "" && charts.TSchID != "") sendTS();
+       //sendMetadata();
       #endif
       
     }

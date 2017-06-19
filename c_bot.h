@@ -51,9 +51,6 @@
         postStr +="&8="; 
         postStr += String(ch[7].temp,1);
       }
-    
-      //postStr += "&metadata=";
-      //postStr += "{\"officeTemp\":73}";
 
       String adress = F("channels/");
       adress += charts.TSchID;
@@ -66,7 +63,6 @@
       DPRINTF("[INFO]\tPublish to Thingspeak at QoS 0: %ums\r\n", millis()-vorher); 
     } else mqttClient.connect();
   }
-
 
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
   // Send Message to Telegram via Thingspeak

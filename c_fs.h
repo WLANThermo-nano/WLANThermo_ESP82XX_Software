@@ -192,7 +192,7 @@ bool loadconfig(byte count) {
         pidsize++;
       }
     }
-    if (pidsize < 3) return 0;   // Alte Versionen abfangen und 3 Default PID-Settings laden
+    if (pidsize < 1) return 0;   // Alte Versionen abfangen und 3 Default PID-Settings laden
     break;
 
     case 4:     // SYSTEM

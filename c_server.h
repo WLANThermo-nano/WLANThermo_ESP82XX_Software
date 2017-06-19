@@ -127,12 +127,18 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
   //_hw.add(String("V")+String(2));
+
+  //String jsonStr;
     
   if (www) {
     response->setLength();
     request->send(response);
-  } else root.printTo(Serial);
-   
+  } else {
+    root.printTo(Serial);
+  } 
+  
+  //else  root.printTo(jsonStr);
+ // return jsonStr;
 }
 
 
@@ -941,20 +947,10 @@ void server_setup() {
     });
 
     // REQUEST: /update
-    server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      sys.update = 1;
-      request->send(200, "text/json", "OK");
-    });
-
-    // REQUEST: /update
     server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request) { 
+      if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();
       sys.update = 1;
-      request->send(200, "text/json", "OK");
-    });
-    
-    // REQUEST: /checkupdate
-    server.on("/checkupdate", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      sys.update = -1;
       request->send(200, "text/json", "OK");
     });
 
@@ -964,9 +960,8 @@ void server_setup() {
       request->send(200, "text/json", "OK");
     });
     
-
-    // REQUEST: /updateStatus
-    server.on("/updateStatus", HTTP_POST, [](AsyncWebServerRequest *request) { 
+    // REQUEST: /updatestatus
+    server.on("/updatestatus", HTTP_POST, [](AsyncWebServerRequest *request) { 
         if(sys.update > 0) request->send(200, "text/plain", "true");
         request->send(200, "text/plain", "false");
     });
