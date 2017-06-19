@@ -165,6 +165,9 @@ void read_serial(char *buffer) {
       set_Channels();
       setconfig(eSYSTEM,{});
       loadconfig(eSYSTEM);
+      set_pid();
+      setconfig(ePIT,{});
+      loadconfig(ePIT);
       return;
     }
 

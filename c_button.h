@@ -441,8 +441,8 @@ static inline void button_event() {
         if (mupi == 10) mupi = 1;
         if (event[1]) tempor = ch[current_ch].typ;
         tempor += mupi;
-        if (tempor > (SENSORTYPEN-2)) tempor = 0;
-        else if (tempor < 0) tempor = SENSORTYPEN-2;
+        if (tempor > (SENSORTYPEN-1)) tempor = 0;
+        else if (tempor < 0) tempor = SENSORTYPEN-1;
         if (event[2]) ch[current_ch].typ = tempor;
         break;
         

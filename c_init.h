@@ -49,12 +49,12 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.4.2"
+#define FIRMWAREVERSION "v0.4.3"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
-#define SENSORTYPEN    9               // NUMBER OF SENSORS
+#define SENSORTYPEN    10               // NUMBER OF SENSORS
 #define LIMITUNTERGRENZE -20           // MINIMUM LIMIT
 #define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
 #define MAX1161x_ADDRESS 0x33          // MAX11615
@@ -159,7 +159,8 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
                       "Perfektion",
                       "5K3A1B",
                       "MOUSER47K",
-                      "100K6A1B"};
+                      "100K6A1B",
+                      "Weber_6743"};
 
 
 String  temp_unit = "C";
@@ -404,6 +405,7 @@ void clearEE(int startP, int endP);
 // PITMASTER
 void startautotunePID(int maxCycles, bool storeValues);
 void pitmaster_control();
+void disableAllHeater();
 
 // BOT
 #ifdef THINGSPEAK
@@ -613,7 +615,8 @@ bool standby_control() {
       LADENSHOW = true;
       DPRINTPLN("[INFO]\tChange to Standby");
       //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
-      pitmaster.active = false;
+      //pitmaster.active = false;
+      disableAllHeater();
       piepserOFF();
       // set_pitmaster();
     }
