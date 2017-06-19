@@ -2692,7 +2692,12 @@
 							  <label>
 								<input id="fastmode" type="checkbox"/><i class="helper"></i>Schnelllauf
 							  </label>
-							</div>	
+							</div>
+							<div class="checkbox">
+							  <label>
+								<input id="searchUpdate" type="checkbox"/><i class="helper"></i>Nach Updates suchen
+							  </label>
+							</div>								
 						</form>
 					</div>
 				</div>
@@ -2868,7 +2873,6 @@
 	document.addEventListener("DOMContentLoaded", function(event) { 
 		setThermoName();
 		setInterval("readTemp();", 2000);
-	//your code to run since DOM is loaded and ready
 	});
 	
 	document.getElementById("index").style.display = "inline";
@@ -2901,6 +2905,7 @@
 	}	
 
 	function setThingspeak(){
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
 			jsonresponse = JSON.parse(response);
 			jsonresponse.charts.TSwrite = document.getElementById('TSwrite').value;
@@ -2909,8 +2914,10 @@
 			jsonresponse.charts.TSshow8 = document.getElementById('TSshow8').checked;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
+			showLoader('true');
 			loadJSON('setcharts', data, '60000', function (response) {
 				showIndex();
+				showLoader('false');
 			})		
 		})
 	}
@@ -2946,6 +2953,7 @@
 	}
 
 	function setChannel(channel){
+		showLoader('true');
 		loadJSON('data', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			jsonresponse.channel[channel].min = document.getElementById('temp_min').value;
@@ -2954,11 +2962,12 @@
 			jsonresponse.channel[channel].typ = document.getElementById('sensor').value;
 			jsonresponse.channel[channel].alarm = document.getElementById('webalarm').checked;
 			jsonresponse.channel[channel].color = document.getElementById('color').value;
-			//alert(jsonresponse.channel[channel].min);
 			var data = JSON.stringify(jsonresponse.channel[channel]);
 				//alert(data);
+			showLoader('true');
 			loadJSON('setchannels', data, '60000', function (response) {
 				showIndex();
+				showLoader('false');
 			})		
 		})	
 	}
@@ -2973,14 +2982,17 @@
 	}
 	
 	function setWLAN(ssid, passwd){
+		showLoader('true');
 		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
 		loadJSON('setnetwork', data, '60000', function (response) {
 			showWLAN();
+			showLoader('false');
 		})
 		
 	}	
 	
 	function setThermoName(){
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
@@ -2989,17 +3001,21 @@
 			}else{
 				document.getElementsByClassName("notification")[0].style.display = "inline";
 			}
+			showLoader('false');
 		})
 	}
 	
 	var updateActivated = 'false';
+	
 	function checkUpdateActivated(){
-		loadJSON('settings', '', '3000', function (response) {
+		loadJSON('updatestatus', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
-			if(jsonresponse.system.version == jsonresponse.system.getupdate){
+			if (jsonresponse == 'true'){
+				showLoader('true');
+			}else if (jsonresponse == 'false'){
 				showLoader('false')
 				updateActivated = 'false';
-			}		
+			}
 		})	
 	}
 	
@@ -3042,6 +3058,7 @@
 			document.getElementById('hwalarm').checked = jsonresponse.system.hwalarm;
 			document.getElementById('summer').checked = jsonresponse.system.summer;
 			document.getElementById('fastmode').checked = jsonresponse.system.fastmode;
+			document.getElementById('searchUpdate').checked = jsonresponse.system.autoupd;
 			clearOption('hwversion');
 			for (var i = 0; i < jsonresponse.hardware.length; i++) {
 				document.getElementById('hwversion').options[document.getElementById('hwversion').options.length] = new Option(jsonresponse.hardware[i], jsonresponse.hardware[i]);
@@ -3053,6 +3070,7 @@
 	}
 	
 	function setSystem(){
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			jsonresponse.system.host = document.getElementById('hostname').value.replace(/ /g, '_');
@@ -3063,12 +3081,15 @@
 			jsonresponse.system.unit = document.getElementById('unit').value;
 			jsonresponse.system.hwalarm = document.getElementById('hwalarm').checked;
 			jsonresponse.system.summer = document.getElementById('summer').checked;
-			jsonresponse.system.fastmode = document.getElementById('fastmode').checked;			
+			jsonresponse.system.fastmode = document.getElementById('fastmode').checked;		
+			jsonresponse.system.autoupd = document.getElementById('searchUpdate').checked;			
 			var data = JSON.stringify(jsonresponse.system);
+			showLoader('true');
 			loadJSON('setsystem', data, '60000', function (response) {
 				//alert(data);
 				document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 				showIndex();
+				showLoader('false');
 			})		
 		})	
 	}
@@ -3116,47 +3137,49 @@
             }
         }
 		xobj.ontimeout = function (e) {
-			showLoader('false');
+			if (updateActivated != 'true'){
+				showLoader('false');
+			}
 		};
         xobj.send(data);
     }
 	
 	function readTemp(){
-		loadJSON('data', '', '3000', function (response) {
-		//loadJSON(function(response) {	
-			jsonresponse = JSON.parse(response);
-			if (updateActivated == 'true'){
+		if (updateActivated == 'true'){
 				checkUpdateActivated();
-			}
-			document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%";
-			document.getElementsByClassName("wifi")[0].innerHTML = jsonresponse.system.rssi + "dBm";
-			var x = document.getElementsByClassName("pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index");
-			var i;
-			for (i = 0; i < x.length; i++) {
-				x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jsonresponse.channel[i].color;
-				x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;
-				x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jsonresponse.channel[i].number;
-				x[i].getElementsByClassName('tempmin')[0].innerHTML = jsonresponse.channel[i].min + "°";
-				x[i].getElementsByClassName('tempmax')[0].innerHTML = jsonresponse.channel[i].max + "°";
-				if (jsonresponse.channel[i].temp == '999'){
-					x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
-					x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
-					x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
-				}else{
-					x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;
-					if (jsonresponse.channel[i].temp < jsonresponse.channel[i].min){
-						x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
-						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
-					}else if (jsonresponse.channel[i].temp > jsonresponse.channel[i].max){
-						x[i].getElementsByClassName('temp')[0].style.color = "red";
-						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
-					}else{
-						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";
+		}else{
+			loadJSON('data', '', '3000', function (response) {
+				jsonresponse = JSON.parse(response);
+				document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%";
+				document.getElementsByClassName("wifi")[0].innerHTML = jsonresponse.system.rssi + "dBm";
+				var x = document.getElementsByClassName("pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index");
+				var i;
+				for (i = 0; i < x.length; i++) {
+					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jsonresponse.channel[i].color;
+					x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;
+					x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jsonresponse.channel[i].number;
+					x[i].getElementsByClassName('tempmin')[0].innerHTML = jsonresponse.channel[i].min + "°";
+					x[i].getElementsByClassName('tempmax')[0].innerHTML = jsonresponse.channel[i].max + "°";
+					if (jsonresponse.channel[i].temp == '999'){
+						x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
+						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
 						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
+					}else{
+						x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;
+						if (jsonresponse.channel[i].temp < jsonresponse.channel[i].min){
+							x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
+							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
+						}else if (jsonresponse.channel[i].temp > jsonresponse.channel[i].max){
+							x[i].getElementsByClassName('temp')[0].style.color = "red";
+							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
+						}else{
+							x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";
+							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
+						}
 					}
 				}
-			}
-		})
+			})
+		}
 	}
 	
 	function networkscan(){
@@ -3241,7 +3264,6 @@
 	}
 	
 	function validateNumber(number) {
-	
 		val = number.value.replace(/[^0-9.,]/g,'');
 		val = val.replace(/[,]/g, '.'); // "," ersetzen zu "."
 		if(val){
