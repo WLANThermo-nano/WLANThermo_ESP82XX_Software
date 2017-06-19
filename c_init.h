@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.4.3"
+#define FIRMWAREVERSION "v0.4.4"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -251,7 +251,7 @@ Charts charts;
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL       
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool displayblocked = false;                     // No OLED Update
-enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM};
+enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE};
 
 struct MyQuestion {
    int typ;    

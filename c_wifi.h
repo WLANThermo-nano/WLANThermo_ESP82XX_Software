@@ -220,6 +220,10 @@ void wifimonitoring() {
     DPRINTP("[INFO]\tIP address: ");
     DPRINTLN(WiFi.localIP());
 
+    displayblocked = true;
+    question.typ = IPADRESSE;
+    drawQuestion(0);
+
     if (holdssid.hold) {
       holdssid.hold = false;
       const char* data[2];

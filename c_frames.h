@@ -77,13 +77,21 @@ void drawQuestion(int counter) {
     display.setTextAlignment(TEXT_ALIGN_LEFT);
     display.setFont(ArialMT_Plain_10);
 
-    bool b0 = true;
+    byte b0 = 1;
     bool b1 = true;
     
     switch (question.typ) {                   // Which Question?
 
       case CONFIGRESET:
         display.drawString(32,3,"Reset Config?");
+        break;
+
+      case IPADRESSE:
+        display.drawString(25,3,"WLAN-Anmeldung");
+        display.drawString(17, 20, "IP:");
+        display.drawString(33, 20, WiFi.localIP().toString());
+        b1 = false;
+        b0 = 2;
         break;
 
       case HARDWAREALARM:
@@ -99,7 +107,8 @@ void drawQuestion(int counter) {
     
     if (b1) display.drawString(10,40,"NO");
     display.setTextAlignment(TEXT_ALIGN_RIGHT);
-    if (b0) display.drawString(118,40,"YES");
+    if (b0 == 1) display.drawString(118,40,"YES");
+    else if (b0 == 2) display.drawString(118,40,"OK");
     display.display();
 }
 
