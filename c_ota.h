@@ -84,42 +84,45 @@
 // Check if there is http update
 void check_http_update() {
 
-  if((wifiMulti.run() == WL_CONNECTED && sys.autoupdate)) {
-    HTTPClient http;
+  if (sys.update < 1) {
+    if((wifiMulti.run() == WL_CONNECTED && sys.autoupdate)) {
+      HTTPClient http;
 
-    String adress = F("http://nano.wlanthermo.de/update.php?software=");
-    adress += FIRMWAREVERSION;
-    adress += F("&hardware=v");
-    adress += String(sys.hwversion);
-    adress += F("&serial=");
-    adress += String(ESP.getChipId(), HEX);
-    adress += F("&checkUpdate=true");
+      String adress = F("http://nano.wlanthermo.de/update.php?software=");
+      adress += FIRMWAREVERSION;
+      adress += F("&hardware=v");
+      adress += String(sys.hwversion);
+      adress += F("&serial=");
+      adress += String(ESP.getChipId(), HEX);
+      adress += F("&checkUpdate=true");
 
-    DPRINTPLN("[INFO]\tCheck HTTP Update");
+      DPRINTPLN("[INFO]\tCheck HTTP Update");
 
-    http.begin(adress); //HTTP
+      http.begin(adress); //HTTP
        
-    int httpCode = http.GET();
+      int httpCode = http.GET();
 
-    // httpCode will be negative on error
-    if(httpCode > 0) {
-      // HTTP header has been send and Server response header has been handled
-      DPRINTF("[HTTP]\tGET... code: %d\n", httpCode);
+      // httpCode will be negative on error
+      if(httpCode > 0) {
+        // HTTP header has been send and Server response header has been handled
+        DPRINTF("[HTTP]\tGET... code: %d\n", httpCode);
 
-      // file found at server
-      if(httpCode == HTTP_CODE_OK) {
-        String payload = http.getString();
-        DPRINTP("[HTTP]\tReceive: ");
-        DPRINTLN(payload);
-        sys.getupdate = payload;
+        // file found at server
+        if(httpCode == HTTP_CODE_OK) {
+          String payload = http.getString();
+          DPRINTP("[HTTP]\tReceive: ");
+          DPRINTLN(payload);
+          sys.getupdate = payload;
+        }
+      } else {
+        DPRINTF("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        sys.getupdate = "false";
       }
-    } else {
-      DPRINTF("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-      sys.getupdate = "false";
-    }
-    http.end();
-  } else sys.getupdate = "false";
-  if (sys.update == -1) sys.update = 0;
+      http.end();
+    } else sys.getupdate = "false";
+    sys.update = 0;
+  } 
+  
 }
 
 

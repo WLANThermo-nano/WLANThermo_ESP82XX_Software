@@ -95,10 +95,8 @@ void drawQuestion(int counter) {
         break;
 
       case OTAUPDATE:
-        display.drawString(3,3,"Update: ");
-        display.setTextAlignment(TEXT_ALIGN_CENTER);
-        if (sys.getupdate == "false") display.drawString(64,20,"Erfolgreich!");
-        else display.drawString(64,20,"Fehlgeschlagen!");
+        if (sys.getupdate == "false") display.drawString(3,3,"Update: Erfolgreich!");
+        else display.drawString(3,3,"Update: Fehlgeschlagen!");
         b1 = false;
         b0 = 2;
         break;
