@@ -132,6 +132,9 @@ void do_http_update() {
     if (sys.update == 3){
       sys.update = 0;
       modifyconfig(eSYSTEM,{});
+      displayblocked = true;
+      question.typ = OTAUPDATE;
+      drawQuestion(0);
       DPRINTPLN("[INFO]\tUPDATE FINISHED");
       return;
     }

@@ -962,6 +962,7 @@ void server_setup() {
     
     // REQUEST: /updatestatus
     server.on("/updatestatus", HTTP_POST, [](AsyncWebServerRequest *request) { 
+        DPRINTPLN("... in process");
         if(sys.update > 0) request->send(200, "text/plain", "true");
         request->send(200, "text/plain", "false");
     });

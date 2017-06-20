@@ -94,6 +94,15 @@ void drawQuestion(int counter) {
         b0 = 2;
         break;
 
+      case OTAUPDATE:
+        display.drawString(3,3,"Update: ");
+        display.setTextAlignment(TEXT_ALIGN_CENTER);
+        if (sys.getupdate == "false") display.drawString(64,20,"Erfolgreich!");
+        else display.drawString(64,20,"Fehlgeschlagen!");
+        b1 = false;
+        b0 = 2;
+        break;
+
       case HARDWAREALARM:
         String text = "ALARM! Kanal ";
         text += String(counter+1);
@@ -104,7 +113,7 @@ void drawQuestion(int counter) {
     }
 
     display.setFont(ArialMT_Plain_16);
-    
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
     if (b1) display.drawString(10,40,"NO");
     display.setTextAlignment(TEXT_ALIGN_RIGHT);
     if (b0 == 1) display.drawString(118,40,"YES");
@@ -201,9 +210,9 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
     display->fillRect(120,8,2,1); //Draw ground line
     display->fillRect(124,8,2,1); //Draw ground line
 
-    if (rssi > -100) display->fillRect(116,5,2,3); //Draw 1 line
-    if (rssi > -85) display->fillRect(120,3,2,5); //Draw 2 line
-    if (rssi > -70) display->fillRect(124,1,2,7); //Draw 3 line
+    if (rssi > -105) display->fillRect(116,5,2,3); //Draw 1 line
+    if (rssi > -95) display->fillRect(120,3,2,5); //Draw 2 line
+    if (rssi > -80) display->fillRect(124,1,2,7); //Draw 3 line
   }
 
   //display->drawString(80,0,String(map(pit_y,0,pit_pause,0,100)) + "%");

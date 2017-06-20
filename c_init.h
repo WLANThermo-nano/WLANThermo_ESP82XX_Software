@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.4.4"
+#define FIRMWAREVERSION "v0.4.5"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -459,7 +459,7 @@ void timer_charts() {
   
   if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
 
-    if (!isAP) {
+    if (!isAP && sys.update == 0) {
       #ifdef THINGSPEAK
        //if (charts.TSwriteKey != "") sendData();
        if (charts.TSwriteKey != "" && charts.TSchID != "") sendTS();
