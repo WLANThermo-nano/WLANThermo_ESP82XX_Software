@@ -84,7 +84,7 @@
 // Check if there is http update
 void check_http_update() {
 
-  if (sys.update < 1) {
+  if (sys.update < 1 || sys.update == 3) {
     if((wifiMulti.run() == WL_CONNECTED && sys.autoupdate)) {
       HTTPClient http;
 
@@ -120,7 +120,7 @@ void check_http_update() {
       }
       http.end();
     } else sys.getupdate = "false";
-    sys.update = 0;
+    if (sys.update == -1) sys.update = 0;
   } 
   
 }
