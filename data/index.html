@@ -139,7 +139,45 @@
 .icon-circle-left:before {
   content: "\ea44";
 }
-	 
+		table { 
+			width: 100%;
+		}
+		.row-Check {
+			width: 24px;
+			text-align: left;
+			padding-left:2px;
+		}
+		.row-SSID {
+			text-align: left;
+			padding-left:4px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		.row-Enc {
+			width: 24px;
+			text-align: right;
+			padding-right:4px;
+		}
+		.row-RSSI {
+			width: 24px;
+			text-align: right;
+			padding-right:4px;
+		}	
+		.row-link {
+			width: 30px;
+			text-align: right;
+			padding-right:2px;
+		}
+		
+		.wlantable tr {
+			cursor: pointer;	 
+		}
+
+		.wlantable tr:hover {
+			background-color: #333;	 
+		}
+		
 		.pure-button:focus,a:active,a:hover {
 		outline:0
 		}
@@ -1754,28 +1792,6 @@
 			clear:both;
 		}
 
-		.wlantable td {
-			max-width: 0;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-		 
-		.wlantable tr {
-			cursor: pointer;	 
-		}
-
-		.wlantable tr:hover {
-			background-color: #333;	 
-		}
-
-		.row-Check{
-			min-width: 6%;
-		}
-
-		.row-SSID{
-			min-width: 45%;
-		}
 
 		body {
 			color:#777;
@@ -2655,15 +2671,21 @@
 			<h3 class="headtitle">WLAN Einstellungen</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
-					<div class="1-box wlan_conf">
-							<table id="networkconnect" class="wlantable" width="100%">
-								<!--Netzwerkliste -->
-							</table> 
-							<hr />
+					<div class="1-box wlan_conf">						
+						<table id="networkconnect" class="wlantable" width="100%">
+							<!--Netzwerkliste -->
+						</table> 
+						<hr />
 						<h3>Netzwerk wählen...</h3>
 						<table id="networklist" class="wlantable" width="100%">
 								<!--Netzwerkliste -->
-						</table> 
+						</table>
+						<hr />
+						<div class="checkbox">
+						  <label>
+							<input id="wlan_active" onclick="wlan_active();" type="checkbox" checked/><i class="helper"></i>WLAN aktivieren
+						  </label>
+						</div>						
 					</div>
 				</div>
 			</div>
@@ -2675,14 +2697,20 @@
 				<button class="pure-button pure-button-disabled">WLAN</button>
 				<button class="pure-button" onclick="setWLAN(document.getElementsByName('ssidInput')[0].value, document.getElementsByName('ssidPasswordInput')[0].value)">Verbinden</button>
 			</div>
-			<hr />
-			<h3 class="headtitle">WLAN Einstellungen</h3>
+			<h3 class="headtitle">Netzwerk Verbinden</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
-					<div class="1-box wlan_conf">
-						<h3>Netzwerk Verbinden</h3>
-						<input name="ssidInput" type="text" maxlength="32" placeholder="SSID" readonly>
-						<input name="ssidPasswordInput" type="password" maxlength="63" placeholder="Passwort" required />
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="form-group">
+							  <input name="ssidInput" type="text" onchange="setssidInput();"maxlength="32" required="required"/>
+							  <label class="control-label" for="input">SSID</label><i class="bar"></i>
+							</div>			
+							<div class="form-group">
+							  <input name="ssidPasswordInput" type="password" maxlength="63" required="required"/>
+							  <label class="control-label" for="input">Passwort</label><i class="bar"></i>
+							</div>	
+						</form>
 					</div>
 				</div>
 			</div>
@@ -2691,7 +2719,7 @@
 		<div id="channel_settings" class="content" style="display:none">
 			<div class="pure-button-group footer_buttons" role="group">
 				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
-				<button class="pure-button pure-button-disabled">Kanal $</button>
+				<button class="pure-button pure-button-disabled">Kanal</button>
 				<button id="channel_settings_save" class="pure-button" onclick="">Speichern</button>
 			</div>
 			<h3 id="channel_settings_headtitle" class="headtitle">N.C.</h3>
@@ -3018,6 +3046,21 @@
 		networkscan();
 	}
 	
+	function wlan_active(){
+		if(document.getElementById('wlan_active').checked){
+	
+		}else{
+			txt = 'Soll die Wifi-Verbindung bis zum nächsten Restart des Systems wirklich abgeschaltet werden?';
+			if (confirm(txt) == true) {
+				loadJSON('stopwifi', '', '60000', function (response) {
+				
+				});
+				self.location.href='about:blank'
+			} else {
+				document.getElementById('wlan_active').checked = true;
+			}
+		}
+	}
 	function showPlot(){
 		hideAll();
 		document.getElementById("plot").style.display = "inline";
@@ -3150,6 +3193,7 @@
 				showLoader('false')
 				updateActivated = 'false';
 				document.getElementsByClassName("notification")[0].style.display = "none";
+				location.reload(true);
 			}
 		})	
 	}
@@ -3339,6 +3383,29 @@
 			return data;		
 		}
 	}
+
+	function getWifiSecureIcon(data){
+		switch(data) {
+			
+			case 2: //ENC_TYPE_TKIP - WPA / PSK
+				return '<span class="icon-lock"> </span>';
+				break;
+			case 4: //ENC_TYPE_CCMP - WPA2 / PSK
+				return '<span class="icon-lock"> </span>';
+				break;
+			case 5: //ENC_TYPE_WEP - WEP
+				return '<span class="icon-lock"> </span>';
+				break;
+			case 7: //ENC_TYPE_NONE - open network
+				return '<span class="icon-unlock"> </span>';
+			break;
+			case 8:	//ENC_TYPE_AUTO - WPA / WPA2 / PSK
+				return '<span class="icon-lock"> </span>';
+				break;	
+			default:
+				return '<span class="icon-lock"> </span>';
+		} 
+	}
 	
 	function readTemp(){
 		if (updateActivated == 'true'){
@@ -3403,14 +3470,21 @@
 				var cell2 = row.insertCell(1);
 				var cell3 = row.insertCell(2);
 				var cell4 = row.insertCell(3);
-				cell1.innerHTML = '&#10003;';
+				var cell5 = row.insertCell(4);
+				cell1.innerHTML = '<span class="icon-ok"> </span>';
 				cell1.className = 'row-Check';
 				cell2.innerHTML = jsonresponse.SSID;
 				cell2.className = 'row-SSID';
-				cell3.innerHTML = jsonresponse.RSSI + 'dBm';
+				RSSI = getRSSIIcon(jsonresponse.RSSI);
+				cell3.innerHTML = RSSI;
+				//cell3.innerHTML = jsonresponse.RSSI + 'dBm';
 				cell3.className = 'row-RSSI';
-				cell4.innerHTML = jsonresponse.Enc;
-				cell4.className = 'row-Enc';	
+				enc = getWifiSecureIcon(jsonresponse.Enc);
+				cell4.innerHTML = enc;
+				//cell4.innerHTML = jsonresponse.Enc;
+				cell4.className = 'row-Enc';
+				<!-- cell5.innerHTML = '<span class="icon-info_sign"> </span>'; -->
+				cell5.className = 'row-link';				
 			}
 			NetworkconnectRowClick();
 			for (var i = 0; i < jsonresponse.Scan.length; i++) {
@@ -3420,19 +3494,27 @@
 				var cell2 = row.insertCell(1);
 				var cell3 = row.insertCell(2);
 				var cell4 = row.insertCell(3);
+				var cell5 = row.insertCell(4);
 				cell1.innerHTML = '';
 				cell1.className = 'row-Check';
 				cell2.innerHTML = jsonresponse.Scan[i].SSID;
 				cell2.className = 'row-SSID';
-				cell3.innerHTML = jsonresponse.Scan[i].RSSI + 'dBm';
+				RSSI = getRSSIIcon(jsonresponse.Scan[i].RSSI);
+				cell3.innerHTML = RSSI;
+				//cell3.innerHTML = jsonresponse.Scan[i].RSSI + 'dBm';
 				cell3.className = 'row-RSSI';
-				cell4.innerHTML = jsonresponse.Scan[i].Enc;	
+				enc = getWifiSecureIcon(jsonresponse.Scan[i].Enc);
+				cell4.innerHTML = enc;
+				//cell4.innerHTML = jsonresponse.Scan[i].Enc;	
 				cell4.className = 'row-Enc';
+				cell5.innerHTML = '<span class="icon-circle-right"> </span>';
+				cell5.className = 'row-link';
 			}
 			NetworklistRowClick();
 		})
 	}
 	
+	var ssidInput;
 	function NetworklistRowClick() {
 		var table = document.getElementById("networklist");
 		var rows = table.rows; // or table.getElementsByTagName("tr");
@@ -3440,14 +3522,19 @@
 			rows[i].onclick = (function() { // closure
 				var cnt = i; // save the counter to use in the function
 				return function() {
-					showSetWLAN();
 					//alert("row"+cnt+" data="+this.cells[1].innerHTML);
 					//document.getElementsByName('ssidInput')[0].placeholder=this.cells[1].innerHTML;
 					document.getElementsByName('ssidInput')[0].value = this.cells[1].innerHTML;
 					document.getElementsByName('ssidPasswordInput')[0].value = null;
+					ssidInput = this.cells[1].innerHTML;
+					showSetWLAN();
 				}    
 			})(i);
 		}
+	}
+	 
+	function setssidInput(){
+		document.getElementsByName('ssidInput')[0].value = ssidInput;
 	}
 	
 	function NetworkconnectRowClick() {
