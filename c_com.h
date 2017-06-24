@@ -223,6 +223,12 @@ void read_serial(char *buffer) {
       sys.update = -1;
       return;
     }
+
+    // GET MAC
+    else if (str == "mac") {
+      DPRINTLN(getMacAddress());
+      return;
+    }
   }
 
   DPRINTP("[INFO]\tYou entered: >");

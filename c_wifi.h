@@ -32,7 +32,7 @@ void set_wifi() {
   IPAddress subnet(255,255,255,0);
 
   WiFi.hostname(sys.host);
-  WiFi.mode(WIFI_STA);
+  //WiFi.mode(WIFI_STA);
   
   DPRINTLN("[INFO]\tHostname: " + sys.host);
   DPRINTP("[INFO]\tConnecting");
@@ -40,17 +40,31 @@ void set_wifi() {
   holdssid.hold = false;
   holdssid.connect = false;
 
-  // Add Wifi Settings
-  for (int i = 0; i < lenwifi; i++) {
-    wifiMulti.addAP(wifissid[i].c_str(), wifipass[i].c_str());
-  }
-  
   drawConnect();
-  int counter = 0;
-  while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
-    delay(500);
-    DPRINTP(".");
-    counter++;
+
+  if (lenwifi > 1) {
+  
+    // Add Wifi Settings
+    for (int i = 0; i < lenwifi; i++) {
+      wifiMulti.addAP(wifissid[i].c_str(), wifipass[i].c_str());
+    }
+
+    int counter = 0;
+    while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
+      delay(500);
+      DPRINTP(".");
+      counter++;
+    }
+  } else {
+    
+    WiFi.begin(wifissid[0].c_str(), wifipass[0].c_str());
+    int counter = 0;
+    
+    while (WiFi.status() != WL_CONNECTED && counter < 8) {
+      delay(500);
+      DPRINTP(".");
+      counter++;
+    }
   }
   
   

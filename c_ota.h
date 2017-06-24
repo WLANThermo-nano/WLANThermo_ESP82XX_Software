@@ -85,7 +85,7 @@
 void check_http_update() {
 
   if (sys.update < 1 || sys.update == 3) {
-    if((wifiMulti.run() == WL_CONNECTED && sys.autoupdate)) {
+    if((isAP == 0 && sys.autoupdate)) {
       HTTPClient http;
 
       String adress = F("http://nano.wlanthermo.de/update.php?software=");
@@ -130,7 +130,7 @@ void check_http_update() {
 // Do http update
 void do_http_update() {
   
-  if((wifiMulti.run() == WL_CONNECTED)) {
+  if((isAP == 0)) {
 
     if (sys.update == 3){
       sys.update = 0;
@@ -153,6 +153,9 @@ void do_http_update() {
     else  {
       sys.update = 0;
       modifyconfig(eSYSTEM,{});
+      displayblocked = true;
+      question.typ = OTAUPDATE;
+      drawQuestion(0);
       DPRINTPLN("[INFO]\tUPDATE_CANCELED");
       displayblocked = false;
       sys.updatecount = 0;
