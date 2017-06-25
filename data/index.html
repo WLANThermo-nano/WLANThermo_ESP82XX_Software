@@ -33,26 +33,55 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
+.icon-arrow_down:before {
+  content: "\e900";
+}
+.icon-arrow_left:before {
+  content: "\e901";
+}
+.icon-arrow_right:before {
+  content: "\e902";
+}
+.icon-arrow_up:before {
+  content: "\e903";
+}
+.icon-temp_down:before {
+  content: "\e904";
+  margin-right:4px;
+}
+.icon-temp_up:before {
+  content: "\e905";
+  margin-right:4px;
+}
+.icon-Wlan25:before {
+  content: "\e906";
+}
+.icon-Wlan50:before {
+  content: "\e907";
+}
+.icon-Wlan75:before {
+  content: "\e908";
+}
+.icon-Wlan100:before {
+  content: "\e909";
+}
 .icon-fan:before {
   content: "\e913";
 }
 .icon-wifi-off:before {
   content: "\e915";
-  color: red;
 }
-.icon-wifi-50:before {
-  content: "\e918";
+.icon-Wlan25:before {
+  content: "\e906";
 }
-.icon-wifi-75:before {
-  content: "\e919";
+.icon-Wlan50:before {
+  content: "\e907";
 }
-.icon-wifi-25:before {
-  content: "\e91a";
-  color: red;
+.icon-Wlan75:before {
+  content: "\e908";
 }
-.icon-wifi-100:before {
-  content: "\e914";
+.icon-Wlan100:before {
+  content: "\e909";
 }
 .icon-ic_wifi_lock_black_24px:before {
   content: "\e916";
@@ -107,6 +136,33 @@
   content: "\f244";
   animation: blinker 2s linear infinite;
   color: red;
+}
+.icon-stats-dots:before {
+  content: "\e99b";
+}
+.icon-power-cord:before {
+  content: "\e9b7";
+}
+.icon-eye:before {
+  content: "\e9ce";
+}
+.icon-eye-blocked:before {
+  content: "\e9d1";
+}
+.icon-notification_2:before {
+  content: "\ea08";
+}
+.icon-circle-up:before {
+  content: "\ea41";
+}
+.icon-circle-right:before {
+  content: "\ea42";
+}
+.icon-circle-down:before {
+  content: "\ea43";
+}
+.icon-circle-left:before {
+  content: "\ea44";
 }
 
 @keyframes blinker {  
@@ -2570,8 +2626,8 @@
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
@@ -2582,8 +2638,8 @@
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
@@ -2594,8 +2650,8 @@
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
@@ -2606,8 +2662,8 @@
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
@@ -2618,8 +2674,8 @@
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
@@ -2630,8 +2686,8 @@
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
@@ -2642,8 +2698,8 @@
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
@@ -2654,8 +2710,8 @@
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
@@ -3371,13 +3427,13 @@
 		data = '';
 		if (showBatteryWlanIcon == true){
 			if(dbm >= '-70'){
-				data = data + '<span class="icon-wifi-100"> </span>';
+				data = data + '<span class="icon-Wlan100"></span> </span>';
 			}else if (dbm >= '-80'){
-				data = data + '<span class="icon-wifi-75"> </span>';
+				data = data + '<span class="icon-Wlan75"></span> </span>';
 			}else if (dbm >= '-90'){
-				data = data + '<span class="icon-wifi-50"> </span>';
+				data = data + '<span class="icon-Wlan50"></span> </span>';
 			}else if (dbm >= '-100'){
-				data = data + '<span class="icon-wifi-25"> </span>';
+				data = data + '<span class="icon-Wlan25"></span> </span>';
 			}
 			return data;	
 		}else{
@@ -3426,8 +3482,8 @@
 					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jsonresponse.channel[i].color;
 					x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;
 					x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jsonresponse.channel[i].number;
-					x[i].getElementsByClassName('tempmin')[0].innerHTML = jsonresponse.channel[i].min + "°";
-					x[i].getElementsByClassName('tempmax')[0].innerHTML = jsonresponse.channel[i].max + "°";
+					x[i].getElementsByClassName('tempmin')[0].innerHTML = '<span class="icon-temp_down"></span>' + jsonresponse.channel[i].min + "°";
+					x[i].getElementsByClassName('tempmax')[0].innerHTML = '<span class="icon-temp_up"></span>' + jsonresponse.channel[i].max + "°";
 					if (jsonresponse.channel[i].temp == '999'){
 						x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
 						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
