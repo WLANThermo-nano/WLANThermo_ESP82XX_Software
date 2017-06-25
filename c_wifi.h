@@ -48,9 +48,9 @@ void set_wifi() {
     for (int i = 0; i < lenwifi; i++) {
       wifiMulti.addAP(wifissid[i].c_str(), wifipass[i].c_str());
     }
-
+    DPRINTP("_Multi");
     int counter = 0;
-    while (wifiMulti.run() != WL_CONNECTED && counter < 16) {
+    while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
       delay(500);
       DPRINTP(".");
       counter++;
@@ -60,7 +60,7 @@ void set_wifi() {
     WiFi.begin(wifissid[0].c_str(), wifipass[0].c_str());
     int counter = 0;
     
-    while (WiFi.status() != WL_CONNECTED && counter < 8) {
+    while (WiFi.status() != WL_CONNECTED && counter < 16) {
       delay(500);
       DPRINTP(".");
       counter++;
