@@ -50,7 +50,7 @@ void set_wifi() {
     }
 
     int counter = 0;
-    while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
+    while (wifiMulti.run() != WL_CONNECTED && counter < 16) {
       delay(500);
       DPRINTP(".");
       counter++;
