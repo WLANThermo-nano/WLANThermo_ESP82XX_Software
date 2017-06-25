@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
 	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-title" content="WlanThermo">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
@@ -1984,7 +1985,7 @@
 			}
 		}
 
-		.channel:hover, .notification:hover{
+		.channel:hover, .notification:hover, .wifi:hover, .battery:hover{
 			cursor: pointer;
 		}
 
@@ -2703,7 +2704,7 @@
 					<div class="1-box channel_conf">
 						<form>							
 							<div class="form-group">
-							  <input name="ssidInput" type="text" onchange="setssidInput();"maxlength="32" required="required"/>
+							  <input name="ssidInput" type="text" onkeyup="setssidInput();"maxlength="32" required="required"/>
 							  <label class="control-label" for="input">SSID</label><i class="bar"></i>
 							</div>			
 							<div class="form-group">
@@ -3061,6 +3062,7 @@
 			}
 		}
 	}
+	
 	function showPlot(){
 		hideAll();
 		document.getElementById("plot").style.display = "inline";
@@ -3386,7 +3388,6 @@
 
 	function getWifiSecureIcon(data){
 		switch(data) {
-			
 			case 2: //ENC_TYPE_TKIP - WPA / PSK
 				return '<span class="icon-lock"> </span>';
 				break;
