@@ -933,6 +933,12 @@ void server_setup() {
     });
     
     // REQUEST: /clear wifi
+    server.on("/clearwifi", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      setconfig(eWIFI,{}); // clear Wifi settings
+      request->send(200, "text/json", "OK");
+    });
+
+    // REQUEST: /clear wifi
     server.on("/clearwifi", HTTP_POST, [](AsyncWebServerRequest *request) { 
       setconfig(eWIFI,{}); // clear Wifi settings
       request->send(200, "text/json", "OK");
