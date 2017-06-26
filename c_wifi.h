@@ -60,7 +60,7 @@ void set_wifi() {
     WiFi.begin(wifissid[0].c_str(), wifipass[0].c_str());
     int counter = 0;
     
-    while (WiFi.status() != WL_CONNECTED && counter < 16) {
+    while (WiFi.status() != WL_CONNECTED && counter < 20) {
       delay(500);
       DPRINTP(".");
       counter++;
