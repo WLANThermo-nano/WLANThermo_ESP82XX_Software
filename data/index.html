@@ -3085,9 +3085,10 @@
 			txt = 'Soll die Wifi-Verbindung bis zum nächsten Restart des Systems wirklich abgeschaltet werden?';
 			if (confirm(txt) == true) {
 				loadJSON('stopwifi', '', '60000', function (response) {
-				
-				});
-				self.location.href='about:blank'
+                  if(response == 'true'){      
+                    self.location.href='about:blank'
+                  }
+                });
 			} else {
 				document.getElementById('wlan_active').checked = true;
 			}

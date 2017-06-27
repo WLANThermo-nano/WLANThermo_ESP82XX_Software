@@ -890,7 +890,7 @@ void server_setup() {
     DPRINTPLN("/data to see the current temperature");
 
     server.on("/help",HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->redirect("https://github.com/Phantomias2006/Nemesis/blob/develop/README.md");
+      request->redirect("https://github.com/WLANThermo-nano/WLANThermo_nano_Software/blob/master/README.md");
     }).setFilter(ON_STA_FILTER);
     
 
@@ -941,19 +941,19 @@ void server_setup() {
     // REQUEST: /stop wifi
     server.on("/stopwifi", HTTP_POST, [](AsyncWebServerRequest *request) { 
       isAP = 3; // Turn Wifi off
-      request->send(200, "text/json", "OK");
+      request->send(200, "text/plain", "true");
     });
     
     // REQUEST: /clear wifi
     server.on("/clearwifi", HTTP_GET, [](AsyncWebServerRequest *request) { 
       setconfig(eWIFI,{}); // clear Wifi settings
-      request->send(200, "text/json", "OK");
+      request->send(200, "text/json", "true");
     });
 
     // REQUEST: /clear wifi
     server.on("/clearwifi", HTTP_POST, [](AsyncWebServerRequest *request) { 
       setconfig(eWIFI,{}); // clear Wifi settings
-      request->send(200, "text/json", "OK");
+      request->send(200, "text/json", "true");
     });
 
     // REQUEST: /configreset
@@ -961,7 +961,7 @@ void server_setup() {
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
       set_Channels();
-      request->send(200, "text/json", "OK");
+      request->send(200, "text/json", "true");
     });
 
     // REQUEST: /update
@@ -969,13 +969,13 @@ void server_setup() {
       if(!request->authenticate(www_username, www_password))
           return request->requestAuthentication();
       sys.update = 1;
-      request->send(200, "text/json", "OK");
+      request->send(200, "text/json", "true");
     });
 
     // REQUEST: /checkupdate
     server.on("/checkupdate", HTTP_POST, [](AsyncWebServerRequest *request) { 
       sys.update = -1;
-      request->send(200, "text/json", "OK");
+      request->send(200, "text/json", "true");
     });
     
     // REQUEST: /updatestatus
