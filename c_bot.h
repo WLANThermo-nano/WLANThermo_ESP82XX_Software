@@ -92,5 +92,101 @@
 
 #endif
 
+// see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
+static AsyncClient * aClient = NULL;
+
+void sendSettings(){
+
+  if(aClient) return;                 //client already exists
+
+  aClient = new AsyncClient();
+  if(!aClient)  return;               //could not allocate client
+
+  aClient->onError([](void * arg, AsyncClient * client, int error){
+    Serial.println("[INFO]\tConnect Error");
+    aClient = NULL;
+    delete client;
+  }, NULL);
+
+  aClient->onConnect([](void * arg, AsyncClient * client){
+    
+    Serial.println(millis());
+    
+    aClient->onError(NULL, NULL);
+
+    client->onDisconnect([](void * arg, AsyncClient * c){
+      Serial.println(millis());
+      aClient = NULL;
+      delete c;
+    }, NULL);
+
+    client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
+      Serial.print("\r\nData: ");
+      Serial.println(len);
+      uint8_t * d = (uint8_t*)data;
+      for(size_t i=0; i<len;i++)
+        Serial.write(d[i]);
+    }, NULL);
+
+    //send the request
+    String postStr;
+
+    /*
+    for (int i = 0; i < 7; i++)  {
+      if (ch[i].temp != INACTIVEVALUE) {
+        postStr += "&";
+        postStr += String(i+1);
+        postStr += "=";
+        postStr += String(ch[i].temp,1);
+      }
+    }
+
+    if (charts.TSshow8) {
+      postStr +="&8=";  
+      postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
+    } else if (ch[7].temp != INACTIVEVALUE) {
+      postStr +="&8="; 
+      postStr += String(ch[7].temp,1);
+    }
+
+    AsyncWebServerRequest *request;
+    postStr = "&status=";
+    postStr += handleData(request, 2);
+    
+    String adress = F("POST /update.json?api_key=");
+    adress += charts.TSwriteKey;
+    adress += postStr;          // starts with &
+    adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
+
+    //client->write(adress.c_str());
+
+    */
+    
+    AsyncWebServerRequest *request;
+    
+    // Metadata
+    postStr = "&metadata=";
+    postStr += handleSettings(request, 2);
+    
+    String adress = F("PUT /channels/");
+    adress += charts.TSchID;
+    adress += F(".json?api_key=");
+    adress += "Q2EID9PNX0YQVGRH";
+    adress += postStr;
+    adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
+    
+    client->write(adress.c_str());
+    
+    
+  }, NULL);
+
+  if(!aClient->connect(SERVER1, 80)){
+    Serial.println("[INFO]\tConnect Fail");
+    AsyncClient * client = aClient;
+    aClient = NULL;
+    delete client;
+  }
+}
+
 
 

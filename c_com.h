@@ -229,6 +229,12 @@ void read_serial(char *buffer) {
       DPRINTLN(getMacAddress());
       return;
     }
+
+    // Test
+    else if (str == "sendSetting") {
+      sendSettings();
+      return;
+    }
   }
 
   DPRINTP("[INFO]\tYou entered: >");

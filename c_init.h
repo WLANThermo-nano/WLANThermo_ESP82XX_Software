@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.4.7"
+#define FIRMWAREVERSION "v0.4.8"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -385,8 +385,8 @@ WiFiEventHandler wifiConnectHandler;
 AsyncMqttClient mqttClient;
 
 // SERVER
-void handleSettings(AsyncWebServerRequest *request, bool www);
-void handleData(AsyncWebServerRequest *request, bool www);
+String handleSettings(AsyncWebServerRequest *request, byte www);
+String handleData(AsyncWebServerRequest *request, byte www);
 void handleWifiResult(AsyncWebServerRequest *request, bool www);
 void handleWifiScan(AsyncWebServerRequest *request, bool www);
 bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas);
@@ -412,7 +412,7 @@ void disableAllHeater();
 #ifdef THINGSPEAK
 void sendMessage(int ch, int count);
 void sendTS();
-void sendMetadata();
+void sendSettings();
 #endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++

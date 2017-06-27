@@ -70,7 +70,7 @@ bool handleFileRead(String path, AsyncWebServerRequest *request){
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
-void handleSettings(AsyncWebServerRequest *request, bool www) {
+String handleSettings(AsyncWebServerRequest *request, byte www) {
 
   AsyncJsonResponse * response = new AsyncJsonResponse();
   response->addHeader("Server","ESP Async Web Server");
@@ -128,23 +128,22 @@ void handleSettings(AsyncWebServerRequest *request, bool www) {
   _hw.add(String("V")+String(1));
   //_hw.add(String("V")+String(2));
 
-  //String jsonStr;
+  String jsonStr;
     
-  if (www) {
+  if (www == 1) {
     response->setLength();
     request->send(response);
-  } else {
+  } else if (www == 0) {
     root.printTo(Serial);
-  } 
+  } else  root.printTo(jsonStr);
   
-  //else  root.printTo(jsonStr);
- // return jsonStr;
+  return jsonStr;
 }
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
-void handleData(AsyncWebServerRequest *request, bool www) {
+String handleData(AsyncWebServerRequest *request, byte www) {
 
   AsyncJsonResponse * response = new AsyncJsonResponse();
   response->addHeader("Server","ESP Async Web Server");
@@ -181,11 +180,24 @@ void handleData(AsyncWebServerRequest *request, bool www) {
   master["set"] = pitmaster.set;
   master["active"] = pitmaster.active;
   master["manuel"] = pitmaster.manuel;
+
+  String jsonStr;
+    
+  if (www == 1) {
+    response->setLength();
+    request->send(response);
+  } else if (www == 0) {
+    root.printTo(Serial);
+  } else  root.printTo(jsonStr);
   
+  return jsonStr;
+  
+  /*
   if (www) {
     response->setLength();
     request->send(response);
   } else root.printTo(Serial);
+  */
 }
 
 /*
