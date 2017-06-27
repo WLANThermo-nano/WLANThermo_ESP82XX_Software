@@ -132,7 +132,6 @@
 }
 .icon-battery-0:before {
   content: "\f244";
-  animation: blinker 2s linear infinite;
   color: red;
 }
 .icon-stats-dots:before {
@@ -161,6 +160,9 @@
 }
 .icon-circle-left:before {
   content: "\ea44";
+}
+icon-blinker{
+  animation: blinker 2s linear infinite;
 }
 @keyframes blinker {  
   50% { opacity: 0; }
@@ -3381,8 +3383,10 @@
 				data = data + '<span class="icon-battery-50"> </span>';
 			}else if (percent >= '15'){
 				data = data + '<span class="icon-battery-25"> </span>';
-			}else{
+			}else if (percent >= '10'){
 				data = data + '<span class="icon-battery-0"> </span>';
+			}else{
+				data = data + '<span class="icon-battery-0 icon-blinker"> </span>';
 			}
 			return data + '&nbsp;';
 		}else{
