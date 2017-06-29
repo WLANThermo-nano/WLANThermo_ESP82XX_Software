@@ -126,7 +126,7 @@ void get_Vbat() {
         battery.max = battery.voltage-10;      
         // Grenze etwas nach unten versetzen, um die Ladespannung zu kompensieren
         // alternativ die Speicherung um 5 min verschieben, Gefahr: das dann schon abgeschaltet
-        modifyconfig(eSYSTEM,{});                                      // SPEICHERN
+        setconfig(eSYSTEM,{});                                      // SPEICHERN
         DPRINTF("[INFO]\tNew battery voltage reference: %umV\r\n", battery.max); 
       }
     }

@@ -163,8 +163,19 @@ bool loadconfig(byte count) {
       std::unique_ptr<char[]> buf(new char[EEPITMASTER]);
       readEE(buf.get(),EEPITMASTER, EEPITMASTERBEGIN);
 
-      JsonArray& _pid = jsonBuffer.parseArray(buf.get());
-      if (!checkjson(_pid,PIT_FILE)) return false;
+      JsonObject& json = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(json,PIT_FILE)) return false;
+
+      JsonObject& _master = json["pm"];
+      
+      pitmaster.channel   = _master["ch"]; 
+      pitmaster.pid       = _master["pid"];
+      pitmaster.value     = _master["val"];
+      pitmaster.set       = _master["set"];
+      pitmaster.active    = _master["act"];
+      pitmaster.manuel    = _master["man"];
+  
+      JsonArray& _pid = json["pid"];
 
       pidsize = 0;
       
@@ -377,23 +388,20 @@ bool setconfig(byte count, const char* data[2]) {
 
     case 4:         // SYSTEM
     {
-      String host = HOSTNAME;
-      host += String(ESP.getChipId(), HEX);
-
       JsonObject& json = jsonBuffer.createObject();
-  
-      json["host"] =        host;
-      json["hwalarm"] =     false; 
-      json["ap"] =          APNAME;
-      json["lang"] =        "de";
-      json["utc"] =         1;
-      json["summer"] =      false;
-      json["fast"] =        false;
-      json["hwversion"] =   1;
-      json["update"] =      0;
-      json["autoupd"] =     1;
-      json["batmax"] =      BATTMAX;
-      json["batmin"] =      BATTMIN;
+      
+      json["host"] =        sys.host;
+      json["hwalarm"] =     sys.hwalarm;
+      json["ap"] =          sys.apname;
+      json["lang"] =        sys.language;
+      json["utc"] =         sys.timeZone;
+      json["summer"] =      sys.summer;
+      json["fast"] =        sys.fastmode;
+      json["hwversion"] =   sys.hwversion;
+      json["update"] =      sys.update;
+      json["autoupd"] =     sys.autoupdate;
+      json["batmax"] =      battery.max;
+      json["batmin"] =      battery.min;
       json["logsec"] =      log_sector;
     
       size_t size = json.measureLength() + 1;
@@ -424,7 +432,6 @@ bool setconfig(byte count, const char* data[2]) {
 bool modifyconfig(byte count, const char* data[12]) {
   
   DynamicJsonBuffer jsonBuffer;
-  File configFile;
 
   switch (count) {
     case 0:           // CHANNEL
@@ -469,89 +476,11 @@ bool modifyconfig(byte count, const char* data[12]) {
     break;
 
     case 3:         // PITMASTER
-    {
-      // Alte Daten auslesen
-      std::unique_ptr<char[]> buf(new char[EEPITMASTER]);
-      readEE(buf.get(), EEPITMASTER, EEPITMASTERBEGIN);
-
-      JsonArray& json = jsonBuffer.parseArray(buf.get());
-      if (!checkjson(json,PIT_FILE)) {
-        //set_pid();
-        setconfig(ePIT,{});
-        return false;
-      }
-
-      
-
-      // Neue Daten eintragen
-      JsonObject& _pid = json.createNestedObject();
-      
-      _pid["name"]     = pid[pidsize].name;
-      _pid["id"]       = pid[pidsize].id;
-      _pid["aktor"]    = pid[pidsize].aktor;
-      _pid["Kp"]       = pid[pidsize].Kp;  
-      _pid["Ki"]       = pid[pidsize].Ki;    
-      _pid["Kd"]       = pid[pidsize].Kd;                   
-      _pid["Kp_a"]     = pid[pidsize].Kp_a;               
-      _pid["Ki_a"]     = pid[pidsize].Ki_a;                  
-      _pid["Kd_a"]     = pid[pidsize].Kd_a;             
-      _pid["Ki_min"]   = pid[pidsize].Ki_min;             
-      _pid["Ki_max"]   = pid[pidsize].Ki_max;             
-      _pid["switch"]   = pid[pidsize].pswitch;           
-      _pid["rev"]      = pid[pidsize].reversal;
-      _pid["DCmin"]    = pid[pidsize].DCmin;             
-      _pid["DCmax"]    = pid[pidsize].DCmax;             
-      _pid["SVmin"]    = pid[pidsize].SVmin;             
-      _pid["SVmax"]    = pid[pidsize].SVmax;  
-    
-      // Speichern
-      size_t size = json.measureLength() + 1;
-      if (size > EEPITMASTER) {
-        DPRINTPLN("[INFO]\tZu viele PITMASTER Daten!");
-        return false;
-      } else {
-        clearEE(EEPITMASTER,EEPITMASTERBEGIN);  // Bereich reinigen
-        static char buffer[EEPITMASTER];
-        json.printTo(buffer, size);
-        writeEE(buffer, size, EEPITMASTERBEGIN); 
-      }
-    }
+    // nicht notwendig, kann über setconfig beschrieben werden
     break;
 
     case 4:           // SYSTEM
-    {
-      // Alte Daten auslesen
-      std::unique_ptr<char[]> buf(new char[EESYSTEM]);
-      readEE(buf.get(),EESYSTEM, EESYSTEMBEGIN);
-      
-      JsonObject& alt = jsonBuffer.parseObject(buf.get());
-      if (!checkjson(alt,SYSTEM_FILE)) return false;
-      
-      // Neue Daten erzeugen
-      JsonObject& json = jsonBuffer.createObject();
-
-      json["host"] =        sys.host;
-      json["hwalarm"] =     sys.hwalarm;
-      json["ap"] =          sys.apname;
-      json["lang"] =        sys.language;
-      json["utc"] =         sys.timeZone;
-      json["summer"] =      sys.summer;
-      json["fast"] =        sys.fastmode;
-      json["hwversion"] =   sys.hwversion;
-      json["update"] =      sys.update;
-      json["autoupd"] =     sys.autoupdate;
-      json["batmax"] =      battery.max;
-      json["batmin"] =      battery.min;
-      json["logsec"] =      log_sector;
-
-      // Speichern
-      size_t size = json.measureLength() + 1;
-      clearEE(EESYSTEM,EESYSTEMBEGIN);  // Bereich reinigen
-      static char buffer[EESYSTEM];
-      json.printTo(buffer, size);
-      writeEE(buffer, size, EESYSTEMBEGIN);
-      
-    }
+    // nicht notwendig, kann über setconfig beschrieben werden
     break;
 
     default:
@@ -612,6 +541,7 @@ void start_fs() {
   // SYSTEM
   if (!loadconfig(eSYSTEM)) {
     DPRINTPLN("[INFO]\tFailed to load system config");
+    set_system();
     setconfig(eSYSTEM,{});  // Speicherplatz vorbereiten
     ESP.restart();
   } else DPRINTPLN("[INFO]\tSystem config loaded");

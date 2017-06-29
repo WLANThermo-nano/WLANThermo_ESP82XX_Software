@@ -424,6 +424,27 @@ void set_serial() {
   DPRINTLN();
 }
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Initialize System-Settings, if not loaded from EE
+void set_system() {
+  
+  String host = HOSTNAME;
+  host += String(ESP.getChipId(), HEX);
+  
+  sys.host = host;
+  sys.hwalarm = false; 
+  sys.apname = APNAME;
+  sys.language = "de";
+  sys.timeZone = 1;
+  sys.summer = false;
+  sys.fastmode = false;
+  sys.hwversion = 1;
+  sys.update = 0;
+  sys.autoupdate = 1;
+  battery.max = BATTMAX;
+  battery.min = BATTMIN;
+}
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Temperature and Battery Measurement Timer
@@ -506,7 +527,7 @@ void timer_datalog() {
         
       write_flash(log_sector);
       log_sector++;
-      modifyconfig(eSYSTEM,{});
+      setconfig(eSYSTEM,{});
 
         //getLog(3);
         

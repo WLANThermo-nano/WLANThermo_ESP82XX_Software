@@ -76,13 +76,6 @@ void read_serial(char *buffer) {
       return;
     }
 
-    // ADD PITMASTER PID
-    else if (command == "addpid") {
-      AsyncWebServerRequest *request;
-      handleAddPitmaster(request,PM_buffer);     
-      return;
-    }
-
     // SET PITMASTER
     else if (command == "setpitmaster") {
       AsyncWebServerRequest *request;
@@ -163,6 +156,7 @@ void read_serial(char *buffer) {
       set_channels(1);
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
+      set_system();
       setconfig(eSYSTEM,{});
       loadconfig(eSYSTEM);
       set_pid();

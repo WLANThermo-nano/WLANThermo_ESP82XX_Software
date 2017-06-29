@@ -150,7 +150,7 @@ static inline void button_event() {
             displayblocked = true;
             drawMenu();
             inMenu = MAINMENU;
-            //modifyconfig(ePIT,{});
+            setconfig(ePIT,{});
             isback = 0;
           }
           return;
@@ -160,7 +160,7 @@ static inline void button_event() {
             displayblocked = true;
             drawMenu();
             inMenu = MAINMENU;
-            modifyconfig(eSYSTEM,{});
+            setconfig(eSYSTEM,{});
             isback = 0;
           }
           return;
@@ -210,14 +210,14 @@ static inline void button_event() {
           displayblocked = true;
           drawMenu();
           inMenu = MAINMENU;
-          //modifyconfig(ePIT,{});
+          setconfig(ePIT,{});
           return;
 
         case SYSTEMSUB:                   // Main aufrufen
           displayblocked = true;
           drawMenu();
           inMenu = MAINMENU;
-          modifyconfig(eSYSTEM,{});
+          setconfig(eSYSTEM,{});
           return;
 
         case TEMPKONTEXT:                 // Temperaturmenu aufrufen
@@ -509,7 +509,7 @@ static inline void button_event() {
         if (event[2]) {
           if(sys.hwalarm != tempor) {
             sys.hwalarm = tempor;
-            modifyconfig(eSYSTEM,{});
+            setconfig(eSYSTEM,{});
           }
         }
         break;
@@ -520,7 +520,7 @@ static inline void button_event() {
         if (event[2]) {
           if (sys.fastmode != tempor);
           sys.fastmode = tempor;
-          modifyconfig(eSYSTEM,{});
+          setconfig(eSYSTEM,{});
         }
         break;
 

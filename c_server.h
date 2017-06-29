@@ -675,6 +675,96 @@ bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
   return 1;
 }
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& _network = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_network.success()) return 0;
+
+  if (!_network.containsKey("ssid")) return 0;
+  holdssid.ssid = _network["ssid"].asString();
+  if (!_network.containsKey("password")) return 0;
+  holdssid.pass = _network["password"].asString();
+  holdssid.connect = millis();
+  holdssid.hold = true;
+  
+  return 1;
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& _system = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_system.success()) return 0;
+
+  String unit;
+  
+  if (_system.containsKey("hwalarm")) sys.hwalarm = _system["hwalarm"];
+  if (_system.containsKey("host")) sys.host = _system["host"].asString();
+  if (_system.containsKey("utc")) sys.timeZone = _system["utc"];
+  if (_system.containsKey("language")) sys.language = _system["language"].asString();
+  if (_system.containsKey("unit"))  unit = _system["unit"].asString();
+  if (_system.containsKey("autoupd"))  sys.autoupdate = _system["autoupd"];
+  if (_system.containsKey("summer")) sys.summer = _system["summer"];
+  if (_system.containsKey("fastmode")) sys.fastmode = _system["fastmode"];
+  if (_system.containsKey("ap")) sys.apname = _system["ap"].asString();
+  if (_system.containsKey("hwversion")) {
+    String ver = _system["hwversion"].asString();
+    ver.replace("V","");
+    sys.hwversion = ver.toInt();
+  }
+
+  setconfig(eSYSTEM,{});                                      // SPEICHERN
+  
+  if (temp_unit != unit)  {
+    temp_unit = unit;
+    transform_limits();                             // Transform Limits
+    setconfig(eCHANNEL,{});                         // Save Config
+    get_Temperature();                              // Update Temperature
+    DPRINTPLN("[INFO]\tEinheitenwechsel");
+  }
+  
+  DPRINTP("[INFO]\t");
+  DPRINTLN(digitalClockDisplay(mynow()));
+  return 1;
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& _chart = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!_chart.success()) return 0;
+
+  if (_chart.containsKey("TSwrite"))  charts.TSwriteKey = _chart["TSwrite"].asString();  
+  else return 0;
+  if (_chart.containsKey("TShttp")) charts.TShttpKey = _chart["TShttp"].asString(); 
+  else return 0;
+  if (_chart.containsKey("TSchID")) charts.TSchID = _chart["TSchID"].asString();
+  else return 0;
+  if (_chart.containsKey("TSshow8")) charts.TSshow8 = _chart["TSshow8"];
+  else return 0;
+  
+  if (!setconfig(eTHING,{})) {
+    DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
+    return 0;
+  }
+  else  DPRINTPLN("[INFO]\tThingspeak config saved");    
+  return 1;
+}
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
 bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
@@ -731,144 +821,6 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   return 1;
 }
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// 
-bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
-
-  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
-  
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& _network = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
-  if (!_network.success()) return 0;
-
-  if (!_network.containsKey("ssid")) return 0;
-  holdssid.ssid = _network["ssid"].asString();
-  if (!_network.containsKey("password")) return 0;
-  holdssid.pass = _network["password"].asString();
-  holdssid.connect = millis();
-  holdssid.hold = true;
-  
-  return 1;
-}
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// 
-bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
-
-  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
-  
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& _system = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
-  if (!_system.success()) return 0;
-
-  String unit;
-  
-  if (_system.containsKey("hwalarm")) sys.hwalarm = _system["hwalarm"];
-  if (_system.containsKey("host")) sys.host = _system["host"].asString();
-  if (_system.containsKey("utc")) sys.timeZone = _system["utc"];
-  if (_system.containsKey("language")) sys.language = _system["language"].asString();
-  if (_system.containsKey("unit"))  unit = _system["unit"].asString();
-  if (_system.containsKey("autoupd"))  sys.autoupdate = _system["autoupd"];
-  if (_system.containsKey("summer")) sys.summer = _system["summer"];
-  if (_system.containsKey("fastmode")) sys.fastmode = _system["fastmode"];
-  if (_system.containsKey("ap")) sys.apname = _system["ap"].asString();
-  if (_system.containsKey("hwversion")) {
-    String ver = _system["hwversion"].asString();
-    ver.replace("V","");
-    sys.hwversion = ver.toInt();
-  }
-
-  modifyconfig(eSYSTEM,{});                                      // SPEICHERN
-  
-  if (temp_unit != unit)  {
-    temp_unit = unit;
-    transform_limits();                             // Transform Limits
-    setconfig(eCHANNEL,{});                         // Save Config
-    get_Temperature();                              // Update Temperature
-    DPRINTPLN("[INFO]\tEinheitenwechsel");
-  }
-  
-  DPRINTP("[INFO]\t");
-  DPRINTLN(digitalClockDisplay(mynow()));
-  return 1;
-}
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// 
-bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
-
-  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
-  
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& _chart = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
-  if (!_chart.success()) return 0;
-
-  if (_chart.containsKey("TSwrite"))  charts.TSwriteKey = _chart["TSwrite"].asString();  
-  else return 0;
-  if (_chart.containsKey("TShttp")) charts.TShttpKey = _chart["TShttp"].asString(); 
-  else return 0;
-  if (_chart.containsKey("TSchID")) charts.TSchID = _chart["TSchID"].asString();
-  else return 0;
-  if (_chart.containsKey("TSshow8")) charts.TSshow8 = _chart["TSshow8"];
-  else return 0;
-  
-  if (!setconfig(eTHING,{})) {
-    DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
-    return 0;
-  }
-  else  DPRINTPLN("[INFO]\tThingspeak config saved");    
-  return 1;
-}
-
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// 
-bool handleAddPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
-
-  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
-  
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& _pid = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
-  if (!_pid.success()) return 0;
-
-  if (pidsize < PITMASTERSIZE) {
-    
-    pid[pidsize].name =     _pid["name"].asString();
-    pid[pidsize].aktor =    _pid["aktor"];
-    pid[pidsize].Kp =       _pid["Kp"];  
-    pid[pidsize].Ki =       _pid["Ki"];    
-    pid[pidsize].Kd =       _pid["Kd"];                     
-    pid[pidsize].Kp_a =     _pid["Kpa"];                   
-    pid[pidsize].Ki_a =     _pid["Kia"];                   
-    pid[pidsize].Kd_a =     _pid["Kda"];                   
-    pid[pidsize].Ki_min =   _pid["Kimin"];                   
-    pid[pidsize].Ki_max =   _pid["Kimax"];                  
-    pid[pidsize].pswitch =  _pid["switch"];                   
-    pid[pidsize].reversal = _pid["rev"];                   
-    pid[pidsize].DCmin =    _pid["DCmin"];                   
-    pid[pidsize].DCmax =    _pid["DCmax"];                   
-    pid[pidsize].SVmin =    _pid["SVmin"];                  
-    pid[pidsize].SVmax =    _pid["SVmax"];               
-       
-    pid[pidsize].esum =    0;             
-    pid[pidsize].elast =   0;    
-    pid[pidsize].id = pidsize;
-  
-    if (!modifyconfig(ePIT,{})) {
-      DPRINTPLN("[INFO]\tFailed to save pitmaster config");
-      return 0;
-    }
-    else {
-      DPRINTPLN("[INFO]\tPitmaster config saved");
-      pidsize++;   // Erhöhung von pidsize nur wenn auch gespeichert wurde
-    }
-  } else {
-    DPRINTPLN("[INFO]\tTo many pitmaster");   
-    return 0; 
-  }
-  return 1;
-}
- 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
@@ -879,8 +831,6 @@ String getMacAddress()  {
   sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return  String(macStr);
 }
-
-
 
 
 
@@ -965,6 +915,7 @@ void server_setup() {
       set_channels(1);
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
+      set_system();
       setconfig(eSYSTEM,{});
       loadconfig(eSYSTEM);
       set_pid();
