@@ -85,19 +85,25 @@ AutoTune autotune;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Set Pitmaster Pin
-void set_pitmaster() {
+void set_pitmaster(bool init) {
   
   pinMode(PITMASTER1, OUTPUT);
   digitalWrite(PITMASTER1, LOW);
 
   pinMode(PITMASTER2, OUTPUT);
   digitalWrite(PITMASTER2, LOW);
-  
-  pitmaster.pid = 0;
-  pitmaster.channel = 0;
-  pitmaster.set = ch[pitmaster.channel].min;
-  pitmaster.active = false;
-  pitmaster.value = 0;
+
+  if (init) {
+    pitmaster.pid = 0;
+    pitmaster.channel = 0;
+    pitmaster.set = ch[pitmaster.channel].min;
+    pitmaster.active = false;
+    pitmaster.value = 0;
+    pitmaster.resume = 0;
+  }
+
+  if (!pitmaster.resume) pitmaster.active = false; 
+
   pitmaster.manuel = false;
   pitmaster.event = false;
   pitmaster.msec = 0;

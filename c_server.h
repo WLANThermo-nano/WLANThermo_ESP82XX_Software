@@ -918,6 +918,7 @@ void server_setup() {
       set_system();
       setconfig(eSYSTEM,{});
       loadconfig(eSYSTEM);
+      set_pitmaster(1);
       set_pid();
       setconfig(ePIT,{});
       loadconfig(ePIT);

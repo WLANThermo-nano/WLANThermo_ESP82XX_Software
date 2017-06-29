@@ -286,6 +286,7 @@ void connectToMqtt() {
   DPRINTP("[INFO]\tIP address: ");
   DPRINTLN(WiFi.localIP());
   DPRINTPLN("[INFO]\tConnecting to MQTT...");
+  DPRINTLN();
   mqttClient.connect();
 }
 

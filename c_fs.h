@@ -173,7 +173,7 @@ bool loadconfig(byte count) {
       pitmaster.value     = _master["val"];
       pitmaster.set       = _master["set"];
       pitmaster.active    = _master["act"];
-      pitmaster.manuel    = _master["man"];
+      pitmaster.resume    = _master["res"];
   
       JsonArray& _pid = json["pid"];
 
@@ -348,7 +348,7 @@ bool setconfig(byte count, const char* data[2]) {
       _master["val"]    = pitmaster.value;
       _master["set"]    = pitmaster.set;
       _master["act"]    = pitmaster.active;
-      _master["man"]    = pitmaster.manuel;
+      _master["res"]    = pitmaster.resume;
   
       JsonArray& _pit = json.createNestedArray("pid");
   
@@ -534,6 +534,7 @@ void start_fs() {
   if (!loadconfig(ePIT)) {
     DPRINTPLN("[INFO]\tFailed to load pitmaster config");
     set_pid();  // Default PID-Settings
+    set_pitmaster(1);
     setconfig(ePIT,{});  // Reset pitmaster config
   } else DPRINTPLN("[INFO]\tPitmaster config loaded");
 

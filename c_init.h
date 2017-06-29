@@ -179,6 +179,7 @@ struct Pitmaster {
    int16_t msec;          // PITMASTER VALUE IN MILLISEC
    unsigned long last;
    int pause;             // PITMASTER PAUSE
+   bool resume;           // Continue after restart           
 };
 
 Pitmaster pitmaster;
@@ -408,6 +409,8 @@ void clearEE(int startP, int endP);
 void startautotunePID(int maxCycles, bool storeValues);
 void pitmaster_control();
 void disableAllHeater();
+void set_pitmaster(bool init);
+void set_pid();
 
 // BOT
 #ifdef THINGSPEAK

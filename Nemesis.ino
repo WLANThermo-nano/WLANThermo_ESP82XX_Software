@@ -117,7 +117,7 @@ void setup() {
     cal_soc();
     
     // Initialize Pitmaster
-    set_pitmaster(); 
+    set_pitmaster(0); 
 
     // Check HTTP Update
     check_http_update();
