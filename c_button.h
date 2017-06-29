@@ -168,7 +168,7 @@ static inline void button_event() {
         case TEMPKONTEXT:                 // Temperaturmenu aufrufen
           if (isback) {
             b_counter = 0;
-            modifyconfig(eCHANNEL,{});      // Am Ende des Kontextmenu Config speichern
+            setconfig(eCHANNEL,{});      // Am Ende des Kontextmenu Config speichern
             inMenu = TEMPSUB;
             ui.switchToFrame(b_counter);
             isback = 0;
@@ -222,7 +222,7 @@ static inline void button_event() {
 
         case TEMPKONTEXT:                 // Temperaturmenu aufrufen
           b_counter = 0;
-          modifyconfig(eCHANNEL,{});      // Am Ende des Kontextmenu Config speichern
+          setconfig(eCHANNEL,{});      // Am Ende des Kontextmenu Config speichern
           inMenu = TEMPSUB;
           ui.switchToFrame(b_counter);
           return;
@@ -239,9 +239,9 @@ static inline void button_event() {
       // Frage wurde mit YES bestätigt
       switch (question.typ) {
         case CONFIGRESET:
+          set_channels(1);
           setconfig(eCHANNEL,{});
           loadconfig(eCHANNEL);
-          set_Channels();
           break;
 
         case HARDWAREALARM:
@@ -496,7 +496,7 @@ static inline void button_event() {
           if (unit != temp_unit) {
             temp_unit = unit;
             transform_limits();                             // Transform Limits
-            modifyconfig(eCHANNEL,{});                      // Save Config
+            setconfig(eCHANNEL,{});                      // Save Config
             get_Temperature();                              // Update Temperature
             DPRINTPLN("[INFO]\tEinheitenwechsel");
           }

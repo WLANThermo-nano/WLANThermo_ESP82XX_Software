@@ -106,7 +106,7 @@ void setup() {
     
     // Initialize Sensors
     set_sensor();
-    set_Channels();
+    set_channels(0);
     set_piepser();
 
     // Initialize Buttons

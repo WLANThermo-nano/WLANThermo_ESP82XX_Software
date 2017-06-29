@@ -116,7 +116,7 @@ void get_Temperature() {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Temperature Channels
-void set_Channels() {
+void set_channels(bool init) {
 
   // Grundwerte einrichten
   for (int i=0; i<CHANNELS; i++) {
@@ -126,8 +126,23 @@ void set_Channels() {
     ch[i].isalarm = false;
     ch[i].showalarm = false;
     ch[i].show = false;
-  }
 
+    if (init) {
+      ch[i].name = ("Kanal " + String(i+1));
+      ch[i].typ = 0;
+    
+      if (temp_unit == "F") {
+        ch[i].min = ULIMITMINF;
+        ch[i].max = OLIMITMINF;
+      } else {
+        ch[i].min = ULIMITMIN;
+        ch[i].max = OLIMITMIN;
+      }
+  
+      ch[i].alarm = false; 
+      ch[i].color = colors[i];
+    }
+  }
 }
 
 

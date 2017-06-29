@@ -49,6 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
+#define FIRMWAREVERSION "v0.4.9"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -336,7 +337,7 @@ void cal_soc();
 // TEMPERATURE (TEMP)
 float calcT(int r, byte typ);                     // Calculate Temperature from ADC-Bytes
 void get_Temperature();                           // Reading Temperature ADC
-void set_Channels();                              // Initialize Temperature Channels
+void set_channels(bool init);                              // Initialize Temperature Channels
 void transform_limits();                          // Transform Channel Limits
 
 // OLED

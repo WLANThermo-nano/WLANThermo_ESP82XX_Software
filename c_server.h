@@ -671,7 +671,7 @@ bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas) {
     ch[num].color = _cha["color"].asString();                // COLOR
   } else return 0;
   
-  modifyconfig(eCHANNEL,{});                                      // SPEICHERN
+  setconfig(eCHANNEL,{});                                      // SPEICHERN
   return 1;
 }
 
@@ -783,7 +783,7 @@ bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas) {
   if (temp_unit != unit)  {
     temp_unit = unit;
     transform_limits();                             // Transform Limits
-    modifyconfig(eCHANNEL,{});                      // Save Config
+    setconfig(eCHANNEL,{});                         // Save Config
     get_Temperature();                              // Update Temperature
     DPRINTPLN("[INFO]\tEinheitenwechsel");
   }
@@ -962,9 +962,9 @@ void server_setup() {
 
     // REQUEST: /configreset
     server.on("/configreset", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      set_channels(1);
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
-      set_Channels();
       setconfig(eSYSTEM,{});
       loadconfig(eSYSTEM);
       set_pid();

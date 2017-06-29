@@ -160,9 +160,9 @@ void read_serial(char *buffer) {
     }
   
     else if (str == "configreset") {
+      set_channels(1);
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
-      set_Channels();
       setconfig(eSYSTEM,{});
       loadconfig(eSYSTEM);
       set_pid();

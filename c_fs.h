@@ -192,7 +192,7 @@ bool loadconfig(byte count) {
         pidsize++;
       }
     }
-    if (pidsize < 1) return 0;   // Alte Versionen abfangen und 3 Default PID-Settings laden
+    if (pidsize < 1) return 0;   // Alte Versionen abfangen
     break;
 
     case 4:     // SYSTEM
@@ -265,7 +265,7 @@ bool setconfig(byte count, const char* data[2]) {
     case 0:         // CHANNEL
     {
       JsonObject& json = jsonBuffer.createObject();
-  
+
       json["temp_unit"] = temp_unit;
 
       JsonArray& _name = json.createNestedArray("tname");
@@ -274,20 +274,14 @@ bool setconfig(byte count, const char* data[2]) {
       JsonArray& _max = json.createNestedArray("tmax");
       JsonArray& _alarm = json.createNestedArray("talarm");
       JsonArray& _color = json.createNestedArray("tcolor");
-  
-      for (int i=0; i < CHANNELS; i++){
-        _name.add("Kanal " + String(i+1));
-        _typ.add(0);
     
-        if (temp_unit == "F") {
-          _min.add(ULIMITMINF,1);
-          _max.add(OLIMITMINF,1);
-        } else {
-          _min.add(ULIMITMIN,1);
-          _max.add(OLIMITMIN,1);
-        }
-        _alarm.add(false); 
-        _color.add(colors[i]);
+      for (int i=0; i < CHANNELS; i++){
+        _name.add(ch[i].name);
+        _typ.add(ch[i].typ); 
+        _min.add(ch[i].min,1);
+        _max.add(ch[i].max,1);
+        _alarm.add(ch[i].alarm); 
+        _color.add(ch[i].color);
       }
 
       //if (!savefile(CHANNEL_FILE, configFile)) return false;
@@ -335,11 +329,20 @@ bool setconfig(byte count, const char* data[2]) {
 
     case 3:        // PITMASTER
     {
-      JsonArray& json = jsonBuffer.createArray();
+      JsonObject& json = jsonBuffer.createObject();
+      JsonObject& _master = json.createNestedObject("pm");
       
+      _master["ch"]     = pitmaster.channel;
+      _master["pid"]    = pitmaster.pid;
+      _master["val"]    = pitmaster.value;
+      _master["set"]    = pitmaster.set;
+      _master["act"]    = pitmaster.active;
+      _master["man"]    = pitmaster.manuel;
+  
+      JsonArray& _pit = json.createNestedArray("pid");
+  
       for (int i = 0; i < pidsize; i++) {
-        
-        JsonObject& _pid = json.createNestedObject();
+        JsonObject& _pid = _pit.createNestedObject();
         _pid["name"]     = pid[i].name;
         _pid["id"]       = pid[i].id;
         _pid["aktor"]    = pid[i].aktor;
@@ -356,10 +359,9 @@ bool setconfig(byte count, const char* data[2]) {
         _pid["DCmin"]    = pid[i].DCmin;             
         _pid["DCmax"]    = pid[i].DCmax;             
         _pid["SVmin"]    = pid[i].SVmin;             
-        _pid["SVmax"]    = pid[i].SVmax;           
-        
-      }    
-      
+        _pid["SVmax"]    = pid[i].SVmax;
+      }
+       
       size_t size = json.measureLength() + 1;
       if (size > EEPITMASTER) {
         DPRINTPLN("[INFO]\tZu viele PITMASTER Daten!");
@@ -426,35 +428,7 @@ bool modifyconfig(byte count, const char* data[12]) {
 
   switch (count) {
     case 0:           // CHANNEL
-    {   
-      // Neue Daten erzeugen
-      JsonObject& json = jsonBuffer.createObject();
-
-      json["temp_unit"] = temp_unit;
-
-      JsonArray& _name = json.createNestedArray("tname");
-      JsonArray& _typ = json.createNestedArray("ttyp");
-      JsonArray& _min = json.createNestedArray("tmin");
-      JsonArray& _max = json.createNestedArray("tmax");
-      JsonArray& _alarm = json.createNestedArray("talarm");
-      JsonArray& _color = json.createNestedArray("tcolor");
-    
-      for (int i=0; i < CHANNELS; i++){
-        _name.add(ch[i].name);
-        _typ.add(ch[i].typ); 
-        _min.add(ch[i].min,1);
-        _max.add(ch[i].max,1);
-        _alarm.add(ch[i].alarm); 
-        _color.add(ch[i].color);
-      }
-
-      // Speichern
-      size_t size = json.measureLength() + 1;
-      clearEE(EECHANNEL,EECHANNELBEGIN);  // Bereich reinigen
-      static char buffer[EECHANNEL];
-      json.printTo(buffer, size);
-      writeEE(buffer, size, EECHANNELBEGIN);
-    }
+    // nicht notwendig, kann über setconfig beschrieben werden
     break;
 
     case 1:         // WIFI
@@ -506,6 +480,8 @@ bool modifyconfig(byte count, const char* data[12]) {
         setconfig(ePIT,{});
         return false;
       }
+
+      
 
       // Neue Daten eintragen
       JsonObject& _pid = json.createNestedObject();
@@ -605,6 +581,7 @@ void start_fs() {
   // CHANNEL
   if (!loadconfig(eCHANNEL)) {
     DPRINTPLN("[INFO]\tFailed to load channel config");
+    set_channels(1);
     setconfig(eCHANNEL,{});  // Speicherplatz vorbereiten
     ESP.restart();
   } else DPRINTPLN("[INFO]\tChannel config loaded");
