@@ -24,7 +24,6 @@
 
 void set_wifi() {
 
-  char apname[] = APNAME;
   char appass[] = APPASSWORD;
 
   IPAddress local_IP(192,168,66,1);
@@ -42,28 +41,30 @@ void set_wifi() {
 
   drawConnect();
 
-  if (lenwifi > 1) {
+  if (lenwifi > 0) {
+    if (lenwifi > 1) {
   
-    // Add Wifi Settings
-    for (int i = 0; i < lenwifi; i++) {
-      wifiMulti.addAP(wifissid[i].c_str(), wifipass[i].c_str());
-    }
-    DPRINTP("_Multi");
-    int counter = 0;
-    while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
-      delay(500);
-      DPRINTP(".");
-      counter++;
-    }
-  } else {
+      // Add Wifi Settings
+      for (int i = 0; i < lenwifi; i++) {
+        wifiMulti.addAP(wifissid[i].c_str(), wifipass[i].c_str());
+      }
+      DPRINTP("_Multi");
+      int counter = 0;
+      while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
+        delay(500);
+        DPRINTP(".");
+        counter++;
+      }
+    } else {
     
-    WiFi.begin(wifissid[0].c_str(), wifipass[0].c_str());
-    int counter = 0;
+      WiFi.begin(wifissid[0].c_str(), wifipass[0].c_str());
+      int counter = 0;
     
-    while (WiFi.status() != WL_CONNECTED && counter < 20) {
-      delay(500);
-      DPRINTP(".");
-      counter++;
+      while (WiFi.status() != WL_CONNECTED && counter < 20) {
+        delay(500);
+        DPRINTP(".");
+        counter++;
+      }
     }
   }
   
@@ -85,11 +86,11 @@ void set_wifi() {
     WiFi.mode(WIFI_AP_STA);
 
     DPRINTP("[INFO]\tConfiguring access point: ");
-    DPRINT(APNAME);
+    DPRINT(sys.apname);
     DPRINTPLN(" ...");
     
     WiFi.softAPConfig(local_IP, gateway, subnet);
-    WiFi.softAP(apname, appass, 5);  // Channel 5
+    WiFi.softAP(sys.apname.c_str(), appass, 5);  // Channel 5
 
     DPRINTP("[INFO]\tAP IP address: ");
     DPRINTLN(WiFi.softAPIP());
@@ -286,7 +287,6 @@ void connectToMqtt() {
   DPRINTP("[INFO]\tIP address: ");
   DPRINTLN(WiFi.localIP());
   DPRINTPLN("[INFO]\tConnecting to MQTT...");
-  DPRINTLN();
   mqttClient.connect();
 }
 

@@ -167,10 +167,10 @@ bool loadconfig(byte count) {
       if (!checkjson(json,PIT_FILE)) return false;
 
       JsonObject& _master = json["pm"];
-      
-      pitmaster.channel   = _master["ch"]; 
+
+      if (_master.containsKey("ch"))  pitmaster.channel   = _master["ch"]; 
+      else return false;
       pitmaster.pid       = _master["pid"];
-      pitmaster.value     = _master["val"];
       pitmaster.set       = _master["set"];
       pitmaster.active    = _master["act"];
       pitmaster.resume    = _master["res"];
@@ -345,7 +345,6 @@ bool setconfig(byte count, const char* data[2]) {
       
       _master["ch"]     = pitmaster.channel;
       _master["pid"]    = pitmaster.pid;
-      _master["val"]    = pitmaster.value;
       _master["set"]    = pitmaster.set;
       _master["act"]    = pitmaster.active;
       _master["res"]    = pitmaster.resume;

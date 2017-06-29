@@ -127,6 +127,8 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define PITMIN 0                    // LOWER LIMIT SET
 #define PITMAX 100                  // UPPER LIMIT SET
 #define PITMASTERSIZE 5             // PITMASTER SETTINGS LIMIT
+#define PITMASTERSETMIN 50
+#define PITMASTERSETMAX 200
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 

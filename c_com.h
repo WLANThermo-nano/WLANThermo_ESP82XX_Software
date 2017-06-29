@@ -159,13 +159,14 @@ void read_serial(char *buffer) {
       set_system();
       setconfig(eSYSTEM,{});
       loadconfig(eSYSTEM);
+      set_pitmaster(1);
       set_pid();
       setconfig(ePIT,{});
       loadconfig(ePIT);
       return;
     }
 
-    else if (str == "piepsertest") {
+    else if (str == "piepser") {
       Serial.println("Piepsertest");
       piepserON();
       delay(1000);
@@ -175,12 +176,14 @@ void read_serial(char *buffer) {
 
     else if (str == "getSSID") {
       Serial.println(WiFi.SSID());
+      return;
     }
 
     else if (str == "getTS") {
       Serial.println(charts.TSwriteKey);
       Serial.println(charts.TShttpKey);
       Serial.println(charts.TSchID);
+      return;
     }
 
     // RESTART SYSTEM
@@ -198,12 +201,27 @@ void read_serial(char *buffer) {
     // GET FIRMWAREVERSION
     else if (str == "getVersion") {
       Serial.println(FIRMWAREVERSION);
+      return;
     }
 
     // Reset PITMASTER PID
     else if (str == "setPID") {
       set_pid();  // Default PID-Settings
       if (setconfig(ePIT,{})) DPRINTPLN("[INFO]\tReset pitmaster config");
+      return;
+    }
+
+    // AUTOTUNE
+    else if (str == "autotune") {
+      startautotunePID(5, true);
+      return;
+    }
+
+    // STOP PITMASTER
+    else if (str == "stop") {
+      disableAllHeater();
+      setconfig(ePIT,{});
+      return;
     }
 
     // HTTP UPDATE

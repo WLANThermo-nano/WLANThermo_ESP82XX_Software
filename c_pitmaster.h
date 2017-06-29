@@ -96,14 +96,15 @@ void set_pitmaster(bool init) {
   if (init) {
     pitmaster.pid = 0;
     pitmaster.channel = 0;
-    pitmaster.set = ch[pitmaster.channel].min;
+    pitmaster.set = PITMASTERSETMIN;
     pitmaster.active = false;
-    pitmaster.value = 0;
-    pitmaster.resume = 0;
+    //pitmaster.resume = 0;
   }
 
+  pitmaster.resume = 1;   // später wieder raus
   if (!pitmaster.resume) pitmaster.active = false; 
 
+  pitmaster.value = 0;
   pitmaster.manuel = false;
   pitmaster.event = false;
   pitmaster.msec = 0;
