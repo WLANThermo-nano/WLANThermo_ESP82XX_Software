@@ -174,7 +174,7 @@ String handleData(AsyncWebServerRequest *request, byte www) {
   
   JsonObject& master = root.createNestedObject("pitmaster");
 
-  master["channel"] = pitmaster.channel;
+  master["channel"] = pitmaster.channel+1;
   master["pid"] = pitmaster.pid;
   master["value"] = pitmaster.value;
   master["set"] = pitmaster.set;
@@ -684,8 +684,12 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& _pitmaster = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_pitmaster.success()) return 0;
+
   
-  if (_pitmaster.containsKey("channel")) pitmaster.channel = _pitmaster["channel"];
+  if (_pitmaster.containsKey("channel")) {
+    byte cha = _pitmaster["channel"];
+    pitmaster.channel = cha - 1;
+  }
   else return 0;
   if (_pitmaster.containsKey("pid")) pitmaster.pid = _pitmaster["pid"]; // ""
   else return 0;
@@ -940,7 +944,7 @@ void server_setup() {
 
     // REQUEST: /stop wifi
     server.on("/stopwifi", HTTP_POST, [](AsyncWebServerRequest *request) { 
-      isAP = 3; // Turn Wifi off
+      isAP = 4; // Turn Wifi off with timer
       request->send(200, "text/plain", "true");
     });
     
@@ -961,6 +965,11 @@ void server_setup() {
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
       set_Channels();
+      setconfig(eSYSTEM,{});
+      loadconfig(eSYSTEM);
+      set_pid();
+      setconfig(ePIT,{});
+      loadconfig(ePIT);
       request->send(200, "text/json", "true");
     });
 

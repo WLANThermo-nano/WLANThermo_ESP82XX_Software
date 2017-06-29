@@ -49,7 +49,6 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.4.8"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -267,6 +266,7 @@ enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 ESP8266WiFiMulti wifiMulti;               // MULTIWIFI instance
 WiFiUDP udp;                              // UDP instance
 byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO, 3 = Turn off)
+unsigned long isAPcount;
 String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;

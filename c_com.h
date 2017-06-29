@@ -72,7 +72,7 @@ void read_serial(char *buffer) {
 
     // AUTOTUNE
     else if (command == "autotune") {
-      //startautotunePID(json["data"][0], json["data"][1]);
+      startautotunePID(5, true);
       return;
     }
 

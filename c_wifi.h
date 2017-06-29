@@ -222,7 +222,7 @@ void wifimonitoring() {
       WIFI_Connect();
       holdssid.connect = false;
     }
-  } else if (isAP == 3) {
+  } else if (isAP == 3 || isAP == 4) {
     stop_wifi();
   } else if (WiFi.status() == WL_CONNECTED & isAP > 0) {
     // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
@@ -335,20 +335,28 @@ void dumpClients()
 
 
 void stop_wifi() {
-  
-  DPRINTPLN("[INFO]\tStop Wifi");
-  mqttClient.disconnect();
-  wifi_station_disconnect();
-  wifi_set_opmode(NULL_MODE);
-  wifi_set_sleep_type(MODEM_SLEEP_T);
-  wifi_fpm_open();
-  wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
-  //WiFi.disconnect();
-  //delay(100); // leider notwendig
-  //WiFi.mode(WIFI_OFF);
-  delay(100); // leider notwendig
 
-  isAP = 2;
+  if (isAP == 4) {
+    isAPcount = millis();
+    isAP = 3;
+    return;
+  }
+  
+  if (millis() - isAPcount > 1000) {
+    DPRINTPLN("[INFO]\tStop Wifi");
+    mqttClient.disconnect();
+    wifi_station_disconnect();
+    wifi_set_opmode(NULL_MODE);
+    wifi_set_sleep_type(MODEM_SLEEP_T);
+    wifi_fpm_open();
+    wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+    //WiFi.disconnect();
+    //delay(100); // leider notwendig
+    //WiFi.mode(WIFI_OFF);
+    delay(100); // leider notwendig
+
+    isAP = 2;
+  }
 }
 
 void reconnect_wifi() {
