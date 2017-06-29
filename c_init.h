@@ -244,8 +244,11 @@ int vol_count = 0;
 struct Charts {
    String TSwriteKey;           // THINGSPEAK WRITE API KEY
    String TShttpKey;            // THINGSPEAK HTTP API KEY 
-   String TSchID;                // THINGSPEAK CHANNEL ID 
-   bool TSshow8;
+   String TSuserKey;            // THINGSPEAK USER KEY 
+   String TSchID;               // THINGSPEAK CHANNEL ID 
+   bool TSshow8;                // THINGSPEAK SHOW SOC
+   int TSint;                   // THINGSPEAK INTERVAL IN SEC
+   bool TSon;                   // THINGSPEAK ON / OFF
 };
 
 Charts charts;
@@ -415,11 +418,11 @@ void set_pitmaster(bool init);
 void set_pid();
 
 // BOT
-#ifdef THINGSPEAK
+void set_charts(bool init);
 void sendMessage(int ch, int count);
 void sendTS();
 void sendSettings();
-#endif
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
@@ -485,14 +488,12 @@ void timer_alarm() {
 // Charts Timer
 void timer_charts() {
   
-  if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
+  if (millis() - lastUpdateCommunication > (charts.TSint * 1000)) {
 
-    if (!isAP && sys.update == 0) {
-      #ifdef THINGSPEAK
+    if (!isAP && sys.update == 0 && charts.TSon) {
        //if (charts.TSwriteKey != "") sendData();
        if (charts.TSwriteKey != "" && charts.TSchID != "") sendTS();
        //sendMetadata();
-      #endif
       
     }
     lastUpdateCommunication = millis();

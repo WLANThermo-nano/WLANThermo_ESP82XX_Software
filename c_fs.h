@@ -151,9 +151,15 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("TShttp"))  charts.TShttpKey = json["TShttp"].asString();
       else return false;
+      if (json.containsKey("TSuser"))  charts.TSuserKey = json["TSuser"].asString();
+      else return false;
       if (json.containsKey("TSchID"))  charts.TSchID = json["TSchID"].asString();
       else return false;
       if (json.containsKey("TS8"))  charts.TSshow8 = json["TS8"];
+      else return false;
+      if (json.containsKey("TSint"))  charts.TSint = json["TSint"];
+      else return false;
+      if (json.containsKey("TSon"))  charts.TSon = json["TSon"];
       else return false;
     }
     break;
@@ -321,9 +327,12 @@ bool setconfig(byte count, const char* data[2]) {
       JsonObject& json = jsonBuffer.createObject();
       
       json["TSwrite"] = charts.TSwriteKey;
-      json["TShttp"] = charts.TShttpKey;
-      json["TSchID"] = charts.TSchID;
-      json["TS8"] = charts.TSshow8;
+      json["TShttp"]  = charts.TShttpKey;
+      json["TSuser"]  = charts.TSuserKey;
+      json["TSchID"]  = charts.TSchID;
+      json["TS8"]     = charts.TSshow8;
+      json["TSint"]   = charts.TSint;
+      json["TSon"]    = charts.TSon;
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {
@@ -525,6 +534,7 @@ void start_fs() {
   // THINGSPEAK
   if (!loadconfig(eTHING)) {
     DPRINTPLN("[INFO]\tFailed to load Thingspeak config");
+    set_charts(0);
     setconfig(eTHING,{});  // Speicherplatz vorbereiten
   } else DPRINTPLN("[INFO]\tThingspeak config loaded");
 

@@ -18,10 +18,25 @@
     
  ****************************************************/
 
-#ifdef THINGSPEAK
 
-  WiFiClient THINGclient;
-  #define SERVER1 "api.thingspeak.com"
+WiFiClient THINGclient;
+#define SERVER1 "api.thingspeak.com"
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Initialize Charts
+void set_charts(bool init) {
+  
+   if (init) {
+    charts.TSwriteKey = "";     
+    charts.TShttpKey = "";       
+    charts.TSuserKey = ""; //"Q2EID9PNX0YQVGRH";       
+    charts.TSchID = ""; 
+   }
+   
+   charts.TSshow8 = false;        
+   charts.TSint = INTERVALCOMMUNICATION/1000;
+   charts.TSon = true;   
+}
 
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
   // Send data to Thingspeak
@@ -90,7 +105,6 @@
     THINGclient.stop(); 
   }
 
-#endif
 
 // see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
 static AsyncClient * aClient = NULL;
@@ -171,7 +185,7 @@ void sendSettings(){
     String adress = F("PUT /channels/");
     adress += charts.TSchID;
     adress += F(".json?api_key=");
-    adress += "Q2EID9PNX0YQVGRH";
+    adress += charts.TSuserKey;
     adress += postStr;
     adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
     

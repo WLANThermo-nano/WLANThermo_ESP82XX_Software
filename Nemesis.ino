@@ -24,8 +24,6 @@
 // Entwicklereinstellungen
 #define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
-#define THINGSPEAK                          // ENABLE THINGSPEAK
-//#define KTYPE                             // ENABLE TYP K (Test only)
 
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)

@@ -121,8 +121,11 @@ String handleSettings(AsyncWebServerRequest *request, byte www) {
   JsonObject& _chart = root.createNestedObject("charts");
   _chart["TSwrite"] = charts.TSwriteKey; 
   _chart["TShttp"] = charts.TShttpKey;
+  _chart["TSuser"] = charts.TSuserKey;
   _chart["TSchID"] = charts.TSchID;
   _chart["TSshow8"] = charts.TSshow8;
+  _chart["TSinterval"] = charts.TSint;
+  _chart["TSon"] = charts.TSon;
 
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
@@ -752,10 +755,16 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
   else return 0;
   if (_chart.containsKey("TShttp")) charts.TShttpKey = _chart["TShttp"].asString(); 
   else return 0;
+  if (_chart.containsKey("TSuser")) charts.TSuserKey = _chart["TSuser"].asString(); 
+  //else return 0;
   if (_chart.containsKey("TSchID")) charts.TSchID = _chart["TSchID"].asString();
   else return 0;
   if (_chart.containsKey("TSshow8")) charts.TSshow8 = _chart["TSshow8"];
   else return 0;
+  if (_chart.containsKey("TSinterval")) charts.TSint = _chart["TSinterval"];
+  //else return 0;
+  if (_chart.containsKey("TSon")) charts.TSon = _chart["TSon"];
+  //else return 0;
   
   if (!setconfig(eTHING,{})) {
     DPRINTPLN("[INFO]\tFailed to save Thingspeak config");
@@ -922,6 +931,9 @@ void server_setup() {
       set_pid();
       setconfig(ePIT,{});
       loadconfig(ePIT);
+      set_charts(1);
+      setconfig(eTHING,{});
+      loadconfig(eTHING);
       request->send(200, "text/json", "true");
     });
 

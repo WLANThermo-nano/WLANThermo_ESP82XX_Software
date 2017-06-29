@@ -163,6 +163,9 @@ void read_serial(char *buffer) {
       set_pid();
       setconfig(ePIT,{});
       loadconfig(ePIT);
+      set_charts(1);
+      setconfig(eTHING,{});
+      loadconfig(eTHING);
       return;
     }
 
