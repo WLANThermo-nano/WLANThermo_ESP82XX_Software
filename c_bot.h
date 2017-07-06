@@ -40,15 +40,19 @@ void set_charts(bool init) {
     charts.TS_httpKey = "";       
     charts.TS_userKey = ""; //"Q2EID9PNX0YQVGRH";       
     charts.TS_chID = ""; 
-    charts.P_MQTT_HOST = "";
-    charts.P_MQTT_PORT = 1883;
     charts.P_MQTT_USER = "";
     charts.P_MQTT_PASS = ""; 
+    charts.P_MQTT_QoS = 0;
+    
    }
    
    charts.TS_show8 = false;        
    charts.TS_int = INTERVALCOMMUNICATION/1000;
-   charts.TS_on = true;   
+   charts.TS_on = true;
+   charts.P_MQTT_on = false;
+   charts.P_MQTT_HOST = "192.168.2.1";
+   charts.P_MQTT_PORT = 1883;
+      
 }
 
   
