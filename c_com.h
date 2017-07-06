@@ -90,7 +90,17 @@ void read_serial(char *buffer) {
       String val(buffer);
       pitmaster.value = val.toInt();
       return;
-    }    
+    }   
+
+     // UPDATE auf bestimmte Version
+    else if (command == "update") {
+      String payload((char*)buffer);
+      if (payload.indexOf("v") == 0) {
+        sys.getupdate = payload;  // kein Speichern, da während des Updates eh gespeichert wird
+        sys.update = 1;  
+      } else  DPRINTPLN("[INFO]\tUpdateversion nicht erkannt!");
+      return;    
+    }
   
   } else {
   
@@ -148,7 +158,15 @@ void read_serial(char *buffer) {
     else if (str == "pittest") {
       pitmaster.active = true;
       pitmaster.manuel = true;
-      pitmaster.value = 90;
+      pitmaster.value = 50;
+      //pitmaster.pid = 1;
+      return;
+    }
+
+    else if (str == "pittest2") {
+      pitmaster.active = true;
+      pitmaster.manuel = true;
+      pitmaster.value = 100;
       return;
     }
   

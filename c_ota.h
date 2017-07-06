@@ -146,65 +146,66 @@ void check_http_update() {
 void do_http_update() {
   
   if((isAP == 0)) {
+    if (sys.getupdate != "false") {
 
-    // UPDATE beendet
-    if (sys.update == 3){
+      // UPDATE beendet
+      if (sys.update == 3){
+        displayblocked = true;
+        question.typ = OTAUPDATE;
+        drawQuestion(0);
+        sys.getupdate = "false";
+        sys.update = 0;
+        setconfig(eSYSTEM,{});
+        sys.update = -1;   // Neue Suche anstoßen
+        DPRINTPLN("[INFO]\tUPDATE FINISHED");
+        return;
+      }
+
+      // UPDATE Adresse
+      String adress = F("http://nano.wlanthermo.de/checkUpdate.php?device=nano&serial=");
+      adress += String(ESP.getChipId(), HEX);
+      adress += F("&hw_version=v");
+      adress += String(sys.hwversion);
+      adress += F("&sw_version=");
+      adress += FIRMWAREVERSION;
+
+      // UPDATE 1x Wiederholen falls schief gelaufen
+      if (sys.updatecount < 2) sys.updatecount++;   // eine Wiederholung
+      else  {
+        sys.update = 0;
+        setconfig(eSYSTEM,{});
+        displayblocked = true;
+        question.typ = OTAUPDATE;
+        drawQuestion(0);
+        DPRINTPLN("[INFO]\tUPDATE_CANCELED");
+        displayblocked = false;
+        sys.updatecount = 0;
+        return;
+      }
+
+      // UPDATE spiffs oder firmware
       displayblocked = true;
-      question.typ = OTAUPDATE;
-      drawQuestion(0);
-      sys.getupdate == "false";
-      sys.update = 0;
-      setconfig(eSYSTEM,{});
-      sys.update = -1;   // Neue Suche anstoßen
-      DPRINTPLN("[INFO]\tUPDATE FINISHED");
-      return;
-    }
-
-    // UPDATE Adresse
-    String adress = F("http://nano.wlanthermo.de/checkUpdate.php?device=nano&serial=");
-    adress += String(ESP.getChipId(), HEX);
-    adress += F("&hw_version=v");
-    adress += String(sys.hwversion);
-    adress += F("&sw_version=");
-    adress += FIRMWAREVERSION;
-
-    // UPDATE 1x Wiederholen falls schief gelaufen
-    if (sys.updatecount < 2) sys.updatecount++;   // eine Wiederholung
-    else  {
-      sys.update = 0;
-      setconfig(eSYSTEM,{});
-      displayblocked = true;
-      question.typ = OTAUPDATE;
-      drawQuestion(0);
-      DPRINTPLN("[INFO]\tUPDATE_CANCELED");
-      displayblocked = false;
-      sys.updatecount = 0;
-      return;
-    }
-
-    // UPDATE spiffs oder firmware
-    displayblocked = true;
-    t_httpUpdate_return ret;
+      t_httpUpdate_return ret;
     
-    if (sys.update == 1) {
-      sys.update = 2;  // Nächster Updatestatus
-      drawUpdate("Webinterface");
-      setconfig(eSYSTEM,{});                                      // SPEICHERN
-      DPRINTPLN("[INFO]\tDo SPIFFS Update ...");
-      ret = ESPhttpUpdate.updateSpiffs(adress + "&getSpiffs=" + sys.getupdate);
+      if (sys.update == 1) {
+        sys.update = 2;  // Nächster Updatestatus
+        drawUpdate("Webinterface");
+        setconfig(eSYSTEM,{});                                      // SPEICHERN
+        DPRINTPLN("[INFO]\tDo SPIFFS Update ...");
+        ret = ESPhttpUpdate.updateSpiffs(adress + "&getSpiffs=" + sys.getupdate);
 
     
-    } else if (sys.update == 2) {
-      sys.update = 3;
-      drawUpdate("Firmware");
-      setconfig(eSYSTEM,{});                                      // SPEICHERN
-      DPRINTPLN("[INFO]\tDo Firmware Update ...");
-      ret = ESPhttpUpdate.update(adress + "&getFirmware=" + sys.getupdate);
+      } else if (sys.update == 2) {
+        sys.update = 3;
+        drawUpdate("Firmware");
+        setconfig(eSYSTEM,{});                                      // SPEICHERN
+        DPRINTPLN("[INFO]\tDo Firmware Update ...");
+        ret = ESPhttpUpdate.update(adress + "&getFirmware=" + sys.getupdate);
     
-    } 
+      } 
 
-    // UPDATE Ereigniskontrolle
-    switch(ret) {
+      // UPDATE Ereigniskontrolle
+      switch(ret) {
         case HTTP_UPDATE_FAILED:
           DPRINTF("[HTTP]\tUPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
           DPRINTPLN("");
@@ -223,7 +224,11 @@ void do_http_update() {
           DPRINTPLN("[HTTP]\tUPDATE_OK");
           if (sys.update == 2) ESP.restart();   // falls nach spiffs kein automatischer Restart durchgeführt wird
           break;
-     }
+      }
+    } else {
+      DPRINTPLN("[INFO]\tKein UPDATE vorhanden");
+      sys.update = 0;   // Vorgang beenden
+    }
   }
 }
 
@@ -275,16 +280,18 @@ void check_http_update() {
             index = payload.indexOf("\r");                 // Ende Versionsnummer
             payload = payload.substring(0,index);
 
-            if (payload == "false")
+            if (payload == "false") {
               DPRINTPLN("Kein Update");
+              sys.getupdate = payload;
+            }
             else if (payload.indexOf("v") == 0) {
               DPRINTLN(payload);
               sys.getupdate = payload;
-              setconfig(eSYSTEM,{});
             } else {
               DPRINTPLN("Fehler");
               sys.getupdate = "false";
             }
+            setconfig(eSYSTEM,{});    // Speichern
           }
            
         }, NULL);
