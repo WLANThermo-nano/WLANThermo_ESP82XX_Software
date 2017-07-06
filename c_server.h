@@ -130,6 +130,8 @@ String handleSettings(AsyncWebServerRequest *request, byte www) {
   _chart["PMQport"] = charts.P_MQTT_PORT;
   _chart["PMQuser"] = charts.P_MQTT_USER;
   _chart["PMQpass"] = charts.P_MQTT_PASS;
+  _chart["PMQqos"] = charts.P_MQTT_QoS;
+  _chart["PMQon"] = charts.P_MQTT_on;
 
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
@@ -776,6 +778,10 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
   if (_chart.containsKey("PMQuser")) charts.P_MQTT_USER = _chart["PMQuser"].asString(); 
   //else return 0;
   if (_chart.containsKey("PMQpass")) charts.P_MQTT_PASS = _chart["PMQpass"].asString(); 
+  //else return 0;
+  if (_chart.containsKey("PMQqos")) charts.P_MQTT_QoS = _chart["PMQqos"]; 
+  //else return 0;
+  if (_chart.containsKey("PMQon")) charts.P_MQTT_on = _chart["PMQon"]; 
   //else return 0;
   
   if (!setconfig(eTHING,{})) {

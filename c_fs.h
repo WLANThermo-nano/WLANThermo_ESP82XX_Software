@@ -169,6 +169,10 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("PMQpass"))  charts.P_MQTT_PASS = json["PMQpass"].asString();
       else return false;
+      if (json.containsKey("PMQqos"))  charts.P_MQTT_QoS = json["PMQqos"];
+      else return false;
+      if (json.containsKey("PMQon"))  charts.P_MQTT_on = json["PMQon"];
+      else return false;
     }
     break;
 
@@ -347,6 +351,8 @@ bool setconfig(byte count, const char* data[2]) {
       json["PMQport"]  = charts.P_MQTT_PORT;
       json["PMQuser"]  = charts.P_MQTT_USER;
       json["PMQpass"]  = charts.P_MQTT_PASS;
+      json["PMQqos"]   = charts.P_MQTT_QoS;
+      json["PMQon"]   = charts.P_MQTT_on;
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {

@@ -56,6 +56,7 @@
 #include "c_wifi.h"
 #include "c_frames.h"
 #include "c_bot.h"
+#include "c_pmqtt.h"
 #include "c_ota.h"
 #include "c_server.h"
 
@@ -79,8 +80,8 @@ void setup() {
     check_sector();
     setEE(); start_fs();
 
-    // Initalize MQTT
-    set_mqtt();
+    // Initalize P_MQTT
+    set_pmqtt();
     
     // Initialize Wifi
     set_wifi();

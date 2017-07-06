@@ -104,8 +104,6 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define APPASSWORD "12345678"
 #define HOSTNAME "NANO-"
 #define NTP_PACKET_SIZE 48          // NTP time stamp is in the first 48 bytes of the message
-#define MQTT_HOST "mqtt.thingspeak.com"
-#define MQTT_PORT 1883
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
@@ -253,6 +251,8 @@ struct Charts {
    uint16_t P_MQTT_PORT;        // PRIVATE MQTT BROKER PORT
    String P_MQTT_USER;          // PRIVATE MQTT BROKER USER
    String P_MQTT_PASS;          // PRIVATE MQTT BROKER PASSWD
+   byte P_MQTT_QoS;             // PRIVATE MQTT BROKER QoS
+   bool P_MQTT_on;              // PRIVATE MQTT BROKER ON/OFF
 };
 
 Charts charts;
@@ -393,7 +393,8 @@ time_t getNtpTime();
 WiFiEventHandler wifiConnectHandler;
 
 //MQTT
-AsyncMqttClient mqttClient;
+AsyncMqttClient pmqttClient;
+void sendpmqtt();
 
 // SERVER
 String handleSettings(AsyncWebServerRequest *request, byte www);
@@ -496,11 +497,13 @@ void timer_charts() {
   
   if (millis() - lastUpdateCommunication > (charts.TS_int * 1000)) {
 
-    if (!isAP && sys.update == 0 && charts.TS_on) {
-       //if (charts.TS_writeKey != "") sendData();
-       if (charts.TS_writeKey != "" && charts.TS_chID != "") sendDataTS();//sendTS();
-       //sendMetadata();
-      
+    if (!isAP && sys.update == 0) {
+      if (charts.TS_on) {
+        if (charts.TS_writeKey != "" && charts.TS_chID != "") sendDataTS();
+      }
+      if (charts.P_MQTT_on) {
+        sendpmqtt();
+      }
     }
     lastUpdateCommunication = millis();
   }

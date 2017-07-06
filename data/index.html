@@ -2960,6 +2960,11 @@
 				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
 						<form>							
+							<div class="checkbox">
+							  <label>
+								<input id="TSon" type="checkbox" checked="checked"/><i class="helper"></i>Thingspeak aktivieren
+							  </label>
+							</div>
 							<div class="form-group">
 							  <input type="text" id="TSwrite" maxlength="26" required="required"/>
 							  <label class="control-label" for="input">Channel Write API Key</label><i class="bar"></i>
@@ -2972,10 +2977,57 @@
 							  <input type="text" id="TSchID" maxlength="26" required="required"/>
 							  <label class="control-label" for="input">Channel ID</label><i class="bar"></i>
 							</div>
+							<div class="form-group">
+							  <select id="TSinterval">
+								<option value="30">30 Sekunden</option>
+								<option value="60">1 Minute</option>
+								<option value="120">2 Minuten</option>
+								<option value="300">5 Minuten</option>
+							  </select>
+							  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
+							</div>
 							<div class="checkbox">
 							  <label>
 								<input id="TSshow8" type="checkbox" checked="checked"/><i class="helper"></i>Batterieladezustand anstatt CH8
 							  </label>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+			<h3 class="headtitle">Private MQTT Client</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="checkbox">
+							  <label>
+								<input id="PMQon" type="checkbox" checked="checked"/><i class="helper"></i>Private MQTT aktivieren
+							  </label>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="PMQhost" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Private MQTT Host</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="PMQport" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Private MQTT Port</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="PMQuser" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Private MQTT User</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="PMQpass" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Private MQTT Password</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <select id="PMQqos">
+								<option value="0">0</option>
+								<option value="1">1</option>
+								<option value="2">2</option>
+							  </select>
+							  <label class="control-label" for="select">QoS</label><i class="bar"></i>
 							</div>
 						</form>
 					</div>
@@ -3155,10 +3207,18 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
+			document.getElementById('TSon').checked = jsonresponse.charts.TSon;
 			document.getElementById('TSwrite').value = jsonresponse.charts.TSwrite;
 			document.getElementById('TShttp').value = jsonresponse.charts.TShttp;
 			document.getElementById('TSchID').value = jsonresponse.charts.TSchID;
+			document.getElementById('TSinterval').value = jsonresponse.charts.TSinterval;
 			document.getElementById('TSshow8').checked = jsonresponse.charts.TSshow8;
+			document.getElementById('PMQon').checked = jsonresponse.charts.PMQon;
+			document.getElementById('PMQhost').value = jsonresponse.charts.PMQhost;
+			document.getElementById('PMQport').value = jsonresponse.charts.PMQport;
+			document.getElementById('PMQuser').value = jsonresponse.charts.PMQuser;
+			document.getElementById('PMQpass').value = jsonresponse.charts.PMQpass;
+			document.getElementById('PMQqos').value = jsonresponse.charts.PMQqos;
 			document.getElementById("thingspeak").style.display = "inline";
 			showLoader('false');
 		})
@@ -3169,10 +3229,18 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
 			jsonresponse = JSON.parse(response);
+			jsonresponse.charts.TSon = document.getElementById('TSon').checked;
 			jsonresponse.charts.TSwrite = document.getElementById('TSwrite').value;
 			jsonresponse.charts.TShttp = document.getElementById('TShttp').value;
 			jsonresponse.charts.TSchID = document.getElementById('TSchID').value;
+			jsonresponse.charts.TSinterval = document.getElementById('TSinterval').value;
 			jsonresponse.charts.TSshow8 = document.getElementById('TSshow8').checked;
+			jsonresponse.charts.PMQon = document.getElementById('PMQon').checked;
+			jsonresponse.charts.PMQhost = document.getElementById('PMQhost').value;
+			jsonresponse.charts.PMQport = document.getElementById('PMQport').value;
+			jsonresponse.charts.PMQuser = document.getElementById('PMQuser').value;
+			jsonresponse.charts.PMQpass = document.getElementById('PMQpass').value;
+			jsonresponse.charts.PMQqos = document.getElementById('PMQqos').value;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
 			showLoader('true');

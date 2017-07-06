@@ -287,7 +287,7 @@ void connectToMqtt() {
   DPRINTP("[INFO]\tIP address: ");
   DPRINTLN(WiFi.localIP());
   DPRINTPLN("[INFO]\tConnecting to MQTT...");
-  mqttClient.connect();
+  pmqttClient.connect();
 }
 
 void onWifiConnect(const WiFiEventStationModeGotIP& event) {
@@ -299,12 +299,11 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   if (WiFi.isConnected()) connectToMqtt;
 }
 
-void set_mqtt() {
+void set_pmqtt() {
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-  mqttClient.onDisconnect(onMqttDisconnect);
-  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-  //pmqttClient.setServer(charts.P_MQTT_HOST, charts.P_MQTT_PORT);
-  //pmqttClient.setCredentials(charts.P_MQTT_USER, charts.P_MQTT_PASSWD);
+  pmqttClient.onDisconnect(onMqttDisconnect);
+  pmqttClient.setServer(charts.P_MQTT_HOST.c_str(), charts.P_MQTT_PORT);
+  pmqttClient.setCredentials(charts.P_MQTT_USER.c_str(), charts.P_MQTT_PASS.c_str());
 }
 
 
@@ -347,7 +346,7 @@ void stop_wifi() {
   
   if (millis() - isAPcount > 1000) {
     DPRINTPLN("[INFO]\tStop Wifi");
-    mqttClient.disconnect();
+    pmqttClient.disconnect();
     wifi_station_disconnect();
     wifi_set_opmode(NULL_MODE);
     wifi_set_sleep_type(MODEM_SLEEP_T);
