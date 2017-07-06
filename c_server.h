@@ -119,13 +119,17 @@ String handleSettings(AsyncWebServerRequest *request, byte www) {
   //_aktor.add("FAN");
 
   JsonObject& _chart = root.createNestedObject("charts");
-  _chart["TSwrite"] = charts.TSwriteKey; 
-  _chart["TShttp"] = charts.TShttpKey;
-  _chart["TSuser"] = charts.TSuserKey;
-  _chart["TSchID"] = charts.TSchID;
-  _chart["TSshow8"] = charts.TSshow8;
-  _chart["TSinterval"] = charts.TSint;
-  _chart["TSon"] = charts.TSon;
+  _chart["TSwrite"] = charts.TS_writeKey; 
+  _chart["TShttp"] = charts.TS_httpKey;
+  _chart["TSuser"] = charts.TS_userKey;
+  _chart["TSchID"] = charts.TS_chID;
+  _chart["TSshow8"] = charts.TS_show8;
+  _chart["TSinterval"] = charts.TS_int;
+  _chart["TSon"] = charts.TS_on;
+  _chart["PMQhost"] = charts.P_MQTT_HOST;
+  _chart["PMQport"] = charts.P_MQTT_PORT;
+  _chart["PMQuser"] = charts.P_MQTT_USER;
+  _chart["PMQpass"] = charts.P_MQTT_PASS;
 
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
@@ -751,19 +755,27 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas) {
   JsonObject& _chart = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_chart.success()) return 0;
 
-  if (_chart.containsKey("TSwrite"))  charts.TSwriteKey = _chart["TSwrite"].asString();  
+  if (_chart.containsKey("TSwrite"))  charts.TS_writeKey = _chart["TSwrite"].asString(); 
   else return 0;
-  if (_chart.containsKey("TShttp")) charts.TShttpKey = _chart["TShttp"].asString(); 
+  if (_chart.containsKey("TShttp")) charts.TS_httpKey = _chart["TShttp"].asString(); 
   else return 0;
-  if (_chart.containsKey("TSuser")) charts.TSuserKey = _chart["TSuser"].asString(); 
+  if (_chart.containsKey("TSuser")) charts.TS_userKey = _chart["TSuser"].asString(); 
   //else return 0;
-  if (_chart.containsKey("TSchID")) charts.TSchID = _chart["TSchID"].asString();
+  if (_chart.containsKey("TSchID")) charts.TS_chID = _chart["TSchID"].asString();
   else return 0;
-  if (_chart.containsKey("TSshow8")) charts.TSshow8 = _chart["TSshow8"];
+  if (_chart.containsKey("TSshow8")) charts.TS_show8 = _chart["TSshow8"];
   else return 0;
-  if (_chart.containsKey("TSinterval")) charts.TSint = _chart["TSinterval"];
+  if (_chart.containsKey("TSinterval")) charts.TS_int = _chart["TSinterval"];
   //else return 0;
-  if (_chart.containsKey("TSon")) charts.TSon = _chart["TSon"];
+  if (_chart.containsKey("TSon")) charts.TS_on = _chart["TSon"];
+  //else return 0;
+  if (_chart.containsKey("PMQhost")) charts.P_MQTT_HOST = _chart["PMQhost"].asString(); 
+  //else return 0;
+  if (_chart.containsKey("PMQport")) charts.P_MQTT_PORT = _chart["PMQport"];
+  //else return 0;
+  if (_chart.containsKey("PMQuser")) charts.P_MQTT_USER = _chart["PMQuser"].asString(); 
+  //else return 0;
+  if (_chart.containsKey("PMQpass")) charts.P_MQTT_PASS = _chart["PMQpass"].asString(); 
   //else return 0;
   
   if (!setconfig(eTHING,{})) {

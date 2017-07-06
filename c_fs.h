@@ -147,19 +147,27 @@ bool loadconfig(byte count) {
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,THING_FILE)) return false;
       
-      if (json.containsKey("TSwrite"))  charts.TSwriteKey = json["TSwrite"].asString();
+      if (json.containsKey("TSwrite"))  charts.TS_writeKey = json["TSwrite"].asString();
       else return false;
-      if (json.containsKey("TShttp"))  charts.TShttpKey = json["TShttp"].asString();
+      if (json.containsKey("TShttp"))  charts.TS_httpKey = json["TShttp"].asString();
       else return false;
-      if (json.containsKey("TSchID"))  charts.TSchID = json["TSchID"].asString();
+      if (json.containsKey("TSchID"))  charts.TS_chID = json["TSchID"].asString();
       else return false;
-      if (json.containsKey("TS8"))  charts.TSshow8 = json["TS8"];
+      if (json.containsKey("TS8"))  charts.TS_show8 = json["TS8"];
       else return false;
-      if (json.containsKey("TSuser"))  charts.TSuserKey = json["TSuser"].asString();
+      if (json.containsKey("TSuser"))  charts.TS_userKey = json["TSuser"].asString();
       else return false;
-      if (json.containsKey("TSint"))  charts.TSint = json["TSint"];
+      if (json.containsKey("TSint"))  charts.TS_int = json["TSint"];
       else return false;
-      if (json.containsKey("TSon"))  charts.TSon = json["TSon"];
+      if (json.containsKey("TSon"))  charts.TS_on = json["TSon"];
+      else return false;
+      if (json.containsKey("PMQhost"))  charts.P_MQTT_HOST = json["PMQhost"].asString();
+      else return false;
+      if (json.containsKey("PMQport"))  charts.P_MQTT_PORT = json["PMQport"];
+      else return false;
+      if (json.containsKey("PMQuser"))  charts.P_MQTT_USER = json["PMQuser"].asString();
+      else return false;
+      if (json.containsKey("PMQpass"))  charts.P_MQTT_PASS = json["PMQpass"].asString();
       else return false;
     }
     break;
@@ -328,13 +336,17 @@ bool setconfig(byte count, const char* data[2]) {
     {
       JsonObject& json = jsonBuffer.createObject();
       
-      json["TSwrite"] = charts.TSwriteKey;
-      json["TShttp"]  = charts.TShttpKey;
-      json["TSuser"]  = charts.TSuserKey;
-      json["TSchID"]  = charts.TSchID;
-      json["TS8"]     = charts.TSshow8;
-      json["TSint"]   = charts.TSint;
-      json["TSon"]    = charts.TSon;
+      json["TSwrite"] = charts.TS_writeKey;
+      json["TShttp"]  = charts.TS_httpKey;
+      json["TSuser"]  = charts.TS_userKey;
+      json["TSchID"]  = charts.TS_chID;
+      json["TS8"]     = charts.TS_show8;
+      json["TSint"]   = charts.TS_int;
+      json["TSon"]    = charts.TS_on;
+      json["PMQhost"]  = charts.P_MQTT_HOST;
+      json["PMQport"]  = charts.P_MQTT_PORT;
+      json["PMQuser"]  = charts.P_MQTT_USER;
+      json["PMQpass"]  = charts.P_MQTT_PASS;
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {

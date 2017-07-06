@@ -22,119 +22,61 @@
  ****************************************************/
 
 
-WiFiClient THINGclient;
+//WiFiClient THINGclient;
 #define SERVER1 "api.thingspeak.com"
+
+// see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
+static AsyncClient * tssettingclient = NULL;
+static AsyncClient * tsdataclient = NULL;
+static AsyncClient * tsalarmclient = NULL;
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Charts
 void set_charts(bool init) {
   
    if (init) {
-    charts.TSwriteKey = "";     
-    charts.TShttpKey = "";       
-    charts.TSuserKey = ""; //"Q2EID9PNX0YQVGRH";       
-    charts.TSchID = ""; 
+    charts.TS_writeKey = "";     
+    charts.TS_httpKey = "";       
+    charts.TS_userKey = ""; //"Q2EID9PNX0YQVGRH";       
+    charts.TS_chID = ""; 
+    charts.P_MQTT_HOST = "";
+    charts.P_MQTT_PORT = 1883;
+    charts.P_MQTT_USER = "";
+    charts.P_MQTT_PASS = ""; 
    }
    
-   charts.TSshow8 = false;        
-   charts.TSint = INTERVALCOMMUNICATION/1000;
-   charts.TSon = true;   
+   charts.TS_show8 = false;        
+   charts.TS_int = INTERVALCOMMUNICATION/1000;
+   charts.TS_on = true;   
 }
 
-  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  // Send data to Thingspeak
-  void sendTS() {
-    
-    if (mqttClient.connected()) {
-    
-      unsigned long vorher = millis();
-      //mqttClient.connect();
-      // Sendedauer: ~1ms  
-
-      String postStr = "";
-
-      for (int i = 0; i < 7; i++)  {
-        if (ch[i].temp != INACTIVEVALUE) {
-          postStr += "&";
-          postStr += String(i+1);
-          postStr += "=";
-          postStr += String(ch[i].temp,1);
-        }
-      }
-
-      if (charts.TSshow8) {
-        postStr +="&8=";  
-        postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
-      } else if (ch[7].temp != INACTIVEVALUE) {
-        postStr +="&8="; 
-        postStr += String(ch[7].temp,1);
-      }
-
-      String adress = F("channels/");
-      adress += charts.TSchID;
-      adress += F("/publish/");
-      adress += charts.TSwriteKey;
-
-      mqttClient.publish(adress.c_str(), 0, false, postStr.c_str());
-    
-      //mqttClient.disconnect();
-      DPRINTF("[INFO]\tPublish to Thingspeak at QoS 0: %ums\r\n", millis()-vorher); 
-    } else mqttClient.connect();
-  }
-
-  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  // Send Message to Telegram via Thingspeak
-  void sendMessage(int ch, int count) {
-
-    unsigned long vorher = millis();
-
-    // Sendedauer: ~120 ms
-    if (THINGclient.connect(SERVER1,80)) {
- 
-      String url = "/apps/thinghttp/send_request?api_key=";
-      url += charts.TShttpKey;
-      url += "&message=";
-      if (count) url += "hoch";
-      else url += "niedrig";
-      url += "&ch=";
-      url += String(ch);
-    
-      THINGclient.print("GET " + url + " HTTP/1.1\r\n" + "Host: " + SERVER1 
-                        + "\r\n" + "Connection: close\r\n\r\n");
   
-      DPRINTF("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
-    }
 
-    THINGclient.stop(); 
-  }
-
-
-// see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
-static AsyncClient * aClient = NULL;
-static AsyncClient * tsdataclient = NULL;
-
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Send Settings to Thingspeak
 void sendSettings(){
 
-  if(aClient) return;                 //client already exists
+  if(tssettingclient) return;                 //client already exists
 
-  aClient = new AsyncClient();
-  if(!aClient)  return;               //could not allocate client
+  tssettingclient = new AsyncClient();
+  if(!tssettingclient)  return;               //could not allocate client
 
-  aClient->onError([](void * arg, AsyncClient * client, int error){
+  tssettingclient->onError([](void * arg, AsyncClient * client, int error){
     Serial.println("[INFO]\tConnect Error");
-    aClient = NULL;
+    tssettingclient = NULL;
     delete client;
   }, NULL);
 
-  aClient->onConnect([](void * arg, AsyncClient * client){
+  tssettingclient->onConnect([](void * arg, AsyncClient * client){
     
     Serial.println(millis());
     
-    aClient->onError(NULL, NULL);
+    tssettingclient->onError(NULL, NULL);
 
     client->onDisconnect([](void * arg, AsyncClient * c){
       Serial.println(millis());
-      aClient = NULL;
+      tssettingclient = NULL;
       delete c;
     }, NULL);
 
@@ -156,9 +98,9 @@ void sendSettings(){
     postStr += handleSettings(request, 2);
     
     String adress = F("PUT /channels/");
-    adress += charts.TSchID;
+    adress += charts.TS_chID;
     adress += F(".json?api_key=");
-    adress += charts.TSuserKey;
+    adress += charts.TS_userKey;
     adress += postStr;
     adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
     
@@ -167,16 +109,18 @@ void sendSettings(){
     
   }, NULL);
 
-  if(!aClient->connect(SERVER1, 80)){
+  if(!tssettingclient->connect(SERVER1, 80)){
     Serial.println("[INFO]\tConnect Fail");
-    AsyncClient * client = aClient;
-    aClient = NULL;
+    AsyncClient * client = tssettingclient;
+    tssettingclient = NULL;
     delete client;
   }
 }
 
 
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Send Temp-Data to Thingspeak
 void sendDataTS(){
 
   if(tsdataclient) return;                 //client already exists
@@ -185,7 +129,7 @@ void sendDataTS(){
   if(!tsdataclient)  return;               //could not allocate client
 
   tsdataclient->onError([](void * arg, AsyncClient * client, int error){
-    DPRINTPLN("[INFO]\tThingspeak Client Connect Error");
+    DPRINTPLN("[INFO]\tThingspeak Data Client Connect Error");
     tsdataclient = NULL;
     delete client;
   }, NULL);
@@ -211,7 +155,7 @@ void sendDataTS(){
       }
     }
 
-    if (charts.TSshow8) {
+    if (charts.TS_show8) {
       postStr +="&8=";  
       postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
     } else if (ch[7].temp != INACTIVEVALUE) {
@@ -224,7 +168,7 @@ void sendDataTS(){
     //postStr += handleData(request, 2);
     
     String adress = F("POST /update.json?api_key=");
-    adress += charts.TSwriteKey;
+    adress += charts.TS_writeKey;
     adress += postStr;          // starts with &
     adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
 
@@ -241,5 +185,86 @@ void sendDataTS(){
   }
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Send Temp-Data to Thingspeak
+void sendMessage(int ch, int count){
+
+  if(tsalarmclient) return;                 //client already exists
+
+  tsalarmclient = new AsyncClient();
+  if(!tsalarmclient)  return;               //could not allocate client
+
+  tsalarmclient->onError([](void * arg, AsyncClient * client, int error){
+    DPRINTPLN("[INFO]\tThingspeak Alarm Client Connect Error");
+    tsalarmclient = NULL;
+    delete client;
+  }, NULL);
+
+  tsalarmclient->onConnect([](void * arg, AsyncClient * client){
+    
+    tsalarmclient->onError(NULL, NULL);
+
+    client->onDisconnect([](void * arg, AsyncClient * c){
+      tsalarmclient = NULL;
+      delete c;
+    }, NULL);
+
+    //send the request
+
+    String postStr = "&message=hoch";
+    /*
+    if (count) 
+      postStr += "hoch";
+    else 
+      postStr += "niedrig";
+    postStr += "&ch=";
+    postStr += String(ch);
+    */
+    
+    String adress = F("GET /apps/thinghttp/send_request?api_key=");
+    adress += charts.TS_httpKey;
+    adress += postStr;          // starts with &
+    adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
+
+    DPRINTPLN("[INFO]\tSend Alarm to Thingspeak"); 
+    client->write(adress.c_str());
+        
+  }, NULL);
+
+  if(!tsalarmclient->connect(SERVER1, 80)){
+    Serial.println("[INFO]\tThingspeak Server Connect Fail");
+    AsyncClient * client = tsalarmclient;
+    tsalarmclient = NULL;
+    delete client;
+  }
+}
+
+/*
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  // Send Message to Telegram via Thingspeak
+  void sendMessage(int ch, int count) {
+
+    unsigned long vorher = millis();
+
+    // Sendedauer: ~120 ms
+    if (THINGclient.connect(SERVER1,80)) {
+ 
+      String url = "/apps/thinghttp/send_request?api_key=";
+      url += charts.TS_httpKey;
+      url += "&message=";
+      if (count) url += "hoch";
+      else url += "niedrig";
+      url += "&ch=";
+      url += String(ch);
+    
+      THINGclient.print("GET " + url + " HTTP/1.1\r\n" + "Host: " + SERVER1 
+                        + "\r\n" + "Connection: close\r\n\r\n");
+  
+      DPRINTF("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
+    }
+
+    THINGclient.stop(); 
+  }
+*/
 
 

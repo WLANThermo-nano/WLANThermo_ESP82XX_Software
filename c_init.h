@@ -109,7 +109,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
-#define EEPROM_SIZE 1920            // EEPROM SIZE
+#define EEPROM_SIZE 2048            // EEPROM SIZE
 #define EEWIFIBEGIN         0
 #define EEWIFI              300
 #define EESYSTEMBEGIN       EEWIFIBEGIN+EEWIFI
@@ -117,7 +117,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define EECHANNELBEGIN      EESYSTEMBEGIN+EESYSTEM
 #define EECHANNEL           500
 #define EETHINGBEGIN        EECHANNELBEGIN+EECHANNEL
-#define EETHING             150
+#define EETHING             290
 #define EEPITMASTERBEGIN    EETHINGBEGIN+EETHING
 #define EEPITMASTER         700
 
@@ -242,13 +242,17 @@ int vol_count = 0;
 
 // CHARTS
 struct Charts {
-   String TSwriteKey;           // THINGSPEAK WRITE API KEY
-   String TShttpKey;            // THINGSPEAK HTTP API KEY 
-   String TSuserKey;            // THINGSPEAK USER KEY 
-   String TSchID;               // THINGSPEAK CHANNEL ID 
-   bool TSshow8;                // THINGSPEAK SHOW SOC
-   int TSint;                   // THINGSPEAK INTERVAL IN SEC
-   bool TSon;                   // THINGSPEAK ON / OFF
+   String TS_writeKey;          // THINGSPEAK WRITE API KEY
+   String TS_httpKey;           // THINGSPEAK HTTP API KEY 
+   String TS_userKey;           // THINGSPEAK USER KEY 
+   String TS_chID;              // THINGSPEAK CHANNEL ID 
+   bool TS_show8;               // THINGSPEAK SHOW SOC
+   int TS_int;                  // THINGSPEAK INTERVAL IN SEC
+   bool TS_on;                  // THINGSPEAK ON / OFF
+   String P_MQTT_HOST;          // PRIVATE MQTT BROKER HOST
+   uint16_t P_MQTT_PORT;        // PRIVATE MQTT BROKER PORT
+   String P_MQTT_USER;          // PRIVATE MQTT BROKER USER
+   String P_MQTT_PASS;          // PRIVATE MQTT BROKER PASSWD
 };
 
 Charts charts;
@@ -490,11 +494,11 @@ void timer_alarm() {
 // Charts Timer
 void timer_charts() {
   
-  if (millis() - lastUpdateCommunication > (charts.TSint * 1000)) {
+  if (millis() - lastUpdateCommunication > (charts.TS_int * 1000)) {
 
-    if (!isAP && sys.update == 0 && charts.TSon) {
-       //if (charts.TSwriteKey != "") sendData();
-       if (charts.TSwriteKey != "" && charts.TSchID != "") sendDataTS();//sendTS();
+    if (!isAP && sys.update == 0 && charts.TS_on) {
+       //if (charts.TS_writeKey != "") sendData();
+       if (charts.TS_writeKey != "" && charts.TS_chID != "") sendDataTS();//sendTS();
        //sendMetadata();
       
     }

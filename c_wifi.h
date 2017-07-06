@@ -303,6 +303,8 @@ void set_mqtt() {
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
   mqttClient.onDisconnect(onMqttDisconnect);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  //pmqttClient.setServer(charts.P_MQTT_HOST, charts.P_MQTT_PORT);
+  //pmqttClient.setCredentials(charts.P_MQTT_USER, charts.P_MQTT_PASSWD);
 }
 
 

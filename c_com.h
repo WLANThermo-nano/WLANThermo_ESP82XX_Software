@@ -201,9 +201,9 @@ void read_serial(char *buffer) {
     }
 
     else if (str == "getTS") {
-      Serial.println(charts.TSwriteKey);
-      Serial.println(charts.TShttpKey);
-      Serial.println(charts.TSchID);
+      Serial.println(charts.TS_writeKey);
+      Serial.println(charts.TS_httpKey);
+      Serial.println(charts.TS_chID);
       return;
     }
 

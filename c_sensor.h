@@ -238,7 +238,7 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
         setalarm = true;
 
         if (!isAP) {
-          if (charts.TShttpKey != "") {
+          if (charts.TS_httpKey != "") {
             if (ch[i].temp > ch[i].max) sendMessage(i+1,1);
             else if (ch[i].temp < ch[i].min) sendMessage(i+1,0);
           }
