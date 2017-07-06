@@ -24,8 +24,6 @@
 // Entwicklereinstellungen
 #define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
-#define THINGSPEAK                          // ENABLE THINGSPEAK
-//#define KTYPE                             // ENABLE TYP K (Test only)
 
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)
@@ -106,7 +104,7 @@ void setup() {
     
     // Initialize Sensors
     set_sensor();
-    set_Channels();
+    set_channels(0);
     set_piepser();
 
     // Initialize Buttons
@@ -117,7 +115,7 @@ void setup() {
     cal_soc();
     
     // Initialize Pitmaster
-    set_pitmaster(); 
+    set_pitmaster(0); 
 
     // Check HTTP Update
     check_http_update();

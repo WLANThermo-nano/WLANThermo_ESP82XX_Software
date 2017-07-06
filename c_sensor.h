@@ -126,7 +126,7 @@ void get_Vbat() {
         battery.max = battery.voltage-10;      
         // Grenze etwas nach unten versetzen, um die Ladespannung zu kompensieren
         // alternativ die Speicherung um 5 min verschieben, Gefahr: das dann schon abgeschaltet
-        modifyconfig(eSYSTEM,{});                                      // SPEICHERN
+        setconfig(eSYSTEM,{});                                      // SPEICHERN
         DPRINTF("[INFO]\tNew battery voltage reference: %umV\r\n", battery.max); 
       }
     }
@@ -238,12 +238,10 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
         setalarm = true;
 
         if (!isAP) {
-        #ifdef THINGSPEAK
           if (charts.TShttpKey != "") {
             if (ch[i].temp > ch[i].max) sendMessage(i+1,1);
             else if (ch[i].temp < ch[i].min) sendMessage(i+1,0);
           }
-        #endif
         }
       }
     }

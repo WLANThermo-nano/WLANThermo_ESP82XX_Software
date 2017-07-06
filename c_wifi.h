@@ -24,7 +24,6 @@
 
 void set_wifi() {
 
-  char apname[] = APNAME;
   char appass[] = APPASSWORD;
 
   IPAddress local_IP(192,168,66,1);
@@ -32,7 +31,7 @@ void set_wifi() {
   IPAddress subnet(255,255,255,0);
 
   WiFi.hostname(sys.host);
-  WiFi.mode(WIFI_STA);
+  //WiFi.mode(WIFI_STA);
   
   DPRINTLN("[INFO]\tHostname: " + sys.host);
   DPRINTP("[INFO]\tConnecting");
@@ -40,17 +39,33 @@ void set_wifi() {
   holdssid.hold = false;
   holdssid.connect = false;
 
-  // Add Wifi Settings
-  for (int i = 0; i < lenwifi; i++) {
-    wifiMulti.addAP(wifissid[i].c_str(), wifipass[i].c_str());
-  }
-  
   drawConnect();
-  int counter = 0;
-  while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
-    delay(500);
-    DPRINTP(".");
-    counter++;
+
+  if (lenwifi > 0) {
+    if (lenwifi > 1) {
+  
+      // Add Wifi Settings
+      for (int i = 0; i < lenwifi; i++) {
+        wifiMulti.addAP(wifissid[i].c_str(), wifipass[i].c_str());
+      }
+      DPRINTP("_Multi");
+      int counter = 0;
+      while (wifiMulti.run() != WL_CONNECTED && counter < 8) {
+        delay(500);
+        DPRINTP(".");
+        counter++;
+      }
+    } else {
+    
+      WiFi.begin(wifissid[0].c_str(), wifipass[0].c_str());
+      int counter = 0;
+    
+      while (WiFi.status() != WL_CONNECTED && counter < 20) {
+        delay(500);
+        DPRINTP(".");
+        counter++;
+      }
+    }
   }
   
   
@@ -71,11 +86,11 @@ void set_wifi() {
     WiFi.mode(WIFI_AP_STA);
 
     DPRINTP("[INFO]\tConfiguring access point: ");
-    DPRINT(APNAME);
+    DPRINT(sys.apname);
     DPRINTPLN(" ...");
     
     WiFi.softAPConfig(local_IP, gateway, subnet);
-    WiFi.softAP(apname, appass, 5);  // Channel 5
+    WiFi.softAP(sys.apname.c_str(), appass, 5);  // Channel 5
 
     DPRINTP("[INFO]\tAP IP address: ");
     DPRINTLN(WiFi.softAPIP());
@@ -208,7 +223,7 @@ void wifimonitoring() {
       WIFI_Connect();
       holdssid.connect = false;
     }
-  } else if (isAP == 3) {
+  } else if (isAP == 3 || isAP == 4) {
     stop_wifi();
   } else if (WiFi.status() == WL_CONNECTED & isAP > 0) {
     // Verbindung neu hergestellt, entweder aus AP oder wegen Verbindungsverlust
@@ -219,6 +234,10 @@ void wifimonitoring() {
     DPRINTLN(WiFi.SSID());
     DPRINTP("[INFO]\tIP address: ");
     DPRINTLN(WiFi.localIP());
+
+    displayblocked = true;
+    question.typ = IPADRESSE;
+    drawQuestion(0);
 
     if (holdssid.hold) {
       holdssid.hold = false;
@@ -317,20 +336,28 @@ void dumpClients()
 
 
 void stop_wifi() {
-  
-  DPRINTPLN("[INFO]\tStop Wifi");
-  mqttClient.disconnect();
-  wifi_station_disconnect();
-  wifi_set_opmode(NULL_MODE);
-  wifi_set_sleep_type(MODEM_SLEEP_T);
-  wifi_fpm_open();
-  wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
-  //WiFi.disconnect();
-  //delay(100); // leider notwendig
-  //WiFi.mode(WIFI_OFF);
-  delay(100); // leider notwendig
 
-  isAP = 2;
+  if (isAP == 4) {
+    isAPcount = millis();
+    isAP = 3;
+    return;
+  }
+  
+  if (millis() - isAPcount > 1000) {
+    DPRINTPLN("[INFO]\tStop Wifi");
+    mqttClient.disconnect();
+    wifi_station_disconnect();
+    wifi_set_opmode(NULL_MODE);
+    wifi_set_sleep_type(MODEM_SLEEP_T);
+    wifi_fpm_open();
+    wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+    //WiFi.disconnect();
+    //delay(100); // leider notwendig
+    //WiFi.mode(WIFI_OFF);
+    delay(100); // leider notwendig
+
+    isAP = 2;
+  }
 }
 
 void reconnect_wifi() {

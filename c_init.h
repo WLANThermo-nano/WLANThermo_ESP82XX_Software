@@ -49,12 +49,12 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.4.0"
+#define FIRMWAREVERSION "v0.5.0"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
-#define SENSORTYPEN    9               // NUMBER OF SENSORS
+#define SENSORTYPEN    10               // NUMBER OF SENSORS
 #define LIMITUNTERGRENZE -20           // MINIMUM LIMIT
 #define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
 #define MAX1161x_ADDRESS 0x33          // MAX11615
@@ -127,6 +127,8 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define PITMIN 0                    // LOWER LIMIT SET
 #define PITMAX 100                  // UPPER LIMIT SET
 #define PITMASTERSIZE 5             // PITMASTER SETTINGS LIMIT
+#define PITMASTERSETMIN 50
+#define PITMASTERSETMAX 200
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -159,7 +161,8 @@ String  ttypname[SENSORTYPEN] = {"Maverick",
                       "Perfektion",
                       "5K3A1B",
                       "MOUSER47K",
-                      "100K6A1B"};
+                      "100K6A1B",
+                      "Weber_6743"};
 
 
 String  temp_unit = "C";
@@ -178,6 +181,7 @@ struct Pitmaster {
    int16_t msec;          // PITMASTER VALUE IN MILLISEC
    unsigned long last;
    int pause;             // PITMASTER PAUSE
+   bool resume;           // Continue after restart           
 };
 
 Pitmaster pitmaster;
@@ -214,6 +218,7 @@ struct System {
    byte updatecount;           // 
    int update;             // FIRMWARE UPDATE -1 = check, 0 = no, 1 = spiffs, 2 = firmware
    String getupdate;
+   bool autoupdate;
 };
 
 System sys;
@@ -239,8 +244,11 @@ int vol_count = 0;
 struct Charts {
    String TSwriteKey;           // THINGSPEAK WRITE API KEY
    String TShttpKey;            // THINGSPEAK HTTP API KEY 
-   String TSchID;                // THINGSPEAK CHANNEL ID 
-   bool TSshow8;
+   String TSuserKey;            // THINGSPEAK USER KEY 
+   String TSchID;               // THINGSPEAK CHANNEL ID 
+   bool TSshow8;                // THINGSPEAK SHOW SOC
+   int TSint;                   // THINGSPEAK INTERVAL IN SEC
+   bool TSon;                   // THINGSPEAK ON / OFF
 };
 
 Charts charts;
@@ -249,7 +257,7 @@ Charts charts;
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL       
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool displayblocked = false;                     // No OLED Update
-enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM};
+enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE};
 
 struct MyQuestion {
    int typ;    
@@ -265,6 +273,7 @@ enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 ESP8266WiFiMulti wifiMulti;               // MULTIWIFI instance
 WiFiUDP udp;                              // UDP instance
 byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO, 3 = Turn off)
+unsigned long isAPcount;
 String wifissid[5];
 String wifipass[5];
 int lenwifi = 0;
@@ -334,7 +343,7 @@ void cal_soc();
 // TEMPERATURE (TEMP)
 float calcT(int r, byte typ);                     // Calculate Temperature from ADC-Bytes
 void get_Temperature();                           // Reading Temperature ADC
-void set_Channels();                              // Initialize Temperature Channels
+void set_channels(bool init);                              // Initialize Temperature Channels
 void transform_limits();                          // Transform Channel Limits
 
 // OLED
@@ -383,8 +392,8 @@ WiFiEventHandler wifiConnectHandler;
 AsyncMqttClient mqttClient;
 
 // SERVER
-void handleSettings(AsyncWebServerRequest *request, bool www);
-void handleData(AsyncWebServerRequest *request, bool www);
+String handleSettings(AsyncWebServerRequest *request, byte www);
+String handleData(AsyncWebServerRequest *request, byte www);
 void handleWifiResult(AsyncWebServerRequest *request, bool www);
 void handleWifiScan(AsyncWebServerRequest *request, bool www);
 bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas);
@@ -393,6 +402,7 @@ bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas);
 bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas);
 bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas);
 bool handleAddPitmaster(AsyncWebServerRequest *request, uint8_t *datas);
+String getMacAddress();
 
 // EEPROM
 void setEE();
@@ -403,12 +413,17 @@ void clearEE(int startP, int endP);
 // PITMASTER
 void startautotunePID(int maxCycles, bool storeValues);
 void pitmaster_control();
+void disableAllHeater();
+void set_pitmaster(bool init);
+void set_pid();
 
 // BOT
-#ifdef THINGSPEAK
+void set_charts(bool init);
 void sendMessage(int ch, int count);
 void sendTS();
-#endif
+void sendSettings();
+void sendDataTS();
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
@@ -416,6 +431,28 @@ void set_serial() {
   Serial.begin(115200);
   DPRINTLN();
   DPRINTLN();
+}
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Initialize System-Settings, if not loaded from EE
+void set_system() {
+  
+  String host = HOSTNAME;
+  host += String(ESP.getChipId(), HEX);
+  
+  sys.host = host;
+  sys.hwalarm = false; 
+  sys.apname = APNAME;
+  sys.language = "de";
+  sys.timeZone = 1;
+  sys.summer = false;
+  sys.fastmode = false;
+  sys.hwversion = 1;
+  sys.update = 0;
+  sys.getupdate = "false";
+  sys.autoupdate = 1;
+  battery.max = BATTMAX;
+  battery.min = BATTMIN;
 }
 
 
@@ -453,13 +490,12 @@ void timer_alarm() {
 // Charts Timer
 void timer_charts() {
   
-  if (millis() - lastUpdateCommunication > INTERVALCOMMUNICATION) {
+  if (millis() - lastUpdateCommunication > (charts.TSint * 1000)) {
 
-    if (!isAP) {
-      #ifdef THINGSPEAK
+    if (!isAP && sys.update == 0 && charts.TSon) {
        //if (charts.TSwriteKey != "") sendData();
-       if (charts.TSwriteKey != "" && charts.TSchID != "") sendTS();
-      #endif
+       if (charts.TSwriteKey != "" && charts.TSchID != "") sendDataTS();//sendTS();
+       //sendMetadata();
       
     }
     lastUpdateCommunication = millis();
@@ -499,7 +535,7 @@ void timer_datalog() {
         
       write_flash(log_sector);
       log_sector++;
-      modifyconfig(eSYSTEM,{});
+      setconfig(eSYSTEM,{});
 
         //getLog(3);
         
@@ -610,7 +646,8 @@ bool standby_control() {
       LADENSHOW = true;
       DPRINTPLN("[INFO]\tChange to Standby");
       //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
-      pitmaster.active = false;
+      //pitmaster.active = false;
+      disableAllHeater();
       piepserOFF();
       // set_pitmaster();
     }

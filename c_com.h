@@ -72,14 +72,7 @@ void read_serial(char *buffer) {
 
     // AUTOTUNE
     else if (command == "autotune") {
-      //startautotunePID(json["data"][0], json["data"][1]);
-      return;
-    }
-
-    // ADD PITMASTER PID
-    else if (command == "addpid") {
-      AsyncWebServerRequest *request;
-      handleAddPitmaster(request,PM_buffer);     
+      startautotunePID(5, true);
       return;
     }
 
@@ -160,15 +153,23 @@ void read_serial(char *buffer) {
     }
   
     else if (str == "configreset") {
+      set_channels(1);
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
-      set_Channels();
+      set_system();
       setconfig(eSYSTEM,{});
       loadconfig(eSYSTEM);
+      set_pitmaster(1);
+      set_pid();
+      setconfig(ePIT,{});
+      loadconfig(ePIT);
+      set_charts(1);
+      setconfig(eTHING,{});
+      loadconfig(eTHING);
       return;
     }
 
-    else if (str == "piepsertest") {
+    else if (str == "piepser") {
       Serial.println("Piepsertest");
       piepserON();
       delay(1000);
@@ -178,12 +179,14 @@ void read_serial(char *buffer) {
 
     else if (str == "getSSID") {
       Serial.println(WiFi.SSID());
+      return;
     }
 
     else if (str == "getTS") {
       Serial.println(charts.TSwriteKey);
       Serial.println(charts.TShttpKey);
       Serial.println(charts.TSchID);
+      return;
     }
 
     // RESTART SYSTEM
@@ -201,12 +204,27 @@ void read_serial(char *buffer) {
     // GET FIRMWAREVERSION
     else if (str == "getVersion") {
       Serial.println(FIRMWAREVERSION);
+      return;
     }
 
     // Reset PITMASTER PID
     else if (str == "setPID") {
       set_pid();  // Default PID-Settings
       if (setconfig(ePIT,{})) DPRINTPLN("[INFO]\tReset pitmaster config");
+      return;
+    }
+
+    // AUTOTUNE
+    else if (str == "autotune") {
+      startautotunePID(5, true);
+      return;
+    }
+
+    // STOP PITMASTER
+    else if (str == "stop") {
+      disableAllHeater();
+      setconfig(ePIT,{});
+      return;
     }
 
     // HTTP UPDATE
@@ -218,6 +236,18 @@ void read_serial(char *buffer) {
     // CHECK HTTP UPDATE
     else if (str == "checkupdate") {
       sys.update = -1;
+      return;
+    }
+
+    // GET MAC
+    else if (str == "mac") {
+      DPRINTLN(getMacAddress());
+      return;
+    }
+
+    // Test
+    else if (str == "sendSetting") {
+      sendSettings();
       return;
     }
   }

@@ -5,11 +5,258 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
 	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-title" content="WlanThermo">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
     <title>WLANThermo - Nano</title>
 	 <style>
+@font-face {
+  font-family: 'nano';
+  src:
+    url('nano.ttf?57g8q9') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'nano' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-uniF2C7:before {
+  content: "\f2c7";
+  margin-right:4px;
+  margin-left:2px;
+}
+.icon-uniF2C8:before {
+  content: "\f2c8";
+  margin-right:4px;
+  margin-left:2px;
+}
+.icon-uniF2C9:before {
+  content: "\f2c9";
+  margin-right:4px;
+  margin-left:2px;
+}
+.icon-uniF2CA:before {
+  content: "\f2ca";
+  margin-right:4px;
+  margin-left:2px;
+}
+.icon-uniF2CB:before {
+  content: "\f2cb";
+  margin-right:4px;
+  margin-left:2px;
+}
+.icon-Wlan33:before {
+  content: "\e906";
+}
+.icon-Wlan66:before {
+  content: "\e907";
+}
+.icon-Wlan100:before {
+  content: "\e908";
+}
+.icon-arrow_down:before {
+  content: "\e900";
+}
+.icon-arrow_left:before {
+  content: "\e901";
+}
+.icon-arrow_right:before {
+  content: "\e902";
+}
+.icon-arrow_up:before {
+  content: "\e903";
+}
+.icon-temp_down:before {
+  content: "\e904";
+   margin-right:4px;
+}
+.icon-temp_up:before {
+  content: "\e905";
+  margin-right:4px;
+}
+.icon-fan:before {
+  content: "\e913";
+}
+.icon-wifi-off:before {
+  content: "\e915";
+}
+.icon-wifi-50:before {
+  content: "\e918";
+}
+.icon-wifi-75:before {
+  content: "\e919";
+}
+.icon-wifi-25:before {
+  content: "\e91a";
+}
+.icon-wifi-100:before {
+  content: "\e914";
+}
+.icon-ic_wifi_lock_black_24px:before {
+  content: "\e916";
+}
+.icon-ok:before {
+  content: "\f00c";
+}
+.icon-remove:before {
+  content: "\f00d";
+}
+.icon-refresh:before {
+  content: "\f021";
+}
+.icon-lock:before {
+  content: "\f023";
+}
+.icon-question_sign:before {
+  content: "\f059";
+}
+.icon-info_sign:before {
+  content: "\f05a";
+}
+.icon-notification:before {
+  content: "\f06a";
+  color:#FFFF00;
+}
+.icon-unlock:before {
+  content: "\f09c";
+}
+.icon-reorder:before {
+  content: "\f0c9";
+}
+.icon-spinner_2:before {
+  content: "\f110";
+}
+.icon-charger:before {
+  content: "\f1e6";
+}
+.icon-battery-100:before {
+  content: "\f240";
+}
+.icon-battery-75:before {
+  content: "\f241";
+}
+.icon-battery-50:before {
+  content: "\f242";
+}
+.icon-battery-25:before {
+  content: "\f243";
+}
+.icon-battery-0:before {
+  content: "\f244";
+  color: red;
+}
+.icon-stats-dots:before {
+  content: "\e99b";
+}
+.icon-power-cord:before {
+  content: "\e9b7";
+}
+.icon-eye:before {
+  content: "\e9ce";
+}
+.icon-eye-blocked:before {
+  content: "\e9d1";
+}
+.icon-notification_2:before {
+  content: "\ea08";
+}
+.icon-circle-up:before {
+  content: "\ea41";
+}
+.icon-circle-right:before {
+  content: "\ea42";
+}
+.icon-circle-down:before {
+  content: "\ea43";
+}
+.icon-circle-left:before {
+  content: "\ea44";
+}
+.icon-rotate-100{
+  animation: rotate 2s infinite linear;
+  -webkit-transition-delay: 1s; /* Safari */
+  transition-delay: 1s;
+  display: inline-block;
+}
+.icon-rotate-75{
+  animation: rotate 3s infinite linear;
+  -webkit-transition-delay: 1s; /* Safari */
+  transition-delay: 1s;
+  display: inline-block;
+}
+.icon-rotate-50{
+  animation: rotate 4s infinite linear;
+  -webkit-transition-delay: 1s; /* Safari */
+  transition-delay: 1s;
+  display: inline-block;
+}
+.icon-rotate-25{
+  animation: rotate 5s infinite linear;
+  -webkit-transition-delay: 1s; /* Safari */
+  transition-delay: 1s;
+  display: inline-block;
+}
+
+.icon-blinker{
+  animation: blinker 2s linear infinite;
+}
+@keyframes blinker {  
+  50% { opacity: 0; }
+}
+
+		table { 
+			width: 100%;
+		}
+		.row-Check {
+			width: 24px;
+			text-align: left;
+			padding-left:2px;
+		}
+		.row-SSID {
+			text-align: left;
+			padding-left:4px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		.row-Enc {
+			width: 24px;
+			text-align: right;
+			padding-right:4px;
+		}
+		.row-RSSI {
+			width: 24px;
+			text-align: right;
+			padding-right:4px;
+		}	
+		.row-link {
+			width: 30px;
+			text-align: right;
+			padding-right:2px;
+		}
+		
+		.wlantable tr {
+			cursor: pointer;	 
+		}
+
+		.wlantable tr:hover {
+			background-color: #333;	 
+		}
+		
 		.pure-button:focus,a:active,a:hover {
 		outline:0
 		}
@@ -1281,126 +1528,126 @@
 		}
 
 		@media screen and (min-width:64em) {
-		.pure-u-lg-1,.pure-u-lg-1-1,.pure-u-lg-1-12,.pure-u-lg-1-2,.pure-u-lg-1-24,.pure-u-lg-1-3,.pure-u-lg-1-4,.pure-u-lg-1-5,.pure-u-lg-1-6,.pure-u-lg-1-8,.pure-u-lg-10-24,.pure-u-lg-11-12,.pure-u-lg-11-24,.pure-u-lg-12-24,.pure-u-lg-13-24,.pure-u-lg-14-24,.pure-u-lg-15-24,.pure-u-lg-16-24,.pure-u-lg-17-24,.pure-u-lg-18-24,.pure-u-lg-19-24,.pure-u-lg-2-24,.pure-u-lg-2-3,.pure-u-lg-2-5,.pure-u-lg-20-24,.pure-u-lg-21-24,.pure-u-lg-22-24,.pure-u-lg-23-24,.pure-u-lg-24-24,.pure-u-lg-3-24,.pure-u-lg-3-4,.pure-u-lg-3-5,.pure-u-lg-3-8,.pure-u-lg-4-24,.pure-u-lg-4-5,.pure-u-lg-5-12,.pure-u-lg-5-24,.pure-u-lg-5-5,.pure-u-lg-5-6,.pure-u-lg-5-8,.pure-u-lg-6-24,.pure-u-lg-7-12,.pure-u-lg-7-24,.pure-u-lg-7-8,.pure-u-lg-8-24,.pure-u-lg-9-24 {
-		display:inline-block;
-		zoom:1;
-		letter-spacing:normal;
-		word-spacing:normal;
-		vertical-align:top;
-		text-rendering:auto
-		}
+			.pure-u-lg-1,.pure-u-lg-1-1,.pure-u-lg-1-12,.pure-u-lg-1-2,.pure-u-lg-1-24,.pure-u-lg-1-3,.pure-u-lg-1-4,.pure-u-lg-1-5,.pure-u-lg-1-6,.pure-u-lg-1-8,.pure-u-lg-10-24,.pure-u-lg-11-12,.pure-u-lg-11-24,.pure-u-lg-12-24,.pure-u-lg-13-24,.pure-u-lg-14-24,.pure-u-lg-15-24,.pure-u-lg-16-24,.pure-u-lg-17-24,.pure-u-lg-18-24,.pure-u-lg-19-24,.pure-u-lg-2-24,.pure-u-lg-2-3,.pure-u-lg-2-5,.pure-u-lg-20-24,.pure-u-lg-21-24,.pure-u-lg-22-24,.pure-u-lg-23-24,.pure-u-lg-24-24,.pure-u-lg-3-24,.pure-u-lg-3-4,.pure-u-lg-3-5,.pure-u-lg-3-8,.pure-u-lg-4-24,.pure-u-lg-4-5,.pure-u-lg-5-12,.pure-u-lg-5-24,.pure-u-lg-5-5,.pure-u-lg-5-6,.pure-u-lg-5-8,.pure-u-lg-6-24,.pure-u-lg-7-12,.pure-u-lg-7-24,.pure-u-lg-7-8,.pure-u-lg-8-24,.pure-u-lg-9-24 {
+				display:inline-block;
+				zoom:1;
+				letter-spacing:normal;
+				word-spacing:normal;
+				vertical-align:top;
+				text-rendering:auto
+			}
 
-		.pure-u-lg-1-24 {
-		width:4.1667%
-		}
+			.pure-u-lg-1-24 {
+			width:4.1667%
+			}
 
-		.pure-u-lg-1-12,.pure-u-lg-2-24 {
-		width:8.3333%
-		}
+			.pure-u-lg-1-12,.pure-u-lg-2-24 {
+			width:8.3333%
+			}
 
-		.pure-u-lg-1-8,.pure-u-lg-3-24 {
-		width:12.5%
-		}
+			.pure-u-lg-1-8,.pure-u-lg-3-24 {
+			width:12.5%
+			}
 
-		.pure-u-lg-1-6,.pure-u-lg-4-24 {
-		width:16.6667%
-		}
+			.pure-u-lg-1-6,.pure-u-lg-4-24 {
+			width:16.6667%
+			}
 
-		.pure-u-lg-1-5 {
-		width:20%
-		}
+			.pure-u-lg-1-5 {
+			width:20%
+			}
 
-		.pure-u-lg-5-24 {
-		width:20.8333%
-		}
+			.pure-u-lg-5-24 {
+			width:20.8333%
+			}
 
-		.pure-u-lg-1-4,.pure-u-lg-6-24 {
-		width:25%
-		}
+			.pure-u-lg-1-4,.pure-u-lg-6-24 {
+			width:25%
+			}
 
-		.pure-u-lg-7-24 {
-		width:29.1667%
-		}
+			.pure-u-lg-7-24 {
+			width:29.1667%
+			}
 
-		.pure-u-lg-1-3,.pure-u-lg-8-24 {
-		width:33.3333%
-		}
+			.pure-u-lg-1-3,.pure-u-lg-8-24 {
+			width:33.3333%
+			}
 
-		.pure-u-lg-3-8,.pure-u-lg-9-24 {
-		width:37.5%
-		}
+			.pure-u-lg-3-8,.pure-u-lg-9-24 {
+			width:37.5%
+			}
 
-		.pure-u-lg-2-5 {
-		width:40%
-		}
+			.pure-u-lg-2-5 {
+			width:40%
+			}
 
-		.pure-u-lg-10-24,.pure-u-lg-5-12 {
-		width:41.6667%
-		}
+			.pure-u-lg-10-24,.pure-u-lg-5-12 {
+			width:41.6667%
+			}
 
-		.pure-u-lg-11-24 {
-		width:45.8333%
-		}
+			.pure-u-lg-11-24 {
+			width:45.8333%
+			}
 
-		.pure-u-lg-1-2,.pure-u-lg-12-24 {
-		width:50%
-		}
+			.pure-u-lg-1-2,.pure-u-lg-12-24 {
+			width:50%
+			}
 
-		.pure-u-lg-13-24 {
-		width:54.1667%
-		}
+			.pure-u-lg-13-24 {
+			width:54.1667%
+			}
 
-		.pure-u-lg-14-24,.pure-u-lg-7-12 {
-		width:58.3333%
-		}
+			.pure-u-lg-14-24,.pure-u-lg-7-12 {
+			width:58.3333%
+			}
 
-		.pure-u-lg-3-5 {
-		width:60%
-		}
+			.pure-u-lg-3-5 {
+			width:60%
+			}
 
-		.pure-u-lg-15-24,.pure-u-lg-5-8 {
-		width:62.5%
-		}
+			.pure-u-lg-15-24,.pure-u-lg-5-8 {
+			width:62.5%
+			}
 
-		.pure-u-lg-16-24,.pure-u-lg-2-3 {
-		width:66.6667%
-		}
+			.pure-u-lg-16-24,.pure-u-lg-2-3 {
+			width:66.6667%
+			}
 
-		.pure-u-lg-17-24 {
-		width:70.8333%
-		}
+			.pure-u-lg-17-24 {
+			width:70.8333%
+			}
 
-		.pure-u-lg-18-24,.pure-u-lg-3-4 {
-		width:75%
-		}
+			.pure-u-lg-18-24,.pure-u-lg-3-4 {
+			width:75%
+			}
 
-		.pure-u-lg-19-24 {
-		width:79.1667%
-		}
+			.pure-u-lg-19-24 {
+			width:79.1667%
+			}
 
-		.pure-u-lg-4-5 {
-		width:80%
-		}
+			.pure-u-lg-4-5 {
+			width:80%
+			}
 
-		.pure-u-lg-20-24,.pure-u-lg-5-6 {
-		width:83.3333%
-		}
+			.pure-u-lg-20-24,.pure-u-lg-5-6 {
+			width:83.3333%
+			}
 
-		.pure-u-lg-21-24,.pure-u-lg-7-8 {
-		width:87.5%
-		}
+			.pure-u-lg-21-24,.pure-u-lg-7-8 {
+			width:87.5%
+			}
 
-		.pure-u-lg-11-12,.pure-u-lg-22-24 {
-		width:91.6667%
-		}
+			.pure-u-lg-11-12,.pure-u-lg-22-24 {
+			width:91.6667%
+			}
 
-		.pure-u-lg-23-24 {
-		width:95.8333%
-		}
+			.pure-u-lg-23-24 {
+			width:95.8333%
+			}
 
-		.pure-u-lg-1,.pure-u-lg-1-1,.pure-u-lg-24-24,.pure-u-lg-5-5 {
-		width:100%
-		}
+			.pure-u-lg-1,.pure-u-lg-1-1,.pure-u-lg-24-24,.pure-u-lg-5-5 {
+			width:100%
+			}
 		}
 
 		@media screen and (min-width:80em) {
@@ -1541,9 +1788,7 @@
 			white-space: nowrap;
 			float:left;
 		}
-		.notification{
-			color:#FFFF00;
-		}
+
 		.wifi, .notification {
 			text-align:center;
 			padding:14px 5px;
@@ -1626,28 +1871,6 @@
 			clear:both;
 		}
 
-		.wlantable td {
-			max-width: 0;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-		 
-		.wlantable tr {
-			cursor: pointer;	 
-		}
-
-		.wlantable tr:hover {
-			background-color: #333;	 
-		}
-
-		.row-Check{
-			min-width: 6%;
-		}
-
-		.row-SSID{
-			min-width: 45%;
-		}
 
 		body {
 			color:#777;
@@ -1840,7 +2063,7 @@
 			}
 		}
 
-		.channel:hover{
+		.channel:hover, .notification:hover, .wifi:hover, .battery:hover{
 			cursor: pointer;
 		}
 
@@ -1970,6 +2193,12 @@
 		
 		.form-group textarea {
 			resize: none;
+		}
+		
+		select {
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			appearance: none;
 		}
 		
 		.form-group select {
@@ -2286,6 +2515,39 @@
 			.pure-u-sm-1,.pure-u-sm-1-1,.pure-u-sm-1-12,.pure-u-sm-1-2,.pure-u-sm-1-24,.pure-u-sm-1-3,.pure-u-sm-1-4,.pure-u-sm-1-5,.pure-u-sm-1-6,.pure-u-sm-1-8,.pure-u-sm-10-24,.pure-u-sm-11-12,.pure-u-sm-11-24,.pure-u-sm-12-24,.pure-u-sm-13-24,.pure-u-sm-14-24,.pure-u-sm-15-24,.pure-u-sm-16-24,.pure-u-sm-17-24,.pure-u-sm-18-24,.pure-u-sm-19-24,.pure-u-sm-2-24,.pure-u-sm-2-3,.pure-u-sm-2-5,.pure-u-sm-20-24,.pure-u-sm-21-24,.pure-u-sm-22-24,.pure-u-sm-23-24,.pure-u-sm-24-24,.pure-u-sm-3-24,.pure-u-sm-3-4,.pure-u-sm-3-5,.pure-u-sm-3-8,.pure-u-sm-4-24,.pure-u-sm-4-5,.pure-u-sm-5-12,.pure-u-sm-5-24,.pure-u-sm-5-5,.pure-u-sm-5-6,.pure-u-sm-5-8,.pure-u-sm-6-24,.pure-u-sm-7-12,.pure-u-sm-7-24,.pure-u-sm-7-8,.pure-u-sm-8-24,.pure-u-sm-9-24{display:inline-block;zoom:1;letter-spacing:normal;word-spacing:normal;vertical-align:top;text-rendering:auto}.pure-u-sm-1-24{width:4.1667%}.pure-u-sm-1-12,.pure-u-sm-2-24{width:8.3333%}.pure-u-sm-1-8,.pure-u-sm-3-24{width:12.5%}.pure-u-sm-1-6,.pure-u-sm-4-24{width:16.6667%}.pure-u-sm-1-5{width:20%}.pure-u-sm-5-24{width:20.8333%}.pure-u-sm-1-4,.pure-u-sm-6-24{width:25%}.pure-u-sm-7-24{width:29.1667%}.pure-u-sm-1-3,.pure-u-sm-8-24{width:33.3333%}.pure-u-sm-3-8,.pure-u-sm-9-24{width:37.5%}.pure-u-sm-2-5{width:40%}.pure-u-sm-10-24,.pure-u-sm-5-12{width:41.6667%}.pure-u-sm-11-24{width:45.8333%}.pure-u-sm-1-2,.pure-u-sm-12-24{width:50%}.pure-u-sm-13-24{width:54.1667%}.pure-u-sm-14-24,.pure-u-sm-7-12{width:58.3333%}.pure-u-sm-3-5{width:60%}.pure-u-sm-15-24,.pure-u-sm-5-8{width:62.5%}.pure-u-sm-16-24,.pure-u-sm-2-3{width:66.6667%}.pure-u-sm-17-24{width:70.8333%}.pure-u-sm-18-24,.pure-u-sm-3-4{width:75%}.pure-u-sm-19-24{width:79.1667%}.pure-u-sm-4-5{width:80%}.pure-u-sm-20-24,.pure-u-sm-5-6{width:83.3333%}.pure-u-sm-21-24,.pure-u-sm-7-8{width:87.5%}.pure-u-sm-11-12,.pure-u-sm-22-24{width:91.6667%}.pure-u-sm-23-24{width:95.8333%}.pure-u-sm-1,.pure-u-sm-1-1,.pure-u-sm-24-24,.pure-u-sm-5-5{width:100%}}@media screen and (min-width:48em){.pure-u-md-1,.pure-u-md-1-1,.pure-u-md-1-12,.pure-u-md-1-2,.pure-u-md-1-24,.pure-u-md-1-3,.pure-u-md-1-4,.pure-u-md-1-5,.pure-u-md-1-6,.pure-u-md-1-8,.pure-u-md-10-24,.pure-u-md-11-12,.pure-u-md-11-24,.pure-u-md-12-24,.pure-u-md-13-24,.pure-u-md-14-24,.pure-u-md-15-24,.pure-u-md-16-24,.pure-u-md-17-24,.pure-u-md-18-24,.pure-u-md-19-24,.pure-u-md-2-24,.pure-u-md-2-3,.pure-u-md-2-5,.pure-u-md-20-24,.pure-u-md-21-24,.pure-u-md-22-24,.pure-u-md-23-24,.pure-u-md-24-24,.pure-u-md-3-24,.pure-u-md-3-4,.pure-u-md-3-5,.pure-u-md-3-8,.pure-u-md-4-24,.pure-u-md-4-5,.pure-u-md-5-12,.pure-u-md-5-24,.pure-u-md-5-5,.pure-u-md-5-6,.pure-u-md-5-8,.pure-u-md-6-24,.pure-u-md-7-12,.pure-u-md-7-24,.pure-u-md-7-8,.pure-u-md-8-24,.pure-u-md-9-24{display:inline-block;zoom:1;letter-spacing:normal;word-spacing:normal;vertical-align:top;text-rendering:auto}.pure-u-md-1-24{width:4.1667%}.pure-u-md-1-12,.pure-u-md-2-24{width:8.3333%}.pure-u-md-1-8,.pure-u-md-3-24{width:12.5%}.pure-u-md-1-6,.pure-u-md-4-24{width:16.6667%}.pure-u-md-1-5{width:20%}.pure-u-md-5-24{width:20.8333%}.pure-u-md-1-4,.pure-u-md-6-24{width:25%}.pure-u-md-7-24{width:29.1667%}.pure-u-md-1-3,.pure-u-md-8-24{width:33.3333%}.pure-u-md-3-8,.pure-u-md-9-24{width:37.5%}.pure-u-md-2-5{width:40%}.pure-u-md-10-24,.pure-u-md-5-12{width:41.6667%}.pure-u-md-11-24{width:45.8333%}.pure-u-md-1-2,.pure-u-md-12-24{width:50%}.pure-u-md-13-24{width:54.1667%}.pure-u-md-14-24,.pure-u-md-7-12{width:58.3333%}.pure-u-md-3-5{width:60%}.pure-u-md-15-24,.pure-u-md-5-8{width:62.5%}.pure-u-md-16-24,.pure-u-md-2-3{width:66.6667%}.pure-u-md-17-24{width:70.8333%}.pure-u-md-18-24,.pure-u-md-3-4{width:75%}.pure-u-md-19-24{width:79.1667%}.pure-u-md-4-5{width:80%}.pure-u-md-20-24,.pure-u-md-5-6{width:83.3333%}.pure-u-md-21-24,.pure-u-md-7-8{width:87.5%}.pure-u-md-11-12,.pure-u-md-22-24{width:91.6667%}.pure-u-md-23-24{width:95.8333%}.pure-u-md-1,.pure-u-md-1-1,.pure-u-md-24-24,.pure-u-md-5-5{width:100%}}@media screen and (min-width:64em){.pure-u-lg-1,.pure-u-lg-1-1,.pure-u-lg-1-12,.pure-u-lg-1-2,.pure-u-lg-1-24,.pure-u-lg-1-3,.pure-u-lg-1-4,.pure-u-lg-1-5,.pure-u-lg-1-6,.pure-u-lg-1-8,.pure-u-lg-10-24,.pure-u-lg-11-12,.pure-u-lg-11-24,.pure-u-lg-12-24,.pure-u-lg-13-24,.pure-u-lg-14-24,.pure-u-lg-15-24,.pure-u-lg-16-24,.pure-u-lg-17-24,.pure-u-lg-18-24,.pure-u-lg-19-24,.pure-u-lg-2-24,.pure-u-lg-2-3,.pure-u-lg-2-5,.pure-u-lg-20-24,.pure-u-lg-21-24,.pure-u-lg-22-24,.pure-u-lg-23-24,.pure-u-lg-24-24,.pure-u-lg-3-24,.pure-u-lg-3-4,.pure-u-lg-3-5,.pure-u-lg-3-8,.pure-u-lg-4-24,.pure-u-lg-4-5,.pure-u-lg-5-12,.pure-u-lg-5-24,.pure-u-lg-5-5,.pure-u-lg-5-6,.pure-u-lg-5-8,.pure-u-lg-6-24,.pure-u-lg-7-12,.pure-u-lg-7-24,.pure-u-lg-7-8,.pure-u-lg-8-24,.pure-u-lg-9-24{display:inline-block;zoom:1;letter-spacing:normal;word-spacing:normal;vertical-align:top;text-rendering:auto}.pure-u-lg-1-24{width:4.1667%}.pure-u-lg-1-12,.pure-u-lg-2-24{width:8.3333%}.pure-u-lg-1-8,.pure-u-lg-3-24{width:12.5%}.pure-u-lg-1-6,.pure-u-lg-4-24{width:16.6667%}.pure-u-lg-1-5{width:20%}.pure-u-lg-5-24{width:20.8333%}.pure-u-lg-1-4,.pure-u-lg-6-24{width:25%}.pure-u-lg-7-24{width:29.1667%}.pure-u-lg-1-3,.pure-u-lg-8-24{width:33.3333%}.pure-u-lg-3-8,.pure-u-lg-9-24{width:37.5%}.pure-u-lg-2-5{width:40%}.pure-u-lg-10-24,.pure-u-lg-5-12{width:41.6667%}.pure-u-lg-11-24{width:45.8333%}.pure-u-lg-1-2,.pure-u-lg-12-24{width:50%}.pure-u-lg-13-24{width:54.1667%}.pure-u-lg-14-24,.pure-u-lg-7-12{width:58.3333%}.pure-u-lg-3-5{width:60%}.pure-u-lg-15-24,.pure-u-lg-5-8{width:62.5%}.pure-u-lg-16-24,.pure-u-lg-2-3{width:66.6667%}.pure-u-lg-17-24{width:70.8333%}.pure-u-lg-18-24,.pure-u-lg-3-4{width:75%}.pure-u-lg-19-24{width:79.1667%}.pure-u-lg-4-5{width:80%}.pure-u-lg-20-24,.pure-u-lg-5-6{width:83.3333%}.pure-u-lg-21-24,.pure-u-lg-7-8{width:87.5%}.pure-u-lg-11-12,.pure-u-lg-22-24{width:91.6667%}.pure-u-lg-23-24{width:95.8333%}.pure-u-lg-1,.pure-u-lg-1-1,.pure-u-lg-24-24,.pure-u-lg-5-5{width:100%}}@media screen and (min-width:80em){.pure-u-xl-1,.pure-u-xl-1-1,.pure-u-xl-1-12,.pure-u-xl-1-2,.pure-u-xl-1-24,.pure-u-xl-1-3,.pure-u-xl-1-4,.pure-u-xl-1-5,.pure-u-xl-1-6,.pure-u-xl-1-8,.pure-u-xl-10-24,.pure-u-xl-11-12,.pure-u-xl-11-24,.pure-u-xl-12-24,.pure-u-xl-13-24,.pure-u-xl-14-24,.pure-u-xl-15-24,.pure-u-xl-16-24,.pure-u-xl-17-24,.pure-u-xl-18-24,.pure-u-xl-19-24,.pure-u-xl-2-24,.pure-u-xl-2-3,.pure-u-xl-2-5,.pure-u-xl-20-24,.pure-u-xl-21-24,.pure-u-xl-22-24,.pure-u-xl-23-24,.pure-u-xl-24-24,.pure-u-xl-3-24,.pure-u-xl-3-4,.pure-u-xl-3-5,.pure-u-xl-3-8,.pure-u-xl-4-24,.pure-u-xl-4-5,.pure-u-xl-5-12,.pure-u-xl-5-24,.pure-u-xl-5-5,.pure-u-xl-5-6,.pure-u-xl-5-8,.pure-u-xl-6-24,.pure-u-xl-7-12,.pure-u-xl-7-24,.pure-u-xl-7-8,.pure-u-xl-8-24,.pure-u-xl-9-24{display:inline-block;zoom:1;letter-spacing:normal;word-spacing:normal;vertical-align:top;text-rendering:auto}.pure-u-xl-1-24{width:4.1667%}.pure-u-xl-1-12,.pure-u-xl-2-24{width:8.3333%}.pure-u-xl-1-8,.pure-u-xl-3-24{width:12.5%}.pure-u-xl-1-6,.pure-u-xl-4-24{width:16.6667%}.pure-u-xl-1-5{width:20%}.pure-u-xl-5-24{width:20.8333%}.pure-u-xl-1-4,.pure-u-xl-6-24{width:25%}.pure-u-xl-7-24{width:29.1667%}.pure-u-xl-1-3,.pure-u-xl-8-24{width:33.3333%}.pure-u-xl-3-8,.pure-u-xl-9-24{width:37.5%}.pure-u-xl-2-5{width:40%}.pure-u-xl-10-24,.pure-u-xl-5-12{width:41.6667%}.pure-u-xl-11-24{width:45.8333%}.pure-u-xl-1-2,.pure-u-xl-12-24{width:50%}.pure-u-xl-13-24{width:54.1667%}.pure-u-xl-14-24,.pure-u-xl-7-12{width:58.3333%}.pure-u-xl-3-5{width:60%}.pure-u-xl-15-24,.pure-u-xl-5-8{width:62.5%}.pure-u-xl-16-24,.pure-u-xl-2-3{width:66.6667%}.pure-u-xl-17-24{width:70.8333%}.pure-u-xl-18-24,.pure-u-xl-3-4{width:75%}.pure-u-xl-19-24{width:79.1667%}.pure-u-xl-4-5{width:80%}.pure-u-xl-20-24,.pure-u-xl-5-6{width:83.3333%}.pure-u-xl-21-24,.pure-u-xl-7-8{width:87.5%}.pure-u-xl-11-12,.pure-u-xl-22-24{width:91.6667%}.pure-u-xl-23-24{width:95.8333%}.pure-u-xl-1,.pure-u-xl-1-1,.pure-u-xl-24-24,.pure-u-xl-5-5{width:100%}
 		}
 
+		.cover_active{
+			position:fixed; 
+			top:0; 
+			left:0; 
+			background:rgba(0,0,0,0.6); 
+			z-index:5; 
+			width:100%; 
+			height:100%; 
+			display:none; 
+			display:block; 
+			opacity:2; 
+		}
+		.spinner{
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			height: 28px;
+			width: 28px;
+			margin-left: -14px;
+			margin-top: -14px;
+			animation: rotate 0.8s infinite linear;
+			border: 8px solid #fff;
+			border-right-color: transparent;
+			border-radius: 50%; 
+			-webkit-transition-delay: 1s; /* Safari */
+			transition-delay: 1s;
+		}
+		
+		@keyframes rotate {
+			0%    { transform: rotate(0deg); }
+			100%  { transform: rotate(360deg); }
+		}
+
 
     </style>
 </head>
@@ -2299,70 +2561,73 @@
 			<span></span>
 		</a>
 		<div id="thermoname">N.C.</div>
-		<div class="battery">N.C.</div>
-		<div class="wifi">N.C.</div>
-		<div class="notification" style="display:none" onclick="update();">(!)</div>
+		<div class="battery" onclick="setshowBatteryWlanIcon();">N.C.</div>
+		<div title="This is my tooltip" class="wifi" onclick="setshowBatteryWlanIcon();">N.C.</div>
+		<div class="notification" style="display:none" onclick="update();"><span class="icon-notification"> </span></div>
 	</div>
 	<div class="clear"></div>
     <div id="menu">
         <div class="pure-menu custom-restricted-width">
-				<a class="pure-menu-heading" href="javascript:showIndex()"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAAA+CAMAAADOHANyAAABy1BMVEVHcEz////LtrjCo6T+/v67
-												srLmGSX18/Pk5OT////////////19fX9/f3+/v76+vrs7Oz7+/vkMDr+/v77+/vkCxj///+8vLzc
-												3Nz8/Pzx8fH8/Pz9/f3v7+/+/v77+/vp6en6+vrk5OTt7e3////7+/vx8fH39/f7+/v8/Pzv7+/0
-												9PTkDxzb29vz8fH7+/v+/v74+Pjy8vL7+/v6+vr9/f3a2tr////+/v76+fn8/Pz5+fnkCRb4+Pj8
-												/Pz19fX8/Pz9/f3kCxjlEh75+fnu7u7kChb7+/vkDRr5+fn09PT8/Pz29vba2tr6+vr8/Pzs7Oz8
-												/Pz39/f9/f37+/vkDBnkCRblER3v7+/v7+/+/v7kBxT6+vrpOELz8/P8/PzlDxz6+vroLDfq6ur5
-												+fn39/f29vb8/Pz////kEyDrRlDnIy/lDRr////////kDBj////kBxToMz3z8/PlEyDlGCPkChf3
-												9/f////lEh/lFSH4+PjlFSHnIS3kDRrkCxjkChflEBz////lDhrkDBjlHyvkCxj39/flFyPu7u7m
-												GyfkDRnlEyDlFSH////oc3r////pXGTnKTTywcTzxMfrT1jsgIb////kBhPe/hkIAAAAl3RSTlMA
-												zQMC/QE8SBT+fPpg5PhSDB/L3XPKkBsH3i6W7WqBohqTKDIUvhxkr8kOTXQJN7P0cDSqiPEEjraP
-												23nsa+OqzOnglJ0k8qWofUS7UAuFxBHPV9a4tfhbKidL/vkLO9R+ixYXgklB2Z6EBxyuSFXGKfsR
-												PW5C2j50Y0xbVyac1OaMXKK7NszGRzwsv1NQyl7LiDN1jxiQLUfRqQAACeRJREFUeF7tmGlXG0cW
-												hu9IaiMs1IiEZATSBBQCSGBAGKQZNgWZfbMABIYQA9gYAraTeMGOl3gZL4m3yWS2l587fau6qlsg
-												nUM44VueD5xbatT16tbduunUub1/7sm7e/2rBweroxe+G994f51KUh25qUyjaZoUVyOREBF9FjlP
-												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" alt="WLANThermo" height="58" width="130"> </a>
+				<a class="pure-menu-heading" href="javascript:showIndex()">
+					<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAAA+CAMAAADOHANyAAABy1BMVEVHcEz////LtrjCo6T+/v67
+						srLmGSX18/Pk5OT////////////19fX9/f3+/v76+vrs7Oz7+/vkMDr+/v77+/vkCxj///+8vLzc
+						3Nz8/Pzx8fH8/Pz9/f3v7+/+/v77+/vp6en6+vrk5OTt7e3////7+/vx8fH39/f7+/v8/Pzv7+/0
+						9PTkDxzb29vz8fH7+/v+/v74+Pjy8vL7+/v6+vr9/f3a2tr////+/v76+fn8/Pz5+fnkCRb4+Pj8
+						/Pz19fX8/Pz9/f3kCxjlEh75+fnu7u7kChb7+/vkDRr5+fn09PT8/Pz29vba2tr6+vr8/Pzs7Oz8
+						/Pz39/f9/f37+/vkDBnkCRblER3v7+/v7+/+/v7kBxT6+vrpOELz8/P8/PzlDxz6+vroLDfq6ur5
+						+fn39/f29vb8/Pz////kEyDrRlDnIy/lDRr////////kDBj////kBxToMz3z8/PlEyDlGCPkChf3
+						9/f////lEh/lFSH4+PjlFSHnIS3kDRrkCxjkChflEBz////lDhrkDBjlHyvkCxj39/flFyPu7u7m
+						GyfkDRnlEyDlFSH////oc3r////pXGTnKTTywcTzxMfrT1jsgIb////kBhPe/hkIAAAAl3RSTlMA
+						zQMC/QE8SBT+fPpg5PhSDB/L3XPKkBsH3i6W7WqBohqTKDIUvhxkr8kOTXQJN7P0cDSqiPEEjraP
+						23nsa+OqzOnglJ0k8qWofUS7UAuFxBHPV9a4tfhbKidL/vkLO9R+ixYXgklB2Z6EBxyuSFXGKfsR
+						PW5C2j50Y0xbVyac1OaMXKK7NszGRzwsv1NQyl7LiDN1jxiQLUfRqQAACeRJREFUeF7tmGlXG0cW
+						hu9IaiMs1IiEZATSBBQCSGBAGKQZNgWZfbMABIYQA9gYAraTeMGOl3gZL4m3yWS2l587fau6qlsg
+						nUM44VueD5xbatT16tbduunUub1/7sm7e/2rBweroxe+G994f51KUh25qUyjaZoUVyOREBF9FjlP
+						RzD6PORiIEwuvJHIVVIYr3Zf3zo4zIUXjy9TUbqR1/bWuqHMZvSSxceopCNsF374jzGDHNLl+Jwk
+						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" 
+					alt="WLANThermo" height="58" width="130"> 
+				</a>
             <ul class="pure-menu-list">
                 <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
                 <!-- <li class="pure-menu-item pure-menu-has-children"><a href="#" id="menuChannel" class="pure-menu-link">Kanal</a></li> -->
@@ -2381,97 +2646,97 @@
 		<!-- ################################################### -->
         <div id="index" class="content" class="hidden" style="display:none">
             <div class="pure-g">
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('0')">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index" onclick="showSetChannel('0')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('1')">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index" onclick="showSetChannel('1')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('2')">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index" onclick="showSetChannel('2')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('3')">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index" onclick="showSetChannel('3')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('4')">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index" onclick="showSetChannel('4')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('5')">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index" onclick="showSetChannel('5')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('6')">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index" onclick="showSetChannel('6')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
 					</div>
                 </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index" onclick="showSetChannel('7')">
+                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index" onclick="showSetChannel('7')">
 					<div class="1-box channel">
 						<div class="chtitle">N.C.</div>
 						<div class="chnumber">N.C.</div>
 							<div class="tempadjust">
-								<div class="tempmin">N.C.</div>
 								<div class="tempmax">N.C.</div>
+								<div class="tempmin">N.C.</div>
 							</div>
 							<div class="temp">N.C.</div>
 							<div class="clear"></div>
@@ -2488,15 +2753,21 @@
 			<h3 class="headtitle">WLAN Einstellungen</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
-					<div class="1-box wlan_conf">
-							<table id="networkconnect" class="wlantable" width="100%">
-								<!--Netzwerkliste -->
-							</table> 
-							<hr />
+					<div class="1-box wlan_conf">						
+						<table id="networkconnect" class="wlantable" width="100%">
+							<!--Netzwerkliste -->
+						</table> 
+						<hr />
 						<h3>Netzwerk wählen...</h3>
 						<table id="networklist" class="wlantable" width="100%">
 								<!--Netzwerkliste -->
-						</table> 
+						</table>
+						<hr />
+						<div class="checkbox">
+						  <label>
+							<input id="wlan_active" onclick="wlan_active();" type="checkbox" checked/><i class="helper"></i>WLAN aktivieren
+						  </label>
+						</div>						
 					</div>
 				</div>
 			</div>
@@ -2508,14 +2779,20 @@
 				<button class="pure-button pure-button-disabled">WLAN</button>
 				<button class="pure-button" onclick="setWLAN(document.getElementsByName('ssidInput')[0].value, document.getElementsByName('ssidPasswordInput')[0].value)">Verbinden</button>
 			</div>
-			<hr />
-			<h3 class="headtitle">WLAN Einstellungen</h3>
+			<h3 class="headtitle">Netzwerk Verbinden</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
-					<div class="1-box wlan_conf">
-						<h3>Netzwerk Verbinden</h3>
-						<input name="ssidInput" type="text" maxlength="32" placeholder="SSID" readonly>
-						<input name="ssidPasswordInput" type="password" maxlength="63" placeholder="Passwort" required />
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="form-group">
+							  <input name="ssidInput" type="text" onkeyup="setssidInput();"maxlength="32" required="required"/>
+							  <label class="control-label" for="input">SSID</label><i class="bar"></i>
+							</div>			
+							<div class="form-group">
+							  <input name="ssidPasswordInput" type="password" maxlength="63" required="required"/>
+							  <label class="control-label" for="input">Passwort</label><i class="bar"></i>
+							</div>	
+						</form>
 					</div>
 				</div>
 			</div>
@@ -2524,7 +2801,7 @@
 		<div id="channel_settings" class="content" style="display:none">
 			<div class="pure-button-group footer_buttons" role="group">
 				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
-				<button class="pure-button pure-button-disabled">Kanal $</button>
+				<button class="pure-button pure-button-disabled">Kanal</button>
 				<button id="channel_settings_save" class="pure-button" onclick="">Speichern</button>
 			</div>
 			<h3 id="channel_settings_headtitle" class="headtitle">N.C.</h3>
@@ -2659,7 +2936,12 @@
 							  <label>
 								<input id="fastmode" type="checkbox"/><i class="helper"></i>Schnelllauf
 							  </label>
-							</div>	
+							</div>
+							<div class="checkbox">
+							  <label>
+								<input id="searchUpdate" type="checkbox"/><i class="helper"></i>Nach Updates suchen
+							  </label>
+							</div>								
 						</form>
 					</div>
 				</div>
@@ -2748,7 +3030,9 @@
 		<!-- ################################################### -->
     </div>
 </div>
-
+<div id="cover">
+	<div id="spinner"></div>
+</div>
 <script> 
 	(function (window, document) {
 
@@ -2833,7 +3117,6 @@
 	document.addEventListener("DOMContentLoaded", function(event) { 
 		setThermoName();
 		setInterval("readTemp();", 2000);
-	//your code to run since DOM is loaded and ready
 	});
 	
 	document.getElementById("index").style.display = "inline";
@@ -2845,6 +3128,23 @@
 		networkscan();
 	}
 	
+	function wlan_active(){
+		if(document.getElementById('wlan_active').checked){
+	
+		}else{
+			txt = 'Soll die Wifi-Verbindung bis zum nächsten Restart des Systems wirklich abgeschaltet werden?';
+			if (confirm(txt) == true) {
+				loadJSON('stopwifi', '', '60000', function (response) {
+                  if(response == 'true'){      
+                    self.location.href='about:blank'
+                  }
+                });
+			} else {
+				document.getElementById('wlan_active').checked = true;
+			}
+		}
+	}
+	
 	function showPlot(){
 		hideAll();
 		document.getElementById("plot").style.display = "inline";
@@ -2852,17 +3152,21 @@
 
 	function showThingspeak(){
 		hideAll();
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('TSwrite').value = jsonresponse.charts.TSwrite;
 			document.getElementById('TShttp').value = jsonresponse.charts.TShttp;
 			document.getElementById('TSchID').value = jsonresponse.charts.TSchID;
 			document.getElementById('TSshow8').checked = jsonresponse.charts.TSshow8;
+			document.getElementById("thingspeak").style.display = "inline";
+			showLoader('false');
 		})
-		document.getElementById("thingspeak").style.display = "inline";
+		
 	}	
 
 	function setThingspeak(){
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
 			jsonresponse = JSON.parse(response);
 			jsonresponse.charts.TSwrite = document.getElementById('TSwrite').value;
@@ -2871,8 +3175,10 @@
 			jsonresponse.charts.TSshow8 = document.getElementById('TSshow8').checked;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
+			showLoader('true');
 			loadJSON('setcharts', data, '60000', function (response) {
 				showIndex();
+				showLoader('false');
 			})		
 		})
 	}
@@ -2884,7 +3190,7 @@
 
 	function showSetChannel(channel){
 		hideAll();
-		document.getElementById("channel_settings").style.display = "inline";
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			clearOption('sensor');
@@ -2902,10 +3208,13 @@
 			document.getElementById('color').value = jsonresponse.channel[channel].color;
 			document.getElementById('sensor').value = jsonresponse.channel[channel].typ;
 			document.getElementById('webalarm').checked = jsonresponse.channel[channel].alarm;
+			document.getElementById("channel_settings").style.display = "inline";
+			showLoader('false');
 		})
 	}
 
 	function setChannel(channel){
+		showLoader('true');
 		loadJSON('data', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			jsonresponse.channel[channel].min = document.getElementById('temp_min').value;
@@ -2914,11 +3223,12 @@
 			jsonresponse.channel[channel].typ = document.getElementById('sensor').value;
 			jsonresponse.channel[channel].alarm = document.getElementById('webalarm').checked;
 			jsonresponse.channel[channel].color = document.getElementById('color').value;
-			//alert(jsonresponse.channel[channel].min);
 			var data = JSON.stringify(jsonresponse.channel[channel]);
 				//alert(data);
+			showLoader('true');
 			loadJSON('setchannels', data, '60000', function (response) {
 				showIndex();
+				showLoader('false');
 			})		
 		})	
 	}
@@ -2933,15 +3243,18 @@
 	}
 	
 	function setWLAN(ssid, passwd){
+		showLoader('true');
 		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
 		loadJSON('setnetwork', data, '60000', function (response) {
 			showWLAN();
+			showLoader('false');
 		})
 		
 	}	
 	
 	function setThermoName(){
-		loadJSON('settings', '', '3000', function (response) {
+		showLoader('true');
+		loadJSON('settings', '', '5000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 			if(jsonresponse.system.getupdate == 'false'){
@@ -2949,7 +3262,34 @@
 			}else{
 				document.getElementsByClassName("notification")[0].style.display = "inline";
 			}
+			showLoader('false');
 		})
+	}
+	
+	var updateActivated = 'false';
+	
+	function checkUpdateActivated(){
+		loadJSON('updatestatus', '', '3000', function (response) {
+			jsonresponse = JSON.parse(response);
+			if (jsonresponse == true){
+				showLoader('true');
+			}else if (jsonresponse == false){
+				showLoader('false')
+				updateActivated = 'false';
+				document.getElementsByClassName("notification")[0].style.display = "none";
+				location.reload(true);
+			}
+		})	
+	}
+	
+	function showLoader(show){
+		if (show == 'true') {
+			document.getElementById("cover").classList.add("cover_active");
+			document.getElementById("spinner").classList.add("spinner");		
+		}else{
+			document.getElementById("cover").classList.remove("cover_active");
+			document.getElementById("spinner").classList.remove("spinner");
+		}
 	}
 	
 	function update(){
@@ -2958,16 +3298,18 @@
 			txt = 'Wollen Sie das aktuelle Update Installieren?\n\nAktuelle Version:' + jsonresponse.system.version + '\nNeue Version:' + jsonresponse.system.getupdate;
 			if (confirm(txt) == true) {
 				loadJSON('update', '', '60000', function (response) {
-					document.getElementsByClassName("notification")[0].style.display = "none";
-				})
+					showLoader('true');
+					updateActivated = 'true';
+				});
 			} else {
 			
 			}						
 		})	
 	}
-		
+	
 	function showSystem(){
 		hideAll();
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			document.getElementById('timezone').value = jsonresponse.system.utc;
@@ -2979,16 +3321,19 @@
 			document.getElementById('hwalarm').checked = jsonresponse.system.hwalarm;
 			document.getElementById('summer').checked = jsonresponse.system.summer;
 			document.getElementById('fastmode').checked = jsonresponse.system.fastmode;
+			document.getElementById('searchUpdate').checked = jsonresponse.system.autoupd;
 			clearOption('hwversion');
 			for (var i = 0; i < jsonresponse.hardware.length; i++) {
 				document.getElementById('hwversion').options[document.getElementById('hwversion').options.length] = new Option(jsonresponse.hardware[i], jsonresponse.hardware[i]);
 			}
 			document.getElementById('hwversion').value = jsonresponse.system.hwversion;
+			document.getElementById("system_config").style.display = "inline";
+			showLoader('false');
 		})
-		document.getElementById("system_config").style.display = "inline";
 	}
 	
 	function setSystem(){
+		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
 			jsonresponse.system.host = document.getElementById('hostname').value.replace(/ /g, '_');
@@ -2999,12 +3344,15 @@
 			jsonresponse.system.unit = document.getElementById('unit').value;
 			jsonresponse.system.hwalarm = document.getElementById('hwalarm').checked;
 			jsonresponse.system.summer = document.getElementById('summer').checked;
-			jsonresponse.system.fastmode = document.getElementById('fastmode').checked;			
+			jsonresponse.system.fastmode = document.getElementById('fastmode').checked;		
+			jsonresponse.system.autoupd = document.getElementById('searchUpdate').checked;			
 			var data = JSON.stringify(jsonresponse.system);
+			showLoader('true');
 			loadJSON('setsystem', data, '60000', function (response) {
 				//alert(data);
 				document.getElementById('thermoname').innerHTML = jsonresponse.system.host;
 				showIndex();
+				showLoader('false');
 			})		
 		})	
 	}
@@ -3051,43 +3399,156 @@
                 callback(xobj.responseText);
             }
         }
+		xobj.ontimeout = function (e) {
+			if (updateActivated != 'true'){
+				showLoader('false');
+			}
+		};
         xobj.send(data);
     }
 	
+	var showBatteryWlanIcon = true;
+	
+	function setshowBatteryWlanIcon(){
+		showBatteryWlanIcon = false;
+		readTemp();
+		setTimeout(function(){
+			showBatteryWlanIcon = true;
+        }, 10000);
+		//setTimeout(showBatteryWlanIcon = false, 3000)
+	}
+	
+	function getBatteryIcon(percent,charge){
+		data = '';
+		if (showBatteryWlanIcon == true){
+			if(charge == true){
+				data = '<span class="icon-power-cord"> </span>';
+			}else{
+				data = '';
+			}
+			if (percent >= '90'){
+				data = data + '<span class="icon-battery-100"> </span>';
+			}else if (percent >= '75'){
+				data = data + '<span class="icon-battery-75"> </span>';
+			}else if (percent >= '50'){
+				data = data + '<span class="icon-battery-50"> </span>';
+			}else if (percent >= '15'){
+				data = data + '<span class="icon-battery-25"> </span>';
+			}else if (percent >= '10'){
+				data = data + '<span class="icon-battery-0"> </span>';
+			}else{
+				data = data + '<span class="icon-battery-0 icon-blinker"> </span>';
+			}
+			return data + '&nbsp;';
+		}else{
+			if(charge == true){
+				data = '<span class="icon-power-cord"> </span>';
+			}else{
+				data = '';
+			}
+			data = data + percent + '%';
+			return data + '&nbsp;';
+		}
+	}
+	
+	function getRSSIIcon(dbm){
+		data = '';
+		if (showBatteryWlanIcon == true){
+			if(dbm >= '-80'){
+				data = data + '<span class="icon-Wlan100"></span> </span>';
+			}else if (dbm >= '-95'){
+				data = data + '<span class="icon-Wlan66"></span> </span>';
+			}else if (dbm >= '-105'){
+				data = data + '<span class="icon-Wlan33"></span> </span>';
+			}
+			return data;	
+		}else{
+			data = dbm + 'dBm';
+			return data;		
+		}
+	}
+
+	function getWifiSecureIcon(data){
+		switch(data) {
+			case 2: //ENC_TYPE_TKIP - WPA / PSK
+				return '<span class="icon-lock"> </span>';
+				break;
+			case 4: //ENC_TYPE_CCMP - WPA2 / PSK
+				return '<span class="icon-lock"> </span>';
+				break;
+			case 5: //ENC_TYPE_WEP - WEP
+				return '<span class="icon-lock"> </span>';
+				break;
+			case 7: //ENC_TYPE_NONE - open network
+				return '<span class="icon-unlock"> </span>';
+			break;
+			case 8:	//ENC_TYPE_AUTO - WPA / WPA2 / PSK
+				return '<span class="icon-lock"> </span>';
+				break;	
+			default:
+				return '<span class="icon-lock"> </span>';
+		} 
+	}
+	
 	function readTemp(){
-		loadJSON('data', '', '3000', function (response) {
-		//loadJSON(function(response) {	
-			jsonresponse = JSON.parse(response);
-			document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%";
-			document.getElementsByClassName("wifi")[0].innerHTML = jsonresponse.system.rssi + "dBm";
-			var x = document.getElementsByClassName("pure-u-1-1 pure-u-md-1-2 pure-u-lg-1-4 temp_index");
-			var i;
-			for (i = 0; i < x.length; i++) {
-				x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jsonresponse.channel[i].color;
-				x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;
-				x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jsonresponse.channel[i].number;
-				x[i].getElementsByClassName('tempmin')[0].innerHTML = jsonresponse.channel[i].min + "°";
-				x[i].getElementsByClassName('tempmax')[0].innerHTML = jsonresponse.channel[i].max + "°";
-				if (jsonresponse.channel[i].temp == '999'){
-					x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
-					x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
-					x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
-				}else{
-					x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;
-					if (jsonresponse.channel[i].temp < jsonresponse.channel[i].min){
-						x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
-						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
-					}else if (jsonresponse.channel[i].temp > jsonresponse.channel[i].max){
-						x[i].getElementsByClassName('temp')[0].style.color = "red";
-						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
+		if (updateActivated == 'true'){
+				checkUpdateActivated();
+		}else{
+			loadJSON('data', '', '3000', function (response) {
+				jsonresponse = JSON.parse(response);
+				BatteryIcon = getBatteryIcon(jsonresponse.system.soc,jsonresponse.system.charge);
+				document.getElementsByClassName("battery")[0].innerHTML = BatteryIcon;
+				<!-- document.getElementsByClassName("battery")[0].innerHTML = jsonresponse.system.soc + "%"; -->
+				RSSIIcon = getRSSIIcon(jsonresponse.system.rssi);
+				document.getElementsByClassName("wifi")[0].innerHTML = RSSIIcon;
+				<!-- document.getElementsByClassName("wifi")[0].innerHTML = jsonresponse.system.rssi + "dBm"; -->
+				var x = document.getElementsByClassName("pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index");
+				var i;
+				for (i = 0; i < x.length; i++) {
+					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jsonresponse.channel[i].color;
+					x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;
+					if(jsonresponse.pitmaster.active == true){
+						if (jsonresponse.pitmaster.channel == jsonresponse.channel[i].number){
+							if(jsonresponse.pitmaster.value == '0'){
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
+							}else if (jsonresponse.pitmaster.value <= '25'){
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-25"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
+							}else if (jsonresponse.pitmaster.value <= '50'){
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-50"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
+							}else if (jsonresponse.pitmaster.value <= '75'){
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-75"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
+							}else if (jsonresponse.pitmaster.value <= '100'){
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-100"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
+							}
+						}else{
+							x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;
+						}
 					}else{
-						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";
+						x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;
+					}
+					x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jsonresponse.channel[i].number;
+					x[i].getElementsByClassName('tempmin')[0].innerHTML = '<span class="icon-temp_down"></span>' + jsonresponse.channel[i].min + "°";
+					x[i].getElementsByClassName('tempmax')[0].innerHTML = '<span class="icon-temp_up"></span>' + jsonresponse.channel[i].max + "°";
+					if (jsonresponse.channel[i].temp == '999'){
+						x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
+						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
 						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
+					}else{
+						x[i].getElementsByClassName('temp')[0].innerHTML = jsonresponse.channel[i].temp + "°" + jsonresponse.system.unit;
+						if (jsonresponse.channel[i].temp < jsonresponse.channel[i].min){
+							x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
+							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
+						}else if (jsonresponse.channel[i].temp > jsonresponse.channel[i].max){
+							x[i].getElementsByClassName('temp')[0].style.color = "red";
+							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
+						}else{
+							x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";
+							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
+						}
 					}
 				}
-			}
-
-		})
+			})
+		}
 	}
 	
 	function networkscan(){
@@ -3111,14 +3572,21 @@
 				var cell2 = row.insertCell(1);
 				var cell3 = row.insertCell(2);
 				var cell4 = row.insertCell(3);
-				cell1.innerHTML = '&#10003;';
+				var cell5 = row.insertCell(4);
+				cell1.innerHTML = '<span class="icon-ok"> </span>';
 				cell1.className = 'row-Check';
 				cell2.innerHTML = jsonresponse.SSID;
 				cell2.className = 'row-SSID';
-				cell3.innerHTML = jsonresponse.RSSI + 'dBm';
+				RSSI = getRSSIIcon(jsonresponse.RSSI);
+				cell3.innerHTML = RSSI;
+				//cell3.innerHTML = jsonresponse.RSSI + 'dBm';
 				cell3.className = 'row-RSSI';
-				cell4.innerHTML = jsonresponse.Enc;
-				cell4.className = 'row-Enc';	
+				enc = getWifiSecureIcon(jsonresponse.Enc);
+				cell4.innerHTML = enc;
+				//cell4.innerHTML = jsonresponse.Enc;
+				cell4.className = 'row-Enc';
+				<!-- cell5.innerHTML = '<span class="icon-info_sign"> </span>'; -->
+				cell5.className = 'row-link';				
 			}
 			NetworkconnectRowClick();
 			for (var i = 0; i < jsonresponse.Scan.length; i++) {
@@ -3128,19 +3596,27 @@
 				var cell2 = row.insertCell(1);
 				var cell3 = row.insertCell(2);
 				var cell4 = row.insertCell(3);
+				var cell5 = row.insertCell(4);
 				cell1.innerHTML = '';
 				cell1.className = 'row-Check';
 				cell2.innerHTML = jsonresponse.Scan[i].SSID;
 				cell2.className = 'row-SSID';
-				cell3.innerHTML = jsonresponse.Scan[i].RSSI + 'dBm';
+				RSSI = getRSSIIcon(jsonresponse.Scan[i].RSSI);
+				cell3.innerHTML = RSSI;
+				//cell3.innerHTML = jsonresponse.Scan[i].RSSI + 'dBm';
 				cell3.className = 'row-RSSI';
-				cell4.innerHTML = jsonresponse.Scan[i].Enc;	
+				enc = getWifiSecureIcon(jsonresponse.Scan[i].Enc);
+				cell4.innerHTML = enc;
+				//cell4.innerHTML = jsonresponse.Scan[i].Enc;	
 				cell4.className = 'row-Enc';
+				cell5.innerHTML = '<span class="icon-circle-right"> </span>';
+				cell5.className = 'row-link';
 			}
 			NetworklistRowClick();
 		})
 	}
 	
+	var ssidInput;
 	function NetworklistRowClick() {
 		var table = document.getElementById("networklist");
 		var rows = table.rows; // or table.getElementsByTagName("tr");
@@ -3148,14 +3624,19 @@
 			rows[i].onclick = (function() { // closure
 				var cnt = i; // save the counter to use in the function
 				return function() {
-					showSetWLAN();
 					//alert("row"+cnt+" data="+this.cells[1].innerHTML);
 					//document.getElementsByName('ssidInput')[0].placeholder=this.cells[1].innerHTML;
 					document.getElementsByName('ssidInput')[0].value = this.cells[1].innerHTML;
 					document.getElementsByName('ssidPasswordInput')[0].value = null;
+					ssidInput = this.cells[1].innerHTML;
+					showSetWLAN();
 				}    
 			})(i);
 		}
+	}
+	 
+	function setssidInput(){
+		document.getElementsByName('ssidInput')[0].value = ssidInput;
 	}
 	
 	function NetworkconnectRowClick() {
@@ -3172,7 +3653,6 @@
 	}
 	
 	function validateNumber(number) {
-	
 		val = number.value.replace(/[^0-9.,]/g,'');
 		val = val.replace(/[,]/g, '.'); // "," ersetzen zu "."
 		if(val){

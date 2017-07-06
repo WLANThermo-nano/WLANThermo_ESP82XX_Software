@@ -77,13 +77,28 @@ void drawQuestion(int counter) {
     display.setTextAlignment(TEXT_ALIGN_LEFT);
     display.setFont(ArialMT_Plain_10);
 
-    bool b0 = true;
+    byte b0 = 1;
     bool b1 = true;
     
     switch (question.typ) {                   // Which Question?
 
       case CONFIGRESET:
         display.drawString(32,3,"Reset Config?");
+        break;
+
+      case IPADRESSE:
+        display.drawString(25,3,"WLAN-Anmeldung");
+        display.drawString(17, 20, "IP:");
+        display.drawString(33, 20, WiFi.localIP().toString());
+        b1 = false;
+        b0 = 2;
+        break;
+
+      case OTAUPDATE:
+        if (sys.getupdate == FIRMWAREVERSION) display.drawString(3,3,"Update: Erfolgreich!");
+        else display.drawString(3,3,"Update: Fehlgeschlagen!");
+        b1 = false;
+        b0 = 2;
         break;
 
       case HARDWAREALARM:
@@ -96,10 +111,11 @@ void drawQuestion(int counter) {
     }
 
     display.setFont(ArialMT_Plain_16);
-    
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
     if (b1) display.drawString(10,40,"NO");
     display.setTextAlignment(TEXT_ALIGN_RIGHT);
-    if (b0) display.drawString(118,40,"YES");
+    if (b0 == 1) display.drawString(118,40,"YES");
+    else if (b0 == 2) display.drawString(118,40,"OK");
     display.display();
 }
 
@@ -192,9 +208,9 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
     display->fillRect(120,8,2,1); //Draw ground line
     display->fillRect(124,8,2,1); //Draw ground line
 
-    if (rssi > -100) display->fillRect(116,5,2,3); //Draw 1 line
-    if (rssi > -85) display->fillRect(120,3,2,5); //Draw 2 line
-    if (rssi > -70) display->fillRect(124,1,2,7); //Draw 3 line
+    if (rssi > -105) display->fillRect(116,5,2,3); //Draw 1 line
+    if (rssi > -95) display->fillRect(120,3,2,5); //Draw 2 line
+    if (rssi > -80) display->fillRect(124,1,2,7); //Draw 3 line
   }
 
   //display->drawString(80,0,String(map(pit_y,0,pit_pause,0,100)) + "%");

@@ -59,6 +59,9 @@ float calcT(int r, byte typ){
   case 8: // NTC 100K6A1B (lila Kopf)
     Rn = 100; a = 0.00335639; b = 0.000241116; c = 0.00000243362; 
     break;
+  case 9: // Weber_6743
+    Rn = 102.315; a = 3.3558796e-03; b = 2.7111149e-04; c = 3.1838428e-06; 
+    break;
    
   default:  
     return INACTIVEVALUE;
@@ -113,7 +116,7 @@ void get_Temperature() {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Temperature Channels
-void set_Channels() {
+void set_channels(bool init) {
 
   // Grundwerte einrichten
   for (int i=0; i<CHANNELS; i++) {
@@ -123,8 +126,23 @@ void set_Channels() {
     ch[i].isalarm = false;
     ch[i].showalarm = false;
     ch[i].show = false;
-  }
 
+    if (init) {
+      ch[i].name = ("Kanal " + String(i+1));
+      ch[i].typ = 0;
+    
+      if (temp_unit == "F") {
+        ch[i].min = ULIMITMINF;
+        ch[i].max = OLIMITMINF;
+      } else {
+        ch[i].min = ULIMITMIN;
+        ch[i].max = OLIMITMIN;
+      }
+  
+      ch[i].alarm = false; 
+      ch[i].color = colors[i];
+    }
+  }
 }
 
 
