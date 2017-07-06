@@ -165,7 +165,7 @@ void do_http_update() {
     adress += String(ESP.getChipId(), HEX);
     adress += F("&hw_version=v");
     adress += String(sys.hwversion);
-    adress += F("&sw_version=v");
+    adress += F("&sw_version=");
     adress += FIRMWAREVERSION;
 
     // UPDATE 1x Wiederholen falls schief gelaufen
@@ -294,7 +294,7 @@ void check_http_update() {
         adress += String(ESP.getChipId(), HEX);
         adress += F("&hw_version=v");
         adress += String(sys.hwversion);
-        adress += F("&sw_version=v");
+        adress += F("&sw_version=");
         adress += FIRMWAREVERSION;
         adress += F(" HTTP/1.1\n");
         adress += F("User-Agent: ESP8266\n");    // sonst Hinweis im Body
