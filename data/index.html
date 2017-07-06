@@ -3510,15 +3510,15 @@
 					if(jsonresponse.pitmaster.active == true){
 						if (jsonresponse.pitmaster.channel == jsonresponse.channel[i].number){
 							if(jsonresponse.pitmaster.value == '0'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan"></span>' + jsonresponse.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
 							}else if (jsonresponse.pitmaster.value <= '25'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-25"></span>' + jsonresponse.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-25"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
 							}else if (jsonresponse.pitmaster.value <= '50'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-50"></span>' + jsonresponse.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-50"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
 							}else if (jsonresponse.pitmaster.value <= '75'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-75"></span>' + jsonresponse.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-75"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
 							}else if (jsonresponse.pitmaster.value <= '100'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-100"></span>' + jsonresponse.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-100"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
 							}
 						}else{
 							x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;

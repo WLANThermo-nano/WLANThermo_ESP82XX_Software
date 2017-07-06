@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
     HISTORY: Please refer Github History
+
+    LITERATUR:
+    - https://de.wikipedia.org/wiki/Liste_der_HTTP-Headerfelder
     
  ****************************************************/
 
@@ -108,6 +111,7 @@ void set_charts(bool init) {
 
 // see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
 static AsyncClient * aClient = NULL;
+static AsyncClient * tsdataclient = NULL;
 
 void sendSettings(){
 
@@ -144,37 +148,6 @@ void sendSettings(){
 
     //send the request
     String postStr;
-
-    /*
-    for (int i = 0; i < 7; i++)  {
-      if (ch[i].temp != INACTIVEVALUE) {
-        postStr += "&";
-        postStr += String(i+1);
-        postStr += "=";
-        postStr += String(ch[i].temp,1);
-      }
-    }
-
-    if (charts.TSshow8) {
-      postStr +="&8=";  
-      postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
-    } else if (ch[7].temp != INACTIVEVALUE) {
-      postStr +="&8="; 
-      postStr += String(ch[7].temp,1);
-    }
-
-    AsyncWebServerRequest *request;
-    postStr = "&status=";
-    postStr += handleData(request, 2);
-    
-    String adress = F("POST /update.json?api_key=");
-    adress += charts.TSwriteKey;
-    adress += postStr;          // starts with &
-    adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
-
-    //client->write(adress.c_str());
-
-    */
     
     AsyncWebServerRequest *request;
     
@@ -198,6 +171,72 @@ void sendSettings(){
     Serial.println("[INFO]\tConnect Fail");
     AsyncClient * client = aClient;
     aClient = NULL;
+    delete client;
+  }
+}
+
+
+
+void sendDataTS(){
+
+  if(tsdataclient) return;                 //client already exists
+
+  tsdataclient = new AsyncClient();
+  if(!tsdataclient)  return;               //could not allocate client
+
+  tsdataclient->onError([](void * arg, AsyncClient * client, int error){
+    DPRINTPLN("[INFO]\tThingspeak Client Connect Error");
+    tsdataclient = NULL;
+    delete client;
+  }, NULL);
+
+  tsdataclient->onConnect([](void * arg, AsyncClient * client){
+    
+    tsdataclient->onError(NULL, NULL);
+
+    client->onDisconnect([](void * arg, AsyncClient * c){
+      tsdataclient = NULL;
+      delete c;
+    }, NULL);
+
+    //send the request
+    String postStr;
+
+    for (int i = 0; i < 7; i++)  {
+      if (ch[i].temp != INACTIVEVALUE) {
+        postStr += "&";
+        postStr += String(i+1);
+        postStr += "=";
+        postStr += String(ch[i].temp,1);
+      }
+    }
+
+    if (charts.TSshow8) {
+      postStr +="&8=";  
+      postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
+    } else if (ch[7].temp != INACTIVEVALUE) {
+      postStr +="&8="; 
+      postStr += String(ch[7].temp,1);
+    }
+
+    AsyncWebServerRequest *request;
+    //postStr = "&status=";
+    //postStr += handleData(request, 2);
+    
+    String adress = F("POST /update.json?api_key=");
+    adress += charts.TSwriteKey;
+    adress += postStr;          // starts with &
+    adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
+
+    DPRINTPLN("[INFO]\tSend to Thingspeak"); 
+    client->write(adress.c_str());
+        
+  }, NULL);
+
+  if(!tsdataclient->connect(SERVER1, 80)){
+    Serial.println("[INFO]\tThingspeak Server Connect Fail");
+    AsyncClient * client = tsdataclient;
+    tsdataclient = NULL;
     delete client;
   }
 }

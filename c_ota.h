@@ -18,6 +18,20 @@
     
  ****************************************************/
 
+ /*
+ * Example:
+ *
+ * Check for new update
+ * http://nano.wlanthermo.de/checkUpdate.php?device="nano"&serial="Serialnummer"&hw_version="v1"&sw_version="currentVersion"
+ * ----------------------------------------------------------------------------------------------------------------------------------------
+ * Download Firmware-version XYZ
+ * http://nano.wlanthermo.de/checkUpdate.php?device="nano"serial="Serialnummer"&hw_version="v1"&sw_version="currentVersion"&getFirmware="XYZ"
+ * ----------------------------------------------------------------------------------------------------------------------------------------
+ * Download Spiffs-version XYZ
+ * http://nano.wlanthermo.de/checkUpdate.php?device="nano"serial="Serialnummer"&hw_version="v1"&sw_version="currentVersion"&getSpiffs="XYZ"
+ * ----------------------------------------------------------------------------------------------------------------------------------------
+ */ 
+
 #ifdef OTA
 
   #include <ArduinoOTA.h>           // OTA
@@ -80,6 +94,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 
+/*
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Check if there is http update
 void check_http_update() {
@@ -88,14 +103,13 @@ void check_http_update() {
     if((isAP == 0 && sys.autoupdate)) {
       HTTPClient http;
 
-      String adress = F("http://nano.wlanthermo.de/update.php?software=");
-      adress += FIRMWAREVERSION;
-      adress += F("&hardware=v");
-      adress += String(sys.hwversion);
-      adress += F("&serial=");
+      String adress = F("http://nano.wlanthermo.de/checkUpdate.php?device=nano&serial=");
       adress += String(ESP.getChipId(), HEX);
-      adress += F("&checkUpdate=true");
-
+      adress += F("&hw_version=v");
+      adress += String(sys.hwversion);
+      adress += F("&sw_version=v");
+      adress += FIRMWAREVERSION;
+      
       DPRINTPLN("[INFO]\tCheck HTTP Update");
 
       http.begin(adress); //HTTP
@@ -124,6 +138,7 @@ void check_http_update() {
   } 
   
 }
+*/
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -132,27 +147,32 @@ void do_http_update() {
   
   if((isAP == 0)) {
 
+    // UPDATE beendet
     if (sys.update == 3){
-      sys.update = 0;
-      modifyconfig(eSYSTEM,{});
       displayblocked = true;
       question.typ = OTAUPDATE;
       drawQuestion(0);
+      sys.getupdate == "false";
+      sys.update = 0;
+      setconfig(eSYSTEM,{});
+      sys.update = -1;   // Neue Suche anstoßen
       DPRINTPLN("[INFO]\tUPDATE FINISHED");
       return;
     }
 
-    String adress = F("http://nano.wlanthermo.de/update.php?software=");
-    adress += FIRMWAREVERSION;
-    adress += F("&hardware=v");
-    adress += String(sys.hwversion);
-    adress += F("&serial=");
+    // UPDATE Adresse
+    String adress = F("http://nano.wlanthermo.de/checkUpdate.php?device=nano&serial=");
     adress += String(ESP.getChipId(), HEX);
+    adress += F("&hw_version=v");
+    adress += String(sys.hwversion);
+    adress += F("&sw_version=v");
+    adress += FIRMWAREVERSION;
 
+    // UPDATE 1x Wiederholen falls schief gelaufen
     if (sys.updatecount < 2) sys.updatecount++;   // eine Wiederholung
     else  {
       sys.update = 0;
-      modifyconfig(eSYSTEM,{});
+      setconfig(eSYSTEM,{});
       displayblocked = true;
       question.typ = OTAUPDATE;
       drawQuestion(0);
@@ -162,32 +182,35 @@ void do_http_update() {
       return;
     }
 
+    // UPDATE spiffs oder firmware
     displayblocked = true;
     t_httpUpdate_return ret;
     
     if (sys.update == 1) {
       sys.update = 2;  // Nächster Updatestatus
       drawUpdate("Webinterface");
-      modifyconfig(eSYSTEM,{});                                      // SPEICHERN
+      setconfig(eSYSTEM,{});                                      // SPEICHERN
       DPRINTPLN("[INFO]\tDo SPIFFS Update ...");
-      ret = ESPhttpUpdate.updateSpiffs(adress + "&getcurrentSpiffs=true");
+      ret = ESPhttpUpdate.updateSpiffs(adress + "&getSpiffs=" + sys.getupdate);
+
     
     } else if (sys.update == 2) {
       sys.update = 3;
       drawUpdate("Firmware");
-      modifyconfig(eSYSTEM,{});                                      // SPEICHERN
+      setconfig(eSYSTEM,{});                                      // SPEICHERN
       DPRINTPLN("[INFO]\tDo Firmware Update ...");
-      ret = ESPhttpUpdate.update(adress + "&getcurrentFirmware=true");
+      ret = ESPhttpUpdate.update(adress + "&getFirmware=" + sys.getupdate);
     
     } 
-    
+
+    // UPDATE Ereigniskontrolle
     switch(ret) {
         case HTTP_UPDATE_FAILED:
           DPRINTF("[HTTP]\tUPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
           DPRINTPLN("");
           if (sys.update == 2) sys.update = 1;  // Spiffs wiederholen
           else  sys.update = 2;                 // Firmware wiederholen
-          //modifyconfig(eSYSTEM,{});
+          //setconfig(eSYSTEM,{});
           drawUpdate("error");
           break;
 
@@ -202,6 +225,98 @@ void do_http_update() {
           break;
      }
   }
+}
+
+
+// see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
+static AsyncClient * updateClient = NULL;
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Check if there is http update
+void check_http_update() {
+
+  if (sys.update < 1) {
+    if((isAP == 0 && sys.autoupdate)) {
+
+      if(updateClient) return;                 //client already exists
+
+      updateClient = new AsyncClient();
+      if(!updateClient)  return;               //could not allocate client
+
+      updateClient->onError([](void * arg, AsyncClient * client, int error){
+        DPRINTF("[HTTP] GET... failed, error: %s\n", updateClient->errorToString(error));
+        updateClient = NULL;
+        delete client;
+        sys.getupdate = "false";
+      }, NULL);
+
+      updateClient->onConnect([](void * arg, AsyncClient * client){
+
+        Serial.println("[INFO]\tConnect Update Client");
+        
+        updateClient->onError(NULL, NULL);
+
+        client->onDisconnect([](void * arg, AsyncClient * c){
+          Serial.println("[INFO]\tDisconnect Update Client");
+          updateClient = NULL;
+          delete c;
+        }, NULL);
+
+        client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
+          
+          String payload((char*)data);
+
+          if (payload.indexOf("200 OK") > -1) {
+        
+            DPRINTP("[HTTP]\tGET: ");
+         
+            int index = payload.indexOf("\r\n\r\n");       // Trennung von Header und Body
+            payload = payload.substring(index+7,len);      // Beginn des Body
+            index = payload.indexOf("\r");                 // Ende Versionsnummer
+            payload = payload.substring(0,index);
+
+            if (payload == "false")
+              DPRINTPLN("Kein Update");
+            else if (payload.indexOf("v") == 0) {
+              DPRINTLN(payload);
+              sys.getupdate = payload;
+              setconfig(eSYSTEM,{});
+            } else {
+              DPRINTPLN("Fehler");
+              sys.getupdate = "false";
+            }
+          }
+           
+        }, NULL);
+
+        //send the request
+        String adress = F("GET /checkUpdate.php?device=nano&serial=");
+        adress += String(ESP.getChipId(), HEX);
+        adress += F("&hw_version=v");
+        adress += String(sys.hwversion);
+        adress += F("&sw_version=v");
+        adress += FIRMWAREVERSION;
+        adress += F(" HTTP/1.1\n");
+        adress += F("User-Agent: ESP8266\n");    // sonst Hinweis im Body
+        adress += F("Host: nano.wlanthermo.de\n\n");
+
+        DPRINTPLN("[INFO]\tCheck HTTP Update");
+        client->write(adress.c_str());
+    
+      }, NULL);
+
+      if(!updateClient->connect("nano.wlanthermo.de", 80)){
+        Serial.println("[INFO]\tUpdate Client Connect Fail");
+        AsyncClient * client = updateClient;
+        updateClient = NULL;
+        delete client;
+      }
+      
+    
+    } else sys.getupdate = "false";
+    if (sys.update == -1) sys.update = 0;
+    // kein Speichern im EE, Zustand -1 ist nur temporär
+  } 
 }
 
 

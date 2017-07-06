@@ -151,11 +151,11 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("TShttp"))  charts.TShttpKey = json["TShttp"].asString();
       else return false;
-      if (json.containsKey("TSuser"))  charts.TSuserKey = json["TSuser"].asString();
-      else return false;
       if (json.containsKey("TSchID"))  charts.TSchID = json["TSchID"].asString();
       else return false;
       if (json.containsKey("TS8"))  charts.TSshow8 = json["TS8"];
+      else return false;
+      if (json.containsKey("TSuser"))  charts.TSuserKey = json["TSuser"].asString();
       else return false;
       if (json.containsKey("TSint"))  charts.TSint = json["TSint"];
       else return false;
@@ -249,6 +249,8 @@ bool loadconfig(byte count) {
       if (json.containsKey("update")) sys.update = json["update"];
       else return false;
       if (json.containsKey("autoupd")) sys.autoupdate = json["autoupd"];
+      else return false;
+      if (json.containsKey("getupd")) sys.getupdate = json["getupd"].asString();
       else return false;
       
     }
@@ -407,6 +409,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["fast"] =        sys.fastmode;
       json["hwversion"] =   sys.hwversion;
       json["update"] =      sys.update;
+      json["getupd"] =      sys.getupdate;
       json["autoupd"] =     sys.autoupdate;
       json["batmax"] =      battery.max;
       json["batmin"] =      battery.min;

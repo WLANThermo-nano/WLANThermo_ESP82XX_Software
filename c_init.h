@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.4.9"
+#define FIRMWAREVERSION "v0.5.0"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -422,6 +422,7 @@ void set_charts(bool init);
 void sendMessage(int ch, int count);
 void sendTS();
 void sendSettings();
+void sendDataTS();
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -448,6 +449,7 @@ void set_system() {
   sys.fastmode = false;
   sys.hwversion = 1;
   sys.update = 0;
+  sys.getupdate = "false";
   sys.autoupdate = 1;
   battery.max = BATTMAX;
   battery.min = BATTMIN;
@@ -492,7 +494,7 @@ void timer_charts() {
 
     if (!isAP && sys.update == 0 && charts.TSon) {
        //if (charts.TSwriteKey != "") sendData();
-       if (charts.TSwriteKey != "" && charts.TSchID != "") sendTS();
+       if (charts.TSwriteKey != "" && charts.TSchID != "") sendDataTS();//sendTS();
        //sendMetadata();
       
     }
