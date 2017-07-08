@@ -1,22 +1,22 @@
 
 /***************************************************
- Copyright (C) 2017  Steffen Ochs, Holger Imbery
- 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
- HISTORY: Please refer Github History
- 
+  Copyright (C) 2017  Steffen Ochs, Holger Imbery
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  HISTORY: Please refer Github History
+
  ****************************************************/
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // MQTT
@@ -72,23 +72,27 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
   topic_prefix += F("/set/");
   int topic_prefix_length = topic_prefix.length();
   String topic_short = String(topic);
-  topic_short.remove(0,topic_prefix_length);
-
-  float new_payload = atof(payload);
-  for (int i = 0; i < 8; i++){
+  topic_short.remove(0, topic_prefix_length);
+  // temp - min/max
+  if (topic_short.startsWith("temp")) {
+    float new_payload = atof(payload);
+    for (int i = 0; i < 8; i++) {
       String test1 = "temp" + String(i) + "/min";
       String test2 = "temp" + String(i) + "/max";
-      if (test1 == topic_short){
-         ch[i].min = new_payload; 
+      if (test1 == topic_short) {
+        ch[i].min = new_payload;
       }
-      else if (test2 == topic_short){
-         ch[i].max = new_payload; 
+      else if (test2 == topic_short) {
+        ch[i].max = new_payload;
       }
-      else { 
+      else {
       }
-    } 
-         
-  setconfig(eCHANNEL,{});  
+    }
+    setconfig(eCHANNEL, {});
+  }
+  // skeleton
+  // if (topic_short.startsWith("dummy")) {
+  // }
 }
 
 void set_pmqtt() {
@@ -107,35 +111,35 @@ void set_pmqtt() {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Send data to private MQTT Broker
 void sendpmqtt() {
-     
-    if (pmqttClient.connected()) {
-        
-        unsigned long vorher = millis();
-        
-        for (int i = 0; i < 8; i++)  {
-            if (ch[i].temp != INACTIVEVALUE) {
-                String adress = F("WLanThermo/");
-                adress += sys.host;
-                adress += F("/status/");
-                adress += "temp";
-                adress += String(i+1);
-                String postStr = String(ch[i].temp,1);
-                pmqttClient.publish(adress.c_str(), charts.P_MQTT_QoS, false, postStr.c_str());
-            }
-        }
-        
+
+  if (pmqttClient.connected()) {
+
+    unsigned long vorher = millis();
+
+    for (int i = 0; i < 8; i++)  {
+      if (ch[i].temp != INACTIVEVALUE) {
         String adress = F("WLanThermo/");
         adress += sys.host;
         adress += F("/status/");
-        adress += "voltage";
-        String postStr = String(battery.percentage);
+        adress += "temp";
+        adress += String(i + 1);
+        String postStr = String(ch[i].temp, 1);
         pmqttClient.publish(adress.c_str(), charts.P_MQTT_QoS, false, postStr.c_str());
-        
-        DPRINTF("[INFO]\tPublish to MQTTbroker: %ums\r\n", millis()-vorher);
-        
-    } else {
-      DPRINTPLN("[INFO]\tNot Connected to MQTT Broker");
-      pmqttClient.connect();
+      }
     }
+
+    String adress = F("WLanThermo/");
+    adress += sys.host;
+    adress += F("/status/");
+    adress += "voltage";
+    String postStr = String(battery.percentage);
+    pmqttClient.publish(adress.c_str(), charts.P_MQTT_QoS, false, postStr.c_str());
+
+    DPRINTF("[INFO]\tPublish to MQTTbroker: %ums\r\n", millis() - vorher);
+
+  } else {
+    DPRINTPLN("[INFO]\tNot Connected to MQTT Broker");
+    pmqttClient.connect();
+  }
 }
 
