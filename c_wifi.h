@@ -277,36 +277,6 @@ void wifimonitoring() {
 }
 
 
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// MQTT
-void connectToMqtt() {
-  DPRINTLN();
-  DPRINTP("[INFO]\tWiFi connected to: ");
-  DPRINTLN(WiFi.SSID());
-  DPRINTP("[INFO]\tIP address: ");
-  DPRINTLN(WiFi.localIP());
-  DPRINTPLN("[INFO]\tConnecting to MQTT...");
-  pmqttClient.connect();
-}
-
-void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-  connectToMqtt();
-}
-
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
-  DPRINTPLN("[INFO]\tDisconnected from MQTT.");
-  if (WiFi.isConnected()) connectToMqtt;
-}
-
-void set_pmqtt() {
-  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-  pmqttClient.onDisconnect(onMqttDisconnect);
-  pmqttClient.setServer(charts.P_MQTT_HOST.c_str(), charts.P_MQTT_PORT);
-  pmqttClient.setCredentials(charts.P_MQTT_USER.c_str(), charts.P_MQTT_PASS.c_str());
-}
-
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Test
 struct station_info *stat_info;

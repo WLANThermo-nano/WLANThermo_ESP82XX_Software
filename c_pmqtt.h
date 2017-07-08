@@ -18,6 +18,85 @@
  HISTORY: Please refer Github History
  
  ****************************************************/
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// MQTT
+void connectToMqtt() {
+  DPRINTLN();
+  DPRINTP("[INFO]\tWiFi connected to: ");
+  DPRINTLN(WiFi.SSID());
+  DPRINTP("[INFO]\tIP address: ");
+  DPRINTLN(WiFi.localIP());
+  DPRINTPLN("[INFO]\tConnecting to MQTT...");
+  pmqttClient.connect();
+}
+
+void onWifiConnect(const WiFiEventStationModeGotIP& event) {
+  connectToMqtt();
+}
+
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+  DPRINTPLN("[INFO]\tDisconnected from MQTT.");
+  if (WiFi.isConnected()) connectToMqtt;
+}
+
+void onMqttConnect(bool sessionPresent) {
+  DPRINTPLN("[INFO]\tConnected to MQTT.");
+  DPRINTP("[INFO]\tSession present: ");
+  DPRINTLN(sessionPresent);
+  String adress = F("WLanThermo/");
+  adress += sys.host;
+  adress += F("/set/#");
+  uint16_t packetIdSub = pmqttClient.subscribe(adress.c_str(), 2);
+  DPRINTP("[INFO]\tSubscribing at QoS 2, packetId: ");
+  DPRINTLN(packetIdSub);
+}
+
+void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
+  DPRINTPLN("[INFO]\tSubscribe acknowledged.");
+  DPRINTP("[INFO]\t  packetId: ");
+  DPRINTLN(packetId);
+  DPRINTP("[INFO]\t  qos: ");
+  DPRINTLN(qos);
+}
+
+void onMqttUnsubscribe(uint16_t packetId) {
+  DPRINTPLN("[INFO]\tUnsubscribe acknowledged.");
+  DPRINTP("[INFO]\t  packetId: ");
+  DPRINTLN(packetId);
+}
+
+void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+// work in progress - subscribe working, but no action implemented yet
+  DPRINTPLN("[INFO]\tPublish received.");
+  DPRINTP("[INFO]\t  topic: ");
+  DPRINTLN(topic);
+  DPRINTP("[INFO]\t  payload: ");
+  DPRINTLN(payload);
+  DPRINTP("[INFO]\t  qos: ");
+  DPRINTLN(properties.qos);
+  DPRINTP("[INFO]\t  dup: ");
+  DPRINTLN(properties.dup);
+  DPRINTP("[INFO]\t  retain: ");
+  DPRINTLN(properties.retain);
+  DPRINTP("[INFO]\t  len: ");
+  DPRINTLN(len);
+  DPRINTP("[INFO]\t  index: ");
+  DPRINTLN(index);
+  DPRINTP("[INFO]\t  total: ");
+  DPRINTLN(total);
+}
+
+void set_pmqtt() {
+  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+  pmqttClient.onConnect(onMqttConnect);
+  pmqttClient.onDisconnect(onMqttDisconnect);
+  pmqttClient.onSubscribe(onMqttSubscribe);
+  pmqttClient.onUnsubscribe(onMqttUnsubscribe);
+  pmqttClient.onMessage(onMqttMessage);
+  pmqttClient.setServer(charts.P_MQTT_HOST.c_str(), charts.P_MQTT_PORT);
+  pmqttClient.setCredentials(charts.P_MQTT_USER.c_str(), charts.P_MQTT_PASS.c_str());
+}
+
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -47,7 +126,7 @@ void sendpmqtt() {
         String postStr = String(battery.percentage);
         pmqttClient.publish(adress.c_str(), charts.P_MQTT_QoS, false, postStr.c_str());
         
-        DPRINTF("[INFO]\tPublish to MQTTbroker at QoS 0: %ums\r\n", millis()-vorher);
+        DPRINTF("[INFO]\tPublish to MQTTbroker: %ums\r\n", millis()-vorher);
         
     } else {
       DPRINTPLN("[INFO]\tNot Connected to MQTT Broker");
