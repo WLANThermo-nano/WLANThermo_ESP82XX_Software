@@ -91,9 +91,24 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     setconfig(eCHANNEL, {});
   }
   // skeleton
+  if (topic_short.startsWith("alarm")) {
+    bool newb_payload = (char)atoi(payload);
+    for (int i = 0; i < 8; i++) {
+      String test3 = "alarm" + String(i);
+      if (test3 == topic_short) {
+        ch[i].alarm = newb_payload;
+      }
+      
+      else {
+      }
+    }
+    setconfig(eCHANNEL, {});
+  } 
+  }
+  
+  // skeleton
   // if (topic_short.startsWith("dummy")) {
   // }
-}
 
 void set_pmqtt() {
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
