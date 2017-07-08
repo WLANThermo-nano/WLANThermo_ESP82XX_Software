@@ -66,81 +66,28 @@ void onMqttUnsubscribe(uint16_t packetId) {
 }
 
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
-// work in progress - subscribe working, but no action implemented yet
-  DPRINTPLN("[INFO]\tPublish received.");
-  DPRINTP("[INFO]\t  topic: ");
-  DPRINTLN(topic);
-  DPRINTP("[INFO]\t  payload: ");
-  DPRINTLN(payload);
-  DPRINTP("[INFO]\t  qos: ");
-  DPRINTLN(properties.qos);
-  DPRINTP("[INFO]\t  dup: ");
-  DPRINTLN(properties.dup);
-  DPRINTP("[INFO]\t  retain: ");
-  DPRINTLN(properties.retain);
-  DPRINTP("[INFO]\t  len: ");
-  DPRINTLN(len);
-  DPRINTP("[INFO]\t  index: ");
-  DPRINTLN(index);
-  DPRINTP("[INFO]\t  total: ");
-  DPRINTLN(total);
+
   String topic_prefix = F("WLanThermo/");
   topic_prefix += sys.host;
   topic_prefix += F("/set/");
   int topic_prefix_length = topic_prefix.length();
   String topic_short = String(topic);
   topic_short.remove(0,topic_prefix_length);
-  DPRINTP("[INFO]\t  ActionString: ");
-  DPRINTLN(topic_short);
+
   float new_payload = atof(payload);
-  if (topic_short = "temp0/min"){
-     ch[0].min = new_payload;
-  }
-  else if (topic_short = "temp1/min"){
-       ch[1].min = new_payload;  
-  }
-  else if (topic_short = "temp2/min"){
-       ch[2].min = new_payload; 
-  }
-  else if (topic_short = "temp3/min"){
-       ch[3].min = new_payload;  
-  }
-  else if (topic_short = "temp4/min"){
-       ch[4].min = new_payload;  
-  }
-  else if (topic_short = "temp5/min"){
-       ch[5].min = new_payload;  
-  }
-  else if (topic_short = "temp6/min"){
-       ch[6].min = new_payload;
-  }
-  else if (topic_short = "temp7/min"){
-       ch[7].min = new_payload;
-  }
-  else if (topic_short = "temp0/max"){
-       ch[0].max = new_payload;
-  }
-  else if (topic_short = "temp1/max"){
-       ch[1].max = new_payload;
-  }
-  else if (topic_short = "temp2/max"){
-       ch[2].max = new_payload;
-  }
-  else if (topic_short = "temp3/max"){
-       ch[3].max = new_payload;
-  }
-  else if (topic_short = "temp4/max"){
-       ch[4].max = new_payload;
-  }
-  else if (topic_short = "temp5/max"){
-       ch[5].max = new_payload;
-  }
-  else if (topic_short = "temp6/max"){
-       ch[6].max = new_payload;
-  }
-  else if (topic_short = "temp7/max"){
-       ch[7].max = new_payload;
-  }
+  for (int i = 0; i < 8; i++){
+      String test1 = "temp" + String(i) + "/min";
+      String test2 = "temp" + String(i) + "/max";
+      if (test1 == topic_short){
+         ch[i].min = new_payload; 
+      }
+      else if (test2 == topic_short){
+         ch[i].max = new_payload; 
+      }
+      else { 
+      }
+    } 
+         
   setconfig(eCHANNEL,{});  
 }
 
