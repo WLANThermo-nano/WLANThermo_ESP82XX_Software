@@ -116,7 +116,7 @@ String handleSettings(AsyncWebServerRequest *request, byte www) {
 
   JsonArray& _aktor = root.createNestedArray("aktor");
   _aktor.add("SSR");
-  //_aktor.add("FAN");
+  _aktor.add("FAN");
 
   JsonObject& _chart = root.createNestedObject("charts");
   _chart["TSwrite"] = charts.TS_writeKey; 
