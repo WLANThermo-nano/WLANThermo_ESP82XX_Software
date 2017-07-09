@@ -173,6 +173,12 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("PMQon"))  charts.P_MQTT_on = json["PMQon"];
       else return false;
+      if (json.containsKey("TGon"))  charts.TG_on = json["TGon"];
+      else return false;
+      if (json.containsKey("TGtoken"))  charts.TG_token = json["TGtoken"].asString();
+      else return false;
+      if (json.containsKey("TGid"))  charts.TG_id = json["TGid"].asString(); 
+      else return false;
     }
     break;
 
@@ -353,10 +359,13 @@ bool setconfig(byte count, const char* data[2]) {
       json["PMQpass"]  = charts.P_MQTT_PASS;
       json["PMQqos"]   = charts.P_MQTT_QoS;
       json["PMQon"]   = charts.P_MQTT_on;
+      json["TGon"]    = charts.TG_on;
+      json["TGtoken"] = charts.TG_token;
+      json["TGid"]    = charts.TG_id;
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {
-        DPRINTPLN("[INFO]\tZu viele THINGSPEAK Daten!");
+        DPRINTPLN("[INFO]\tZu viele BOT Daten!");
         return false;
       } else {
         clearEE(EETHING,EETHINGBEGIN);  // Bereich reinigen

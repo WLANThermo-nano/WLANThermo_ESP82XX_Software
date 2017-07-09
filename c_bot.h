@@ -52,6 +52,9 @@ void set_charts(bool init) {
    charts.P_MQTT_on = false;
    charts.P_MQTT_HOST = "192.168.2.1";
    charts.P_MQTT_PORT = 1883;
+   charts.TG_on = false;
+   charts.TG_token = "";
+   charts.TG_id = "";
       
 }
 
@@ -271,4 +274,63 @@ void sendMessage(int ch, int count){
   }
 */
 
+/*
+#include "include/ssl.h"
+static AsyncClient * aClient = NULL;
+
+#define SERVER2 "192.168.254.16"
+const char *sslHost = "192.168.254.16";
+const uint16_t sslPort = 443;
+
+void runAsyncClient(){
+  if(aClient)//client already exists
+    return;
+
+  aClient = new AsyncClient();
+  if(!aClient)//could not allocate client
+    return;
+
+  aClient->onError([](void * arg, AsyncClient * client, int error){
+    Serial.println("Connect Error");
+    aClient = NULL;
+    delete client;
+  }, NULL);
+
+  aClient->onConnect([](void * arg, AsyncClient * client){
+    Serial.println("Connected");
+    //securePrintInfo(client->getSSL());
+    aClient->onError(NULL, NULL);
+
+    client->onDisconnect([](void * arg, AsyncClient * c){
+      Serial.println("Disconnected");
+      aClient = NULL;
+      delete c;
+    }, NULL);
+
+    client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
+      Serial.print("\r\nData: ");
+      Serial.println(len);
+      uint8_t * d = (uint8_t*)data;
+      for(size_t i=0; i<len;i++)
+        Serial.write(d[i]);
+    }, NULL);
+
+    //send the request
+    char m[256];
+    sprintf(m, "GET /test.htm HTTP/1.0\r\nHost: %s\r\n\r\n", sslHost);
+    int wrote = client->write(m, strlen(m));
+    Serial.printf("Sent: %u => %d\r\n", strlen(m), wrote);
+  }, NULL);
+
+  if(!aClient->connect(SERVER2, 443, true)){
+    Serial.println("Connect Fail");
+    AsyncClient * client = aClient;
+    aClient = NULL;
+    delete client;
+  }
+}
+*/
+
+// https://api.telegram.org/bot280220123:AAHdw_5QeO1lfIhXU8ja_IlpSSg2gYTJXtU/sendMessage
+//chat_id=256288661&text=ACHTUNG:+Kanal+%%ch%%+ist+zu+%%message%%
 
