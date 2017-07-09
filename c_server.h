@@ -190,8 +190,11 @@ String handleData(AsyncWebServerRequest *request, byte www) {
   master["pid"] = pitmaster.pid;
   master["value"] = pitmaster.value;
   master["set"] = pitmaster.set;
-  master["active"] = pitmaster.active;
-  master["manuel"] = pitmaster.manuel;
+  if (pitmaster.active)
+    if (autotune.initialized)  master["typ"] = "autotune";
+    else if (pitmaster.manuel) master["typ"] = "manuel";
+    else  master["typ"] = "auto";
+  else master["typ"] = "off";  
 
   String jsonStr;
     
@@ -811,6 +814,10 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   JsonObject& _pitmaster = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_pitmaster.success()) return 0;
 
+  String typ;
+  if (_pitmaster.containsKey("typ"))
+    typ = _pitmaster["typ"].asString();
+  else return 0;
   
   if (_pitmaster.containsKey("channel")) {
     byte cha = _pitmaster["channel"];
@@ -819,17 +826,25 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   else return 0;
   if (_pitmaster.containsKey("pid")) pitmaster.pid = _pitmaster["pid"]; // ""
   else return 0;
-  if (_pitmaster.containsKey("active")) pitmaster.active = _pitmaster["active"];
-  else return 0;
   if (_pitmaster.containsKey("set")) pitmaster.set = _pitmaster["set"];
   else return 0;
-  bool manuel;
-  if (_pitmaster.containsKey("manuel")) manuel = _pitmaster["manuel"];
-  else return 0;
-  pitmaster.manuel = manuel;
-  if (_pitmaster.containsKey("value") && manuel) pitmaster.value = _pitmaster["value"];
-  else return 0;
   
+  bool manuel;
+  bool autotune;
+  if (typ == "autotune") autotune = true;
+  else if (typ == "manuel") manuel = true;
+  else if (typ == "auto") pitmaster.active = true;
+  else  pitmaster.active = false;
+    
+  if (_pitmaster.containsKey("value") && manuel) {
+    pitmaster.value = _pitmaster["value"];
+    pitmaster.manuel = true;
+    pitmaster.active = true;
+  }
+  else {
+    pitmaster.manuel = false;
+    return 0;
+  }
   
   JsonObject& _pid = _pitmaster["setting"];
   
@@ -854,6 +869,9 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
     return 0;
   }
   else  DPRINTPLN("[INFO]\tPitmaster config saved");
+
+  if (autotune) startautotunePID(5, true);
+  
   return 1;
 }
 
