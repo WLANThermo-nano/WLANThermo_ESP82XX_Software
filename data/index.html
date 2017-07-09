@@ -2633,6 +2633,7 @@
                 <!-- <li class="pure-menu-item pure-menu-has-children"><a href="#" id="menuChannel" class="pure-menu-link">Kanal</a></li> -->
 				        <li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
 				        <li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
+						<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link" style="display:none">Pitmaster</a></li>
 				        <li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>
@@ -2798,6 +2799,46 @@
 			</div>
         </div>
 		<!-- ################################################### -->
+		<div id="pitmaster_settings" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">Pitmaster</button>
+				<button class="pure-button pure-button-disabled" onclick="">Speichern</button>
+			</div>
+			<h3 class="headtitle">Pitmaster Einstellungen</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>
+							<div class="checkbox">
+							  <label>
+								<input id="pitmaster_active" type="checkbox" checked="checked"/><i class="helper"></i>Pitmaster aktivieren
+							  </label>
+							</div>
+							<div class="checkbox">
+							  <label>
+								<input id="pitmaster_manuel" type="checkbox" checked="checked"/><i class="helper"></i>Manuelle Vorgabe 
+							  </label>
+							</div>
+							<div class="form-group">
+							  <select id="pitmaster_channel">
+								<option value="1">Kanal 1</option>
+								<option value="2">Kanal 2</option>
+								<option value="3">Kanal 3</option>
+								<option value="4">Kanal 4</option>
+								<option value="5">Kanal 5</option>
+								<option value="6">Kanal 6</option>
+								<option value="7">Kanal 7</option>
+								<option value="8">Kanal 8</option>
+							  </select>
+							  <label class="control-label" for="select">Kanal</label><i class="bar"></i>
+							</div>
+						</form>	
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
 		<div id="channel_settings" class="content" style="display:none">
 			<div class="pure-button-group footer_buttons" role="group">
 				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
@@ -2812,15 +2853,15 @@
 							<div class="form-group">
 							  <input type="text" class="temp_input" id="channel_name" maxlength="10" required="required"/>
 							  <label class="control-label" for="input">Kanal Name</label><i class="bar"></i>
-							</div>			
-							<div class="form-group">
-							  <input class="temp_input" id="temp_min" type="number" step="0.1" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
-							  <label class="control-label" for="input">Temp Min</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <input class="temp_input" id="temp_max" type="number" step="0.1" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
 							  <label class="control-label" for="input">Temp Max</label><i class="bar"></i>
-							</div>													
+							</div>							
+							<div class="form-group">
+							  <input class="temp_input" id="temp_min" type="number" step="0.1" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
+							  <label class="control-label" for="input">Temp Min</label><i class="bar"></i>
+							</div>												
 							<div class="form-group">
 							  <select id="sensor">
 									<!-- Placeholder -->
@@ -3092,6 +3133,7 @@
 			menu     = document.getElementById('menu'),
 			menuLink = document.getElementById('menuLink'),
 			menuHome = document.getElementById('menuHome'),
+			menuPitmaster = document.getElementById('menuPitmaster'),
 			menuWlan = document.getElementById('menuWlan'),
 			menuSystem = document.getElementById('menuSystem'),
 			menuThingspeak = document.getElementById('menuThingspeak'),
@@ -3143,6 +3185,12 @@
 			if (menu.className.indexOf('active') !== -1) {
 				toggleAll(e);
 				showThingspeak();
+			}
+		};
+		menuPitmaster.onclick = function (e) {
+			if (menu.className.indexOf('active') !== -1) {
+				toggleAll(e);
+				showPitmaster();
 			}
 		};
 		menuSystem.onclick = function (e) {
@@ -3425,9 +3473,19 @@
 		})	
 	}
 	
-	function showPitmaster(){
+	function showPitmaster(){		
 		hideAll();
-		document.getElementById("pitmaster_config").style.display = "inline";
+		showLoader('true');
+		loadJSON('data', '', '3000', function (response) {
+			jsonresponse = JSON.parse(response);
+			document.getElementById('pitmaster_active').checked = jsonresponse.pitmaster.active;
+			document.getElementById('pitmaster_manuel').checked = jsonresponse.pitmaster.manuel;
+			document.getElementById('pitmaster_channel').value = jsonresponse.pitmaster.channel;
+			
+			
+			document.getElementById("pitmaster_settings").style.display = "inline";
+			showLoader('false');
+		})
 	}	
 	
 	function showChart(){
@@ -3453,6 +3511,7 @@
 		document.getElementById("wlan_set").style.display = "none";
 		document.getElementById("thingspeak").style.display = "none";
 		document.getElementById("channel_settings").style.display = "none";
+		document.getElementById("pitmaster_settings").style.display = "none";
 	}
 	
     function loadJSON(url, data, timeout, callback) {

@@ -22,6 +22,7 @@
 // https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
 
 // Entwicklereinstellungen
+//#define ASYNC_TCP_SSL_ENABLED 1
 #define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
 

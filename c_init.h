@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.5.1"
+#define FIRMWAREVERSION "v0.5.2"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -253,6 +253,9 @@ struct Charts {
    String P_MQTT_PASS;          // PRIVATE MQTT BROKER PASSWD
    byte P_MQTT_QoS;             // PRIVATE MQTT BROKER QoS
    bool P_MQTT_on;              // PRIVATE MQTT BROKER ON/OFF
+   bool TG_on;            // TELEGRAM NOTIFICATION ON/OFF
+   String TG_token;       // TELEGRAM API TOKEN
+   String TG_id;          // TELEGRAM CHAT ID 
 };
 
 Charts charts;
