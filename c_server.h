@@ -846,24 +846,6 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
     return 0;
   }
   
-  JsonObject& _pid = _pitmaster["setting"];
-  
-  byte id;
-  if (_pid.containsKey("id")) id = _pid["id"];
-  else return 0;
-  if (id >= pidsize) return 0;
-  pid[id].name = _pid["name"].asString();
-  pid[id].aktor =  _pid["aktor"];
-  pid[id].Kp =  _pid["Kp"];
-  pid[id].Ki =  _pid["Ki"];
-  pid[id].Kd =  _pid["Kd"];
-  pid[id].Kp_a =  _pid["Kp_a"];
-  pid[id].Ki_a =  _pid["Ki_a"];
-  pid[id].Kd_a =  _pid["Kd_a"];
-  pid[id].reversal =  _pid["reversal"];
-  pid[id].DCmin =  _pid["DCmmin"];
-  pid[id].DCmax =  _pid["DCmmax"];
-
   if (!setconfig(ePIT,{})) {
     DPRINTPLN("[INFO]\tFailed to save Pitmaster config");
     return 0;
@@ -875,6 +857,46 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   return 1;
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+bool handleSetPID(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!json.success()) return 0;
+
+  JsonArray& _pid = json["pid"];
+
+  byte id;
+  byte ii;
+
+  for (JsonArray::iterator it=_pid.begin(); it!=_pid.end(); ++it) {
+    id = _pid[ii]["id"];
+    if (id >= pidsize) break;
+    pid[id].name     = _pid[ii]["name"].asString();
+    pid[id].aktor    = _pid[ii]["aktor"];
+    pid[id].Kp       = _pid[ii]["Kp"];
+    pid[id].Ki       = _pid[ii]["Ki"];
+    pid[id].Kd       = _pid[ii]["Kd"];
+    pid[id].Kp_a     = _pid[ii]["Kp_a"];
+    pid[id].Ki_a     = _pid[ii]["Ki_a"];
+    pid[id].Kd_a     = _pid[ii]["Kd_a"];
+    pid[id].reversal = _pid[ii]["reversal"];
+    pid[id].DCmin    = _pid[ii]["DCmmin"];
+    pid[id].DCmax    = _pid[ii]["DCmmax"];
+    ii++;
+  }
+  
+  if (!setconfig(ePIT,{})) {
+    DPRINTPLN("[INFO]\tFailed to save PID-Profils");
+    return 0;
+  }
+  else  DPRINTPLN("[INFO]\PID-Profils saved");
+  
+  return 1;
+}
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
@@ -1051,6 +1073,12 @@ void server_setup() {
         if(!request->authenticate(www_username, www_password))
           return request->requestAuthentication();    
         if(!handleSetPitmaster(request, data)) request->send(200, "text/plain", "false");
+          request->send(200, "text/plain", "true");
+      }
+      else if (request->url() =="/setpid") { 
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();    
+        if(!handleSetPID(request, data)) request->send(200, "text/plain", "false");
           request->send(200, "text/plain", "true");
       }
       else if (request->url() =="/setcharts") { 
