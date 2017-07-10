@@ -2156,8 +2156,8 @@
 
 		.form-radio,.form-group {
 			position: relative;
-			margin-top: 2.25rem;
-			margin-bottom: 2.25rem;
+			margin-top: 1.25rem;
+			margin-bottom: 1.25rem;
 		}
 
 		.form-inline > .form-group,.form-inline > .btn {
@@ -2361,7 +2361,7 @@
 		}
 
 		.checkbox {
-			margin-top: 3rem;
+			margin-top: 1.25rem;
 			margin-bottom: 1rem;
 		}
 				
@@ -2547,8 +2547,19 @@
 			0%    { transform: rotate(0deg); }
 			100%  { transform: rotate(360deg); }
 		}
-
-
+		.equalDivide tr td { 
+			width:33%; 
+			padding-left:0.25em;
+			padding-right:0.25em;
+		}
+		.equalDivide tr td:last-child { 
+			padding-right:0;
+			padding-left:0.25em;
+		}
+		.equalDivide tr td:first-child { 
+			padding-left:0;
+			padding-right:0.25em;
+		}
     </style>
 </head>
 <body>
@@ -2628,13 +2639,14 @@
 						F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" 
 					alt="WLANThermo" height="58" width="130"> 
 				</a>
+				<!-- style="display:none" -->
             <ul class="pure-menu-list">
                 <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
-                <!-- <li class="pure-menu-item pure-menu-has-children"><a href="#" id="menuChannel" class="pure-menu-link">Kanal</a></li> -->
-				        <li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
-				        <li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
-						<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link" style="display:none">Pitmaster</a></li>
-				        <li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
+				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
+				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
+				<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li>
+				<li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
+				<li id="menuNotification" class="pure-menu-item"><a href="javascript:showPushNotification()" class="pure-menu-link">Push Notification</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>
         </div>
@@ -2803,36 +2815,105 @@
 			<div class="pure-button-group footer_buttons" role="group">
 				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
 				<button class="pure-button pure-button-disabled">Pitmaster</button>
-				<button class="pure-button pure-button-disabled" onclick="">Speichern</button>
+				<button class="pure-button" onclick="setPitmaster();">Speichern</button>
 			</div>
 			<h3 class="headtitle">Pitmaster Einstellungen</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
 						<form>
-							<div class="checkbox">
-							  <label>
-								<input id="pitmaster_active" type="checkbox" checked="checked"/><i class="helper"></i>Pitmaster aktivieren
-							  </label>
-							</div>
-							<div class="checkbox">
-							  <label>
-								<input id="pitmaster_manuel" type="checkbox" checked="checked"/><i class="helper"></i>Manuelle Vorgabe 
-							  </label>
+							<div class="form-group">
+							  <select id="pitmaster_typ">
+								<option value="off">off</option>
+								<option value="auto">auto</option>
+								<option value="manual">manuel</option>
+								<option value="autotune">autotune</option>
+							  </select>
+							  <label class="control-label" onchange="changePitmasterView();" for="select">Pitmaster</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <select id="pitmaster_channel">
-								<option value="1">Kanal 1</option>
-								<option value="2">Kanal 2</option>
-								<option value="3">Kanal 3</option>
-								<option value="4">Kanal 4</option>
-								<option value="5">Kanal 5</option>
-								<option value="6">Kanal 6</option>
-								<option value="7">Kanal 7</option>
-								<option value="8">Kanal 8</option>
+								<!-- Placeholder -->
 							  </select>
 							  <label class="control-label" for="select">Kanal</label><i class="bar"></i>
 							</div>
+							<div class="form-group">
+							  <input type="text" class="temp_input" id="pitmaster_set" step="0.1" maxlength="6" onkeyup="validateNumber(this);" required="required"/>
+							  <label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="number" min="0" max="100" class="temp_input" id="pitmaster_value" step="1" onkeyup="validateNumber(this);" required="required"/>
+							  <label class="control-label" for="input">Pitmaster-Wert (%)</label><i class="bar"></i>
+							</div>
+						</form>	
+					</div>
+				</div>
+			</div>
+			<h3 class="headtitle">Pitmaster Profile</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>
+							<div class="form-group">
+							  <select onchange="showPitmasterProfile(this.value);" id="pid_profile">
+									<!-- Placeholder -->
+							  </select>
+							  <label class="control-label" onchange="changePitmasterView();" for="select">Pitmaster</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" class="temp_input" id="pid_name" maxlength="10" required="required"/>
+							  <label class="control-label" for="input">Name</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <select id="pitmaster_profile_aktor">
+
+							  </select>
+							  <label class="control-label" onchange="" for="select">Aktor</label><i class="bar"></i>
+							</div>
+							<table class="equalDivide" cellpadding="0" cellspacing="0" width="100%" border="0">
+								<tr>
+								  <td>
+									<div class="form-group">
+									  <input type="text" id="pid_Kp" maxlength="10" required="required"/>
+									  <label class="control-label" for="input">Kp</label><i class="bar"></i>
+									</div>								  	  
+								  </td>
+								  <td>
+									<div class="form-group">
+									  <input type="text" id="pid_Ki" maxlength="10" required="required"/>
+									  <label class="control-label" for="input">Ki</label><i class="bar"></i>
+									</div>								    
+								  </td>
+								  <td>
+									<div class="form-group">
+									  <input type="text" id="pid_Kd" maxlength="10" required="required"/>
+									  <label class="control-label" for="input">Kd</label><i class="bar"></i>
+									</div>								  		  
+								  </td>
+								</tr>
+							</table>
+							<table class="equalDivide" cellpadding="0" cellspacing="0" width="100%" border="0">
+								<tr>
+								  <td>
+									<div class="form-group">
+									  <input type="text" id="pid_Kp_a" maxlength="10" required="required"/>
+									  <label class="control-label" for="input">Kp_a</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>
+									<div class="form-group">
+									  <input type="text" id="pid_Ki_a" maxlength="10" required="required"/>
+									  <label class="control-label" for="input">Ki_a</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>
+									<div class="form-group">
+									  <input type="text" id="pid_Kd_a" maxlength="10" required="required"/>
+									  <label class="control-label" for="input">Kd_a</label><i class="bar"></i>
+									</div>
+								  </td>
+								</tr>
+							</table>
 						</form>	
 					</div>
 				</div>
@@ -2855,11 +2936,11 @@
 							  <label class="control-label" for="input">Kanal Name</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
-							  <input class="temp_input" id="temp_max" type="number" step="0.1" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
+							  <input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
 							  <label class="control-label" for="input">Temp Max</label><i class="bar"></i>
 							</div>							
 							<div class="form-group">
-							  <input class="temp_input" id="temp_min" type="number" step="0.1" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
+							  <input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
 							  <label class="control-label" for="input">Temp Min</label><i class="bar"></i>
 							</div>												
 							<div class="form-group">
@@ -3076,6 +3157,37 @@
 			</div>
         </div>
 		<!-- ################################################### -->
+		<div id="push_notification" class="content" style="display:none">
+			<!-- html for thingspeak-Site -->
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">Notification</button>
+				<button class="pure-button" onclick="setPushNotification();">Speichern</button>
+			</div>
+			<h3 class="headtitle">Telegram</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>	
+							<div class="checkbox">
+							  <label>
+								<input id="TGon" type="checkbox" checked="checked"/><i class="helper"></i>Telegram aktivieren
+							  </label>
+							</div>						
+							<div class="form-group">
+							  <input type="text" class="temp_input" id="TGtoken" maxlength="50" required="required"/>
+							  <label class="control-label" for="input">Token</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" class="temp_input" id="TGid" maxlength="10" required="required"/>
+							  <label class="control-label" for="input">Chat ID</label><i class="bar"></i>
+							</div>							
+						</form>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
 		<div id="about" class="content" style="display:none">
 			<div class="pure-button-group footer_buttons" role="group">
 				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
@@ -3134,6 +3246,7 @@
 			menuLink = document.getElementById('menuLink'),
 			menuHome = document.getElementById('menuHome'),
 			menuPitmaster = document.getElementById('menuPitmaster'),
+			menuNotification = document.getElementById('menuNotification'),
 			menuWlan = document.getElementById('menuWlan'),
 			menuSystem = document.getElementById('menuSystem'),
 			menuThingspeak = document.getElementById('menuThingspeak'),
@@ -3191,6 +3304,12 @@
 			if (menu.className.indexOf('active') !== -1) {
 				toggleAll(e);
 				showPitmaster();
+			}
+		};
+		menuNotification.onclick = function (e) {
+			if (menu.className.indexOf('active') !== -1) {
+				toggleAll(e);
+				showPushNotification();
 			}
 		};
 		menuSystem.onclick = function (e) {
@@ -3273,7 +3392,7 @@
 		
 	}	
 
-	function setThingspeak(){
+		function setThingspeak(){
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
 			jsonresponse = JSON.parse(response);
@@ -3289,6 +3408,36 @@
 			jsonresponse.charts.PMQuser = document.getElementById('PMQuser').value;
 			jsonresponse.charts.PMQpass = document.getElementById('PMQpass').value;
 			jsonresponse.charts.PMQqos = document.getElementById('PMQqos').value;
+			var data = JSON.stringify(jsonresponse.charts);
+			//alert(data);
+			showLoader('true');
+			loadJSON('setcharts', data, '60000', function (response) {
+				showIndex();
+				showLoader('false');
+			})		
+		})
+	}
+	
+	function showPushNotification(){
+		hideAll();
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response) {
+			jsonresponse = JSON.parse(response);
+			document.getElementById('TGon').checked = jsonresponse.charts.TGon;
+			document.getElementById('TGtoken').value = jsonresponse.charts.TGtoken;
+			document.getElementById('TGid').value = jsonresponse.charts.TGid;
+			document.getElementById("push_notification").style.display = "inline";
+			showLoader('false');
+		})				
+	}
+
+	function setPushNotification(){
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response){
+			jsonresponse = JSON.parse(response);
+			jsonresponse.charts.TGon = document.getElementById('TGon').checked;
+			jsonresponse.charts.TGtoken = document.getElementById('TGtoken').value;
+			jsonresponse.charts.TGid = document.getElementById('TGid').value;
 			var data = JSON.stringify(jsonresponse.charts);
 			//alert(data);
 			showLoader('true');
@@ -3478,15 +3627,58 @@
 		showLoader('true');
 		loadJSON('data', '', '3000', function (response) {
 			jsonresponse = JSON.parse(response);
-			document.getElementById('pitmaster_active').checked = jsonresponse.pitmaster.active;
-			document.getElementById('pitmaster_manuel').checked = jsonresponse.pitmaster.manuel;
+			document.getElementById('pitmaster_typ').value = jsonresponse.pitmaster.typ;
+			clearOption('pitmaster_channel');
+			for (var i = 0; i < jsonresponse.channel.length; i++) {
+				document.getElementById('pitmaster_channel').options[document.getElementById('pitmaster_channel').options.length] = new Option('#' + jsonresponse.channel[i].number + ' - ' + jsonresponse.channel[i].name, jsonresponse.channel[i].number);
+			}
 			document.getElementById('pitmaster_channel').value = jsonresponse.pitmaster.channel;
-			
-			
 			document.getElementById("pitmaster_settings").style.display = "inline";
+			document.getElementById('pitmaster_set').value = jsonresponse.pitmaster.set;
+			<!-- document.getElementById('pitmaster_set').name = '{test,hallo}'; -->
+			document.getElementById('pitmaster_value').value = jsonresponse.pitmaster.value;
 			showLoader('false');
+			showPitmasterProfile(jsonresponse.pitmaster.pid);
 		})
-	}	
+	}
+	
+	function showPitmasterProfile(profile){
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response) {
+			jsonresponse = JSON.parse(response);
+			clearOption('pitmaster_profile_aktor');
+			clearOption('pid_profile');
+			for (var i = 0; i < jsonresponse.pid.length; i++) {
+				document.getElementById('pid_profile').options[document.getElementById('pid_profile').options.length] = new Option(jsonresponse.pid[i].name, i);
+			}
+			document.getElementById('pid_profile').value = profile;	
+			for (var i = 0; i < jsonresponse.aktor.length; i++) {
+				document.getElementById('pitmaster_profile_aktor').options[document.getElementById('pitmaster_profile_aktor').options.length] = new Option(jsonresponse.aktor[i], i);
+			}
+			document.getElementById('pitmaster_profile_aktor').value = jsonresponse.pid[profile].aktor;
+			document.getElementById('pid_name').value = jsonresponse.pid[profile].name;	
+			document.getElementById('pid_Kp').value = jsonresponse.pid[profile].Kp;	
+			document.getElementById('pid_Ki').value = jsonresponse.pid[profile].Ki;
+			document.getElementById('pid_Kd').value = jsonresponse.pid[profile].Kd;
+			document.getElementById('pid_Kp_a').value = jsonresponse.pid[profile].Kp_a;
+			document.getElementById('pid_Ki_a').value = jsonresponse.pid[profile].Ki_a;
+			document.getElementById('pid_Kd_a').value = jsonresponse.pid[profile].Kd_a;
+			showLoader('false');
+		})			
+	}
+
+	function setPitmaster(){
+		showLoader('true');
+		loadJSON('data', '', '3000', function (response) {
+			jsonresponse = JSON.parse(response);			
+		})
+		alert('Nicht verfügbar');
+		showLoader('false');		
+	}
+
+	function changePitmasterView(){		
+		
+	}
 	
 	function showChart(){
 		hideAll();
@@ -3510,6 +3702,7 @@
 		document.getElementById("about").style.display = "none";
 		document.getElementById("wlan_set").style.display = "none";
 		document.getElementById("thingspeak").style.display = "none";
+		document.getElementById("push_notification").style.display = "none";
 		document.getElementById("channel_settings").style.display = "none";
 		document.getElementById("pitmaster_settings").style.display = "none";
 	}
@@ -3634,7 +3827,7 @@
 				for (i = 0; i < x.length; i++) {
 					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jsonresponse.channel[i].color;
 					x[i].getElementsByClassName('chtitle')[0].innerHTML = jsonresponse.channel[i].name;
-					if(jsonresponse.pitmaster.active == true){
+					if(jsonresponse.pitmaster.typ == 'auto'){
 						if (jsonresponse.pitmaster.channel == jsonresponse.channel[i].number){
 							if(jsonresponse.pitmaster.value == '0'){
 								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jsonresponse.pitmaster.set + '°' + ' / ' + '<span class="icon-fan"></span>' + ' ' + jsonresponse.pitmaster.value + '%';
@@ -3780,8 +3973,7 @@
 	}
 	
 	function validateNumber(number) {
-		val = number.value.replace(/[^0-9.,]/g,'');
-		val = val.replace(/[,]/g, '.'); // "," ersetzen zu "."
+		val = number.value.replace(/[^0-9.,]/g,'').replace(/[,]/g, '.');
 		if(val){
 			val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];
 		}
@@ -3791,6 +3983,7 @@
 		}		
 		number.value = val;
 	}
+
 	readTemp();
 </script>
 
