@@ -116,7 +116,7 @@ String handleSettings(AsyncWebServerRequest *request, byte www) {
 
   JsonArray& _aktor = root.createNestedArray("aktor");
   _aktor.add("SSR");
-  //_aktor.add("FAN");
+  _aktor.add("FAN");
 
   JsonObject& _chart = root.createNestedObject("charts");
   _chart["TSwrite"] = charts.TS_writeKey; 
@@ -190,8 +190,11 @@ String handleData(AsyncWebServerRequest *request, byte www) {
   master["pid"] = pitmaster.pid;
   master["value"] = pitmaster.value;
   master["set"] = pitmaster.set;
-  master["active"] = pitmaster.active;
-  master["manuel"] = pitmaster.manuel;
+  if (pitmaster.active)
+    if (autotune.initialized)  master["typ"] = "autotune";
+    else if (pitmaster.manuel) master["typ"] = "manuel";
+    else  master["typ"] = "auto";
+  else master["typ"] = "off";  
 
   String jsonStr;
     
@@ -811,6 +814,10 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   JsonObject& _pitmaster = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
   if (!_pitmaster.success()) return 0;
 
+  String typ;
+  if (_pitmaster.containsKey("typ"))
+    typ = _pitmaster["typ"].asString();
+  else return 0;
   
   if (_pitmaster.containsKey("channel")) {
     byte cha = _pitmaster["channel"];
@@ -819,44 +826,77 @@ bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
   else return 0;
   if (_pitmaster.containsKey("pid")) pitmaster.pid = _pitmaster["pid"]; // ""
   else return 0;
-  if (_pitmaster.containsKey("active")) pitmaster.active = _pitmaster["active"];
-  else return 0;
   if (_pitmaster.containsKey("set")) pitmaster.set = _pitmaster["set"];
   else return 0;
+  
   bool manuel;
-  if (_pitmaster.containsKey("manuel")) manuel = _pitmaster["manuel"];
-  else return 0;
-  pitmaster.manuel = manuel;
-  if (_pitmaster.containsKey("value") && manuel) pitmaster.value = _pitmaster["value"];
-  else return 0;
+  bool autotune;
+  if (typ == "autotune") autotune = true;
+  else if (typ == "manuel") manuel = true;
+  else if (typ == "auto") pitmaster.active = true;
+  else  pitmaster.active = false;
+    
+  if (_pitmaster.containsKey("value") && manuel) {
+    pitmaster.value = _pitmaster["value"];
+    pitmaster.manuel = true;
+    pitmaster.active = true;
+  }
+  else {
+    pitmaster.manuel = false;
+    return 0;
+  }
   
-  
-  JsonObject& _pid = _pitmaster["setting"];
-  
-  byte id;
-  if (_pid.containsKey("id")) id = _pid["id"];
-  else return 0;
-  if (id >= pidsize) return 0;
-  pid[id].name = _pid["name"].asString();
-  pid[id].aktor =  _pid["aktor"];
-  pid[id].Kp =  _pid["Kp"];
-  pid[id].Ki =  _pid["Ki"];
-  pid[id].Kd =  _pid["Kd"];
-  pid[id].Kp_a =  _pid["Kp_a"];
-  pid[id].Ki_a =  _pid["Ki_a"];
-  pid[id].Kd_a =  _pid["Kd_a"];
-  pid[id].reversal =  _pid["reversal"];
-  pid[id].DCmin =  _pid["DCmmin"];
-  pid[id].DCmax =  _pid["DCmmax"];
-
   if (!setconfig(ePIT,{})) {
     DPRINTPLN("[INFO]\tFailed to save Pitmaster config");
     return 0;
   }
   else  DPRINTPLN("[INFO]\tPitmaster config saved");
+
+  if (autotune) startautotunePID(5, true);
+  
   return 1;
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+bool handleSetPID(AsyncWebServerRequest *request, uint8_t *datas) {
+
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+  
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+  if (!json.success()) return 0;
+
+  JsonArray& _pid = json["pid"];
+
+  byte id;
+  byte ii;
+
+  for (JsonArray::iterator it=_pid.begin(); it!=_pid.end(); ++it) {
+    id = _pid[ii]["id"];
+    if (id >= pidsize) break;
+    pid[id].name     = _pid[ii]["name"].asString();
+    pid[id].aktor    = _pid[ii]["aktor"];
+    pid[id].Kp       = _pid[ii]["Kp"];
+    pid[id].Ki       = _pid[ii]["Ki"];
+    pid[id].Kd       = _pid[ii]["Kd"];
+    pid[id].Kp_a     = _pid[ii]["Kp_a"];
+    pid[id].Ki_a     = _pid[ii]["Ki_a"];
+    pid[id].Kd_a     = _pid[ii]["Kd_a"];
+    pid[id].reversal = _pid[ii]["reversal"];
+    pid[id].DCmin    = _pid[ii]["DCmmin"];
+    pid[id].DCmax    = _pid[ii]["DCmmax"];
+    ii++;
+  }
+  
+  if (!setconfig(ePIT,{})) {
+    DPRINTPLN("[INFO]\tFailed to save PID-Profils");
+    return 0;
+  }
+  else  DPRINTPLN("[INFO]\PID-Profils saved");
+  
+  return 1;
+}
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
@@ -1033,6 +1073,12 @@ void server_setup() {
         if(!request->authenticate(www_username, www_password))
           return request->requestAuthentication();    
         if(!handleSetPitmaster(request, data)) request->send(200, "text/plain", "false");
+          request->send(200, "text/plain", "true");
+      }
+      else if (request->url() =="/setpid") { 
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();    
+        if(!handleSetPID(request, data)) request->send(200, "text/plain", "false");
           request->send(200, "text/plain", "true");
       }
       else if (request->url() =="/setcharts") { 

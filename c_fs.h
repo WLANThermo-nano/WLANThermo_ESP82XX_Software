@@ -227,7 +227,7 @@ bool loadconfig(byte count) {
         pidsize++;
       }
     }
-    if (pidsize < 1) return 0;   // Alte Versionen abfangen
+    if (pidsize < 3) return 0;   // Alte Versionen abfangen
     break;
 
     case 4:     // SYSTEM
