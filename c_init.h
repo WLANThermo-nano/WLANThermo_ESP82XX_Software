@@ -22,7 +22,7 @@
 #include <SPI.h>                  // SPI
 #include <ESP8266WiFi.h>          // WIFI
 #include <ESP8266WiFiMulti.h>     // WIFI
-#include <WiFiClientSecure.h>     // HTTPS
+//#include <WiFiClientSecure.h>     // HTTPS
 #include <WiFiUdp.h>              // NTP
 #include <TimeLib.h>              // TIME
 #include <EEPROM.h>               // EEPROM
@@ -261,7 +261,7 @@ struct Charts {
 Charts charts;
 
 // OLED
-int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL       
+int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL     
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool displayblocked = false;                     // No OLED Update
 enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE};
@@ -311,8 +311,9 @@ byte inMenu = 0;
 enum {TEMPSUB, PITSUB, SYSTEMSUB, MAINMENU, TEMPKONTEXT, BACK};
 bool inWork = 0;
 bool isback = 0;
-int framepos[3] = {0, 6, 11};
-int frameCount = 19;
+byte framepos[5] = {0, 2, 3, 1, 4};  // TempSub, PitSub, SysSub, TempKon, Back
+byte subframepos[4] = {1, 6, 11, 19};    // immer ein Back dazwischen
+int current_frame = 0;  
 bool flashinwork = true;
 float tempor;                       // Zwischenspeichervariable
 
