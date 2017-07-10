@@ -130,25 +130,31 @@ void sendpmqtt() {
   if (pmqttClient.connected()) {
 
     unsigned long vorher = millis();
+    String prefix = F("WLanThermo/");
+    prefix += sys.host;
+    prefix += F("/status/");
 
+    
     for (int i = 0; i < 8; i++)  {
       if (ch[i].temp != INACTIVEVALUE) {
-        String adress = F("WLanThermo/");
-        adress += sys.host;
-        adress += F("/status/");
-        adress += "temp";
-        adress += String(i + 1);
-        String postStr = String(ch[i].temp, 1);
-        pmqttClient.publish(adress.c_str(), charts.P_MQTT_QoS, false, postStr.c_str());
+        String temp_adress = prefix + "temp";
+        temp_adress += String(i + 1);
+        String posttempStr = String(ch[i].temp, 1);
+        pmqttClient.publish(temp_adress.c_str(), charts.P_MQTT_QoS, false, posttempStr.c_str());
       }
     }
 
-    String adress = F("WLanThermo/");
-    adress += sys.host;
-    adress += F("/status/");
-    adress += "voltage";
-    String postStr = String(battery.percentage);
-    pmqttClient.publish(adress.c_str(), charts.P_MQTT_QoS, false, postStr.c_str());
+ 
+    String volt_adress = prefix + "voltage";
+    String postvoltStr = String(battery.percentage);
+    pmqttClient.publish(volt_adress.c_str(), charts.P_MQTT_QoS, false, postvoltStr.c_str());
+
+ 
+    String wlan_adress = prefix + "wlan";
+    String postwlanStr = String(rssi);
+    pmqttClient.publish(wlan_adress.c_str(), charts.P_MQTT_QoS, false, postwlanStr.c_str());
+
+
 
     DPRINTF("[INFO]\tPublish to MQTTbroker: %ums\r\n", millis() - vorher);
 
