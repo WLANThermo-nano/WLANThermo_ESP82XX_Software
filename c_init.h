@@ -356,7 +356,7 @@ void transform_limits();                          // Transform Channel Limits
 
 // OLED
 #include <SSD1306.h>              
-#include <OLEDDisplayUi.h>        
+#include <OLEDDisplayUi.h>  
 SSD1306 display(OLED_ADRESS, SDA, SCL);
 OLEDDisplayUi ui     ( &display );
 
