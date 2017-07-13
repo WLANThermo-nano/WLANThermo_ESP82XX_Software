@@ -1788,9 +1788,9 @@
                 <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
 				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
 				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
-				<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link" style="display:none">Pitmaster</a></li>
+				<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li>
 				<li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
-				<li id="menuNotification" class="pure-menu-item"><a href="javascript:showPushNotification()" class="pure-menu-link" style="display:none">Push Notification</a></li>
+				<li id="menuNotification" class="pure-menu-item"><a href="javascript:showPushNotification()" class="pure-menu-link">Push Notification</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>
         </div>
@@ -2330,7 +2330,10 @@
 							<div class="form-group">
 							  <input type="text" class="temp_input" id="TGid" maxlength="10" required="required"/>
 							  <label class="control-label" for="input">Chat ID</label><i class="bar"></i>
-							</div>							
+							</div>
+							<!-- <a class="pure-button" href="" onclick="getChatID();">A Pure Button</a> -->
+							<p class="pure-button pure-button-primary" onclick="getChatID();">ChatID ermitteln</p>
+							<!-- <button class="" onSubmit="return false;">A Primary Button</button>														 -->
 						</form>
 					</div>
 				</div>
@@ -2365,6 +2368,8 @@
 </div>
 <script> 
 	var byId = function( id ) { return document.getElementById( id ); };
+	var byClass = function( id ) { return document.getElementsByClassName( id ); };
+	var getIcon = function( icon ) { return '<span class="icon-'  + icon + '"></span>'; };
 	(function (window, document) {
 
 		var byId = function( id ) { return document.getElementById( id ); };
@@ -2559,6 +2564,10 @@
 		})				
 	}
 
+	function getChatID(){
+	
+	}
+	
 	function setPushNotification(){
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
@@ -2651,9 +2660,9 @@
 			jr = JSON.parse(response);
 			byId('thermoname').innerHTML = jr.system.host;
 			if(jr.system.getupdate == 'false'){
-				document.getElementsByClassName("notification")[0].style.display = "none";
+				byClass("notification")[0].style.display = "none";
 			}else{
-				document.getElementsByClassName("notification")[0].style.display = "inline";
+				byClass("notification")[0].style.display = "inline";
 			}
 			showLoader('false');
 		})
@@ -2669,7 +2678,7 @@
 			}else if (jr == false){
 				showLoader('false')
 				updateActivated = 'false';
-				document.getElementsByClassName("notification")[0].style.display = "none";
+				byClass("notification")[0].style.display = "none";
 				location.reload(true);
 			}
 		})	
@@ -2826,15 +2835,10 @@
 	}	
 
 	function hideAll(){
-		byId('index').style.display = "none";
-		byId('wlan_config').style.display = "none";
-		byId('system_config').style.display = "none";
-		byId('about').style.display = "none";
-		byId('wlan_set').style.display = "none";
-		byId('thingspeak').style.display = "none";
-		byId('push_notification').style.display = "none";
-		byId('channel_settings').style.display = "none";
-		byId('pitmaster_settings').style.display = "none";
+		hideIDs = ['index','wlan_config','system_config','system_config','about','wlan_set','thingspeak','push_notification','channel_settings','pitmaster_settings'];
+		for (var i = 0; i < hideIDs.length; i++) {
+			byId(hideIDs[i]).style.display = "none";
+		}
 	}
 	
     function loadJSON(url, data, timeout, callback) {
@@ -2877,22 +2881,22 @@
 				data = '';
 			}
 			if (percent >= '90'){
-				data = data + '<span class="icon-battery-100"> </span>';
+				data = data + getIcon('battery-100');
 			}else if (percent >= '75'){
-				data = data + '<span class="icon-battery-75"> </span>';
+				data = data + getIcon('battery-75');
 			}else if (percent >= '50'){
-				data = data + '<span class="icon-battery-50"> </span>';
+				data = data + getIcon('battery-50');
 			}else if (percent >= '15'){
-				data = data + '<span class="icon-battery-25"> </span>';
+				data = data + getIcon('battery-25');
 			}else if (percent >= '10'){
-				data = data + '<span class="icon-battery-0"> </span>';
+				data = data + getIcon('battery-0');
 			}else{
-				data = data + '<span class="icon-battery-0 icon-blinker"> </span>';
+				data = data + getIcon('battery-0 icon-blinker');
 			}
 			return data + '&nbsp;';
 		}else{
 			if(charge == true){
-				data = '<span class="icon-power-cord"> </span>';
+				data = getIcon('power-cord');
 			}else{
 				data = '';
 			}
@@ -2905,11 +2909,11 @@
 		data = '';
 		if (showBatteryWlanIcon == true){
 			if(dbm >= '-80'){
-				data = data + '<span class="icon-Wlan100"></span> </span>';
+				data = data + getIcon('Wlan100');
 			}else if (dbm >= '-95'){
-				data = data + '<span class="icon-Wlan66"></span> </span>';
+				data = data + getIcon('Wlan66');
 			}else if (dbm >= '-105'){
-				data = data + '<span class="icon-Wlan33"></span> </span>';
+				data = data + getIcon('Wlan33');
 			}
 			return data;	
 		}else{
@@ -2919,24 +2923,26 @@
 	}
 
 	function getWifiSecureIcon(data){
+		var lock = getIcon('lock');
+		var unlock = getIcon('unlock');
 		switch(data) {
 			case 2: //ENC_TYPE_TKIP - WPA / PSK
-				return '<span class="icon-lock"> </span>';
+				return lock;
 				break;
 			case 4: //ENC_TYPE_CCMP - WPA2 / PSK
-				return '<span class="icon-lock"> </span>';
+				return lock;
 				break;
 			case 5: //ENC_TYPE_WEP - WEP
-				return '<span class="icon-lock"> </span>';
+				return lock;
 				break;
 			case 7: //ENC_TYPE_NONE - open network
-				return '<span class="icon-unlock"> </span>';
+				return unlock;
 			break;
 			case 8:	//ENC_TYPE_AUTO - WPA / WPA2 / PSK
-				return '<span class="icon-lock"> </span>';
+				return lock;
 				break;	
 			default:
-				return '<span class="icon-lock"> </span>';
+				return lock;
 		} 
 	}
 	
@@ -2947,26 +2953,28 @@
 			loadJSON('data', '', '3000', function (response) {
 				jr = JSON.parse(response);
 				BatteryIcon = getBatteryIcon(jr.system.soc,jr.system.charge);
-				document.getElementsByClassName("battery")[0].innerHTML = BatteryIcon;
+				byClass("battery")[0].innerHTML = BatteryIcon;
 				RSSIIcon = getRSSIIcon(jr.system.rssi);
-				document.getElementsByClassName("wifi")[0].innerHTML = RSSIIcon;
-				var x = document.getElementsByClassName("pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index");
+				byClass("wifi")[0].innerHTML = RSSIIcon;
+				var x = byClass("pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index");
 				var i;
 				for (i = 0; i < x.length; i++) {
 					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;
 					x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
 					if(jr.pitmaster.typ == 'auto'){
 						if (jr.pitmaster.channel == jr.channel[i].number){
+							var a = getIcon('uniF2C7') + jr.pitmaster.set + '°' + ' / ';
+							var e = ' ' + jr.pitmaster.value + '%';
 							if(jr.pitmaster.value == '0'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jr.pitmaster.set + '°' + ' / ' + '<span class="icon-fan"></span>' + ' ' + jr.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan') + ' ' + jr.pitmaster.value + '%';
 							}else if (jr.pitmaster.value <= '25'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jr.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-25"></span>' + ' ' + jr.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-25') + e;
 							}else if (jr.pitmaster.value <= '50'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jr.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-50"></span>' + ' ' + jr.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-50') + e;
 							}else if (jr.pitmaster.value <= '75'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jr.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-75"></span>' + ' ' + jr.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-75') + e;
 							}else if (jr.pitmaster.value <= '100'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = '<span class="icon-uniF2C7"></span>' + jr.pitmaster.set + '°' + ' / ' + '<span class="icon-fan icon-rotate-100"></span>' + ' ' + jr.pitmaster.value + '%';
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-100') + e;
 							}
 						}else{
 							x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
@@ -2975,8 +2983,8 @@
 						x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
 					}
 					x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jr.channel[i].number;
-					x[i].getElementsByClassName('tempmin')[0].innerHTML = '<span class="icon-temp_down"></span>' + jr.channel[i].min + "°";
-					x[i].getElementsByClassName('tempmax')[0].innerHTML = '<span class="icon-temp_up"></span>' + jr.channel[i].max + "°";
+					x[i].getElementsByClassName('tempmin')[0].innerHTML = getIcon('temp_down') + jr.channel[i].min + "°";
+					x[i].getElementsByClassName('tempmax')[0].innerHTML = getIcon('temp_up') + jr.channel[i].max + "°";
 					if (jr.channel[i].temp == '999'){
 						x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
 						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
@@ -3016,47 +3024,28 @@
 			var table_networkconnect = byId('networkconnect');
 			if (jr.Connect){			
 				var row = table_networkconnect.insertRow(0);
-				var cell1 = row.insertCell(0);
-				var cell2 = row.insertCell(1);
-				var cell3 = row.insertCell(2);
-				var cell4 = row.insertCell(3);
-				var cell5 = row.insertCell(4);
-				cell1.innerHTML = '<span class="icon-ok"> </span>';
-				cell1.className = 'row-Check';
-				cell2.innerHTML = jr.SSID;
-				cell2.className = 'row-SSID';
-				RSSI = getRSSIIcon(jr.RSSI);
-				cell3.innerHTML = RSSI;
-				cell3.className = 'row-RSSI';
-				enc = getWifiSecureIcon(jr.Enc);
-				cell4.innerHTML = enc;
-				cell4.className = 'row-Enc';
-				cell5.className = 'row-link';				
+				addCell(row,getIcon('ok'),'row-Check','0');
+				addCell(row,jr.SSID,'row-SSID','1');
+				addCell(row,getRSSIIcon(jr.RSSI),'row-RSSI','2');
+				addCell(row,getWifiSecureIcon(jr.Enc),'row-Enc','3');
+				addCell(row,'','row-link','4');								
 			}
 			NetworkconnectRowClick();
 			for (var i = 0; i < jr.Scan.length; i++) {
 				var row = table_networklist.insertRow(-1);
-				var cell1 = row.insertCell(0);
-				cell1.className = 'row-Check';
-				var cell2 = row.insertCell(1);
-				var cell3 = row.insertCell(2);
-				var cell4 = row.insertCell(3);
-				var cell5 = row.insertCell(4);
-				cell1.innerHTML = '';
-				cell1.className = 'row-Check';
-				cell2.innerHTML = jr.Scan[i].SSID;
-				cell2.className = 'row-SSID';
-				RSSI = getRSSIIcon(jr.Scan[i].RSSI);
-				cell3.innerHTML = RSSI;
-				cell3.className = 'row-RSSI';
-				enc = getWifiSecureIcon(jr.Scan[i].Enc);
-				cell4.innerHTML = enc;
-				cell4.className = 'row-Enc';
-				cell5.innerHTML = '<span class="icon-circle-right"> </span>';
-				cell5.className = 'row-link';
+				addCell(row,'','row-Check','0');
+				addCell(row,jr.Scan[i].SSID,'row-SSID','1');
+				addCell(row,getRSSIIcon(jr.Scan[i].RSSI),'row-RSSI','2');
+				addCell(row,getWifiSecureIcon(jr.Scan[i].Enc),'row-Enc','3');
+				addCell(row,getIcon('circle-right'),'row-link','4');
 			}
 			NetworklistRowClick();
 		})
+	}
+	function addCell(row,cellinnerHtml,cellClass,nr){
+		var cell = row.insertCell(nr);
+		cell.innerHTML = cellinnerHtml;
+		cell.className = cellClass;
 	}
 	
 	var ssidInput;
