@@ -545,6 +545,31 @@ void start_fs() {
   DPRINTPLN("K)");
   // 0x40200000 ist der Speicherort des SPI FLASH in der Memory Map
 
+  String fileName;
+  Dir dir = SPIFFS.openDir("/");
+  while (dir.next()) {
+    DPRINTP("[INFO]\tFS File: ");
+    //fileName = dir.fileName();
+    //size_t fileSize = dir.fileSize();
+    //DPRINTF("[INFO]\tFS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
+    Serial.print(dir.fileName());
+    File f = dir.openFile("r");
+    DPRINTP("\tSize: ");
+    Serial.println(formatBytes(f.size()));
+  }
+
+  FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  DPRINTP("[INFO]\tTotalBytes: ");
+  DPRINT(formatBytes(fs_info.totalBytes));
+  DPRINTP("\tUsedBytes: ");
+  DPRINTLN(formatBytes(fs_info.usedBytes));
+  //Serial.println(fs_info.blockSize);
+  //Serial.println(fs_info.pageSize);
+
+  //u32_t total, used;
+  //int res = SPIFFS_info(&fs, &total, &used);
+  
   // CHANNEL
   if (!loadconfig(eCHANNEL)) {
     DPRINTPLN("[INFO]\tFailed to load channel config");
