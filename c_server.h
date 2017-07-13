@@ -959,12 +959,12 @@ void server_setup() {
     });
 
     // REQUEST: /networklist
-    server.on("/networklist", HTTP_POST, [](AsyncWebServerRequest *request) { 
-      handleWifiResult(request, true);
+    server.on("/networklist", HTTP_GET, [](AsyncWebServerRequest *request) { 
+      //request->send(200, "text/html", "<form method='POST' action='/networklist'>Networkliste ausgeben?<br><br><input type='submit' value='Ja'></form>");
+      // Wie leite ich einfach weiter ohne User-Eingabe?
     });
 
-    // REQUEST: /networklist
-    server.on("/networklist", HTTP_GET, [](AsyncWebServerRequest *request) { 
+    server.on("/networklist", HTTP_POST, [](AsyncWebServerRequest *request) { 
       handleWifiResult(request, true);
     });
 
@@ -975,19 +975,21 @@ void server_setup() {
     });
     
     // REQUEST: /clear wifi
-    server.on("/clearwifi", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      setconfig(eWIFI,{}); // clear Wifi settings
-      request->send(200, "text/json", "true");
+    server.on("/clearwifi", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(200, "text/html", "<form method='POST' action='/clearwifi'>Wifi-Speicher wirklich leeren?<br><br><input type='submit' value='Ja'></form>");
     });
 
-    // REQUEST: /clear wifi
     server.on("/clearwifi", HTTP_POST, [](AsyncWebServerRequest *request) { 
       setconfig(eWIFI,{}); // clear Wifi settings
       request->send(200, "text/json", "true");
     });
 
     // REQUEST: /configreset
-    server.on("/configreset", HTTP_GET, [](AsyncWebServerRequest *request) { 
+    server.on("/configreset", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(200, "text/html", "<form method='POST' action='/configreset'>System-Speicher wirklich resetten?<br><br><input type='submit' value='Ja'></form>");
+    });
+
+    server.on("/configreset", HTTP_POST, [](AsyncWebServerRequest *request) { 
       set_channels(1);
       setconfig(eCHANNEL,{});
       loadconfig(eCHANNEL);
@@ -1091,9 +1093,8 @@ void server_setup() {
         DPRINTF("%s", (const char*)data);
         if(index + len == total) DPRINTF("BodyEnd: %u\n", total);
       }
-      
     });
-
+      
     server.begin();
     DPRINTPLN("[INFO]\tHTTP server started");
     MDNS.addService("http", "tcp", 80);
