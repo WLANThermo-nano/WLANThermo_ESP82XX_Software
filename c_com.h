@@ -34,12 +34,11 @@ void read_serial(char *buffer) {
     String command = str.substring(0,index);
     DPRINTP("[INFO]\tSerial Command: ");
     DPRINTLN(command);
-    
+
+    // Umsortieren
     for (int i = 0;i<index+1;i++) {
-    *buffer++;
+      *buffer++;
     }
-    
-    //Serial.println(buffer);
     uint8_t * PM_buffer = reinterpret_cast<uint8_t *>(buffer);
 
     // ADD WIFI SETTINGS
