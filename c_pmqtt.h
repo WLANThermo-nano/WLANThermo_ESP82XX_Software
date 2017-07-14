@@ -143,6 +143,15 @@ void sendpmqtt() {
         pmqttClient.publish(temp_adress.c_str(), charts.P_MQTT_QoS, false, posttempStr.c_str());
       }
     }
+    for (int i = 0; i < 8; i++)  {
+      if (ch[i].max != INACTIVEVALUE) {
+        String max_adress = prefix + "temp";
+        max_adress += String(i + 1);
+        max_adress += "/max";
+        String posttempStr = String(ch[i].max, 1);
+        pmqttClient.publish(max_adress.c_str(), charts.P_MQTT_QoS, false, posttempStr.c_str());
+      }
+    }
 
  
     String volt_adress = prefix + "voltage";
