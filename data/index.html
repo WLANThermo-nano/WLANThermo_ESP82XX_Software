@@ -2773,12 +2773,31 @@
 				byId('pitmaster_channel').options[byId('pitmaster_channel').options.length] = new Option('#' + jr.channel[i].number + ' - ' + jr.channel[i].name, jr.channel[i].number);
 			}
 			byId('pitmaster_channel').value = jr.pitmaster.channel;
-			byId('pitmaster_settings').style.display = "inline";
 			byId('pitmaster_set').value = jr.pitmaster.set;
 			byId('pitmaster_value').value = jr.pitmaster.value;
+			byId('pitmaster_settings').style.display = "inline";
 			showLoader('false');
 			showPitmasterProfile(jr.pitmaster.pid);
 		})
+	}
+
+	function setPitmaster(){
+		showLoader('true');
+		loadJSON('data', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			jr.pitmaster.typ = byId('pitmaster_typ').value;
+			jr.pitmaster.channel = byId('pitmaster_channel').value;
+			jr.pitmaster.set = byId('pitmaster_set').value;
+			jr.pitmaster.value = byId('pitmaster_value').value
+			var data = JSON.stringify(jr.pitmaster);
+			loadJSON('setpitmaster', data, '60000', function (response) {
+				//alert(data);
+				setPitmasterProfile();
+				showIndex();
+				showLoader('false');
+			})	
+		})
+		showLoader('false');		
 	}
 	
 	function showPitmasterProfile(profile){
@@ -2808,15 +2827,28 @@
 		})			
 	}
 
-	function setPitmaster(){
-		showLoader('true');
-		loadJSON('data', '', '3000', function (response) {
-			jr = JSON.parse(response);			
+	function setPitmasterProfile(){
+		loadJSON('settings', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			profile = byId('pid_profile').value;
+			jr.pid[profile].aktor = byId('pitmaster_profile_aktor').value;
+			jr.pid[profile].name = byId('pid_name').value;
+			jr.pid[profile].Kp = byId('pid_Kp').value;
+			jr.pid[profile].Ki = byId('pid_Ki').value;
+			jr.pid[profile].Kd = byId('pid_Kd').value;
+			jr.pid[profile].Kp_a = byId('pid_Kp_a').value;
+			jr.pid[profile].Ki_a = byId('pid_Ki_a').value;
+			jr.pid[profile].Kd_a = byId('pid_Kd_a').value;
+			jr.pid[profile].DCmmin = byId('pid_DCmin').value;
+			jr.pid[profile].DCmmax = byId('pid_DCmax').value;
+			var data = JSON.stringify(jr.pid);
+			loadJSON('setpid', data, '60000', function (response) {
+				alert(data);
+			})	
 		})
-		alert('Nicht verfügbar');
-		showLoader('false');		
+		showLoader('false');	
 	}
-
+	
 	function changePitmasterView(){		
 		
 	}
