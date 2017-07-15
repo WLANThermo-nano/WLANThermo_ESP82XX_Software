@@ -2789,6 +2789,7 @@
 			jr.pitmaster.channel = byId('pitmaster_channel').value;
 			jr.pitmaster.set = byId('pitmaster_set').value;
 			jr.pitmaster.value = byId('pitmaster_value').value
+			jr.pitmaster.pid = byId('pid_profile').value
 			var data = JSON.stringify(jr.pitmaster);
 			loadJSON('setpitmaster', data, '60000', function (response) {
 				//alert(data);
