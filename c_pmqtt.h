@@ -80,10 +80,10 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       String test1 = "temp" + String(i) + "/min";
       String test2 = "temp" + String(i) + "/max";
       if (test1 == topic_short) {
-        ch[i].min = new_payload;
+        ch[i-1].min = new_payload;
       }
       else if (test2 == topic_short) {
-        ch[i].max = new_payload;
+        ch[i-1].max = new_payload;
       }
       else {
       }
@@ -103,6 +103,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       }
     }
     setconfig(eCHANNEL, {});
+    loadconfig(eCHANNEL);
   } 
   }
   
@@ -152,7 +153,15 @@ void sendpmqtt() {
         pmqttClient.publish(max_adress.c_str(), charts.P_MQTT_QoS, false, posttempStr.c_str());
       }
     }
-
+    for (int i = 0; i < 8; i++)  {
+      if (ch[i].min != INACTIVEVALUE) {
+        String min_adress = prefix + "temp";
+        min_adress += String(i + 1);
+        min_adress += "/min";
+        String posttempStr = String(ch[i].min, 1);
+        pmqttClient.publish(min_adress.c_str(), charts.P_MQTT_QoS, false, posttempStr.c_str());
+      }
+    }
  
     String volt_adress = prefix + "voltage";
     String postvoltStr = String(battery.percentage);
