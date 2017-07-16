@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.5.3"
+#define FIRMWAREVERSION "v0.5.5"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -174,16 +174,72 @@ struct Pitmaster {
    bool  active;           // IS PITMASTER ACTIVE
    byte  channel;         // PITMASTER CHANNEL
    float value;           // PITMASTER VALUE IN %
-   int manuel;            // MANUEL PITMASTER VALUE IN %
+   int manual;            // MANUEL PITMASTER VALUE IN %
    bool event;
    int16_t msec;          // PITMASTER VALUE IN MILLISEC
    unsigned long last;
    int pause;             // PITMASTER PAUSE
    bool resume;           // Continue after restart           
 };
-
 Pitmaster pitmaster;
 int pidsize;
+
+struct PID {
+  String name;
+  byte id;
+  byte aktor;                     // 0: SSR, 1:FAN, 2:Servo
+  //byte port;                  // IO wird über typ bestimmt
+  float Kp;                     // P-Konstante oberhalb pswitch
+  float Ki;                     // I-Konstante oberhalb pswitch
+  float Kd;                     // D-Konstante oberhalb pswitch
+  float Kp_a;                   // P-Konstante unterhalb pswitch
+  float Ki_a;                   // I-Konstante unterhalb pswitch
+  float Kd_a;                   // D-Konstante unterhalb pswitch
+  int Ki_min;                   // Minimalwert I-Anteil
+  int Ki_max;                   // Maximalwert I-Anteil
+  float pswitch;                // Umschaltungsgrenze
+  bool reversal;                // VALUE umkehren
+  int DCmin;                    // Duty Cycle Min
+  int DCmax;                    // Duty Cycle Max
+  int SVmin;                    // SERVO IMPULS MIN
+  int SVmax;                    // SERVO IMPULS MAX
+  float esum;                   // Startbedingung I-Anteil
+  float elast;                  // Startbedingung D-Anteil
+  
+};
+PID pid[PITMASTERSIZE];
+
+struct AutoTune {
+   bool storeValues;
+   float temp;             // BETRIEBS-TEMPERATUR
+   int  maxCycles;        // WIEDERHOLUNGEN
+   int cycles;            // CURRENT WIEDERHOLUNG
+   int heating;            // HEATING FLAG
+   uint32_t t0;
+   uint32_t t1;            // ZEITKONSTANTE 1
+   uint32_t t2;           // ZEITKONSTANTE 2
+   int32_t t_high;        // FLAG HIGH
+   int32_t t_low;         // FLAG LOW
+   int32_t bias;
+   int32_t d;
+   float Kp;
+   float Ki;
+   float Kd;
+   float Kp_a;
+   float Ki_a;
+   float Kd_a;
+   float maxTemp;
+   float minTemp;
+   bool initialized;
+   float value;
+   float previousTemp;
+   float maxTP;             // MAXIMALE STEIGUNG = WENDEPUNKT
+   uint32_t tWP;            // ZEITPUNKT WENDEPUNKT  
+   float TWP;               // TEMPERATUR WENDEPUNKT
+};
+
+AutoTune autotune;
+
 
 
 // DATALOGGER
@@ -317,6 +373,11 @@ int current_frame = 0;
 bool flashinwork = true;
 float tempor;                       // Zwischenspeichervariable
 
+// WEBSERVER
+AsyncWebServer server(80);        // https://github.com/me-no-dev/ESPAsyncWebServer
+const char* www_username = "admin";
+const char* www_password = "admin";
+
 // TIMER
 unsigned long lastUpdateBatteryMode;
 unsigned long lastUpdateSensor;
@@ -399,19 +460,6 @@ WiFiEventHandler wifiConnectHandler;
 //MQTT
 AsyncMqttClient pmqttClient;
 void sendpmqtt();
-
-// SERVER
-String handleSettings(AsyncWebServerRequest *request, byte www);
-String handleData(AsyncWebServerRequest *request, byte www);
-void handleWifiResult(AsyncWebServerRequest *request, bool www);
-void handleWifiScan(AsyncWebServerRequest *request, bool www);
-bool handleSetNetwork(AsyncWebServerRequest *request, uint8_t *datas);
-bool handleSetSystem(AsyncWebServerRequest *request, uint8_t *datas);
-bool handleSetChart(AsyncWebServerRequest *request, uint8_t *datas);
-bool handleSetPitmaster(AsyncWebServerRequest *request, uint8_t *datas);
-bool handleSetChannels(AsyncWebServerRequest *request, uint8_t *datas);
-bool handleAddPitmaster(AsyncWebServerRequest *request, uint8_t *datas);
-String getMacAddress();
 
 // EEPROM
 void setEE();
@@ -659,6 +707,7 @@ bool standby_control() {
       //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
       //pitmaster.active = false;
       disableAllHeater();
+      server.reset();   // Webserver leeren
       piepserOFF();
       // set_pitmaster();
     }
@@ -686,6 +735,18 @@ float limit_float(float f, int i) {
   } else f = 999;
   return f;
 }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// MAC-Adresse
+String getMacAddress()  {
+  uint8_t mac[6];
+  char macStr[18] = { 0 };
+  WiFi.macAddress(mac);
+  sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  return  String(macStr);
+}
+
+
 
 
 
