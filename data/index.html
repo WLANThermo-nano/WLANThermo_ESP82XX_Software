@@ -42,7 +42,11 @@
   margin-right:4px;
   margin-left:2px;
 }
-
+.icon-play:before {
+  content: "\f144";
+}
+.icon-pause:before {content: "\f28b";}
+.icon-stop:before {content: "\f28d";}
 .icon-Wlan33:before {content: "\e906";}
 .icon-Wlan66:before {content: "\e907";}
 .icon-Wlan100:before {content: "\e908";}
@@ -1718,6 +1722,12 @@
 			top:0.375rem;
 			right:0.25rem;
 		}
+		.icon-input{
+			position:absolute;
+			padding-left:10px;
+			top:0.625rem;
+			right:0.25rem;
+		}
     </style>
 </head>
 <body>
@@ -2030,7 +2040,7 @@
 				<button class="pure-button pure-button-disabled">Profile</button>
 				<button class="pure-button" onclick="setPitmasterProfile();">Speichern</button>
 			</div>
-			<h3 class="headtitle">Pitmaster Profile</h3>
+			<h3 class="headtitle">Aktorik</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
@@ -2042,7 +2052,34 @@
 							<div class="form-group">
 								<select id="pitmaster_profile_aktor"></select>
 								<label class="control-label" onchange="" for="select">Aktor</label><i class="bar"></i>
-							</div>								  								
+							</div>
+							<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
+								<tr>
+								  <td>
+									<div class="form-group">
+									  <input type="text" id="pid_DCmin" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <label class="control-label" for="input">DCmin</label><i class="bar"></i>
+									  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');">
+									</div>
+								  </td>
+								  <td>	
+									<div class="form-group">
+									  <input type="text" id="pid_DCmax" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <label class="control-label" for="input">DCmax</label><i class="bar"></i>
+									  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');">
+									</div>							  
+								  </td>
+								</tr>
+							</table>
+						</form>	
+					</div>
+				</div>
+			</div>
+			<h3 class="headtitle">PID</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>		
 							<table class="table33" cellpadding="0" cellspacing="0" width="100%" border="0">
 								<tr>
 								  <td>
@@ -2084,22 +2121,6 @@
 									  <input type="text" id="pid_Kd_a" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
 									  <label class="control-label" for="input">Kd_a</label><i class="bar"></i>
 									</div>
-								  </td>
-								</tr>
-							</table>
-							<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
-								<tr>
-								  <td>
-									<div class="form-group">
-									  <input type="text" id="pid_DCmin" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
-									  <label class="control-label" for="input">DCmin</label><i class="bar"></i>
-									</div>
-								  </td>
-								  <td>	
-									<div class="form-group">
-									  <input type="text" id="pid_DCmax" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
-									  <label class="control-label" for="input">DCmax</label><i class="bar"></i>
-									</div>							  
 								  </td>
 								</tr>
 							</table>
