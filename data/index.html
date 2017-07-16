@@ -1983,13 +1983,13 @@
 								<tr>
 								  <td>
 									<div class="form-group">
-									  <select id="pitmaster_typ">
+									  <select id="pitmaster_typ" onchange="changePitmasterTyp();">
 										<option value="off">off</option>
 										<option value="auto">auto</option>
 										<option value="manual">manual</option>
 										<option value="autotune">autotune</option>
 									  </select>
-									  <label class="control-label" onchange="changePitmasterView();" for="select">Pitmaster</label><i class="bar"></i>
+									  <label class="control-label" for="select">Pitmaster</label><i class="bar"></i>
 									</div>
 								  </td>
 								  <td>	
@@ -2014,8 +2014,8 @@
 								<label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
 							</div>	
 							
-							<div class="form-group">
-							  <input type="number" min="0" max="100" id="pitmaster_value" step="1" onkeyup="validateNumber(this);" required="required"/>
+							<div id="pitmaster_value_show" class="form-group">
+							  <input type="text" id="pitmaster_value" onkeyup="validateNumber(this);" required="required"/>
 							  <label class="control-label" for="input">Pitmaster-Wert (%)</label><i class="bar"></i>
 							</div>
 						</form>	
@@ -2791,9 +2791,16 @@
 			byId('pitmaster_settings').style.display = "inline";
 			showLoader('false');
 			showPitmasterProfile(jr.pitmaster.pid);
+			changePitmasterTyp();
 		})
 	}
-
+	function changePitmasterTyp(){	
+		<!-- if(byId('pitmaster_typ').value == 'manual'){ -->
+			<!-- byId('pitmaster_value_show').style.display = "inline";	 -->
+		<!-- }else{ -->
+			<!-- byId('pitmaster_value_show').style.display = "none";	 -->
+		<!-- }		 -->
+	}
 	function setPitmaster(){
 		showLoader('true');
 		loadJSON('data', '', '3000', function (response) {
@@ -2877,10 +2884,6 @@
 			})	
 		})
 		showLoader('false');	
-	}
-	
-	function changePitmasterView(){		
-		
 	}
 	
 	function showChart(){
