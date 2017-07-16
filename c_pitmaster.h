@@ -25,64 +25,6 @@
 int pidMax = 100;      // Maximum (PWM) value, the heater should be set
 
 
-struct PID {
-  String name;
-  byte id;
-  byte aktor;                     // 0: SSR, 1:FAN, 2:Servo
-  //byte port;                  // IO wird über typ bestimmt
-  float Kp;                     // P-Konstante oberhalb pswitch
-  float Ki;                     // I-Konstante oberhalb pswitch
-  float Kd;                     // D-Konstante oberhalb pswitch
-  float Kp_a;                   // P-Konstante unterhalb pswitch
-  float Ki_a;                   // I-Konstante unterhalb pswitch
-  float Kd_a;                   // D-Konstante unterhalb pswitch
-  int Ki_min;                   // Minimalwert I-Anteil
-  int Ki_max;                   // Maximalwert I-Anteil
-  float pswitch;                // Umschaltungsgrenze
-  bool reversal;                // VALUE umkehren
-  int DCmin;                    // Duty Cycle Min
-  int DCmax;                    // Duty Cycle Max
-  int SVmin;                    // SERVO IMPULS MIN
-  int SVmax;                    // SERVO IMPULS MAX
-  float esum;                   // Startbedingung I-Anteil
-  float elast;                  // Startbedingung D-Anteil
-  
-};
-
-PID pid[PITMASTERSIZE];
-
-
-struct AutoTune {
-   bool storeValues;
-   float temp;             // BETRIEBS-TEMPERATUR
-   int  maxCycles;        // WIEDERHOLUNGEN
-   int cycles;            // CURRENT WIEDERHOLUNG
-   int heating;            // HEATING FLAG
-   uint32_t t0;
-   uint32_t t1;            // ZEITKONSTANTE 1
-   uint32_t t2;           // ZEITKONSTANTE 2
-   int32_t t_high;        // FLAG HIGH
-   int32_t t_low;         // FLAG LOW
-   int32_t bias;
-   int32_t d;
-   float Kp;
-   float Ki;
-   float Kd;
-   float Kp_a;
-   float Ki_a;
-   float Kd_a;
-   float maxTemp;
-   float minTemp;
-   bool initialized;
-   float value;
-   float previousTemp;
-   float maxTP;             // MAXIMALE STEIGUNG = WENDEPUNKT
-   uint32_t tWP;            // ZEITPUNKT WENDEPUNKT  
-   float TWP;               // TEMPERATUR WENDEPUNKT
-};
-
-AutoTune autotune;
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Set Pitmaster Pin
 void set_pitmaster(bool init) {
@@ -105,7 +47,7 @@ void set_pitmaster(bool init) {
   if (!pitmaster.resume) pitmaster.active = false; 
 
   pitmaster.value = 0;
-  pitmaster.manuel = false;
+  pitmaster.manual = false;
   pitmaster.event = false;
   pitmaster.msec = 0;
   pitmaster.pause = 1000;
@@ -459,7 +401,7 @@ void pitmaster_control() {
       float y;
 
       if (autotune.initialized)       pitmaster.value = autotunePID();
-      else if (!pitmaster.manuel)     pitmaster.value = PID_Regler();
+      else if (!pitmaster.manual)     pitmaster.value = PID_Regler();
       // falls manuel wird value vorgegeben
       
       if (pid[pitmaster.pid].aktor == 1)                // FAN

@@ -103,8 +103,8 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       }
     }
     setconfig(eCHANNEL, {});
-  } 
   }
+}
   
   // skeleton
   // if (topic_short.startsWith("dummy")) {

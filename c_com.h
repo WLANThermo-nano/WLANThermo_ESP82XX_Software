@@ -43,29 +43,25 @@ void read_serial(char *buffer) {
 
     // ADD WIFI SETTINGS
     if (command == "setnetwork") {
-       AsyncWebServerRequest *request;
-       handleSetNetwork(request,PM_buffer);
+       bodyWebHandler.setNetwork(PM_buffer);
        return;
     }
 
     // SET THINGSPEAK KEYs
     else if (command == "setcharts") {
-      AsyncWebServerRequest *request;
-      handleSetChart(request,PM_buffer);
+      //bodyWebHandler.setChart(PM_buffer);
       return;
     }
 
     // SET SYSTEM
     else if (command == "setsystem") {
-      AsyncWebServerRequest *request;
-      handleSetSystem(request,PM_buffer);
+      //bodyWebHandler.setSystem(PM_buffer);
       return;
     }
 
     // SET CHANNELS
     else if (command == "setchannels") {
-      AsyncWebServerRequest *request;
-      handleSetChannels(request,PM_buffer);
+      //bodyWebHandler.setChannels(PM_buffer);
       return;
     }
 
@@ -77,15 +73,14 @@ void read_serial(char *buffer) {
 
     // SET PITMASTER
     else if (command == "setpitmaster") {
-      AsyncWebServerRequest *request;
-      handleSetPitmaster(request,PM_buffer); 
+      //handleSetPitmaster(request,PM_buffer); 
       return;    
     }
 
     // SET PITMASTER MANUEL
-    else if (command == "setmanuel") {
+    else if (command == "setmanual") {
       pitmaster.active = true;
-      pitmaster.manuel = true;
+      pitmaster.manual = true;
       String val(buffer);
       pitmaster.value = val.toInt();
       return;
@@ -121,26 +116,22 @@ void read_serial(char *buffer) {
     }
     
     else if (str == "data") {
-      AsyncWebServerRequest *request;
-      handleData(request, false);
+      nanoWebHandler.handleData(false);
       return;
     }
   
     else if (str == "settings") {
-      AsyncWebServerRequest *request;
-      handleSettings(request, false);
+      nanoWebHandler.handleSettings(false);
       return;
     }
   
     else if (str == "networklist") {
-      AsyncWebServerRequest *request;
-      handleWifiResult(request, false);
+      nanoWebHandler.handleWifiResult(false);
       return;
     }
     
     else if (str == "networkscan") {
-      AsyncWebServerRequest *request;
-      handleWifiScan(request, false);
+      nanoWebHandler.handleWifiScan(false);
       return;
     }
 
@@ -156,7 +147,7 @@ void read_serial(char *buffer) {
   
     else if (str == "pittest") {
       pitmaster.active = true;
-      pitmaster.manuel = true;
+      pitmaster.manual = true;
       pitmaster.value = 50;
       //pitmaster.pid = 1;
       return;
@@ -164,25 +155,13 @@ void read_serial(char *buffer) {
 
     else if (str == "pittest2") {
       pitmaster.active = true;
-      pitmaster.manuel = true;
+      pitmaster.manual = true;
       pitmaster.value = 100;
       return;
     }
   
     else if (str == "configreset") {
-      set_channels(1);
-      setconfig(eCHANNEL,{});
-      loadconfig(eCHANNEL);
-      set_system();
-      setconfig(eSYSTEM,{});
-      loadconfig(eSYSTEM);
-      set_pitmaster(1);
-      set_pid();
-      setconfig(ePIT,{});
-      loadconfig(ePIT);
-      set_charts(1);
-      setconfig(eTHING,{});
-      loadconfig(eTHING);
+      nanoWebHandler.configreset();
       return;
     }
 
@@ -196,13 +175,6 @@ void read_serial(char *buffer) {
 
     else if (str == "getSSID") {
       Serial.println(WiFi.SSID());
-      return;
-    }
-
-    else if (str == "getTS") {
-      Serial.println(charts.TS_writeKey);
-      Serial.println(charts.TS_httpKey);
-      Serial.println(charts.TS_chID);
       return;
     }
 
@@ -264,7 +236,7 @@ void read_serial(char *buffer) {
 
     // Test
     else if (str == "sendSetting") {
-      sendSettings();
+      //sendSettings();
       return;
     }
   }

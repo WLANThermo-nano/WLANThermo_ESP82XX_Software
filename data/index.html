@@ -1966,24 +1966,32 @@
 				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
 						<form>
-							<div class="form-group">
-							  <select id="pitmaster_typ">
-								<option value="off">off</option>
-								<option value="auto">auto</option>
-								<option value="manual">manuel</option>
-								<option value="autotune">autotune</option>
-							  </select>
-							  <label class="control-label" onchange="changePitmasterView();" for="select">Pitmaster</label><i class="bar"></i>
-							</div>
+							<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
+								<tr>
+								  <td>
+									<div class="form-group">
+									  <select id="pitmaster_typ">
+										<option value="off">off</option>
+										<option value="auto">auto</option>
+										<option value="manual">manual</option>
+										<option value="autotune">autotune</option>
+									  </select>
+									  <label class="control-label" onchange="changePitmasterView();" for="select">Pitmaster</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>	
+									<div class="form-group">
+									  <input type="text" class="temp_input" id="pitmaster_set" step="0.1" maxlength="6" onkeyup="validateNumber(this);" required="required"/>
+									  <label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
+									</div>							  
+								  </td>
+								</tr>
+							</table>
 							<div class="form-group">
 							  <select id="pitmaster_channel">
 								<!-- Placeholder -->
 							  </select>
 							  <label class="control-label" for="select">Kanal</label><i class="bar"></i>
-							</div>
-							<div class="form-group">
-							  <input type="text" class="temp_input" id="pitmaster_set" step="0.1" maxlength="6" onkeyup="validateNumber(this);" required="required"/>
-							  <label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <input type="number" min="0" max="100" class="temp_input" id="pitmaster_value" step="1" onkeyup="validateNumber(this);" required="required"/>
@@ -2005,7 +2013,7 @@
 									  <select onchange="showPitmasterProfile(this.value);" id="pid_profile">
 											<!-- Placeholder -->
 									  </select>
-									  <label class="control-label" onchange="changePitmasterView();" for="select">Pitmaster</label><i class="bar"></i>
+									  <label class="control-label" onchange="changePitmasterView();" for="select">Profil</label><i class="bar"></i>
 									</div>
 								  </td>
 								  <td>	
@@ -2020,25 +2028,25 @@
 							</table>									
 							<div class="form-group">
 							  <input type="text" id="pid_name" maxlength="10" required="required"/>
-							  <label class="control-label" for="input">Name</label><i class="bar"></i>
+							  <label class="control-label" for="input">Profil Name</label><i class="bar"></i>
 							</div>
 							<table class="table33" cellpadding="0" cellspacing="0" width="100%" border="0">
 								<tr>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Kp" maxlength="10" required="required"/>
+									  <input type="text" id="pid_Kp" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
 									  <label class="control-label" for="input">Kp</label><i class="bar"></i>
 									</div>								  	  
 								  </td>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Ki" maxlength="10" required="required"/>
+									  <input type="text" id="pid_Ki" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
 									  <label class="control-label" for="input">Ki</label><i class="bar"></i>
 									</div>								    
 								  </td>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Kd" maxlength="10" required="required"/>
+									  <input type="text" id="pid_Kd" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
 									  <label class="control-label" for="input">Kd</label><i class="bar"></i>
 									</div>								  		  
 								  </td>
@@ -2048,19 +2056,19 @@
 								<tr>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Kp_a" maxlength="10" required="required"/>
+									  <input type="text" id="pid_Kp_a" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
 									  <label class="control-label" for="input">Kp_a</label><i class="bar"></i>
 									</div>
 								  </td>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Ki_a" maxlength="10" required="required"/>
+									  <input type="text" id="pid_Ki_a" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
 									  <label class="control-label" for="input">Ki_a</label><i class="bar"></i>
 									</div>
 								  </td>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Kd_a" maxlength="10" required="required"/>
+									  <input type="text" id="pid_Kd_a" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
 									  <label class="control-label" for="input">Kd_a</label><i class="bar"></i>
 									</div>
 								  </td>
@@ -2070,23 +2078,18 @@
 								<tr>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_DCmin" maxlength="10" required="required"/>
+									  <input type="text" id="pid_DCmin" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
 									  <label class="control-label" for="input">DCmin</label><i class="bar"></i>
 									</div>
 								  </td>
 								  <td>	
 									<div class="form-group">
-									  <input type="text" id="pid_DCmax" maxlength="10" required="required"/>
+									  <input type="text" id="pid_DCmax" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
 									  <label class="control-label" for="input">DCmax</label><i class="bar"></i>
 									</div>							  
 								  </td>
 								</tr>
 							</table>
-							<div class="checkbox">
-							  <label>
-								<input id="pid_reversal" type="checkbox" checked="checked"/><i class="helper"></i>Ansteuerung umkehren
-							  </label>
-							</div>
 						</form>	
 					</div>
 				</div>
@@ -2266,31 +2269,31 @@
 					</div>
 				</div>
 			</div>
-			<h3 class="headtitle">MQTT Client</h3>
+			<h3 class="headtitle">Private MQTT Client</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
 						<form>							
 							<div class="checkbox">
 							  <label>
-								<input id="PMQon" type="checkbox" checked="checked"/><i class="helper"></i>MQTT aktivieren
+								<input id="PMQon" type="checkbox" checked="checked"/><i class="helper"></i>Private MQTT aktivieren
 							  </label>
 							</div>
 							<div class="form-group">
 							  <input type="text" id="PMQhost" maxlength="26" required="required"/>
-							  <label class="control-label" for="input">MQTT Broker</label><i class="bar"></i>
+							  <label class="control-label" for="input">Private MQTT Host</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <input type="text" id="PMQport" maxlength="26" required="required"/>
-							  <label class="control-label" for="input">Port</label><i class="bar"></i>
+							  <label class="control-label" for="input">Private MQTT Port</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <input type="text" id="PMQuser" maxlength="26" required="required"/>
-							  <label class="control-label" for="input">Benutzername (optional)</label><i class="bar"></i>
+							  <label class="control-label" for="input">Private MQTT User</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
-							  <input type="password" id="PMQpass" maxlength="26" required="required"/>
-							  <label class="control-label" for="input">Passwort (optional)</label><i class="bar"></i>
+							  <input type="text" id="PMQpass" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Private MQTT Password</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <select id="PMQqos">
@@ -2770,12 +2773,32 @@
 				byId('pitmaster_channel').options[byId('pitmaster_channel').options.length] = new Option('#' + jr.channel[i].number + ' - ' + jr.channel[i].name, jr.channel[i].number);
 			}
 			byId('pitmaster_channel').value = jr.pitmaster.channel;
-			byId('pitmaster_settings').style.display = "inline";
 			byId('pitmaster_set').value = jr.pitmaster.set;
 			byId('pitmaster_value').value = jr.pitmaster.value;
+			byId('pitmaster_settings').style.display = "inline";
 			showLoader('false');
 			showPitmasterProfile(jr.pitmaster.pid);
 		})
+	}
+
+	function setPitmaster(){
+		showLoader('true');
+		loadJSON('data', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			jr.pitmaster.typ = byId('pitmaster_typ').value;
+			jr.pitmaster.channel = byId('pitmaster_channel').value;
+			jr.pitmaster.set = byId('pitmaster_set').value;
+			jr.pitmaster.value = byId('pitmaster_value').value
+			jr.pitmaster.pid = byId('pid_profile').value
+			var data = JSON.stringify(jr.pitmaster);
+			loadJSON('setpitmaster', data, '60000', function (response) {
+				//alert(data);
+				setPitmasterProfile();
+				showIndex();
+				showLoader('false');
+			})	
+		})
+		showLoader('false');		
 	}
 	
 	function showPitmasterProfile(profile){
@@ -2801,20 +2824,32 @@
 			byId('pid_Kd_a').value = jr.pid[profile].Kd_a;
 			byId('pid_DCmin').value = jr.pid[profile].DCmmin;
 			byId('pid_DCmax').value = jr.pid[profile].DCmmax;
-			byId('pid_reversal').checked = jr.pid[profile].reversal;
 			showLoader('false');
 		})			
 	}
 
-	function setPitmaster(){
-		showLoader('true');
-		loadJSON('data', '', '3000', function (response) {
-			jr = JSON.parse(response);			
+	function setPitmasterProfile(){
+		loadJSON('settings', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			profile = byId('pid_profile').value;
+			jr.pid[profile].aktor = byId('pitmaster_profile_aktor').value;
+			jr.pid[profile].name = byId('pid_name').value;
+			jr.pid[profile].Kp = byId('pid_Kp').value;
+			jr.pid[profile].Ki = byId('pid_Ki').value;
+			jr.pid[profile].Kd = byId('pid_Kd').value;
+			jr.pid[profile].Kp_a = byId('pid_Kp_a').value;
+			jr.pid[profile].Ki_a = byId('pid_Ki_a').value;
+			jr.pid[profile].Kd_a = byId('pid_Kd_a').value;
+			jr.pid[profile].DCmmin = byId('pid_DCmin').value;
+			jr.pid[profile].DCmmax = byId('pid_DCmax').value;
+			var data = JSON.stringify(jr.pid);
+			loadJSON('setpid', data, '60000', function (response) {
+				alert(data);
+			})	
 		})
-		alert('Nicht verfügbar');
-		showLoader('false');		
+		showLoader('false');	
 	}
-
+	
 	function changePitmasterView(){		
 		
 	}
@@ -3083,13 +3118,8 @@
 	
 	function validateNumber(number) {
 		val = number.value.replace(/[^0-9.,]/g,'').replace(/[,]/g, '.');
-		if(val){
-			val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];
-		}
-		// Nur ein Dez-Zeichen erlauben
-		if(val.split('.').length>2){
-			val = val.replace(/\.+$/,"");
-		}		
+		if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];}
+		if(val.split('.').length>2){val = val.replace(/\.+$/,"");}		
 		number.value = val;
 	}
 

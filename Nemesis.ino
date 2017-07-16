@@ -20,6 +20,8 @@
 
 // EXECPTION LIST
 // https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
+// WATCHDOG
+// https://techtutorialsx.com/2017/01/21/esp8266-watchdog-functions/
 
 // Entwicklereinstellungen
 //#define ASYNC_TCP_SSL_ENABLED 1
@@ -45,6 +47,7 @@
 // INCLUDE SUBROUTINES
 
 #include "c_init.h"
+#include "c_webhandler.h"
 #include "c_button.h"
 #include "c_median.h"
 #include "c_sensor.h"
