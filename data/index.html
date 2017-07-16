@@ -59,6 +59,7 @@
   content: "\e905";
   margin-right:4px;
 }
+.icon-pencil:before {content: "\f040";}
 .icon-fan:before {content: "\e913";}
 .icon-wifi-off:before {content: "\e915";}
 .icon-wifi-50:before {content: "\e918";}
@@ -955,7 +956,12 @@
 			white-space: nowrap;
 			float:left;
 		}
-
+		.float-right {
+			float:right;
+		}
+		.float-left {
+			float:left;
+		}
 		.wifi, .notification {
 			text-align:center;
 			padding:14px 5px;
@@ -1389,7 +1395,7 @@
 		.form-group input,.form-group textarea {
 			display: block;
 			background: none;
-			padding: 0.125rem 0.125rem 0.0625rem;
+			padding: 0.375rem 0.125rem 0.0625rem;
 			font-size: 1rem;
 			border-width: 0;
 			border-color: transparent;
@@ -1705,6 +1711,13 @@
 			padding-left:0;
 			padding-right:0.25em;
 		}
+		
+		.icon-form{
+			position:absolute;
+			padding-left:10px;
+			top:0.375rem;
+			right:0.25rem;
+		}
     </style>
 </head>
 <body>
@@ -1981,55 +1994,55 @@
 								  </td>
 								  <td>	
 									<div class="form-group">
-									  <input type="text" class="temp_input" id="pitmaster_set" step="0.1" maxlength="6" onkeyup="validateNumber(this);" required="required"/>
-									  <label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
-									</div>							  
+									  <select id="pitmaster_channel">
+										<!-- Placeholder -->
+									  </select>
+									  <label class="control-label" for="select">Kanal</label><i class="bar"></i>
+									</div>						  
 								  </td>
 								</tr>
 							</table>
 							<div class="form-group">
-							  <select id="pitmaster_channel">
-								<!-- Placeholder -->
-							  </select>
-							  <label class="control-label" for="select">Kanal</label><i class="bar"></i>
+								<select onchange="showPitmasterProfile(this.value);" id="pid_profile">
+									<!-- Placeholder -->
+								</select>
+								<label class="control-label" onchange="changePitmasterView();" for="select">Profil</label></span><i class="bar"></i>
+								<span class="icon-pencil icon-form" onclick="togglePitmasterView();">
 							</div>
 							<div class="form-group">
-							  <input type="number" min="0" max="100" class="temp_input" id="pitmaster_value" step="1" onkeyup="validateNumber(this);" required="required"/>
+								<input type="text" id="pitmaster_set" step="0.1" maxlength="6" onkeyup="validateNumber(this);" required="required"/>
+								<label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
+							</div>	
+							
+							<div class="form-group">
+							  <input type="number" min="0" max="100" id="pitmaster_value" step="1" onkeyup="validateNumber(this);" required="required"/>
 							  <label class="control-label" for="input">Pitmaster-Wert (%)</label><i class="bar"></i>
 							</div>
 						</form>	
 					</div>
 				</div>
 			</div>
+		</div>	
+		
+		<div id="pitmaster_profile" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="backPidProfile();">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">Profile</button>
+				<button class="pure-button" onclick="setPitmasterProfile();">Speichern</button>
+			</div>
 			<h3 class="headtitle">Pitmaster Profile</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
 						<form>
-							<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
-								<tr>
-								  <td>
-									<div class="form-group">
-									  <select onchange="showPitmasterProfile(this.value);" id="pid_profile">
-											<!-- Placeholder -->
-									  </select>
-									  <label class="control-label" onchange="changePitmasterView();" for="select">Profil</label><i class="bar"></i>
-									</div>
-								  </td>
-								  <td>	
-									<div class="form-group">
-									  <select id="pitmaster_profile_aktor">
-
-									  </select>
-									  <label class="control-label" onchange="" for="select">Aktor</label><i class="bar"></i>
-									</div>								  
-								  </td>
-								</tr>
-							</table>									
 							<div class="form-group">
-							  <input type="text" id="pid_name" maxlength="10" required="required"/>
+							  <input type="text" id="pid_name" maxlength="12" required="required"/>
 							  <label class="control-label" for="input">Profil Name</label><i class="bar"></i>
 							</div>
+							<div class="form-group">
+								<select id="pitmaster_profile_aktor"></select>
+								<label class="control-label" onchange="" for="select">Aktor</label><i class="bar"></i>
+							</div>								  								
 							<table class="table33" cellpadding="0" cellspacing="0" width="100%" border="0">
 								<tr>
 								  <td>
@@ -2793,7 +2806,7 @@
 			var data = JSON.stringify(jr.pitmaster);
 			loadJSON('setpitmaster', data, '60000', function (response) {
 				//alert(data);
-				setPitmasterProfile();
+				//setPitmasterProfile();
 				showIndex();
 				showLoader('false');
 			})	
@@ -2827,7 +2840,22 @@
 			showLoader('false');
 		})			
 	}
+	
+	function togglePitmasterView(){
+		if(byId('pitmaster_settings').style.display == "inline"){
+			byId('pitmaster_settings').style.display = "none";
+			byId('pitmaster_profile').style.display = "inline";		
+		}else{
+			byId('pitmaster_settings').style.display = "inline";
+			byId('pitmaster_profile').style.display = "none";	
+		}
+	}
 
+	function backPidProfile(){
+		showPitmasterProfile(byId('pid_profile').value);
+		togglePitmasterView();
+	}
+	
 	function setPitmasterProfile(){
 		loadJSON('settings', '', '3000', function (response) {
 			jr = JSON.parse(response);
@@ -2844,7 +2872,8 @@
 			jr.pid[profile].DCmmax = byId('pid_DCmax').value;
 			var data = JSON.stringify(jr.pid);
 			loadJSON('setpid', data, '60000', function (response) {
-				alert(data);
+				//alert(data);
+				togglePitmasterView();
 			})	
 		})
 		showLoader('false');	
