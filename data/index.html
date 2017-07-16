@@ -2013,13 +2013,13 @@
 							</div>
 							<div id="pitmaster_set_show">	
 								<div class="form-group">
-									<input type="text" id="pitmaster_set" maxlength="6" onkeyup="validateNumber(this);" required="required"/>
+									<input type="text" id="pitmaster_set" maxlength="5" onkeyup="validateNumber(this,'1','1');" required="required"/>
 									<label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
 								</div>	
 							</div>
 							<div id="pitmaster_value_show">	
 								<div class="form-group">
-								  <input type="text" id="pitmaster_value" onkeyup="validateNumber(this);" required="required"/>
+								  <input type="text" id="pitmaster_value" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
 								  <label class="control-label" for="input">Pitmaster-Wert (%)</label><i class="bar"></i>
 								</div>
 							</div>
@@ -2052,14 +2052,14 @@
 								<tr>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_DCmin" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <input type="text" id="pid_DCmin" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
 									  <label class="control-label" for="input">DCmin</label><i class="bar"></i>
 									  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');">
 									</div>
 								  </td>
 								  <td>	
 									<div class="form-group">
-									  <input type="text" id="pid_DCmax" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <input type="text" id="pid_DCmax" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
 									  <label class="control-label" for="input">DCmax</label><i class="bar"></i>
 									  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');">
 									</div>							  
@@ -2079,19 +2079,19 @@
 								<tr>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Kp" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <input type="text" id="pid_Kp" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
 									  <label class="control-label" for="input">Kp</label><i class="bar"></i>
 									</div>								  	  
 								  </td>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Ki" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <input type="text" id="pid_Ki" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
 									  <label class="control-label" for="input">Ki</label><i class="bar"></i>
 									</div>								    
 								  </td>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Kd" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <input type="text" id="pid_Kd" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
 									  <label class="control-label" for="input">Kd</label><i class="bar"></i>
 									</div>								  		  
 								  </td>
@@ -2101,19 +2101,19 @@
 								<tr>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Kp_a" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <input type="text" id="pid_Kp_a" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
 									  <label class="control-label" for="input">Kp_a</label><i class="bar"></i>
 									</div>
 								  </td>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Ki_a" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <input type="text" id="pid_Ki_a" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
 									  <label class="control-label" for="input">Ki_a</label><i class="bar"></i>
 									</div>
 								  </td>
 								  <td>
 									<div class="form-group">
-									  <input type="text" id="pid_Kd_a" maxlength="10" onkeyup="validateNumber(this);" required="required"/>
+									  <input type="text" id="pid_Kd_a" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
 									  <label class="control-label" for="input">Kd_a</label><i class="bar"></i>
 									</div>
 								  </td>
@@ -2141,11 +2141,11 @@
 							  <label class="control-label" for="input">Kanal Name</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
-							  <input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
+							  <input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
 							  <label class="control-label" for="input">Temp Max</label><i class="bar"></i>
 							</div>							
 							<div class="form-group">
-							  <input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this);" maxlength="6" required="required"/>
+							  <input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
 							  <label class="control-label" for="input">Temp Min</label><i class="bar"></i>
 							</div>												
 							<div class="form-group">
@@ -2825,10 +2825,10 @@
 				byId('pitmaster_profile_show').style.display = "inline";
 				break;
 			case 'autotune':
-			    byId('pitmaster_profile_show').style.display = "none";
+				byId('pitmaster_profile_show').style.display = "inline";
 				byId('pitmaster_value_show').style.display = "none";
-				byId('pitmaster_channel_show').style.display = "none";
-				byId('pitmaster_set_show').style.display = "none";			
+				byId('pitmaster_channel_show').style.display = "inline";
+				byId('pitmaster_set_show').style.display = "inline";			
 				break;
 			case 'auto':
 				byId('pitmaster_profile_show').style.display = "inline";
@@ -3190,9 +3190,24 @@
 		}
 	}
 	
-	function validateNumber(number) {
+	function validateNumber(number,decimal) {
 		val = number.value.replace(/[^0-9.,]/g,'').replace(/[,]/g, '.');
-		if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];}
+		switch(decimal) {
+			case '1': 
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];}
+				break;
+			case '2': 
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,2})?/)[0];}
+				break;
+			case '3':
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,3})?/)[0];}
+				break;
+			case '4':
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,4})?/)[0];}
+				break;	
+			default:
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];}
+		} 
 		if(val.split('.').length>2){val = val.replace(/\.+$/,"");}		
 		number.value = val;
 	}
