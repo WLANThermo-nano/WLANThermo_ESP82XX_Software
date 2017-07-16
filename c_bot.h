@@ -59,7 +59,7 @@ void set_charts(bool init) {
 }
 
   
-
+/*
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Send Settings to Thingspeak
 void sendSettings(){
@@ -102,7 +102,7 @@ void sendSettings(){
     
     // Metadata
     postStr = "&metadata=";
-    postStr += handleSettings(request, 2);
+    //postStr += handleSettings(request, 2);
     
     String adress = F("PUT /channels/");
     adress += charts.TS_chID;
@@ -124,7 +124,7 @@ void sendSettings(){
   }
 }
 
-
+*/
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Send Temp-Data to Thingspeak

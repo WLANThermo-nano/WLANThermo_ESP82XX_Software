@@ -366,6 +366,7 @@ bool setconfig(byte count, const char* data[2]) {
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {
         DPRINTPLN("[INFO]\tZu viele BOT Daten!");
+        DPRINTLN("[INFO]\tFailed to save Thingspeak config");
         return false;
       } else {
         clearEE(EETHING,EETHINGBEGIN);  // Bereich reinigen
@@ -413,6 +414,7 @@ bool setconfig(byte count, const char* data[2]) {
       size_t size = json.measureLength() + 1;
       if (size > EEPITMASTER) {
         DPRINTPLN("[INFO]\tZu viele PITMASTER Daten!");
+        DPRINTPLN("[INFO]\tFailed to save Pitmaster config");
         return false;
       } else {
         clearEE(EEPITMASTER,EEPITMASTERBEGIN);  // Bereich reinigen
@@ -460,7 +462,8 @@ bool setconfig(byte count, const char* data[2]) {
     return false;
   
   }
-      
+
+  DPRINTPLN("[INFO]\tSaved!");
   return true;
 }
 
@@ -552,10 +555,10 @@ void start_fs() {
     //fileName = dir.fileName();
     //size_t fileSize = dir.fileSize();
     //DPRINTF("[INFO]\tFS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
-    Serial.print(dir.fileName());
+    DPRINT(dir.fileName());
     File f = dir.openFile("r");
     DPRINTP("\tSize: ");
-    Serial.println(formatBytes(f.size()));
+    DPRINTLN(formatBytes(f.size()));
   }
 
   FSInfo fs_info;

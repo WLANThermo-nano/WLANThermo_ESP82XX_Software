@@ -94,53 +94,6 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 
-/*
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Check if there is http update
-void check_http_update() {
-
-  if (sys.update < 1 || sys.update == 3) {
-    if((isAP == 0 && sys.autoupdate)) {
-      HTTPClient http;
-
-      String adress = F("http://nano.wlanthermo.de/checkUpdate.php?device=nano&serial=");
-      adress += String(ESP.getChipId(), HEX);
-      adress += F("&hw_version=v");
-      adress += String(sys.hwversion);
-      adress += F("&sw_version=v");
-      adress += FIRMWAREVERSION;
-      
-      DPRINTPLN("[INFO]\tCheck HTTP Update");
-
-      http.begin(adress); //HTTP
-       
-      int httpCode = http.GET();
-
-      // httpCode will be negative on error
-      if(httpCode > 0) {
-        // HTTP header has been send and Server response header has been handled
-        DPRINTF("[HTTP]\tGET... code: %d\n", httpCode);
-
-        // file found at server
-        if(httpCode == HTTP_CODE_OK) {
-          String payload = http.getString();
-          DPRINTP("[HTTP]\tReceive: ");
-          DPRINTLN(payload);
-          sys.getupdate = payload;
-        }
-      } else {
-        DPRINTF("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-        sys.getupdate = "false";
-      }
-      http.end();
-    } else sys.getupdate = "false";
-    if (sys.update == -1) sys.update = 0;
-  } 
-  
-}
-*/
-
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Do http update
 void do_http_update() {
@@ -257,12 +210,12 @@ void check_http_update() {
 
       updateClient->onConnect([](void * arg, AsyncClient * client){
 
-        Serial.println("[INFO]\tConnect Update Client");
+        DPRINTPLN("[INFO]\tConnect Update Client");
         
         updateClient->onError(NULL, NULL);
 
         client->onDisconnect([](void * arg, AsyncClient * c){
-          Serial.println("[INFO]\tDisconnect Update Client");
+          DPRINTPLN("[INFO]\tDisconnect Update Client");
           updateClient = NULL;
           delete c;
         }, NULL);
