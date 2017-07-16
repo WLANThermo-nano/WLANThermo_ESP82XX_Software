@@ -2004,29 +2004,32 @@
 								  </td>
 								  <td>	
 									<div class="form-group">
-									  <select id="pitmaster_channel">
-										<!-- Placeholder -->
-									  </select>
-									  <label class="control-label" for="select">Kanal</label><i class="bar"></i>
-									</div>						  
+										<select onchange="showPitmasterProfile(this.value);" id="pid_profile">
+											<!-- Placeholder -->
+										</select>
+										<label class="control-label" onchange="changePitmasterView();" for="select">Profil</label></span><i class="bar"></i>
+										<span class="icon-pencil icon-form" onclick="togglePitmasterView();">
+									</div>					  
 								  </td>
 								</tr>
 							</table>
-							<div class="form-group">
-								<select onchange="showPitmasterProfile(this.value);" id="pid_profile">
-									<!-- Placeholder -->
-								</select>
-								<label class="control-label" onchange="changePitmasterView();" for="select">Profil</label></span><i class="bar"></i>
-								<span class="icon-pencil icon-form" onclick="togglePitmasterView();">
+							<div id="pitmaster_channel_show">
+								<div class="form-group">
+									<select id="pitmaster_channel"><!-- Placeholder --></select>
+									<label class="control-label" for="select">Kanal</label><i class="bar"></i>
+								</div>	
 							</div>
-							<div class="form-group">
-								<input type="text" id="pitmaster_set" step="0.1" maxlength="6" onkeyup="validateNumber(this);" required="required"/>
-								<label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
-							</div>	
-							
-							<div id="pitmaster_value_show" class="form-group">
-							  <input type="text" id="pitmaster_value" onkeyup="validateNumber(this);" required="required"/>
-							  <label class="control-label" for="input">Pitmaster-Wert (%)</label><i class="bar"></i>
+							<div id="pitmaster_set_show">	
+								<div class="form-group">
+									<input type="text" id="pitmaster_set" maxlength="6" onkeyup="validateNumber(this);" required="required"/>
+									<label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
+								</div>	
+							</div>
+							<div id="pitmaster_value_show">	
+								<div class="form-group">
+								  <input type="text" id="pitmaster_value" onkeyup="validateNumber(this);" required="required"/>
+								  <label class="control-label" for="input">Pitmaster-Wert (%)</label><i class="bar"></i>
+								</div>
 							</div>
 						</form>	
 					</div>
@@ -2816,11 +2819,15 @@
 		})
 	}
 	function changePitmasterTyp(){	
-		<!-- if(byId('pitmaster_typ').value == 'manual'){ -->
-			<!-- byId('pitmaster_value_show').style.display = "inline";	 -->
-		<!-- }else{ -->
-			<!-- byId('pitmaster_value_show').style.display = "none";	 -->
-		<!-- }		 -->
+		if(byId('pitmaster_typ').value == 'manual'){
+			byId('pitmaster_value_show').style.display = "inline";	
+			byId('pitmaster_channel_show').style.display = "none";
+			byId('pitmaster_set_show').style.display = "none";
+		}else{
+			byId('pitmaster_value_show').style.display = "none";
+			byId('pitmaster_channel_show').style.display = "inline";
+			byId('pitmaster_set_show').style.display = "inline";			
+		}		
 	}
 	function setPitmaster(){
 		showLoader('true');
