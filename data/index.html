@@ -1998,11 +1998,13 @@
 								</select>
 								<label class="control-label" for="select">Pitmaster</label><i class="bar"></i>
 							</div>
-							<div class="form-group">
-								<select onchange="showPitmasterProfile(this.value);" id="pid_profile"><!-- Placeholder --></select>
-								<label class="control-label" onchange="changePitmasterView();" for="select">Profil</label></span><i class="bar"></i>
-								<span class="icon-pencil icon-form" onclick="togglePitmasterView();">
-							</div>					  
+							<div id="pitmaster_profile_show">
+								<div class="form-group">
+									<select onchange="showPitmasterProfile(this.value);" id="pid_profile"><!-- Placeholder --></select>
+									<label class="control-label" onchange="changePitmasterView();" for="select">Profil</label></span><i class="bar"></i>
+									<span class="icon-pencil icon-form" onclick="togglePitmasterView();">
+								</div>					  
+							</div>
 							<div id="pitmaster_channel_show">
 								<div class="form-group">
 									<select id="pitmaster_channel"><!-- Placeholder --></select>
@@ -2808,16 +2810,38 @@
 			changePitmasterTyp();
 		})
 	}
-	function changePitmasterTyp(){	
-		if(byId('pitmaster_typ').value == 'manual'){
-			byId('pitmaster_value_show').style.display = "inline";	
-			byId('pitmaster_channel_show').style.display = "none";
-			byId('pitmaster_set_show').style.display = "none";
-		}else{
-			byId('pitmaster_value_show').style.display = "none";
-			byId('pitmaster_channel_show').style.display = "inline";
-			byId('pitmaster_set_show').style.display = "inline";			
-		}		
+	function changePitmasterTyp(){		
+		switch(byId('pitmaster_typ').value) {
+			case 'off':
+				byId('pitmaster_value_show').style.display = "none";
+				byId('pitmaster_channel_show').style.display = "none";
+				byId('pitmaster_set_show').style.display = "none";
+				byId('pitmaster_profile_show').style.display = "none";
+				break;
+			case 'manual':
+				byId('pitmaster_value_show').style.display = "inline";	
+				byId('pitmaster_channel_show').style.display = "none";
+				byId('pitmaster_set_show').style.display = "none";
+				byId('pitmaster_profile_show').style.display = "inline";
+				break;
+			case 'autotune':
+			    byId('pitmaster_profile_show').style.display = "none";
+				byId('pitmaster_value_show').style.display = "none";
+				byId('pitmaster_channel_show').style.display = "none";
+				byId('pitmaster_set_show').style.display = "none";			
+				break;
+			case 'auto':
+				byId('pitmaster_profile_show').style.display = "inline";
+				byId('pitmaster_value_show').style.display = "none";
+				byId('pitmaster_channel_show').style.display = "inline";
+				byId('pitmaster_set_show').style.display = "inline";			
+				break;
+			default:
+				byId('pitmaster_profile_show').style.display = "inline";
+				byId('pitmaster_value_show').style.display = "inline";
+				byId('pitmaster_channel_show').style.display = "inline";
+				byId('pitmaster_set_show').style.display = "inline";
+		} 		
 	}
 	function setPitmaster(){
 		showLoader('true');
