@@ -191,7 +191,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
     if (autotune.initialized)
       display->drawString(33,0, "A  " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
     else if (pitmaster.manual)
-      display->drawString(33,0, "M  " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
+      display->drawString(33,0, "M  " + String(pitmaster.value,0) + "%");
     else  
       display->drawString(33,0, "P  " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
   else  display->drawString(24,0,String(battery.percentage)); 
@@ -246,11 +246,15 @@ void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setFont(ArialMT_Plain_16);
   if (ch[current_ch].isalarm && !pulsalarm) {
     if (ch[current_ch].temp!=INACTIVEVALUE) {
-      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ " °" + temp_unit); // Channel Temp
+      if (temp_unit == "F") display->drawCircle(100,41,2);  // Grad-Zeichen
+      else display->drawCircle(99,41,2);  // Grad-Zeichen
+      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ "  " + temp_unit); // Channel Temp
     } else display->drawString(114+x, 36+y, "OFF");
   } else if (!ch[current_ch].isalarm) {
     if (ch[current_ch].temp!=INACTIVEVALUE) {
-      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ " °" + temp_unit); // Channel Temp
+      if (temp_unit == "F") display->drawCircle(100,41,2);  // Grad-Zeichen
+      else display->drawCircle(99,41,2);  // Grad-Zeichen
+      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ "  " + temp_unit); // Channel Temp
     } else display->drawString(114+x, 36+y, "OFF");
   }
 
@@ -288,14 +292,16 @@ void drawkontext(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int
 
     case 1:         // UPPER LIMIT
       display->drawLine(33+x,25+y,50,25);
-      if (inWork) display->drawString(104+x, 19+y, String(tempor,1)+ " °" + temp_unit);
-      else display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ " °" + temp_unit);  // Upper Limit 
+      display->drawCircle(95,23,1);  // Grad-Zeichen 
+      if (inWork) display->drawString(104+x, 19+y, String(tempor,1)+ "  " + temp_unit);
+      else display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ "  " + temp_unit);  // Upper Limit 
       break;
 
     case 2:         // LOWER LIMIT
-      display->drawLine(33+x,39+y,50,39); 
-      if (inWork) display->drawString(104+x, 34+y, String(tempor,1)+ " °" + temp_unit);
-      else display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ " °" + temp_unit);  // Lower Limit
+      display->drawLine(33+x,39+y,50,39);
+      display->drawCircle(95,38,1);  // Grad-Zeichen  
+      if (inWork) display->drawString(104+x, 34+y, String(tempor,1)+ "  " + temp_unit);
+      else display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ "  " + temp_unit);  // Lower Limit
       break;
 
     case 3:         // TYP                   
@@ -331,9 +337,10 @@ void drawpit(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
       else  display->drawString(116+x, 36+y, String(pitmaster.channel+1));
       break;
 
-    case 8:         // SET TEMPERATUR         
-      if (inWork) display->drawString(116+x, 36+y, String(tempor,1)+ " °" + temp_unit);
-      else  display->drawString(116+x, 36+y, String(pitmaster.set,1)+ " °" + temp_unit);
+    case 8:         // SET TEMPERATUR  
+      display->drawCircle(107,40,1);  // Grad-Zeichen       
+      if (inWork) display->drawString(116+x, 36+y, String(tempor,1)+ "  " + temp_unit);
+      else  display->drawString(116+x, 36+y, String(pitmaster.set,1)+ "  " + temp_unit);
       break;
 
     case 9:         // PITMASTER TYP         
@@ -374,9 +381,10 @@ void drawsys(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
       break;
 
     case 14:         // UNIT
-      if (inWork && tempor) display->drawString(114+x, 36+y, "°F");
-      else if (!inWork) display->drawString(114+x, 36+y, "°" + temp_unit);
-      else display->drawString(114+x, 36+y, "°C");
+      display->drawCircle(105,40,1);  // Grad-Zeichen
+      if (inWork && tempor) display->drawString(114+x, 36+y, "F");
+      else if (!inWork) display->drawString(114+x, 36+y, temp_unit);
+      else display->drawString(114+x, 36+y, "C");
       break;
 
     case 15:         // HW-ALARM
