@@ -145,6 +145,11 @@ static inline float max(float a,float b)  {
         return a;
 }
 
+void stopautotune() {
+  autotune.value = 0;
+  autotune.initialized = false;
+}
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // AUTOTUNE
 void startautotunePID(int maxCycles, bool storeValues)  {
@@ -342,8 +347,7 @@ float autotunePID() {
   if (currentTemp > (autotune.temp + 40))  {   // FEHLER
     DPRINTPLN("[ERROR]\tAutotune failure: Overtemperature");
     disableAllHeater();
-    autotune.value = 0;
-    autotune.initialized = false;
+    stopautotune();
     return 0;
   }
     
@@ -351,8 +355,7 @@ float autotunePID() {
         
     DPRINTPLN("[ERROR]\tAutotune failure: TIMEOUT");
     disableAllHeater();
-    autotune.value = 0;
-    autotune.initialized = false;
+    stopautotune();
     return 0;
   }
     
@@ -360,8 +363,7 @@ float autotunePID() {
             
     DPRINTPLN("[AUTOTUNE]\tFinished!");
     disableAllHeater();
-    autotune.value = 0;
-    autotune.initialized = false;
+    stopautotune();
             
     if (autotune.storeValues)  {
       

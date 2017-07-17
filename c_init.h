@@ -47,9 +47,9 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
-
+int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.5.5"
+#define FIRMWAREVERSION "v0.5.9"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -473,6 +473,7 @@ void pitmaster_control();
 void disableAllHeater();
 void set_pitmaster(bool init);
 void set_pid();
+void stopautotune();
 
 // BOT
 void set_charts(bool init);

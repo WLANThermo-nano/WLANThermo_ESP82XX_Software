@@ -201,7 +201,7 @@ void server_setup() {
     
   server.addHandler(&nanoWebHandler);
   server.addHandler(&bodyWebHandler);
-  //server.addHandler(&logHandler);
+  server.addHandler(&logHandler);
     
   server.on("/help",HTTP_GET, [](AsyncWebServerRequest *request) {
     request->redirect("https://github.com/WLANThermo-nano/WLANThermo_nano_Software/blob/master/README.md");
@@ -226,6 +226,21 @@ void server_setup() {
       " usedBytes:" + String(fs_info.usedBytes)+" blockSize:" + String(fs_info.blockSize)
       +" pageSize:" + String(fs_info.pageSize)
       +" heap:"+String(ESP.getFreeHeap()));
+  });
+
+  server.on("/setDC",[](AsyncWebServerRequest *request) { 
+      if(request->hasParam("min")&&request->hasParam("aktor")&&request->hasParam("val")){
+        ESP.wdtDisable(); 
+        Serial.println(ESP.getFreeHeap());
+        //int value = request->getParam("value")->value().toInt();
+        //String file=request->getParam("value", true)->value();
+        byte min = request->getParam("min")->value().toInt();
+        byte aktor = request->getParam("min")->value().toInt();
+        byte wert = request->getParam("val")->value().toInt();
+        Serial.println(wert); 
+        ESP.wdtEnable(10);
+        request->send(200, "text/plain", "true");
+      } else request->send(200, "text/plain", "false");
   });
 
   // to avoid multiple requests to ESP
