@@ -2955,7 +2955,6 @@
 			data = '?aktor=' + byId('pitmaster_profile_aktor').value + '&dc=' + dc + '&val=' + var_val;
 			loadJSON('setDC', data, '60000', function (response) {
 				alert(data);
-				togglePitmasterView();
 			})	
 			showLoader('false');
 		} else {
