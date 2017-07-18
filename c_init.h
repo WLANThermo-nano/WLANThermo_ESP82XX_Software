@@ -232,10 +232,12 @@ struct AutoTune {
    float minTemp;
    bool initialized;
    float value;
-   float previousTemp;
+   float pTemp;
    float maxTP;             // MAXIMALE STEIGUNG = WENDEPUNKT
    uint32_t tWP;            // ZEITPUNKT WENDEPUNKT  
    float TWP;               // TEMPERATUR WENDEPUNKT
+   bool start;
+   byte stop;
 };
 
 AutoTune autotune;
@@ -320,7 +322,7 @@ Charts charts;
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL     
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool displayblocked = false;                     // No OLED Update
-enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE};
+enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE, AUTOTUNE};
 
 struct MyQuestion {
    int typ;    
@@ -567,7 +569,7 @@ void timer_charts() {
 // DataLog Timer
 void timer_datalog() {  
   
-  if (millis() - lastUpdateDatalog > 60000) {
+  if (millis() - lastUpdateDatalog > 10000) {
 
     //Serial.println(sizeof(datalogger));
     //Serial.println(sizeof(mylog));

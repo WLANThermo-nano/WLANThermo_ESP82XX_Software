@@ -23,7 +23,7 @@
 // https://github.com/spacehuhn/wifi_ducky/blob/master/esp8266_wifi_duck/esp8266_wifi_duck.ino
 
 
-/*
+
 int dothis;
 int histthis;
 int saved;
@@ -119,7 +119,7 @@ void handlePlot(AsyncWebServerRequest *request, bool www) {
       
         output.getBytes(buffer, maxLen); 
         return output.length();
-        
+        */
       
       } else if (dothis > 0)  {
 
@@ -163,7 +163,7 @@ void handlePlot(AsyncWebServerRequest *request, bool www) {
 
         Serial.print("last: ");
       
-        output.print(F("]);\nvar options = {\nhAxis: {gridlines: {color: 'white', count: 5}},\nwidth: 700,\nheight: 400,\ncurveType: 'function',\n"));
+        output.print(F("]);\nvar options = {\nhAxis: {gridlines: {color: 'white', count: 5}},\nwidth: 700,\nheight: 400,\n"));  //curveType: 'function',\n
         output.print(F("vAxes:{\n0:{title:'Pitmaster in %',ticks:[0,20,40,60,80,100],viewWindow:{min: 0},gridlines:{color:'transparent'},titleTextStyle:{italic:0}},\n1: {title: 'Temperatur in C', minValue: 0, gridlines: {color: 'transparent'}, titleTextStyle: {italic:0}},},\n"));
         output.print(F("series:{\n0: {targetAxisIndex: 0, color: 'black'},\n1: {targetAxisIndex: 1, color: 'red', lineDashStyle: [4,4]},\n2: {targetAxisIndex: 1, color: '#6495ED'},\n},\n};\n"));
         output.print(F("var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));\nchart.draw(data, options);}\n</script>\n</head>\n"));
@@ -188,7 +188,7 @@ void handlePlot(AsyncWebServerRequest *request, bool www) {
     request->send(response);
 }
 
-*/
+
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -213,11 +213,11 @@ void server_setup() {
     server.on("/log", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handleLog(request, true);
     });
-
+*/
     server.on("/plot", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handlePlot(request, true);
     });
-    */
+    
       
   server.on("/fs",[](AsyncWebServerRequest *request){
     FSInfo fs_info;

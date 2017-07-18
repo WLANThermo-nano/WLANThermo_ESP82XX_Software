@@ -68,6 +68,8 @@ void drawLoading() {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Frame while Question
 void drawQuestion(int counter) {
+
+    displayblocked = true;
     
     display.clear();
     display.setColor(WHITE);
@@ -95,6 +97,14 @@ void drawQuestion(int counter) {
       case OTAUPDATE:
         if (sys.getupdate == FIRMWAREVERSION) display.drawString(3,3,"Update: Erfolgreich!");
         else display.drawString(3,3,"Update: Fehlgeschlagen!");
+        b1 = false;
+        b0 = 2;
+        break;
+
+      case AUTOTUNE:
+        if (counter == 0) display.drawString(3,3,"Autotune: gestartet!");
+        else if(counter == 1) display.drawString(3,3,"Autotune: beendet!");
+        else display.drawString(3,3,"Autotune: abgebrochen!");
         b1 = false;
         b0 = 2;
         break;

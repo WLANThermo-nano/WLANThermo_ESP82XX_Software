@@ -178,7 +178,7 @@ class NanoWebHandler: public AsyncWebHandler {
 
     master["channel"] = pitmaster.channel+1;
     master["pid"] = pitmaster.pid;
-    master["value"] = pitmaster.value;
+    master["value"] = (int)pitmaster.value;
     master["set"] = pitmaster.set;
     if (pitmaster.active)
       if (autotune.initialized)  master["typ"] = "autotune";
@@ -841,18 +841,15 @@ class BodyWebHandler: public AsyncWebHandler {
     else return 0;
     if (_pitmaster.containsKey("set")) pitmaster.set = _pitmaster["set"];
     else return 0;
-
-    stopautotune();
-    //disableAllHeater();
   
-    bool manual = false;
-    bool autotune = false;
-    if (typ == "autotune") autotune = true;
-    else if (typ == "manual") manual = true;
+    bool _manual = false;
+    bool _autotune = false;
+    if (typ == "autotune") _autotune = true;
+    else if (typ == "manual") _manual = true;
     else if (typ == "auto") pitmaster.active = true;
     else  pitmaster.active = false;
     
-    if (_pitmaster.containsKey("value") && manual) {
+    if (_pitmaster.containsKey("value") && _manual) {
       int _val = _pitmaster["value"];
       pitmaster.value = constrain(_val,0,100);
       pitmaster.manual = true;
@@ -864,10 +861,12 @@ class BodyWebHandler: public AsyncWebHandler {
       pitmaster.manual = false;
     }
 
-    if (autotune) {
+    if (_autotune) {
       startautotunePID(5, true);
       return 1; // nicht speichern
-    } 
+    } else if (autotune.initialized) {
+      autotune.stop = 2;
+    }
   
     if (!setconfig(ePIT,{})) return 0;
     return 1;

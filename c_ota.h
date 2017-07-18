@@ -103,7 +103,6 @@ void do_http_update() {
 
       // UPDATE beendet
       if (sys.update == 3){
-        displayblocked = true;
         question.typ = OTAUPDATE;
         drawQuestion(0);
         sys.getupdate = "false";
@@ -127,7 +126,6 @@ void do_http_update() {
       else  {
         sys.update = 0;
         setconfig(eSYSTEM,{});
-        displayblocked = true;
         question.typ = OTAUPDATE;
         drawQuestion(0);
         DPRINTPLN("[INFO]\tUPDATE_CANCELED");

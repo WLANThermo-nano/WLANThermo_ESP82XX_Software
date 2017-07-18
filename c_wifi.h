@@ -235,7 +235,6 @@ void wifimonitoring() {
     DPRINTP("[INFO]\tIP address: ");
     DPRINTLN(WiFi.localIP());
 
-    displayblocked = true;
     question.typ = IPADRESSE;
     drawQuestion(0);
 

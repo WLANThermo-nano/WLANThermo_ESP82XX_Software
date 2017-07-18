@@ -223,7 +223,6 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
 
         // Show Alarm
         if (ch[i].show && !displayblocked) {
-          displayblocked = true;
           ch[i].show = false;
           question.typ = HARDWAREALARM;
           question.con = i;
