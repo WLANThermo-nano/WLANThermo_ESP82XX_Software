@@ -2606,7 +2606,7 @@
 	}
 
 	function getChatID(){
-	
+		getRequest();
 	}
 	
 	function setPushNotification(){
@@ -2959,12 +2959,16 @@
 			showLoader('false');
 		} else {
 
-		}
-		
-		
-			
+		}		
 	}
 	
+	function getRequest(){
+		data = "?host='http://nano.norma.uberspace.de'&url='/telegram.php?token=344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc'&method=GET";
+		loadJSON('getRequest', data, '60000', function (response) {
+			jr = JSON.parse(response);
+			alert(jr);
+		})
+	}
 	function showChart(){
 		hideAll();
 		byId('chart_config').style.display = "inline";
