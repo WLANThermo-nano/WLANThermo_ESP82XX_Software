@@ -862,7 +862,7 @@ class BodyWebHandler: public AsyncWebHandler {
     }
 
     if (_autotune) {
-      startautotunePID(5, true);
+      startautotunePID(5, true, 40, 40L*60L*1000L);
       return 1; // nicht speichern
     } else if (autotune.initialized) {
       autotune.stop = 2;
