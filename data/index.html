@@ -2060,14 +2060,14 @@
 										<div class="form-group">
 										  <input type="text" id="pid_DCmin" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
 										  <label class="control-label" for="input">DCmin</label><i class="bar"></i>
-										  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');"></span>
+										  <span class="icon-play icon-input" onclick="setDC('0');"></span>
 										</div>
 									  </td>
 									  <td>	
 										<div class="form-group">
 										  <input type="text" id="pid_DCmax" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
 										  <label class="control-label" for="input">DCmax</label><i class="bar"></i>
-										  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');"></span>
+										  <span class="icon-play icon-input" onclick="setDC('1');"></span>
 										</div>							  
 									  </td>
 									</tr>
@@ -2941,6 +2941,29 @@
 			})	
 		})
 		showLoader('false');	
+	}
+	
+	function setDC(dc){
+		if(dc == '0'){
+			var_val = byId('pid_DCmin').value;
+		}else{
+			var_val = byId('pid_DCmax').value;
+		}
+		txt = 'Soll der Pitmasterausgang für 10Sekunden mit ' + var_val + '% angesteuert werden?';
+		if (confirm(txt) == true) {
+			showLoader('true');
+			data = '?aktor=' + byId('pitmaster_profile_aktor').value + '&dc=' + dc + '&val=' + var_val;
+			loadJSON('setDC', data, '60000', function (response) {
+				alert(data);
+				togglePitmasterView();
+			})	
+			showLoader('false');
+		} else {
+
+		}
+		
+		
+			
 	}
 	
 	function showChart(){
