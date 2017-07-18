@@ -1938,7 +1938,12 @@
 							<!--Netzwerkliste -->
 						</table> 
 						<hr />
-						<h3>Netzwerk wählen...</h3>
+						 <table width="100%">
+							<tr>
+								<td align="left"><h3>Netzwerk wählen...</h3></td>
+								<td id="networkrefresh" align="right"></td>
+							</tr>
+						</table> 		
 						<table id="networklist" class="wlantable" width="100%">
 								<!--Netzwerkliste -->
 						</table>
@@ -2055,14 +2060,14 @@
 										<div class="form-group">
 										  <input type="text" id="pid_DCmin" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
 										  <label class="control-label" for="input">DCmin</label><i class="bar"></i>
-										  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');">
+										  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');"></span>
 										</div>
 									  </td>
 									  <td>	
 										<div class="form-group">
 										  <input type="text" id="pid_DCmax" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
 										  <label class="control-label" for="input">DCmax</label><i class="bar"></i>
-										  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');">
+										  <span class="icon-play icon-input" onclick="alert('Schnittstelle?!');"></span>
 										</div>							  
 									  </td>
 									</tr>
@@ -3128,6 +3133,8 @@
 	
 	function networkscan(){
 		loadJSON('networkscan', '', '3000', function (response) {
+			byId('networkrefresh').innerHTML = '<h3><span class="icon-refresh icon-rotate-50" onclick="networkscan();"></span></h3>'
+			//getIcon('refresh icon-rotate-50')
 			if (response == "OK"){
 				setTimeout("networklist();", 3000);
 			}
@@ -3158,6 +3165,7 @@
 				addCell(row,getWifiSecureIcon(jr.Scan[i].Enc),'row-Enc','3');
 				addCell(row,getIcon('circle-right'),'row-link','4');
 			}
+			byId('networkrefresh').innerHTML = '<h3><span class="icon-refresh" onclick="networkscan();"></span></h3>'
 			NetworklistRowClick();
 		})
 	}
