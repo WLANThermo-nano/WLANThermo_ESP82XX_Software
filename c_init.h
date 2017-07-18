@@ -238,6 +238,8 @@ struct AutoTune {
    float TWP;               // TEMPERATUR WENDEPUNKT
    bool start;
    byte stop;
+   int overtemp;
+   long timelimit;
 };
 
 AutoTune autotune;
@@ -470,7 +472,7 @@ void readEE(char *buffer, int len, int startP);
 void clearEE(int startP, int endP);
 
 // PITMASTER
-void startautotunePID(int maxCycles, bool storeValues);
+void startautotunePID(int maxCyc, bool store, int over, long tlimit);
 void pitmaster_control();
 void disableAllHeater();
 void set_pitmaster(bool init);

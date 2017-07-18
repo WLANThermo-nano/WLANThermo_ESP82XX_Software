@@ -65,12 +65,6 @@ void read_serial(char *buffer) {
       return;
     }
 
-    // AUTOTUNE
-    else if (command == "autotune") {
-      startautotunePID(5, true);
-      return;
-    }
-
     // SET PITMASTER
     else if (command == "setpitmaster") {
       //handleSetPitmaster(request,PM_buffer); 
@@ -205,7 +199,7 @@ void read_serial(char *buffer) {
 
     // AUTOTUNE
     else if (str == "autotune") {
-      startautotunePID(5, true);
+      startautotunePID(5, true, 40, 40L*60L*1000L);
       return;
     }
 

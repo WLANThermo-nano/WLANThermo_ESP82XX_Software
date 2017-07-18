@@ -154,13 +154,13 @@ void stopautotune() {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // AUTOTUNE
-void startautotunePID(int maxCycles, bool storeValues)  {
+void startautotunePID(int maxCyc, bool store, int over, long tlimit)  {
   
   autotune.cycles = 0;           // Durchläufe
   autotune.heating = true;      // Flag
   autotune.temp = pitmaster.set;
-  autotune.maxCycles = constrain(maxCycles, 5, 20);
-  autotune.storeValues = storeValues;
+  autotune.maxCycles = constrain(maxCyc, 5, 20);
+  autotune.storeValues = store;
   
   uint32_t tmi = millis();
   float tem = ch[pitmaster.channel].temp;
@@ -183,6 +183,9 @@ void startautotunePID(int maxCycles, bool storeValues)  {
   autotune.maxTP = 0.0;
   autotune.tWP = tmi;
   autotune.TWP = tem;
+
+  autotune.overtemp = over; //40
+  autotune.timelimit = tlimit; //(10L*60L*1000L*4L)
   
   DPRINTPLN("[AUTOTUNE]\t Start!");
   
@@ -354,14 +357,14 @@ float autotunePID() {
     }
   }
     
-  if (currentTemp > (autotune.temp + 40))  {   // FEHLER
+  if (currentTemp > (autotune.temp + autotune.overtemp))  {   // FEHLER
     DPRINTPLN("[ERROR]\tAutotune failure: Overtemperature");
     disableAllHeater();
     autotune.stop = 2;
     return 0;
   }
     
-  if (((time - autotune.t1) + (time - autotune.t2)) > (10L*60L*1000L*2L)) {   // 20 Minutes
+  if (((time - autotune.t1) + (time - autotune.t2)) > autotune.timelimit) {   // 20 Minutes
         
     DPRINTPLN("[ERROR]\tAutotune failure: TIMEOUT");
     disableAllHeater();
@@ -425,10 +428,15 @@ void pitmaster_control() {
       else if (!pitmaster.manual)     pitmaster.value = PID_Regler();
       // falls manuel wird value vorgegeben
       
-      if (pid[pitmaster.pid].aktor == 1)                // FAN
-        analogWrite(PITMASTER1,map(pitmaster.value,0,100,0,1024));
-      else if (pid[pitmaster.pid].aktor == 0){          // SSR
-        pitmaster.msec = map(pitmaster.value,0,100,0,pitmaster.pause); 
+      if (pid[pitmaster.pid].aktor == 1) {              // FAN
+        int _DCmin = map(pid[pitmaster.pid].DCmin,0,100,0,1024);
+        int _DCmax = map(pid[pitmaster.pid].DCmax,0,100,0,1024);
+        analogWrite(PITMASTER1,map(pitmaster.value,0,100,_DCmin,_DCmax));
+      
+      } else if (pid[pitmaster.pid].aktor == 0){          // SSR
+        int _DCmin = map(pid[pitmaster.pid].DCmin,0,100,0,pitmaster.pause);
+        int _DCmax = map(pid[pitmaster.pid].DCmax,0,100,0,pitmaster.pause);
+        pitmaster.msec = map(pitmaster.value,0,100,_DCmin,_DCmax); 
         if (pitmaster.msec > 0) digitalWrite(PITMASTER1, HIGH);
         if (pitmaster.msec < pitmaster.pause) pitmaster.event = true;  // außer bei 100%
       }
