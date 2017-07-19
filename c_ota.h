@@ -221,7 +221,6 @@ void check_http_update() {
         client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
           
           String payload((char*)data);
-
           if (payload.indexOf("200 OK") > -1) {
         
             DPRINTP("[HTTP]\tGET: ");

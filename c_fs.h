@@ -270,6 +270,8 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("getupd")) sys.getupdate = json["getupd"].asString();
       else return false;
+      if (json.containsKey("god")) sys.god = json["god"];
+      else return false;
       
     }
     break;
@@ -443,6 +445,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["batmax"] =      battery.max;
       json["batmin"] =      battery.min;
       json["logsec"] =      log_sector;
+      json["god"] =         sys.god;
     
       size_t size = json.measureLength() + 1;
       clearEE(EESYSTEM,EESYSTEMBEGIN);  // Bereich reinigen

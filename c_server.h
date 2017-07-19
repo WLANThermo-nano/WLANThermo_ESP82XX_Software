@@ -22,6 +22,76 @@
 // Beispiele:
 // https://github.com/spacehuhn/wifi_ducky/blob/master/esp8266_wifi_duck/esp8266_wifi_duck.ino
 
+struct myRequest {
+  String host;
+  String url;
+  String method;
+  String response;
+  AsyncWebServerRequest *request;
+};
+
+myRequest myrequest;
+
+static AsyncClient * aClient = NULL;
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Check if there is http update
+void getRequest() {
+
+  if(aClient) return;                 //client already exists
+
+  aClient = new AsyncClient();
+  if(!aClient)  return;               //could not allocate client
+
+  aClient->onError([](void * arg, AsyncClient * client, int error){
+    aClient = NULL;
+    delete client;
+  }, NULL);
+
+  aClient->onConnect([](void * arg, AsyncClient * client){
+
+   aClient->onError(NULL, NULL);
+
+   client->onDisconnect([](void * arg, AsyncClient * c){
+    DPRINTPLN("[INFO]\tDisconnect myRequest Client");
+    myrequest.request->send(200, "text/plain", myrequest.response);
+    myrequest.response = "";
+    aClient = NULL;
+    delete c;
+   }, NULL);
+
+   client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
+    String payload((char*)data);
+    myrequest.response += payload; 
+    Serial.println("[INFO]\tResponse external Request");
+   }, NULL);
+
+   //send the request
+   DPRINTPLN("[INFO]\tSend external Request:");
+   String url;
+   if (myrequest.method == "POST") url += F("POST ");
+   else  url += F("GET ");
+   url += myrequest.url;
+   url += F(" HTTP/1.1\n");
+   url += F("Host: ");
+   url += myrequest.host;
+   Serial.println(url);
+   url += F("\n\n");
+
+   client->write(url.c_str());
+    
+ }, NULL);
+
+ if(!aClient->connect(myrequest.host.c_str(), 80)){
+   Serial.println("[INFO]\MyRequest Client Connect Fail");
+   AsyncClient * client = aClient;
+   aClient = NULL;
+   delete client;
+ }    
+}
+
+
+
 
 
 int dothis;
@@ -228,21 +298,61 @@ void server_setup() {
       +" heap:"+String(ESP.getFreeHeap()));
   });
 
+  server.on("/god",[](AsyncWebServerRequest *request){
+    sys.god =!sys.god;
+    setconfig(eSYSTEM,{});
+    if (sys.god) request->send(200, "text/plain", "GodMode aktiviert.");
+    else request->send(200, "text/plain", "GodMode deaktiviert.");
+  });
+/*
   server.on("/setDC",[](AsyncWebServerRequest *request) { 
-      if(request->hasParam("min")&&request->hasParam("aktor")&&request->hasParam("val")){
+      Serial.println("hallo");
+      if(request->hasParam("aktor")) Serial.println(0);
+      if(request->hasParam("aktor", true))  Serial.println(1);
+      if(request->hasParam("aktor")&&request->hasParam("dc")&&request->hasParam("val")){
         ESP.wdtDisable(); 
         Serial.println(ESP.getFreeHeap());
-        //int value = request->getParam("value")->value().toInt();
-        //String file=request->getParam("value", true)->value();
-        byte min = request->getParam("min")->value().toInt();
-        byte aktor = request->getParam("min")->value().toInt();
+        byte min = request->getParam("dc")->value().toInt();
+        byte aktor = request->getParam("aktor")->value().toInt();
         byte wert = request->getParam("val")->value().toInt();
         Serial.println(wert); 
         ESP.wdtEnable(10);
         request->send(200, "text/plain", "true");
       } else request->send(200, "text/plain", "false");
   });
+*/
+  server.on("/getRequest",[](AsyncWebServerRequest *request) { 
+      if(request->hasParam("url")&&request->hasParam("method")&&request->hasParam("host")){
+        //ESP.wdtDisable(); 
+        //Serial.println(ESP.getFreeHeap());
+        Serial.println("[REQUEST]\t/getRequest");
+        myrequest.url = request->getParam("url")->value();
+        myrequest.host = request->getParam("host")->value();
+        myrequest.method = request->getParam("method")->value();
+        getRequest(); 
+        //ESP.wdtEnable(10);
+        myrequest.request = request;
+      } else request->send(200, "text/plain", "false");
+  });
 
+  server.on("/autotune",[](AsyncWebServerRequest *request) { 
+      if(request->hasParam("cycle")&&request->hasParam("over")&&request->hasParam("timelimit")){
+        ESP.wdtDisable(); 
+        Serial.println(ESP.getFreeHeap());
+        long limit = request->getParam("timelimit")->value().toInt();
+        int over = request->getParam("over")->value().toInt();
+        int cycle = request->getParam("cycle")->value().toInt();
+        startautotunePID(cycle, true, over, limit);
+        ESP.wdtEnable(10);
+        request->send(200, "text/plain", "true");
+      } else request->send(200, "text/plain", "false");
+  });
+
+  server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+      if (request->url() == "/setDC") {
+        DPRINTF("[REQUEST]\t%s\r\n", (const char*)data);
+        }
+  });
   // to avoid multiple requests to ESP
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html"); // gibt alles im Ordner frei
     

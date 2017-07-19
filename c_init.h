@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.5.9"
+#define FIRMWAREVERSION "v0.6.1"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -277,6 +277,7 @@ struct System {
    int update;             // FIRMWARE UPDATE -1 = check, 0 = no, 1 = spiffs, 2 = firmware
    String getupdate;
    bool autoupdate;
+   bool god;
 };
 
 System sys;
@@ -513,6 +514,7 @@ void set_system() {
   sys.update = 0;
   sys.getupdate = "false";
   sys.autoupdate = 1;
+  sys.god = false;
   battery.max = BATTMAX;
   battery.min = BATTMIN;
 }

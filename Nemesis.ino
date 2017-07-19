@@ -84,6 +84,14 @@ void setup() {
     check_sector();
     setEE(); start_fs();
 
+    // Initalize Aktor
+    set_piepser();
+
+    // GodMode aktiv
+    if (sys.god) {
+      piepserON(); delay(500); piepserOFF();
+    }
+
     // Initalize P_MQTT
     set_pmqtt();
     
@@ -110,7 +118,6 @@ void setup() {
     // Initialize Sensors
     set_sensor();
     set_channels(0);
-    set_piepser();
 
     // Initialize Buttons
     set_button();
