@@ -3087,7 +3087,7 @@
 						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
 						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
 					}else{
-						x[i].getElementsByClassName('temp')[0].innerHTML = jr.channel[i].temp + "°" + jr.system.unit;
+						x[i].getElementsByClassName('temp')[0].innerHTML = jr.channel[i].temp.toFixed(1) + "°" + jr.system.unit;
 						if (jr.channel[i].temp < jr.channel[i].min){
 							x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
 							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
