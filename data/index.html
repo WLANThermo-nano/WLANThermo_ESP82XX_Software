@@ -2415,17 +2415,7 @@
 
 		var byId = function( id ) { return document.getElementById( id ); };
 	
-		var layout   = byId('layout'),
-			menu     = byId('menu'),
-			menuLink = byId('menuLink'),
-			menuHome = byId('menuHome'),
-			menuPitmaster = byId('menuPitmaster'),
-			menuNotification = byId('menuNotification'),
-			menuWlan = byId('menuWlan'),
-			menuSystem = byId('menuSystem'),
-			menuThingspeak = byId('menuThingspeak'),
-			menuAbout = byId('menuAbout'),
-			content  = byId('main');
+		var layout = byId('layout'),menu = byId('menu'),menuLink = byId('menuLink'),menuHome = byId('menuHome'),menuPitmaster = byId('menuPitmaster'),menuNotification = byId('menuNotification'),menuWlan = byId('menuWlan'),menuSystem = byId('menuSystem'),menuThingspeak = byId('menuThingspeak'),menuAbout = byId('menuAbout'),content  = byId('main');
 		function toggleClass(element, className) {
 			var classes = element.className.split(/\s+/),
 				length = classes.length,
@@ -2453,58 +2443,15 @@
 			toggleClass(menuLink, active);
 		}
 
-		menuLink.onclick = function (e) {
-			toggleAll(e);
-		};
-		menuHome.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showIndex();
-			}
-		};
-		menuWlan.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showWLAN();
-			}
-		};
-		menuThingspeak.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showThingspeak();
-			}
-		};
-		menuPitmaster.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showPitmaster();
-			}
-		};
-		menuNotification.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showPushNotification();
-			}
-		};
-		menuSystem.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showSystem();
-			}
-		};
-		menuAbout.onclick = function (e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-				showAbout();
-			}
-		};
-	 
-		content.onclick = function(e) {
-			if (menu.className.indexOf('active') !== -1) {
-				toggleAll(e);
-			}
-		};
-
+		menuLink.onclick = function (e) {toggleAll(e);};
+		menuHome.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showIndex();}};
+		menuWlan.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showWLAN();}};
+		menuThingspeak.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showThingspeak();}};
+		menuPitmaster.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showPitmaster();}};
+		menuNotification.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showPushNotification();}};
+		menuSystem.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showSystem();}};
+		menuAbout.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showAbout();}};
+		content.onclick = function(e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);}};
 	}(this, this.document));
 
 	document.addEventListener("DOMContentLoaded", function(event) { 
