@@ -2579,29 +2579,29 @@
 	}	
 
 	function showSetChannel(channel){
-		hideAll();
-		showLoader('true');
-		loadJSON('settings', '', '3000', function (response) {
-			jr = JSON.parse(response);
-			clearOption('sensor');
-			for (var i = 0; i < jr.sensors.length; i++) {
-				byId('sensor').options[byId('sensor').options.length] = new Option(jr.sensors[i], i);
-			}
-		})
-		loadJSON('data', '', '3000', function (response) {
-			jr = JSON.parse(response);
-			byId('channel_settings_save').setAttribute('onclick','setChannel(' + channel + ');');
-			byId('channel_settings_headtitle').innerHTML  = jr.channel[channel].name;
-			byId('channel_name').value  = jr.channel[channel].name;
-			byId('temp_max').value  = jr.channel[channel].max;
-			byId('temp_min').value  = jr.channel[channel].min;
-			byId('color').value = jr.channel[channel].color;
-			byId('sensor').value = jr.channel[channel].typ;
-			byId('webalarm').checked = jr.channel[channel].alarm;
-			byId('channel_settings').style.display = "inline";
-			showLoader('false');
-		})
-	}
+        hideAll();
+        showLoader('true');
+        loadJSON('settings', '', '3000', function (response) {
+            jr = JSON.parse(response);
+            clearOption('sensor');
+            for (var i = 0; i < jr.sensors.length; i++) {
+                byId('sensor').options[byId('sensor').options.length] = new Option(jr.sensors[i], i);
+            }
+            loadJSON('data', '', '3000', function (response) {
+                jr = JSON.parse(response);
+                byId('channel_settings_save').setAttribute('onclick','setChannel(' + channel + ');');
+                byId('channel_settings_headtitle').innerHTML  = jr.channel[channel].name;
+                byId('channel_name').value  = jr.channel[channel].name;
+                byId('temp_max').value  = jr.channel[channel].max;
+                byId('temp_min').value  = jr.channel[channel].min;
+                byId('color').value = jr.channel[channel].color;
+                byId('sensor').value = jr.channel[channel].typ;
+                byId('webalarm').checked = jr.channel[channel].alarm;
+                byId('channel_settings').style.display = "inline";
+                showLoader('false');
+            })
+        })
+    }
 
 	function setChannel(channel){
 		showLoader('true');
