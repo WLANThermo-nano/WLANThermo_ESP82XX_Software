@@ -514,6 +514,12 @@ static inline void button_event() {
         }
         break;
 
+      case 17:  // UPDATE
+        if (event[1]) tempor = sys.fastmode;
+        sys.getupdate = FIRMWAREVERSION;
+        sys.update = 1;
+        break;
+
       default:
         if (event[1]) inWork = false;     // kein bearbeitbares Attribut
         break;
