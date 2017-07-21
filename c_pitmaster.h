@@ -444,7 +444,9 @@ void pitmaster_control() {
       pitmaster.last = millis();
     }
   } else {
-    digitalWrite(PITMASTER1, LOW);
+    if (pid[pitmaster.pid].aktor == 1)
+      analogWrite(PITMASTER1, LOW);
+    else digitalWrite(PITMASTER1, LOW);
     pitmaster.value = 0;
     pitmaster.event = false;
     pitmaster.msec = 0;
