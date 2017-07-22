@@ -199,7 +199,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
   
   if (pitmaster.active)
     if (autotune.initialized)
-      display->drawString(33,0, "A  " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
+      display->drawString(33,0, "A"+ String(autotune.cycles) +" / " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
     else if (pitmaster.manual)
       display->drawString(33,0, "M  " + String(pitmaster.value,0) + "%");
     else  

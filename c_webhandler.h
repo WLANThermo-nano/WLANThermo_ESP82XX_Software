@@ -94,12 +94,12 @@ class NanoWebHandler: public AsyncWebHandler {
       _pid["name"] = pid[i].name;
       _pid["id"] = pid[i].id;
       _pid["aktor"] = pid[i].aktor;
-      _pid["Kp"] = pid[i].Kp;
-      _pid["Ki"] = pid[i].Ki;
-      _pid["Kd"] = pid[i].Kd;
-      _pid["Kp_a"] = pid[i].Kp_a;
-      _pid["Ki_a"] = pid[i].Ki_a;
-      _pid["Kd_a"] = pid[i].Kd_a;
+      _pid["Kp"] = limit_float(pid[i].Kp, -1);
+      _pid["Ki"] = limit_float(pid[i].Ki, -1);
+      _pid["Kd"] = limit_float(pid[i].Kd, -1);
+      _pid["Kp_a"] = limit_float(pid[i].Kp_a, -1);
+      _pid["Ki_a"] = limit_float(pid[i].Ki_a, -1);
+      _pid["Kd_a"] = limit_float(pid[i].Kd_a, -1);
       //_pid["reversal"] = pid[i].reversal;
       _pid["DCmmin"] = pid[i].DCmin;
       _pid["DCmmax"] = pid[i].DCmax;
@@ -862,7 +862,7 @@ class BodyWebHandler: public AsyncWebHandler {
     }
 
     if (_autotune) {
-      startautotunePID(5, true, 40, 40L*60L*1000L);
+      startautotunePID(5, true, 40, 120L*60L*1000L);  // 1h Timelimit
       return 1; // nicht speichern
     } else if (autotune.initialized) {
       autotune.stop = 2;
