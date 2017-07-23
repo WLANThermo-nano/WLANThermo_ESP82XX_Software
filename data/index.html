@@ -2900,8 +2900,8 @@
 		if (confirm(txt) == true) {
 			showLoader('true');
 			data = '?aktor=' + byId('pitmaster_profile_aktor').value + '&dc=' + dc + '&val=' + var_val;
-			loadJSON('setDC', data, '60000', function (response) {
-				alert(data);
+			loadJSON('setDC' + data, '', '60000', function (response) {
+				//alert(data);
 			})	
 			showLoader('false');
 		} else {
@@ -2932,7 +2932,7 @@
 	}	
 
 	function hideAll(){
-		hideIDs = ['index','wlan_config','system_config','system_config','about','wlan_set','thingspeak','push_notification','channel_settings','pitmaster_settings'];
+		hideIDs = ['index','wlan_config','system_config','system_config','about','wlan_set','thingspeak','push_notification','channel_settings','pitmaster_settings','pitmaster_profile'];
 		for (var i = 0; i < hideIDs.length; i++) {
 			byId(hideIDs[i]).style.display = "none";
 		}
