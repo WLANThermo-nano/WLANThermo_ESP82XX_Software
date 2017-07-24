@@ -244,7 +244,15 @@ struct AutoTune {
 
 AutoTune autotune;
 
+struct DutyCycle {
+  long timer;
+  int value;
+  bool dc;
+  byte aktor;
+  bool on;
+};
 
+DutyCycle dutycycle;
 
 // DATALOGGER
 struct datalogger {

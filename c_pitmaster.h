@@ -52,6 +52,8 @@ void set_pitmaster(bool init) {
   pitmaster.msec = 0;
   pitmaster.pause = 1000;
 
+  dutycycle.on = false;
+
 }
 
 
@@ -409,6 +411,14 @@ void pitmaster_control() {
     stopautotune();
     autotune.stop = 0;
   }
+
+  // DC-Test beenden
+  if (dutycycle.on && (millis() - dutycycle.timer > 10000)) {
+    pitmaster.active = false;
+    pitmaster.manual = false;
+    dutycycle.on = false;
+    DPRINTLN("[INFO]\tDC-Test beendet.");
+  }
   
   // ESP PWM funktioniert nur bis 10 Hz Trägerfrequenz stabil, daher eigene Taktung
   if (pitmaster.active == 1) {
@@ -423,8 +433,21 @@ void pitmaster_control() {
     if (millis() - pitmaster.last > pitmaster.pause) {
   
       float y;
+      pitmaster.last = millis();
 
-      if (autotune.initialized)       pitmaster.value = autotunePID();
+      if (dutycycle.on)  {
+        if (!dutycycle.dc && (millis() - dutycycle.timer < 1000))
+          pitmaster.value = 100;
+        else pitmaster.value = dutycycle.value;
+        if (dutycycle.aktor == 1) analogWrite(PITMASTER1,pitmaster.value);
+        else if (dutycycle.aktor == 0) {
+          pitmaster.msec = map(pitmaster.value,0,100,0,pitmaster.pause); 
+          if (pitmaster.msec > 0) digitalWrite(PITMASTER1, HIGH);
+          if (pitmaster.msec < pitmaster.pause) pitmaster.event = true; // außer bei 100%
+        }
+        return;
+      }
+      else if (autotune.initialized)  pitmaster.value = autotunePID();
       else if (!pitmaster.manual)     pitmaster.value = PID_Regler();
       // falls manuel wird value vorgegeben
       
@@ -440,8 +463,6 @@ void pitmaster_control() {
         if (pitmaster.msec > 0) digitalWrite(PITMASTER1, HIGH);
         if (pitmaster.msec < pitmaster.pause) pitmaster.event = true;  // außer bei 100%
       }
-    
-      pitmaster.last = millis();
     }
   } else {
     if (pid[pitmaster.pid].aktor == 1)
@@ -456,9 +477,20 @@ void pitmaster_control() {
 
 
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Control Duty Cycle
+void DC_control(bool dc, byte aktor, int val) {
 
-
-
+  if (!dutycycle.on) {
+    dutycycle.dc = dc;
+    dutycycle.aktor = aktor;
+    dutycycle.value = val;
+    dutycycle.on = true;
+    dutycycle.timer = millis();
+    pitmaster.active = true;
+    pitmaster.manual = true;    // nur für die Anzeige
+  }
+}
 
 
 

@@ -314,23 +314,21 @@ void server_setup() {
   });
 
   
-/*
+
   server.on("/setDC",[](AsyncWebServerRequest *request) { 
-      Serial.println("hallo");
-      if(request->hasParam("aktor")) Serial.println(0);
-      if(request->hasParam("aktor", true))  Serial.println(1);
       if(request->hasParam("aktor")&&request->hasParam("dc")&&request->hasParam("val")){
         ESP.wdtDisable(); 
-        Serial.println(ESP.getFreeHeap());
-        byte min = request->getParam("dc")->value().toInt();
+        bool dc = request->getParam("dc")->value().toInt();
         byte aktor = request->getParam("aktor")->value().toInt();
-        byte wert = request->getParam("val")->value().toInt();
-        Serial.println(wert); 
+        int val = request->getParam("val")->value().toInt();
+        DC_control(dc, aktor, val);
+        DPRINTP("[INFO]\tDC-Test: ");
+        DPRINTLN(val);
         ESP.wdtEnable(10);
         request->send(200, "text/plain", "true");
       } else request->send(200, "text/plain", "false");
   });
-*/
+
   server.on("/getRequest",[](AsyncWebServerRequest *request) { 
       if(request->hasParam("url")&&request->hasParam("method")&&request->hasParam("host")){
         //ESP.wdtDisable(); 
@@ -358,11 +356,6 @@ void server_setup() {
       } else request->send(200, "text/plain", "false");
   });
 
-  server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
-      if (request->url() == "/setDC") {
-        DPRINTF("[REQUEST]\t%s\r\n", (const char*)data);
-        }
-  });
   // to avoid multiple requests to ESP
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html"); // gibt alles im Ordner frei
     
