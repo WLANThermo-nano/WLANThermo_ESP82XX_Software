@@ -3058,7 +3058,7 @@
 				for (i = 0; i < x.length; i++) {
 					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;
 					x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
-					if(jr.pitmaster.typ == 'auto'){
+					if(jr.pitmaster.typ == 'auto' || jr.pitmaster.typ == 'autotune'){
 						if (jr.pitmaster.channel == jr.channel[i].number){
 							var a = getIcon('uniF2C7') + jr.pitmaster.set + '°' + ' / ';
 							var e = ' ' + jr.pitmaster.value + '%';
