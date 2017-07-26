@@ -414,8 +414,11 @@ void pitmaster_control() {
 
   // DC-Test beenden
   if (dutycycle.on && (millis() - dutycycle.timer > 10000)) {
-    pitmaster.active = false;
-    pitmaster.manual = false;
+    if (dutycycle.saved == 0) {   // off
+      pitmaster.active = false;
+      pitmaster.manual = false;
+    } else if (dutycycle.saved > 0) pitmaster.value = dutycycle.saved;  //manual
+    else pitmaster.manual = false;  // auto
     dutycycle.on = false;
     DPRINTLN("[INFO]\tDC-Test beendet.");
   }
@@ -437,7 +440,7 @@ void pitmaster_control() {
 
       if (dutycycle.on)  {
         if (!dutycycle.dc && (millis() - dutycycle.timer < 1000))
-          pitmaster.value = 100;
+          pitmaster.value = 50;
         else pitmaster.value = dutycycle.value;
         if (dutycycle.aktor == 1) analogWrite(PITMASTER1,pitmaster.value);
         else if (dutycycle.aktor == 0) {
@@ -449,7 +452,7 @@ void pitmaster_control() {
       }
       else if (autotune.initialized)  pitmaster.value = autotunePID();
       else if (!pitmaster.manual)     pitmaster.value = PID_Regler();
-      // falls manuel wird value vorgegeben
+      // falls manual wird value vorgegeben
       
       if (pid[pitmaster.pid].aktor == 1) {              // FAN
         int _DCmin = map(pid[pitmaster.pid].DCmin,0,100,0,1024);
@@ -487,8 +490,14 @@ void DC_control(bool dc, byte aktor, int val) {
     dutycycle.value = val;
     dutycycle.on = true;
     dutycycle.timer = millis();
+    if (pitmaster.active) 
+      if (pitmaster.manual) dutycycle.saved = pitmaster.value;  // bereits im manual Modus
+      else if (autotune.initialized) dutycycle.saved = 0; // autotune abbrechen
+      else dutycycle.saved = -1;   // bereits im auto Modus
+    else dutycycle.saved = 0;
     pitmaster.active = true;
     pitmaster.manual = true;    // nur für die Anzeige
+    autotune.stop = 2;
   }
 }
 

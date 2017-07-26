@@ -219,7 +219,7 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
       // Alarm anzeigen
       } else if (ch[i].isalarm && ch[i].showalarm) {
         // do alarm
-        setalarm = true;
+        setalarm = true;  // Alarm noch nicht quittiert
 
         // Show Alarm
         if (ch[i].show && !displayblocked) {
@@ -231,19 +231,28 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
       
       } else if (!ch[i].isalarm && ch[i].temp != INACTIVEVALUE) {
         // first rising limits
-        ch[i].isalarm = true;
-        ch[i].showalarm = true;
-        ch[i].show = true;
-        setalarm = true;
 
-        if (!isAP) {
-          if (charts.TS_httpKey != "") {
-            if (ch[i].temp > ch[i].max) sendMessage(i+1,1);
-            else if (ch[i].temp < ch[i].min) sendMessage(i+1,0);
-          }
-        }
+        bool sendM;
+        if (!isAP && charts.TS_httpKey != "") {
+          if (sendMessage(1)) {       // Sender frei? Falls fehlerhaftes Senden, wird der Client selbst wieder frei
+            notification.ch = i+1;
+            if (ch[i].temp > ch[i].max) notification.limit = 1;
+            else if (ch[i].temp < ch[i].min) notification.limit = 0;
+            sendMessage(0);           // Nachricht schicken
+          } else sendM = false;       // kann noch nicht gesendet werden, also warten
+        } else sendM = true;          // kein Internet, also weiter
+
+        if (sendM) {
+          ch[i].isalarm = true;
+          ch[i].showalarm = true;
+          ch[i].show = true;
+          setalarm = true;
+        } 
       }
-    }
+    } else {
+      ch[i].isalarm = false;
+      ch[i].showalarm = false;
+    }   
   }
 
   // Hardware-Alarm-Variable: sys.hwalarm

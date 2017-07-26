@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.6.3"
+#define FIRMWAREVERSION "v0.6.4"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -250,6 +250,7 @@ struct DutyCycle {
   bool dc;
   byte aktor;
   bool on;
+  int saved;
 };
 
 DutyCycle dutycycle;
@@ -269,6 +270,14 @@ unsigned long log_count = 0;
 uint32_t log_sector;                // erster Sector von APP2
 uint32_t freeSpaceStart;            // First Sector of OTA
 uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
+
+struct Notification {
+  byte ch;                          // CHANNEL
+  bool limit;                       // LIMIT: 0 = LOW TEMPERATURE, 1 = HIGH TEMPERATURE
+};
+
+Notification notification;
+
 
 
 // SYSTEM
@@ -414,7 +423,8 @@ static inline void button_event();                // Response Button Status
 void controlAlarm(bool action);                              // Control Hardware Alarm
 void set_piepser();
 void piepserOFF();
-void piepserON();      
+void piepserON();
+time_t mynow();      
 
 // SENSORS
 byte set_sensor();                                // Initialize Sensors
@@ -490,7 +500,7 @@ void stopautotune();
 
 // BOT
 void set_charts(bool init);
-void sendMessage(int ch, int count);
+bool sendMessage(bool check);
 void sendTS();
 void sendSettings();
 void sendDataTS();
@@ -600,7 +610,7 @@ void timer_datalog() {
     //}
     mylog[logc].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
     mylog[logc].soll = (uint8_t) pitmaster.set;           // 8 bit  // 1 byte
-    mylog[logc].timestamp = now();     // 64 bit // 8 byte
+    mylog[logc].timestamp = mynow();     // 64 bit // 8 byte
 
     log_count++;
     // 2*8 + 2 + 8 = 26

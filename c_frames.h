@@ -272,8 +272,8 @@ void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
     if (current_ch == pitmaster.channel) {
       display->setFont(ArialMT_Plain_10);
       if (autotune.initialized) display->drawString(44+x, 31+y, "A");
-      else if (pitmaster.manual) display->drawString(44+x, 31+y, "M");
-      else display->drawString(44+x, 31+y, "P");
+      else if (!pitmaster.manual) display->drawString(44+x, 31+y, "P");
+      else return;
       int _cur = ch[current_ch].temp*10;
       int _set = pitmaster.set*10; 
       if (_cur > _set)
