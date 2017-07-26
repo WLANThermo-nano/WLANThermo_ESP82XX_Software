@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.6.4"
+#define FIRMWAREVERSION "v0.6.6"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -529,8 +529,7 @@ void set_system() {
   sys.summer = false;
   sys.fastmode = false;
   sys.hwversion = 1;
-  sys.update = 0;
-  sys.getupdate = "false";
+  if (sys.update == 0) sys.getupdate = "false";   // Änderungen am EE während Update
   sys.autoupdate = 1;
   sys.god = false;
   battery.max = BATTMAX;

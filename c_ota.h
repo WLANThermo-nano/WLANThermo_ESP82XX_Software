@@ -97,21 +97,21 @@
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Do http update
 void do_http_update() {
+
+  // UPDATE beendet
+  if (sys.update == 3){
+    question.typ = OTAUPDATE;
+    drawQuestion(0);
+    sys.getupdate = "false";
+    sys.update = 0;
+    setconfig(eSYSTEM,{});
+    sys.update = -1;   // Neue Suche anstoßen
+    DPRINTPLN("[INFO]\tUPDATE FINISHED");
+    return;
+  }
   
   if((isAP == 0)) {
     if (sys.getupdate != "false") {
-
-      // UPDATE beendet
-      if (sys.update == 3){
-        question.typ = OTAUPDATE;
-        drawQuestion(0);
-        sys.getupdate = "false";
-        sys.update = 0;
-        setconfig(eSYSTEM,{});
-        sys.update = -1;   // Neue Suche anstoßen
-        DPRINTPLN("[INFO]\tUPDATE FINISHED");
-        return;
-      }
 
       // UPDATE Adresse
       String adress = F("http://nano.wlanthermo.de/checkUpdate.php?device=nano&serial=");
