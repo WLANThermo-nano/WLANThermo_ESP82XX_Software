@@ -253,6 +253,75 @@ bool sendMessage(bool check){
   }
 }
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Send Temp-Data to Thingspeak
+bool sendMessage2(bool check){
+
+  if (check) {
+    if(tsalarmclient) return false;                 //client already exists
+
+    tsalarmclient = new AsyncClient();
+    if(!tsalarmclient)  return false;               //could not allocate client
+
+    return true;                                    // Nachricht kann gesendet werden
+
+  } else {
+    
+    tsalarmclient->onError([](void * arg, AsyncClient * client, int error){
+      DPRINTPLN("[INFO]\tNotification Connect Error");
+      tsalarmclient = NULL;
+      delete client;
+    }, NULL);
+
+    tsalarmclient->onConnect([](void * arg, AsyncClient * client){
+    
+      tsalarmclient->onError(NULL, NULL);
+
+      client->onDisconnect([](void * arg, AsyncClient * c){
+        tsalarmclient = NULL;
+        delete c;
+      }, NULL);
+
+      //send the request
+
+      String postStr = "&msg=";
+    
+      if (notification.limit) 
+        postStr += "up";
+      else 
+        postStr += "down";
+      postStr += "&ch=";
+      postStr += String(notification.ch);
+    
+      String adress = F("GET /sendTelegram.php?serial=");
+      adress += String(ESP.getChipId(), HEX);
+      adress += F("&token=");
+      adress += charts.TG_token;
+      adress += F("&chatID=");
+      adress += charts.TG_id;
+      adress += F("&lang=de");
+      adress += F("&service=telegram");
+      
+      adress += postStr;          // starts with &
+      adress += F(" HTTP/1.1\nHost: nano.wlanthermo.de\n\n");
+
+      DPRINTPLN("[INFO]\tSend Notification"); 
+      client->write(adress.c_str());
+        
+    }, NULL);
+
+    if(!tsalarmclient->connect("nano.wlanthermo.de", 80)){
+      Serial.println("[INFO]\tNotification Server Connect Fail");
+      AsyncClient * client = tsalarmclient;
+      tsalarmclient = NULL;
+      delete client;
+    }
+
+    return true;
+  }
+}
+
 /*
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
   // Send Message to Telegram via Thingspeak

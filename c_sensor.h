@@ -233,12 +233,13 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
         // first rising limits
 
         bool sendM;
-        if (!isAP && charts.TS_httpKey != "") {
+        //if (!isAP && charts.TS_httpKey != "") {
+        if (!isAP && charts.TG_on) {
           if (sendMessage(1)) {       // Sender frei? Falls fehlerhaftes Senden, wird der Client selbst wieder frei
             notification.ch = i+1;
             if (ch[i].temp > ch[i].max) notification.limit = 1;
             else if (ch[i].temp < ch[i].min) notification.limit = 0;
-            sendMessage(0);           // Nachricht schicken
+            sendMessage2(0);           // Nachricht schicken
           } else sendM = false;       // kann noch nicht gesendet werden, also warten
         } else sendM = true;          // kein Internet, also weiter
 

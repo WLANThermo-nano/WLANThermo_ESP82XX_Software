@@ -94,6 +94,191 @@ void getRequest() {
 
 
 
+String serverLog() {
+
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+
+  root["SN"] = String(ESP.getChipId(), HEX);
+  JsonArray& _logs = root.createNestedArray("logs");
+
+  if (log_count > 9) {
+    
+    for (int i = 0; i < 10; i++) {
+      if (mylog[i].modification) {    // nur bei Aenderung wird das Log benutzt
+        JsonObject& _log = _logs.createNestedObject();
+        _log["time"] = mylog[i].timestamp;
+        _log["battery"] = mylog[i].battery;
+        _log["pit_set"] = (mylog[i].soll==NULL)?NULL:mylog[i].soll/10.0;
+        _log["pit_value"] = mylog[i].pitmaster; 
+        _log["ch1"] = (mylog[i].tem[0]==NULL)?NULL:mylog[i].tem[0]/10.0;
+        _log["ch2"] = (mylog[i].tem[1]==NULL)?NULL:mylog[i].tem[1]/10.0;
+        _log["ch3"] = (mylog[i].tem[2]==NULL)?NULL:mylog[i].tem[2]/10.0;
+        _log["ch4"] = (mylog[i].tem[3]==NULL)?NULL:mylog[i].tem[3]/10.0;
+        _log["ch5"] = (mylog[i].tem[4]==NULL)?NULL:mylog[i].tem[4]/10.0;
+        _log["ch6"] = (mylog[i].tem[5]==NULL)?NULL:mylog[i].tem[5]/10.0;
+        _log["ch7"] = (mylog[i].tem[6]==NULL)?NULL:mylog[i].tem[6]/10.0;
+        _log["ch8"] = (mylog[i].tem[7]==NULL)?NULL:mylog[i].tem[7]/10.0;
+      } 
+    }
+  }
+ 
+  String json;
+  root.printTo(json);
+  
+ /*
+ 
+  String json = "{\"SN\":\"";
+  json += String(ESP.getChipId(), HEX);
+  json += "\",\"logs\":[";
+  
+  if (log_count > 9) {
+    
+    for (int i = 0; i < 10; i++) {
+      if (mylog[i].modification) {    // nur bei Aenderung wird das Log benutzt
+        if (i > 0) json += ",";
+        json += "{\"time\":";
+        json += mylog[i].timestamp;
+        json += ",\"battery\":";
+        json += mylog[i].battery;
+        json += ",\"pit_set\":";
+        if (mylog[i].soll=!NULL) json += mylog[i].soll/10.0;
+        json += ",\"pit_value\":";
+        json += mylog[i].pitmaster; 
+        for (int j = 0; j < 8; j++) {
+          json += ",\"ch";
+          json += String(j);
+          json += "\":";
+          if (mylog[i].tem[j]!=NULL)  json += mylog[i].tem[j]/10.0;
+        }
+        json += "}";
+      } 
+    }
+  }
+  json += "]}";
+
+  */
+  return json;
+}
+
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+String handleServerLog(AsyncWebServerRequest *request, byte www) {
+
+  AsyncJsonResponse * response = new AsyncJsonResponse();
+  response->addHeader("Server","ESP Async Web Server");
+  JsonObject& root = response->getRoot();
+
+  root["SN"] = String(ESP.getChipId(), HEX);
+
+  JsonArray& _logs = root.createNestedArray("logs");
+
+  if (log_count > 9) {
+    
+    for (int i = 0; i < 10; i++) {
+      if (mylog[i].modification) {    // nur bei Aenderung wird das Log benutzt
+        JsonObject& _log = _logs.createNestedObject();
+        _log["time"] = mylog[i].timestamp;
+        _log["battery"] = mylog[i].battery;
+        _log["pit_set"] = (mylog[i].soll==NULL)?NULL:mylog[i].soll/10.0;
+        _log["pit_value"] = mylog[i].pitmaster; 
+        _log["ch1"] = (mylog[i].tem[0]==NULL)?NULL:mylog[i].tem[0]/10.0;
+        _log["ch2"] = (mylog[i].tem[1]==NULL)?NULL:mylog[i].tem[1]/10.0;
+        _log["ch3"] = (mylog[i].tem[2]==NULL)?NULL:mylog[i].tem[2]/10.0;
+        _log["ch4"] = (mylog[i].tem[3]==NULL)?NULL:mylog[i].tem[3]/10.0;
+        _log["ch5"] = (mylog[i].tem[4]==NULL)?NULL:mylog[i].tem[4]/10.0;
+        _log["ch6"] = (mylog[i].tem[5]==NULL)?NULL:mylog[i].tem[5]/10.0;
+        _log["ch7"] = (mylog[i].tem[6]==NULL)?NULL:mylog[i].tem[6]/10.0;
+        _log["ch8"] = (mylog[i].tem[7]==NULL)?NULL:mylog[i].tem[7]/10.0;
+      } 
+    }
+  }
+ 
+  String jsonStr;
+    
+  if (www == 1) {
+    response->setLength();
+    request->send(response);
+  } else if (www == 0) {
+    root.printTo(Serial);
+  } else  root.printTo(jsonStr);
+  
+  return jsonStr;
+}
+
+
+
+static AsyncClient * LogClient = NULL;
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+void sendServerLog() {
+
+  if(LogClient) return;                 //client already exists
+
+  LogClient = new AsyncClient();
+  if(!LogClient)  return;               //could not allocate client
+
+  LogClient->onError([](void * arg, AsyncClient * client, int error){
+    LogClient = NULL;
+    delete client;
+  }, NULL);
+
+  LogClient->onConnect([](void * arg, AsyncClient * client){
+
+   LogClient->onError(NULL, NULL);
+
+   client->onDisconnect([](void * arg, AsyncClient * c){
+    DPRINTPLN("[INFO]\tDisconnect Log Client");
+    LogClient = NULL;
+    delete c;
+   }, NULL);
+
+   client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
+    String payload((char*)data);
+    Serial.println("[INFO]\tServer Response");
+    Serial.println(payload);
+   }, NULL);
+
+   //send the request
+   DPRINTPLN("[INFO]\tSend Log to Server:");
+
+    String message = serverLog();   
+    //send the request
+    String adress = F("POST /saveLogs.php");
+    adress += F(" HTTP/1.1\n");
+    
+    adress += F("Content-Type: application/json\n");
+    adress += F("Content-Length: ");
+    adress += String(message.length());
+    adress += "\n";
+    adress += F("Host: nano.wlanthermo.de\n\n");
+
+    adress += message;
+    client->write(adress.c_str());
+
+    //String message = handleServerLog(NULL, 2);
+    
+    //client->write(message.c_str());
+
+    Serial.println(adress);
+    
+    
+ }, NULL);
+
+ if(!LogClient->connect("nano.wlanthermo.de", 80)){
+   Serial.println("[INFO]\Log Client Connect Fail");
+   AsyncClient * client = LogClient;
+   LogClient = NULL;
+   delete client;
+ }    
+}
+
+
+
+
+/*
 int dothis;
 int histthis;
 int saved;
@@ -153,7 +338,7 @@ void handlePlot(AsyncWebServerRequest *request, bool www) {
         } else return 0;
 
       //} else if (savedstart < savedend) {
-/*
+//*
         read_flash(log_sector - saved + savedstart);
         
         while (output.length()+50 < maxLen && histthis != 0) {
@@ -192,7 +377,7 @@ void handlePlot(AsyncWebServerRequest *request, bool www) {
       
         output.getBytes(buffer, maxLen); 
         return output.length();
-        */
+ //
       
       } else if (dothis > 0)  {
 
@@ -261,7 +446,7 @@ void handlePlot(AsyncWebServerRequest *request, bool www) {
     request->send(response);
 }
 
-
+*/
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -287,10 +472,15 @@ void server_setup() {
       handleLog(request, true);
     });
 */
+/*
     server.on("/plot", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handlePlot(request, true);
     });
-    
+  */
+
+  server.on("/testlog",[](AsyncWebServerRequest *request){
+    handleServerLog(request, true);
+  });
       
   server.on("/fs",[](AsyncWebServerRequest *request){
     FSInfo fs_info;

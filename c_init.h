@@ -49,7 +49,8 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.6.6"
+#define FIRMWAREVERSION "v0.6.8"
+#define APIVERSION      "v1"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -179,7 +180,8 @@ struct Pitmaster {
    int16_t msec;          // PITMASTER VALUE IN MILLISEC
    unsigned long last;
    int pause;             // PITMASTER PAUSE
-   bool resume;           // Continue after restart           
+   bool resume;           // Continue after restart 
+   long timer0;           
 };
 Pitmaster pitmaster;
 int pidsize;
@@ -257,16 +259,19 @@ DutyCycle dutycycle;
 
 // DATALOGGER
 struct datalogger {
- uint16_t tem[3];     //8
+ uint16_t tem[8];     //8
  long timestamp;
  uint8_t pitmaster;
- uint8_t soll;
+ uint16_t soll;
+ uint8_t battery;
+ bool modification;
 };
 
-#define MAXLOGCOUNT 255 //155             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
+#define MAXLOGCOUNT 10 //155             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
 datalogger mylog[MAXLOGCOUNT];
 datalogger archivlog[MAXLOGCOUNT];
 unsigned long log_count = 0;
+int log_checksum = 0;
 uint32_t log_sector;                // erster Sector von APP2
 uint32_t freeSpaceStart;            // First Sector of OTA
 uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
@@ -501,10 +506,13 @@ void stopautotune();
 // BOT
 void set_charts(bool init);
 bool sendMessage(bool check);
+bool sendMessage2(bool check);
 void sendTS();
 void sendSettings();
 void sendDataTS();
 
+void sendServerLog();
+String serverLog();
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
@@ -580,6 +588,8 @@ void timer_charts() {
       if (charts.P_MQTT_on) {
         sendpmqtt();
       }
+      sendServerLog();
+      //Serial.println(serverLog());
     }
     lastUpdateCommunication = millis();
   }
@@ -590,29 +600,43 @@ void timer_charts() {
 // DataLog Timer
 void timer_datalog() {  
   
-  if (millis() - lastUpdateDatalog > 20L*1000L) {
-
-    //Serial.println(sizeof(datalogger));
-    //Serial.println(sizeof(mylog));
+  if (millis() - lastUpdateDatalog > 3000) {
 
     int logc;
+    int checksum = 0;
+    
     if (log_count < MAXLOGCOUNT) logc = log_count;
     else {
       logc = MAXLOGCOUNT-1;  // Array verschieben
       memcpy(&mylog[0], &mylog[1], (MAXLOGCOUNT-1)*sizeof(*mylog));
     }
 
-    //for (int i=0; i < CHANNELS; i++)  {     // Achtung tem Länge beachten
-      mylog[logc].tem[0] = (uint16_t) (ch[0].temp * 10);       // 8 * 16 bit  // 8 * 2 byte
-      mylog[logc].tem[1] = (uint16_t) (ch[1].temp * 10);    
-      mylog[logc].tem[2] = (uint16_t) (ch[6].temp * 10);
-    //}
-    mylog[logc].pitmaster = (uint8_t) pitmaster.value;    // 8 bit  // 1 byte
-    mylog[logc].soll = (uint8_t) pitmaster.set;           // 8 bit  // 1 byte
-    mylog[logc].timestamp = mynow();     // 64 bit // 8 byte
+    for (int i=0; i < CHANNELS; i++)  {
+      if (ch[i].temp != INACTIVEVALUE) {
+        mylog[logc].tem[i] = (uint16_t) (ch[i].temp * 10);    // 8 * 16 bit  // 8 * 2 byte
+        checksum += mylog[logc].tem[i];
+      } else
+        mylog[logc].tem[i] = NULL;
+    }
+    mylog[logc].pitmaster = (uint8_t) pitmaster.value;            // 8  bit // 1 byte
+    if (pitmaster.active) {
+      mylog[logc].soll = (uint16_t) (pitmaster.set * 10);           // 16 bit // 2 byte
+      checksum += mylog[logc].soll;
+    } else  mylog[logc].soll = NULL;
+    mylog[logc].timestamp = now();                                // 64 bit // 8 byte
+    mylog[logc].battery = (uint8_t) battery.percentage;           // 8  bit // 1 byte
 
+    checksum += mylog[logc].pitmaster;
+    checksum += mylog[logc].battery;
+
+    if (checksum == log_checksum) mylog[logc].modification = false;
+    else mylog[logc].modification = true;
+    log_checksum = checksum;
+    
     log_count++;
-    // 2*8 + 2 + 8 = 26
+    // 2*8 + 1 + 2 + 8 + 1 = 28
+
+    /*
     if (log_count%MAXLOGCOUNT == 0 && log_count != 0) {
         
       if (log_sector > freeSpaceEnd/SPI_FLASH_SEC_SIZE) 
@@ -620,11 +644,10 @@ void timer_datalog() {
         
       write_flash(log_sector);
       log_sector++;
-      setconfig(eSYSTEM,{});
-
-        //getLog(3);
-        
+      setconfig(eSYSTEM,{});  
     }
+    */
+    
     lastUpdateDatalog = millis();
   }
 }

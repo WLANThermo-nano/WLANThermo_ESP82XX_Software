@@ -442,7 +442,7 @@ void pitmaster_control() {
         if (!dutycycle.dc && (millis() - dutycycle.timer < 1000))
           pitmaster.value = 50;
         else pitmaster.value = dutycycle.value;
-        if (dutycycle.aktor == 1) analogWrite(PITMASTER1,pitmaster.value);
+        if (dutycycle.aktor == 1) analogWrite(PITMASTER1,map(pitmaster.value,0,100,0,1024));
         else if (dutycycle.aktor == 0) {
           pitmaster.msec = map(pitmaster.value,0,100,0,pitmaster.pause); 
           if (pitmaster.msec > 0) digitalWrite(PITMASTER1, HIGH);
@@ -457,7 +457,15 @@ void pitmaster_control() {
       if (pid[pitmaster.pid].aktor == 1) {              // FAN
         int _DCmin = map(pid[pitmaster.pid].DCmin,0,100,0,1024);
         int _DCmax = map(pid[pitmaster.pid].DCmax,0,100,0,1024);
-        analogWrite(PITMASTER1,map(pitmaster.value,0,100,_DCmin,_DCmax));
+        if (pitmaster.value == 0) {   // bei 0 soll der Lüfter auch stehen
+          analogWrite(PITMASTER1,0);
+          pitmaster.timer0 = millis();  
+        } else {
+          if (millis() - pitmaster.timer0 < 1500)  {  // ein Zyklus
+            analogWrite(PITMASTER1,map(30,0,100,_DCmin,_DCmax));   // BOOST
+          } else
+            analogWrite(PITMASTER1,map(pitmaster.value,0,100,_DCmin,_DCmax));
+        }
       
       } else if (pid[pitmaster.pid].aktor == 0){          // SSR
         int _DCmin = map(pid[pitmaster.pid].DCmin,0,100,0,pitmaster.pause);
@@ -492,12 +500,14 @@ void DC_control(bool dc, byte aktor, int val) {
     dutycycle.timer = millis();
     if (pitmaster.active) 
       if (pitmaster.manual) dutycycle.saved = pitmaster.value;  // bereits im manual Modus
-      else if (autotune.initialized) dutycycle.saved = 0; // autotune abbrechen
+      else if (autotune.initialized) {
+        dutycycle.saved = 0; // autotune abbrechen
+        autotune.stop = 2;
+      }
       else dutycycle.saved = -1;   // bereits im auto Modus
     else dutycycle.saved = 0;
     pitmaster.active = true;
     pitmaster.manual = true;    // nur für die Anzeige
-    autotune.stop = 2;
   }
 }
 
