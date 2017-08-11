@@ -48,7 +48,7 @@
 #define SET_PITMASTER "/setpitmaster"
 #define SET_PID       "/setpid"
 #define SET_DC        "/setDC"
-#define SET_CHARTS    "/setcharts"
+#define SET_IOT       "/setIoT"
 #define UPDATE_CHECK  "/checkupdate"
 #define UPDATE_STATUS "/updatestatus"
 
@@ -109,23 +109,27 @@ class NanoWebHandler: public AsyncWebHandler {
     _aktor.add("SSR");
     _aktor.add("FAN");
 
-    JsonObject& _chart = root.createNestedObject("charts");
-    _chart["TSwrite"] = charts.TS_writeKey; 
-    _chart["TShttp"] = charts.TS_httpKey;
-    _chart["TSuser"] = charts.TS_userKey;
-    _chart["TSchID"] = charts.TS_chID;
-    _chart["TSshow8"] = charts.TS_show8;
-    _chart["TSinterval"] = charts.TS_int;
-    _chart["TSon"] = charts.TS_on;
-    _chart["PMQhost"] = charts.P_MQTT_HOST;
-    _chart["PMQport"] = charts.P_MQTT_PORT;
-    _chart["PMQuser"] = charts.P_MQTT_USER;
-    _chart["PMQpass"] = charts.P_MQTT_PASS;
-    _chart["PMQqos"] = charts.P_MQTT_QoS;
-    _chart["PMQon"] = charts.P_MQTT_on;
-    _chart["TGon"]    = charts.TG_on;
-    _chart["TGtoken"] = charts.TG_token;
-    _chart["TGid"]    = charts.TG_id;
+    JsonObject& _iot = root.createNestedObject("iot");
+    _iot["TSwrite"] = charts.TS_writeKey; 
+    _iot["TShttp"] = charts.TS_httpKey;
+    _iot["TSuser"] = charts.TS_userKey;
+    _iot["TSchID"] = charts.TS_chID;
+    _iot["TSshow8"] = charts.TS_show8;
+    _iot["TSint"] = charts.TS_int;
+    _iot["TSon"] = charts.TS_on;
+    _iot["PMQhost"] = charts.P_MQTT_HOST;
+    _iot["PMQport"] = charts.P_MQTT_PORT;
+    _iot["PMQuser"] = charts.P_MQTT_USER;
+    _iot["PMQpass"] = charts.P_MQTT_PASS;
+    _iot["PMQqos"] = charts.P_MQTT_QoS;
+    _iot["PMQon"] = charts.P_MQTT_on;
+    _iot["PMQint"] = charts.P_MQTT_int;
+    _iot["TGon"]    = charts.TG_on;
+    _iot["TGtoken"] = charts.TG_token;
+    _iot["TGid"]    = charts.TG_id;
+    _iot["CLon"]    = charts.CL_on;
+    _iot["CLtoken"] = charts.CL_token;
+    _iot["CLint"]    = charts.CL_int;
 
     JsonArray& _hw = root.createNestedArray("hardware");
     _hw.add(String("V")+String(1));
@@ -802,7 +806,7 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_chart.containsKey("TSuser")) charts.TS_userKey = _chart["TSuser"].asString(); 
     if (_chart.containsKey("TSchID")) charts.TS_chID = _chart["TSchID"].asString();
     if (_chart.containsKey("TSshow8")) charts.TS_show8 = _chart["TSshow8"];
-    if (_chart.containsKey("TSinterval")) charts.TS_int = _chart["TSinterval"];
+    if (_chart.containsKey("TSint")) charts.TS_int = _chart["TSint"];
     if (_chart.containsKey("TSon")) charts.TS_on = _chart["TSon"];
     if (_chart.containsKey("PMQhost")) charts.P_MQTT_HOST = _chart["PMQhost"].asString(); 
     if (_chart.containsKey("PMQport")) charts.P_MQTT_PORT = _chart["PMQport"];
@@ -810,9 +814,13 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_chart.containsKey("PMQpass")) charts.P_MQTT_PASS = _chart["PMQpass"].asString();
     if (_chart.containsKey("PMQqos")) charts.P_MQTT_QoS = _chart["PMQqos"]; 
     if (_chart.containsKey("PMQon")) charts.P_MQTT_on = _chart["PMQon"]; 
+    if (_chart.containsKey("PMQint")) charts.P_MQTT_int = _chart["PMQint"];
     if (_chart.containsKey("TGon"))  charts.TG_on = _chart["TGon"];
     if (_chart.containsKey("TGtoken"))  charts.TG_token = _chart["TGtoken"].asString();
     if (_chart.containsKey("TGid"))  charts.TG_id = _chart["TGid"].asString(); 
+    if (_chart.containsKey("CLon"))  charts.CL_on = _chart["CLon"];
+    if (_chart.containsKey("CLtoken"))  charts.CL_token = _chart["CLtoken"].asString();
+    if (_chart.containsKey("CLint"))  charts.CL_int = _chart["CLint"];
   
     if (!setconfig(eTHING,{})) return 0;    
     return 1;
@@ -951,7 +959,7 @@ public:
       if(!setPID(request, data)) request->send(200, "text/plain", "false");
         request->send(200, "text/plain", "true");
       
-    } else if (request->url() == SET_CHARTS) { 
+    } else if (request->url() == SET_IOT) { 
       if(!request->authenticate(www_username, www_password))
         return request->requestAuthentication();    
       if(!setChart(request, data)) request->send(200, "text/plain", "false");
@@ -963,7 +971,7 @@ public:
     if (request->method() == HTTP_GET) return false; 
     if (request->url() == SET_NETWORK || request->url() == SET_CHANNELS
       || request->url() == SET_SYSTEM || request->url() == SET_PITMASTER
-      || request->url() == SET_PID || request->url() == SET_CHARTS
+      || request->url() == SET_PID || request->url() == SET_IOT
       ) return true;
     return false;
   }

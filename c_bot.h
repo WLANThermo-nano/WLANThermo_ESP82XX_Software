@@ -50,7 +50,7 @@ void set_charts(bool init) {
    charts.P_MQTT_HOST = "192.168.2.1";
    charts.P_MQTT_PORT = 1883;
    charts.P_MQTT_int = INTERVALCOMMUNICATION/1000;
-   charts.TG_on = false;
+   charts.TG_on = 0;
    charts.TG_token = "";
    charts.TG_id = "";
 
@@ -275,25 +275,6 @@ bool sendNote(int check){
     }
 
     return true;
-  }
-}
-
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send Notification to Server
-bool sendMessage2(bool check){
-
-  if (check) {
-    if(tsalarmclient) return false;                 //client already exists
-
-    tsalarmclient = new AsyncClient();
-    if(!tsalarmclient)  return false;               //could not allocate client
-
-    return true;                                    // Nachricht kann gesendet werden
-
-  } else {
-    
-    
   }
 }
 

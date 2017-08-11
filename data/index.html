@@ -1812,7 +1812,7 @@
 		<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
 		<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
 		<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li>
-		<li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">Thingspeak</a></li>
+		<li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">IoT</a></li>
 		<li id="menuNotification" class="pure-menu-item" style="display:none"><a href="javascript:showPushNotification()" class="pure-menu-link">Push Notification</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>
@@ -2264,7 +2264,7 @@
 		<div id="thingspeak" class="content" style="display:none">
 			<div class="pure-button-group footer_buttons" role="group">
 				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
-				<button class="pure-button pure-button-disabled">Thingspeak</button>
+				<button class="pure-button pure-button-disabled">IoT</button>
 				<button class="pure-button" onclick="setThingspeak()">Speichern</button>
 			</div>
 			<h3 class="headtitle">Thingspeak</h3>
@@ -2317,29 +2317,87 @@
 								<input id="PMQon" type="checkbox" checked="checked"/><i class="helper"></i>Private MQTT aktivieren
 							  </label>
 							</div>
-							<div class="form-group">
-							  <input type="text" id="PMQhost" maxlength="26" required="required"/>
-							  <label class="control-label" for="input">Private MQTT Host</label><i class="bar"></i>
+							<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
+								<tr>
+								  <td>
+									<div class="form-group">
+										<input type="text" id="PMQhost" maxlength="26" required="required"/>
+										<label class="control-label" for="input">MQTT Host</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>
+									<div class="form-group">
+										<input type="text" id="PMQport" maxlength="26" required="required"/>
+										<label class="control-label" for="input">MQTT Port</label><i class="bar"></i>
+									</div>
+								  </td>
+								</tr>
+								<tr>
+								  <td>
+									<div class="form-group">
+										<input type="text" id="PMQuser" maxlength="26" required="required"/>
+										<label class="control-label" for="input">MQTT User</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>
+									<div class="form-group">
+										<input type="text" id="PMQpass" maxlength="26" required="required"/>
+										<label class="control-label" for="input">MQTT Password</label><i class="bar"></i>
+									</div>
+								  </td>
+								</tr>
+								<tr>
+								  <td>
+									<div class="form-group">
+									  <select id="PMQinterval">
+										<option value="10">10 Sekunden</option>
+										<option value="30">30 Sekunden</option>
+										<option value="60">1 Minute</option>
+										<option value="120">2 Minuten</option>
+										<option value="300">5 Minuten</option>
+									  </select>
+									  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>	
+									<div class="form-group">
+									  <select id="PMQqos">
+										<option value="0">0</option>
+										<option value="1">1</option>
+										<option value="2">2</option>
+									  </select>
+									  <label class="control-label" for="select">QoS</label><i class="bar"></i>
+									</div>
+								  </td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</div>
+			</div>
+			<h3 class="headtitle">NANO Cloud</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="checkbox">
+							  <label>
+								<input id="CLon" type="checkbox" checked="checked"/><i class="helper"></i>Nano Cloud aktivieren
+							  </label>
 							</div>
 							<div class="form-group">
-							  <input type="text" id="PMQport" maxlength="26" required="required"/>
-							  <label class="control-label" for="input">Private MQTT Port</label><i class="bar"></i>
+							  <input type="text" id="CLtoken" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Cloud Token</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
-							  <input type="text" id="PMQuser" maxlength="26" required="required"/>
-							  <label class="control-label" for="input">Private MQTT User</label><i class="bar"></i>
-							</div>
-							<div class="form-group">
-							  <input type="text" id="PMQpass" maxlength="26" required="required"/>
-							  <label class="control-label" for="input">Private MQTT Password</label><i class="bar"></i>
-							</div>
-							<div class="form-group">
-							  <select id="PMQqos">
-								<option value="0">0</option>
-								<option value="1">1</option>
-								<option value="2">2</option>
+							  <select id="CLinterval">
+								<option value="15">15 Sekunden</option>
+								<option value="30">30 Sekunden</option>
+								<option value="60">1 Minute</option>
+								<option value="120">2 Minuten</option>
+								<option value="300">5 Minuten</option>
 							  </select>
-							  <label class="control-label" for="select">QoS</label><i class="bar"></i>
+							  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
 							</div>
 						</form>
 					</div>
@@ -2495,18 +2553,22 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jr = JSON.parse(response);
-			byId('TSon').checked = jr.charts.TSon;
-			byId('TSwrite').value = jr.charts.TSwrite;
-			byId('TShttp').value = jr.charts.TShttp;
-			byId('TSchID').value = jr.charts.TSchID;
-			byId('TSinterval').value = jr.charts.TSinterval;
-			byId('TSshow8').checked = jr.charts.TSshow8;
-			byId('PMQon').checked = jr.charts.PMQon;
-			byId('PMQhost').value = jr.charts.PMQhost;
-			byId('PMQport').value = jr.charts.PMQport;
-			byId('PMQuser').value = jr.charts.PMQuser;
-			byId('PMQpass').value = jr.charts.PMQpass;
-			byId('PMQqos').value = jr.charts.PMQqos;
+			byId('TSon').checked = jr.iot.TSon;
+			byId('TSwrite').value = jr.iot.TSwrite;
+			byId('TShttp').value = jr.iot.TShttp;
+			byId('TSchID').value = jr.iot.TSchID;
+			byId('TSinterval').value = jr.iot.TSint;
+			byId('TSshow8').checked = jr.iot.TSshow8;
+			byId('PMQon').checked = jr.iot.PMQon;
+			byId('PMQhost').value = jr.iot.PMQhost;
+			byId('PMQport').value = jr.iot.PMQport;
+			byId('PMQuser').value = jr.iot.PMQuser;
+			byId('PMQpass').value = jr.iot.PMQpass;
+			byId('PMQqos').value = jr.iot.PMQqos;
+			byId('PMQinterval').value = jr.iot.PMQint;
+			byId('CLon').checked = jr.iot.CLon;
+			byId('CLtoken').value = jr.iot.CLtoken;
+			byId('CLinterval').value = jr.iot.CLint;
 			byId('thingspeak').style.display = "inline";
 			showLoader('false');
 		})
@@ -2517,22 +2579,26 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
 			jr = JSON.parse(response);
-			jr.charts.TSon = byId('TSon').checked;
-			jr.charts.TSwrite = byId('TSwrite').value;
-			jr.charts.TShttp = byId('TShttp').value;
-			jr.charts.TSchID = byId('TSchID').value;
-			jr.charts.TSinterval = byId('TSinterval').value;
-			jr.charts.TSshow8 = byId('TSshow8').checked;
-			jr.charts.PMQon = byId('PMQon').checked;
-			jr.charts.PMQhost = byId('PMQhost').value;
-			jr.charts.PMQport = byId('PMQport').value;
-			jr.charts.PMQuser = byId('PMQuser').value;
-			jr.charts.PMQpass = byId('PMQpass').value;
-			jr.charts.PMQqos = byId('PMQqos').value;
-			var data = JSON.stringify(jr.charts);
+			jr.iot.TSon = byId('TSon').checked;
+			jr.iot.TSwrite = byId('TSwrite').value;
+			jr.iot.TShttp = byId('TShttp').value;
+			jr.iot.TSchID = byId('TSchID').value;
+			jr.iot.TSint = byId('TSinterval').value;
+			jr.iot.TSshow8 = byId('TSshow8').checked;
+			jr.iot.PMQon = byId('PMQon').checked;
+			jr.iot.PMQhost = byId('PMQhost').value;
+			jr.iot.PMQport = byId('PMQport').value;
+			jr.iot.PMQuser = byId('PMQuser').value;
+			jr.iot.PMQpass = byId('PMQpass').value;
+			jr.iot.PMQqos = byId('PMQqos').value;
+			jr.iot.PMQint = byId('PMQinterval').value;
+			jr.iot.CLon = byId('CLon').checked;
+			jr.iot.CLtoken = byId('CLtoken').value;
+			jr.iot.CLint = byId('CLinterval').value;
+			var data = JSON.stringify(jr.iot);
 			//alert(data);
 			showLoader('true');
-			loadJSON('setcharts', data, '60000', function (response) {
+			loadJSON('setIoT', data, '60000', function (response) {
 				showIndex();
 				showLoader('false');
 			})		
@@ -2566,7 +2632,7 @@
 			var data = JSON.stringify(jr.charts);
 			//alert(data);
 			showLoader('true');
-			loadJSON('setcharts', data, '60000', function (response) {
+			loadJSON('setIoT', data, '60000', function (response) {
 				showIndex();
 				showLoader('false');
 			})		

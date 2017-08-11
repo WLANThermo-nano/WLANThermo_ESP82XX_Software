@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.6.9"
+#define FIRMWAREVERSION "v0.7.0"
 #define APIVERSION      "v1"
 
 // CHANNELS
@@ -337,7 +337,7 @@ struct Charts {
    byte P_MQTT_QoS;             // PRIVATE MQTT BROKER QoS
    bool P_MQTT_on;              // PRIVATE MQTT BROKER ON/OFF
    int P_MQTT_int;              // PRIVATE MQTT BROKER IN SEC
-   bool TG_on;                  // TELEGRAM NOTIFICATION ON/OFF
+   int TG_on;                   // TELEGRAM NOTIFICATION SERVICE
    String TG_token;             // TELEGRAM API TOKEN
    String TG_id;                // TELEGRAM CHAT ID 
    bool CL_on;                  // NANO CLOUD ON / OFF
@@ -413,10 +413,12 @@ const char* www_password = "admin";
 unsigned long lastUpdateBatteryMode;
 unsigned long lastUpdateSensor;
 unsigned long lastUpdatePiepser;
-unsigned long lastUpdateCommunication;
 unsigned long lastUpdateDatalog;
 unsigned long lastFlashInWork;
 unsigned long lastUpdateRSSI;
+unsigned long lastUpdateThingspeak;
+unsigned long lastUpdateCloud;
+unsigned long lastUpdateMQTT;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -583,22 +585,33 @@ void timer_alarm() {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Charts Timer
 void timer_charts() {
-  
-  if (millis() - lastUpdateCommunication > (charts.TS_int * 1000)) {
 
-    if (!isAP && sys.update == 0) {
-      if (charts.TS_on) {
-        if (charts.TS_writeKey != "" && charts.TS_chID != "") sendDataTS();
-      }
-      if (charts.P_MQTT_on) {
-        sendpmqtt();
-      }
-      sendServerLog();
-      sendDataCloud();
-      //Serial.println(serverLog());
+  // THINGSPEAK
+  if (millis() - lastUpdateThingspeak > (charts.TS_int * 1000)) {
+
+    if (!isAP && sys.update == 0 && charts.TS_on) {
+      if (charts.TS_writeKey != "" && charts.TS_chID != "") sendDataTS();
     }
-    lastUpdateCommunication = millis();
+    lastUpdateThingspeak = millis();
   }
+
+  // PRIVATE MQTT
+  if (millis() - lastUpdateMQTT > (charts.P_MQTT_int * 1000)) {
+
+    if (!isAP && sys.update == 0 && charts.P_MQTT_on) sendpmqtt();
+    lastUpdateMQTT = millis();
+  }
+
+  // NANO CLOUD
+  if (millis() - lastUpdateCloud > (charts.CL_int * 1000)) {
+
+    if (!isAP && sys.update == 0 && charts.CL_on) {
+        sendServerLog();
+        sendDataCloud();
+    }
+    lastUpdateCloud = millis();
+  }
+  
 }
 
 
@@ -837,7 +850,7 @@ String createParameter(int para) {
 
     case NOTESERVICE:
       command += F("&service=");
-      command += "telegram";
+      command += charts.TG_on;
       break;
 
     case THINGHTTPKEY:

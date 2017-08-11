@@ -240,7 +240,7 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
             if (ch[i].temp > ch[i].max) notification.limit = 1;
             else if (ch[i].temp < ch[i].min) notification.limit = 0;
             if (charts.TS_httpKey != "") sendNote(1);  // Notification per Thingspeak
-            else if (charts.TG_on) sendNote(2);           // Notification per Server
+            else if (charts.TG_on > 0) sendNote(2);           // Notification per Server
           } else sendM = false;       // kann noch nicht gesendet werden, also warten
         }          // kein Internet, also weiter
 
