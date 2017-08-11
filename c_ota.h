@@ -114,12 +114,11 @@ void do_http_update() {
     if (sys.getupdate != "false") {
 
       // UPDATE Adresse
-      String adress = F("http://nano.wlanthermo.de/checkUpdate.php?device=nano&serial=");
-      adress += String(ESP.getChipId(), HEX);
-      adress += F("&hw_version=v");
-      adress += String(sys.hwversion);
-      adress += F("&sw_version=");
-      adress += FIRMWAREVERSION;
+      String adress = F("http://nano.wlanthermo.de/checkUpdate.php?");
+      adress += createParameter(SERIALNUMBER);
+      adress += createParameter(DEVICE);
+      adress += createParameter(HARDWAREVS);
+      adress += createParameter(SOFTWAREVS);
 
       // UPDATE 1x Wiederholen falls schief gelaufen
       if (sys.updatecount < 2) sys.updatecount++;   // eine Wiederholung
@@ -247,22 +246,14 @@ void check_http_update() {
         }, NULL);
 
         //send the request
-        String adress = F("GET /checkUpdate.php?device=nano&serial=");
-        adress += String(ESP.getChipId(), HEX);
-        adress += F("&hw_version=v");
-        adress += String(sys.hwversion);
-        adress += F("&sw_version=");
-        adress += FIRMWAREVERSION;
-        adress += F(" HTTP/1.1\n");
-        adress += F("User-Agent: ESP8266\n");    // sonst Hinweis im Body
-        adress += F("Host: nano.wlanthermo.de\n\n");
-
         DPRINTPLN("[INFO]\tCheck HTTP Update");
+        String adress = createCommand(GETMETH,CHECKUPDATE,CHECKUPDATELINK,NANOSERVER,0);
         client->write(adress.c_str());
+        //Serial.println(adress);
     
       }, NULL);
 
-      if(!updateClient->connect("nano.wlanthermo.de", 80)){
+      if(!updateClient->connect(NANOSERVER, 80)){
         Serial.println("[INFO]\tUpdate Client Connect Fail");
         AsyncClient * client = updateClient;
         updateClient = NULL;

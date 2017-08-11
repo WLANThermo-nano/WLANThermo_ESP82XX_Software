@@ -159,6 +159,7 @@ class NanoWebHandler: public AsyncWebHandler {
     system["charge"] = !battery.charge;
     system["rssi"] = rssi;
     system["unit"] = temp_unit;
+    //system["sn"] = String(ESP.getChipId(), HEX);
 
     JsonArray& channel = root.createNestedArray("channel");
 

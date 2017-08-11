@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.6.8"
+#define FIRMWAREVERSION "v0.6.9"
 #define APIVERSION      "v1"
 
 // CHANNELS
@@ -108,7 +108,7 @@ int co = 32;
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
-#define EEPROM_SIZE 2048            // EEPROM SIZE
+#define EEPROM_SIZE 2176            // EEPROM SIZE
 #define EEWIFIBEGIN         0
 #define EEWIFI              300
 #define EESYSTEMBEGIN       EEWIFIBEGIN+EEWIFI
@@ -116,7 +116,7 @@ int co = 32;
 #define EECHANNELBEGIN      EESYSTEMBEGIN+EESYSTEM
 #define EECHANNEL           500
 #define EETHINGBEGIN        EECHANNELBEGIN+EECHANNEL
-#define EETHING             290
+#define EETHING             420
 #define EEPITMASTERBEGIN    EETHINGBEGIN+EETHING
 #define EEPITMASTER         700
 
@@ -336,9 +336,13 @@ struct Charts {
    String P_MQTT_PASS;          // PRIVATE MQTT BROKER PASSWD
    byte P_MQTT_QoS;             // PRIVATE MQTT BROKER QoS
    bool P_MQTT_on;              // PRIVATE MQTT BROKER ON/OFF
-   bool TG_on;            // TELEGRAM NOTIFICATION ON/OFF
-   String TG_token;       // TELEGRAM API TOKEN
-   String TG_id;          // TELEGRAM CHAT ID 
+   int P_MQTT_int;              // PRIVATE MQTT BROKER IN SEC
+   bool TG_on;                  // TELEGRAM NOTIFICATION ON/OFF
+   String TG_token;             // TELEGRAM API TOKEN
+   String TG_id;                // TELEGRAM CHAT ID 
+   bool CL_on;                  // NANO CLOUD ON / OFF
+   String CL_token;             // NANO CLOUD TOKEN
+   int CL_int;                  // NANO CLOUD INTERVALL
 };
 
 Charts charts;
@@ -505,14 +509,15 @@ void stopautotune();
 
 // BOT
 void set_charts(bool init);
-bool sendMessage(bool check);
-bool sendMessage2(bool check);
-void sendTS();
+String collectData();
+String createNote(bool ts);
+bool sendNote(int check);
 void sendSettings();
 void sendDataTS();
 
 void sendServerLog();
 String serverLog();
+void sendDataCloud();
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
@@ -589,6 +594,7 @@ void timer_charts() {
         sendpmqtt();
       }
       sendServerLog();
+      sendDataCloud();
       //Serial.println(serverLog());
     }
     lastUpdateCommunication = millis();
@@ -689,7 +695,6 @@ String printDigits(int digits){
 }
 
 String digitalClockDisplay(time_t t){
-
   String zeit;
   zeit += printDigits(hour(t))+":";
   zeit += printDigits(minute(t))+":";
@@ -699,22 +704,6 @@ String digitalClockDisplay(time_t t){
   zeit += String(year(t));
   return zeit;
 }
-
-
-String newDate(time_t t){
-
-  String zeit;
-  zeit += "new Date(";
-  zeit += String(year(t))+",";
-  zeit += String(month(t)-1)+",";
-  zeit += String(day(t))+",";
-  zeit += String(hour(t))+",";
-  zeit += String(minute(t))+",";
-  zeit += String(second(t))+")";
-  
-  return zeit;
-}
-
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // SYSTEM TIME based on UTC
@@ -802,9 +791,151 @@ String getMacAddress()  {
 }
 
 
+#define SAVEDATALINK "/cloud/saveData.php"
+#define SAVELOGSLINK "/saveLogs.php"
+#define SENDTSLINK "/update.json"
+#define THINGSPEAKSERVER "api.thingspeak.com"
+#define NANOSERVER "nano.wlanthermo.de"
+#define SENDNOTELINK "/sendTelegram.php"
+#define THINGHTTPLINK "/apps/thinghttp/send_request"
+#define CHECKUPDATELINK "/checkUpdate.php"
+
+enum {SERIALNUMBER, APITOKEN, TSWRITEKEY, NOTETOKEN, NOTEID, NOTESERVICE,
+      THINGHTTPKEY, DEVICE, HARDWAREVS, SOFTWAREVS};  // Parameters
+enum {NOPARA, SAVEDATA, SENDTS, SENDNOTE, THINGHTTP, CHECKUPDATE};                       // Config
+enum {GETMETH, POSTMETH};                                                   // Method
+
+String createParameter(int para) {
+
+  String command;
+  switch (para) {
+
+    case SERIALNUMBER:
+      command += F("serial=");
+      command += String(ESP.getChipId(), HEX);
+      break;
+
+    case APITOKEN:
+      command += F("&api_token=");
+      command += charts.CL_token;
+      break;
+
+    case TSWRITEKEY:
+      command += F("api_key=");
+      command += charts.TS_writeKey;
+      break;
+
+    case NOTETOKEN:
+      command += F("&token=");
+      command += charts.TG_token;
+      break;
+
+    case NOTEID:
+      command += F("&chatID=");
+      command += charts.TG_id;
+      break;
+
+    case NOTESERVICE:
+      command += F("&service=");
+      command += "telegram";
+      break;
+
+    case THINGHTTPKEY:
+      command += F("api_key=");
+      command += charts.TS_httpKey;
+      break;
+
+    case DEVICE:
+      command += F("&device=nano");
+      break;
+
+    case HARDWAREVS:
+      command += F("&hw_version=v");
+      command += String(sys.hwversion);
+      break;
+
+    case SOFTWAREVS:
+      command += F("&sw_version=");
+      command += FIRMWAREVERSION;
+      break;
+  }
+
+  return command;
+}
 
 
+String createCommand(bool meth, int para, const char * link, const char * host, int content) {
+
+  String command;
+  command += meth ? F("POST ") : F("GET ");
+  command += String(link);
+  command += (para != NOPARA) ? "?" : "";
+
+  switch (para) {
+    
+    case SAVEDATA:
+      command += createParameter(SERIALNUMBER);
+      command += createParameter(APITOKEN);
+      break;
+
+    case SENDTS:
+      command += createParameter(TSWRITEKEY);
+      command += collectData();
+      break;
+
+    case SENDNOTE:
+      command += createParameter(SERIALNUMBER);
+      command += createParameter(NOTETOKEN);
+      command += createParameter(NOTEID);
+      command += F("&lang=de");
+      command += createParameter(NOTESERVICE);
+      command += createNote(0);
+      break;
+
+    case THINGHTTP:
+      command += createParameter(THINGHTTPKEY);
+      command += createNote(1);
+      break;
+
+    case CHECKUPDATE:
+      command += createParameter(SERIALNUMBER);
+      command += createParameter(DEVICE);
+      command += createParameter(HARDWAREVS);
+      command += createParameter(SOFTWAREVS);            
+      break;
+
+    default:
+    break;
+      
+  }
+
+  command += F(" HTTP/1.1\n");
+
+  if (content > 0) {
+    command += F("Content-Type: application/json\n");
+    command += F("Content-Length: ");
+    command += String(content);
+    command += F("\n");
+  }
+
+  command += F("User-Agent: ESP8266\n");
+  command += F("Host: ");
+  command += String(host);
+  command += F("\n\n");
+
+  return  command;
+}
 
 
-
+void serverAnswer(String payload, size_t len) {
+ 
+  if (payload.indexOf("200 OK") > -1) {
+    DPRINTP("[HTTP]\tServer: "); 
+    int index = payload.indexOf("\r\n\r\n");       // Trennung von Header und Body
+    payload = payload.substring(index+7,len);      // Beginn des Body
+    index = payload.indexOf("\r");                 // Ende Versionsnummer
+    payload = payload.substring(0,index);
+    DPRINTLN(payload);
+  }
+}
 

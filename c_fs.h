@@ -139,7 +139,7 @@ bool loadconfig(byte count) {
     }
     break;
   
-    case 2:     // THINGSPEAK
+    case 2:     // IOT
     { 
       std::unique_ptr<char[]> buf(new char[EETHING]);
       readEE(buf.get(),EETHING, EETHINGBEGIN);
@@ -173,11 +173,19 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("PMQon"))  charts.P_MQTT_on = json["PMQon"];
       else return false;
+      if (json.containsKey("PMQint"))  charts.P_MQTT_int = json["PMQint"];
+      else return false;
       if (json.containsKey("TGon"))  charts.TG_on = json["TGon"];
       else return false;
       if (json.containsKey("TGtoken"))  charts.TG_token = json["TGtoken"].asString();
       else return false;
       if (json.containsKey("TGid"))  charts.TG_id = json["TGid"].asString(); 
+      else return false;
+      if (json.containsKey("CLon")) charts.CL_on = json["CLon"];
+      else return false;
+      if (json.containsKey("CLtoken")) charts.CL_token = json["CLtoken"].asString();
+      else return false;
+      if (json.containsKey("CLint")) charts.CL_int = json["CLint"];
       else return false;
     }
     break;
@@ -344,7 +352,7 @@ bool setconfig(byte count, const char* data[2]) {
     }
     break;
     
-    case 2:         //THING
+    case 2:         //IOT
     {
       JsonObject& json = jsonBuffer.createObject();
       
@@ -361,9 +369,13 @@ bool setconfig(byte count, const char* data[2]) {
       json["PMQpass"]  = charts.P_MQTT_PASS;
       json["PMQqos"]   = charts.P_MQTT_QoS;
       json["PMQon"]   = charts.P_MQTT_on;
+      json["PMQint"]   = charts.P_MQTT_int;
       json["TGon"]    = charts.TG_on;
       json["TGtoken"] = charts.TG_token;
       json["TGid"]    = charts.TG_id;
+      json["CLon"]    = charts.CL_on;
+      json["CLtoken"] = charts.CL_token;
+      json["CLint"]   = charts.CL_int;
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {

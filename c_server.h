@@ -92,8 +92,8 @@ void getRequest() {
 
 
 
-
-
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//
 String serverLog() {
 
   DynamicJsonBuffer jsonBuffer;
@@ -162,53 +162,6 @@ String serverLog() {
 }
 
 
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-String handleServerLog(AsyncWebServerRequest *request, byte www) {
-
-  AsyncJsonResponse * response = new AsyncJsonResponse();
-  response->addHeader("Server","ESP Async Web Server");
-  JsonObject& root = response->getRoot();
-
-  root["SN"] = String(ESP.getChipId(), HEX);
-
-  JsonArray& _logs = root.createNestedArray("logs");
-
-  if (log_count > 9) {
-    
-    for (int i = 0; i < 10; i++) {
-      if (mylog[i].modification) {    // nur bei Aenderung wird das Log benutzt
-        JsonObject& _log = _logs.createNestedObject();
-        _log["time"] = mylog[i].timestamp;
-        _log["battery"] = mylog[i].battery;
-        _log["pit_set"] = (mylog[i].soll==NULL)?NULL:mylog[i].soll/10.0;
-        _log["pit_value"] = mylog[i].pitmaster; 
-        _log["ch1"] = (mylog[i].tem[0]==NULL)?NULL:mylog[i].tem[0]/10.0;
-        _log["ch2"] = (mylog[i].tem[1]==NULL)?NULL:mylog[i].tem[1]/10.0;
-        _log["ch3"] = (mylog[i].tem[2]==NULL)?NULL:mylog[i].tem[2]/10.0;
-        _log["ch4"] = (mylog[i].tem[3]==NULL)?NULL:mylog[i].tem[3]/10.0;
-        _log["ch5"] = (mylog[i].tem[4]==NULL)?NULL:mylog[i].tem[4]/10.0;
-        _log["ch6"] = (mylog[i].tem[5]==NULL)?NULL:mylog[i].tem[5]/10.0;
-        _log["ch7"] = (mylog[i].tem[6]==NULL)?NULL:mylog[i].tem[6]/10.0;
-        _log["ch8"] = (mylog[i].tem[7]==NULL)?NULL:mylog[i].tem[7]/10.0;
-      } 
-    }
-  }
- 
-  String jsonStr;
-    
-  if (www == 1) {
-    response->setLength();
-    request->send(response);
-  } else if (www == 0) {
-    root.printTo(Serial);
-  } else  root.printTo(jsonStr);
-  
-  return jsonStr;
-}
-
-
-
 static AsyncClient * LogClient = NULL;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -237,34 +190,18 @@ void sendServerLog() {
 
    client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
     String payload((char*)data);
-    Serial.println("[INFO]\tServer Response");
-    Serial.println(payload);
+    serverAnswer(payload, len);
    }, NULL);
 
    //send the request
    DPRINTPLN("[INFO]\tSend Log to Server:");
 
-    String message = serverLog();   
-    //send the request
-    String adress = F("POST /saveLogs.php");
-    adress += F(" HTTP/1.1\n");
-    
-    adress += F("Content-Type: application/json\n");
-    adress += F("Content-Length: ");
-    adress += String(message.length());
-    adress += "\n";
-    adress += F("Host: nano.wlanthermo.de\n\n");
-
-    adress += message;
-    client->write(adress.c_str());
-
-    //String message = handleServerLog(NULL, 2);
-    
-    //client->write(message.c_str());
-
-    Serial.println(adress);
-    
-    
+   String message = serverLog(); 
+   String adress = createCommand(POSTMETH,NOPARA,SAVELOGSLINK,NANOSERVER,message.length());
+   adress += message;
+   client->write(adress.c_str());
+   //Serial.println(adress);
+      
  }, NULL);
 
  if(!LogClient->connect("nano.wlanthermo.de", 80)){
@@ -276,8 +213,111 @@ void sendServerLog() {
 }
 
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//
+String cloudData() {
+
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  JsonObject& system = root.createNestedObject("system");
+
+    system["time"] = String(now());
+    system["utc"] = sys.timeZone;
+    system["soc"] = battery.percentage;
+    system["charge"] = !battery.charge;
+    system["rssi"] = rssi;
+    system["unit"] = temp_unit;
+    //system["sn"] = String(ESP.getChipId(), HEX);
+
+    JsonArray& channel = root.createNestedArray("channel");
+
+    for (int i = 0; i < CHANNELS; i++) {
+    JsonObject& data = channel.createNestedObject();
+      data["number"]= i+1;
+      data["name"]  = ch[i].name;
+      data["typ"]   = ch[i].typ;
+      data["temp"]  = limit_float(ch[i].temp, i);
+      data["min"]   = ch[i].min;
+      data["max"]   = ch[i].max;
+      data["alarm"] = ch[i].alarm;
+      data["color"] = ch[i].color;
+    }
+  
+    JsonObject& master = root.createNestedObject("pitmaster");
+
+    master["channel"] = pitmaster.channel+1;
+    master["pid"] = pitmaster.pid;
+    master["value"] = (int)pitmaster.value;
+    master["set"] = pitmaster.set;
+    if (pitmaster.active)
+      if (autotune.initialized)  master["typ"] = "autotune";
+      else if (pitmaster.manual) master["typ"] = "manual";
+      else  master["typ"] = "auto";
+    else master["typ"] = "off";  
+
+    String jsonStr;
+    root.printTo(jsonStr);
+  
+    return jsonStr;
+  
+}
 
 
+static AsyncClient * DataClient = NULL;
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+void sendDataCloud() {
+
+  if(DataClient) return;                 //client already exists
+
+  DataClient = new AsyncClient();
+  if(!DataClient)  return;               //could not allocate client
+
+  DataClient->onError([](void * arg, AsyncClient * client, int error){
+    LogClient = NULL;
+    delete client;
+  }, NULL);
+
+  DataClient->onConnect([](void * arg, AsyncClient * client){
+
+   DataClient->onError(NULL, NULL);
+
+   client->onDisconnect([](void * arg, AsyncClient * c){
+    DPRINTPLN("[INFO]\tDisconnect Data Cloud Client");
+    DataClient = NULL;
+    delete c;
+   }, NULL);
+
+   client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
+    String payload((char*)data);
+    serverAnswer(payload, len);
+   }, NULL);
+
+   //send the request
+   DPRINTPLN("[INFO]\tSend Data to Cloud:");
+   String message = cloudData();   
+   String adress = createCommand(GETMETH,SAVEDATA,SAVEDATALINK,NANOSERVER,message.length());
+   adress += message;
+   client->write(adress.c_str());
+   //Serial.println(adress);
+      
+  }, NULL);
+
+  if(!DataClient->connect("nano.wlanthermo.de", 80)){
+   Serial.println("[INFO]\Data Client Connect Fail");
+   AsyncClient * client = DataClient;
+   DataClient = NULL;
+   delete client;
+  }    
+}
+
+
+
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
 /*
 int dothis;
 int histthis;
@@ -466,29 +506,21 @@ void server_setup() {
   }).setFilter(ON_STA_FILTER);
     
 
-    /*
-    // REQUEST: /log
-    server.on("/log", HTTP_GET, [](AsyncWebServerRequest *request) { 
-      handleLog(request, true);
-    });
-*/
 /*
     server.on("/plot", HTTP_GET, [](AsyncWebServerRequest *request) { 
       handlePlot(request, true);
     });
   */
 
-  server.on("/testlog",[](AsyncWebServerRequest *request){
-    handleServerLog(request, true);
-  });
       
-  server.on("/fs",[](AsyncWebServerRequest *request){
+  server.on("/info",[](AsyncWebServerRequest *request){
     FSInfo fs_info;
     SPIFFS.info(fs_info);
     request->send(200,"","totalBytes:" +String(fs_info.totalBytes) +
       " usedBytes:" + String(fs_info.usedBytes)+" blockSize:" + String(fs_info.blockSize)
       +" pageSize:" + String(fs_info.pageSize)
-      +" heap:"+String(ESP.getFreeHeap()));
+      +" heap:"+String(ESP.getFreeHeap())
+      +" serial:"+String(ESP.getChipId(), HEX));
   });
 
   server.on("/god",[](AsyncWebServerRequest *request){

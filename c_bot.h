@@ -22,12 +22,9 @@
  ****************************************************/
 
 
-//WiFiClient THINGclient;
-#define SERVER1 "api.thingspeak.com"
-
 // see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
 static AsyncClient * tssettingclient = NULL;
-static AsyncClient * tsdataclient = NULL;
+static AsyncClient * tsdataclient = NULL;           // Telegram Channel Data
 static AsyncClient * tsalarmclient = NULL;
 
 
@@ -52,12 +49,53 @@ void set_charts(bool init) {
    charts.P_MQTT_on = false;
    charts.P_MQTT_HOST = "192.168.2.1";
    charts.P_MQTT_PORT = 1883;
+   charts.P_MQTT_int = INTERVALCOMMUNICATION/1000;
    charts.TG_on = false;
    charts.TG_token = "";
    charts.TG_id = "";
+
+   charts.CL_on = false;
+   charts.CL_token = "12345678";
+   charts.CL_int = INTERVALCOMMUNICATION/1000;
       
 }
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Collect Data for Sending to Thingspeak
+String collectData() {
+  
+  String postStr;
+  for (int i = 0; i < 7; i++)  {
+    if (ch[i].temp != INACTIVEVALUE) {
+      postStr += "&";
+      postStr += String(i+1);
+      postStr += "=";
+      postStr += String(ch[i].temp,1);
+    }
+  }
+  if (charts.TS_show8) {
+    postStr +="&8=";  
+    postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
+  } else if (ch[7].temp != INACTIVEVALUE) {
+    postStr +="&8="; 
+    postStr += String(ch[7].temp,1);
+  }
+  return postStr;
+}
+
+
+String createNote(bool ts) {
+  
+  String postStr;
+  postStr += (ts)?F("&message="):F("&msg=");
+  if (ts) postStr += (notification.limit)?F("hoch"):F("niedrig"); 
+  else postStr += (notification.limit)?F("up"):F("down");
+  postStr += "&ch=";
+  postStr += String(notification.ch);
+
+  return postStr;
+}
   
 /*
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -151,40 +189,14 @@ void sendDataTS(){
     }, NULL);
 
     //send the request
-    String postStr;
-
-    for (int i = 0; i < 7; i++)  {
-      if (ch[i].temp != INACTIVEVALUE) {
-        postStr += "&";
-        postStr += String(i+1);
-        postStr += "=";
-        postStr += String(ch[i].temp,1);
-      }
-    }
-
-    if (charts.TS_show8) {
-      postStr +="&8=";  
-      postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
-    } else if (ch[7].temp != INACTIVEVALUE) {
-      postStr +="&8="; 
-      postStr += String(ch[7].temp,1);
-    }
-
-    AsyncWebServerRequest *request;
-    //postStr = "&status=";
-    //postStr += handleData(request, 2);
-    
-    String adress = F("POST /update.json?api_key=");
-    adress += charts.TS_writeKey;
-    adress += postStr;          // starts with &
-    adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
-
     DPRINTPLN("[INFO]\tSend to Thingspeak"); 
+    String adress = createCommand(POSTMETH,SENDTS,SENDTSLINK,THINGSPEAKSERVER,0);
     client->write(adress.c_str());
+    //Serial.println(adress);
         
   }, NULL);
 
-  if(!tsdataclient->connect(SERVER1, 80)){
+  if(!tsdataclient->connect(THINGSPEAKSERVER, 80)){
     Serial.println("[INFO]\tThingspeak Server Connect Fail");
     AsyncClient * client = tsdataclient;
     tsdataclient = NULL;
@@ -193,25 +205,25 @@ void sendDataTS(){
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send Temp-Data to Thingspeak
-bool sendMessage(bool check){
+// Send Notification to Thingspeak
+bool sendNote(int check){
 
-  if (check) {
+  if (check == 0) {
     if(tsalarmclient) return false;                 //client already exists
 
     tsalarmclient = new AsyncClient();
     if(!tsalarmclient)  return false;               //could not allocate client
 
-    return true;                                    // Nachricht kann gesendet werden
-
-  } else {
-    
     tsalarmclient->onError([](void * arg, AsyncClient * client, int error){
       DPRINTPLN("[INFO]\tThingspeak Alarm Client Connect Error");
       tsalarmclient = NULL;
       delete client;
     }, NULL);
 
+    return true;                                    // Nachricht kann gesendet werden
+
+  } else if (check == 1) {            // Senden ueber Thingspeak
+    
     tsalarmclient->onConnect([](void * arg, AsyncClient * client){
     
       tsalarmclient->onError(NULL, NULL);
@@ -222,28 +234,41 @@ bool sendMessage(bool check){
       }, NULL);
 
       //send the request
-
-      String postStr = "&message=";
-    
-      if (notification.limit) 
-        postStr += "hoch";
-      else 
-        postStr += "niedrig";
-      postStr += "&ch=";
-      postStr += String(notification.ch);
-    
-      String adress = F("GET /apps/thinghttp/send_request?api_key=");
-      adress += charts.TS_httpKey;
-      adress += postStr;          // starts with &
-      adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
-
       DPRINTPLN("[INFO]\tSend Alarm to Thingspeak"); 
+      String adress = createCommand(GETMETH,THINGHTTP,THINGHTTPLINK,THINGSPEAKSERVER,0);
       client->write(adress.c_str());
-        
+      //Serial.println(adress);
     }, NULL);
 
-    if(!tsalarmclient->connect(SERVER1, 80)){
+    if(!tsalarmclient->connect(THINGSPEAKSERVER, 80)){
       Serial.println("[INFO]\tThingspeak Server Connect Fail");
+      AsyncClient * client = tsalarmclient;
+      tsalarmclient = NULL;
+      delete client;
+    }
+
+    return true;
+    
+  } else if (check == 2) {          // Senden ueber Server
+    
+    tsalarmclient->onConnect([](void * arg, AsyncClient * client){
+    
+      tsalarmclient->onError(NULL, NULL);
+
+      client->onDisconnect([](void * arg, AsyncClient * c){
+        tsalarmclient = NULL;
+        delete c;
+      }, NULL);
+
+      //send the request
+      DPRINTPLN("[INFO]\tSend Alarm to Server"); 
+      String adress = createCommand(GETMETH,SENDNOTE,SENDNOTELINK,NANOSERVER,0);
+      client->write(adress.c_str());
+      //Serial.println(adress);
+    }, NULL);
+
+    if(!tsalarmclient->connect(NANOSERVER, 80)){
+      Serial.println("[INFO]\tNotification Server Connect Fail");
       AsyncClient * client = tsalarmclient;
       tsalarmclient = NULL;
       delete client;
@@ -255,7 +280,7 @@ bool sendMessage(bool check){
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send Temp-Data to Thingspeak
+// Send Notification to Server
 bool sendMessage2(bool check){
 
   if (check) {
@@ -268,87 +293,10 @@ bool sendMessage2(bool check){
 
   } else {
     
-    tsalarmclient->onError([](void * arg, AsyncClient * client, int error){
-      DPRINTPLN("[INFO]\tNotification Connect Error");
-      tsalarmclient = NULL;
-      delete client;
-    }, NULL);
-
-    tsalarmclient->onConnect([](void * arg, AsyncClient * client){
     
-      tsalarmclient->onError(NULL, NULL);
-
-      client->onDisconnect([](void * arg, AsyncClient * c){
-        tsalarmclient = NULL;
-        delete c;
-      }, NULL);
-
-      //send the request
-
-      String postStr = "&msg=";
-    
-      if (notification.limit) 
-        postStr += "up";
-      else 
-        postStr += "down";
-      postStr += "&ch=";
-      postStr += String(notification.ch);
-    
-      String adress = F("GET /sendTelegram.php?serial=");
-      adress += String(ESP.getChipId(), HEX);
-      adress += F("&token=");
-      adress += charts.TG_token;
-      adress += F("&chatID=");
-      adress += charts.TG_id;
-      adress += F("&lang=de");
-      adress += F("&service=telegram");
-      
-      adress += postStr;          // starts with &
-      adress += F(" HTTP/1.1\nHost: nano.wlanthermo.de\n\n");
-
-      DPRINTPLN("[INFO]\tSend Notification"); 
-      client->write(adress.c_str());
-        
-    }, NULL);
-
-    if(!tsalarmclient->connect("nano.wlanthermo.de", 80)){
-      Serial.println("[INFO]\tNotification Server Connect Fail");
-      AsyncClient * client = tsalarmclient;
-      tsalarmclient = NULL;
-      delete client;
-    }
-
-    return true;
   }
 }
 
-/*
-  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  // Send Message to Telegram via Thingspeak
-  void sendMessage(int ch, int count) {
-
-    unsigned long vorher = millis();
-
-    // Sendedauer: ~120 ms
-    if (THINGclient.connect(SERVER1,80)) {
- 
-      String url = "/apps/thinghttp/send_request?api_key=";
-      url += charts.TS_httpKey;
-      url += "&message=";
-      if (count) url += "hoch";
-      else url += "niedrig";
-      url += "&ch=";
-      url += String(ch);
-    
-      THINGclient.print("GET " + url + " HTTP/1.1\r\n" + "Host: " + SERVER1 
-                        + "\r\n" + "Connection: close\r\n\r\n");
-  
-      DPRINTF("[INFO]\tSend to Thingspeak: %ums\r\n", millis()-vorher); 
-    }
-
-    THINGclient.stop(); 
-  }
-*/
 
 /*
 #include "include/ssl.h"
