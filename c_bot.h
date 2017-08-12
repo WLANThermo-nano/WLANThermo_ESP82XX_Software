@@ -55,7 +55,7 @@ void set_iot(bool init) {
    iot.TG_id = "";
 
    iot.CL_on = false;
-   iot.CL_token = "12345678";
+   iot.CL_token = (String) String(ESP.getChipId(), HEX) + String(now(), HEX) + String(random(256), HEX);
    iot.CL_int = INTERVALCOMMUNICATION/1000;
       
 }

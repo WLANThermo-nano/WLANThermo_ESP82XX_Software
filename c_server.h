@@ -535,6 +535,11 @@ void server_setup() {
     request->send(200, "text/plain", "true");
   });
 
+  server.on("/newtoken",[](AsyncWebServerRequest *request){
+    iot.CL_token = (String) String(ESP.getChipId(), HEX) + String(now(), HEX) + String(random(256), HEX);
+    setconfig(eTHING,{});
+    request->send(200, "text/plain", iot.CL_token);
+  });
   
 
   server.on("/setDC",[](AsyncWebServerRequest *request) { 

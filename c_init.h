@@ -351,7 +351,7 @@ IoT iot;
 struct Chart {
    bool on;                  // NANO CHART ON / OFF
    String token;             // NANO CHART TOKEN
-   int int;                  // NANO CHART INTERVALL
+   int interval;                  // NANO CHART INTERVALL
 };
 
 Chart chart;
