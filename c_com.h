@@ -47,39 +47,6 @@ void read_serial(char *buffer) {
        return;
     }
 
-    // SET THINGSPEAK KEYs
-    else if (command == "setiot") {
-      //bodyWebHandler.setChart(PM_buffer);
-      return;
-    }
-
-    // SET SYSTEM
-    else if (command == "setsystem") {
-      //bodyWebHandler.setSystem(PM_buffer);
-      return;
-    }
-
-    // SET CHANNELS
-    else if (command == "setchannels") {
-      //bodyWebHandler.setChannels(PM_buffer);
-      return;
-    }
-
-    // SET PITMASTER
-    else if (command == "setpitmaster") {
-      //handleSetPitmaster(request,PM_buffer); 
-      return;    
-    }
-
-    // SET PITMASTER MANUEL
-    else if (command == "setmanual") {
-      pitmaster.active = true;
-      pitmaster.manual = true;
-      String val(buffer);
-      pitmaster.value = val.toInt();
-      return;
-    }   
-
      // UPDATE auf bestimmte Version
     else if (command == "update") {
       String payload((char*)buffer);
@@ -108,7 +75,7 @@ void read_serial(char *buffer) {
       Serial.println();
       return;
     }
-    
+    /*
     else if (str == "data") {
       nanoWebHandler.handleData(false);
       return;
@@ -128,7 +95,7 @@ void read_serial(char *buffer) {
       nanoWebHandler.handleWifiScan(false);
       return;
     }
-
+*/
     else if (str == "clearwifi") {
       setconfig(eWIFI,{}); // clear Wifi settings
       return;
@@ -136,21 +103,6 @@ void read_serial(char *buffer) {
 
     else if (str == "stopwifi") {
       isAP = 3; // Turn Wifi off
-      return;
-    }
-  
-    else if (str == "pittest") {
-      pitmaster.active = true;
-      pitmaster.manual = true;
-      pitmaster.value = 50;
-      //pitmaster.pid = 1;
-      return;
-    }
-
-    else if (str == "pittest2") {
-      pitmaster.active = true;
-      pitmaster.manual = true;
-      pitmaster.value = 100;
       return;
     }
   

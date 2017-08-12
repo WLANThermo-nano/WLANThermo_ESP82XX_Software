@@ -91,18 +91,17 @@ class NanoWebHandler: public AsyncWebHandler {
     JsonArray& _pit = root.createNestedArray("pid");
     for (int i = 0; i < pidsize; i++) {
       JsonObject& _pid = _pit.createNestedObject();
-      _pid["name"] = pid[i].name;
-      _pid["id"] = pid[i].id;
-      _pid["aktor"] = pid[i].aktor;
-      _pid["Kp"] = limit_float(pid[i].Kp, -1);
-      _pid["Ki"] = limit_float(pid[i].Ki, -1);
-      _pid["Kd"] = limit_float(pid[i].Kd, -1);
-      _pid["Kp_a"] = limit_float(pid[i].Kp_a, -1);
-      _pid["Ki_a"] = limit_float(pid[i].Ki_a, -1);
-      _pid["Kd_a"] = limit_float(pid[i].Kd_a, -1);
-      //_pid["reversal"] = pid[i].reversal;
-      _pid["DCmmin"] = pid[i].DCmin;
-      _pid["DCmmax"] = pid[i].DCmax;
+      _pid["name"] =    pid[i].name;
+      _pid["id"] =      pid[i].id;
+      _pid["aktor"] =   pid[i].aktor;
+      _pid["Kp"] =      limit_float(pid[i].Kp, -1);
+      _pid["Ki"] =      limit_float(pid[i].Ki, -1);
+      _pid["Kd"] =      limit_float(pid[i].Kd, -1);
+      _pid["Kp_a"] =    limit_float(pid[i].Kp_a, -1);
+      _pid["Ki_a"] =    limit_float(pid[i].Ki_a, -1);
+      _pid["Kd_a"] =    limit_float(pid[i].Kd_a, -1);
+      _pid["DCmmin"] =  pid[i].DCmin;
+      _pid["DCmmax"] =  pid[i].DCmax;
     }
 
     JsonArray& _aktor = root.createNestedArray("aktor");
@@ -110,26 +109,26 @@ class NanoWebHandler: public AsyncWebHandler {
     _aktor.add("FAN");
 
     JsonObject& _iot = root.createNestedObject("iot");
-    _iot["TSwrite"] = iot.TS_writeKey; 
-    _iot["TShttp"] = iot.TS_httpKey;
-    _iot["TSuser"] = iot.TS_userKey;
-    _iot["TSchID"] = iot.TS_chID;
-    _iot["TSshow8"] = iot.TS_show8;
-    _iot["TSint"] = iot.TS_int;
-    _iot["TSon"] = iot.TS_on;
-    _iot["PMQhost"] = iot.P_MQTT_HOST;
-    _iot["PMQport"] = iot.P_MQTT_PORT;
-    _iot["PMQuser"] = iot.P_MQTT_USER;
-    _iot["PMQpass"] = iot.P_MQTT_PASS;
-    _iot["PMQqos"] = iot.P_MQTT_QoS;
-    _iot["PMQon"] = iot.P_MQTT_on;
-    _iot["PMQint"] = iot.P_MQTT_int;
-    _iot["TGon"]    = iot.TG_on;
-    _iot["TGtoken"] = iot.TG_token;
-    _iot["TGid"]    = iot.TG_id;
-    _iot["CLon"]    = iot.CL_on;
-    _iot["CLtoken"] = iot.CL_token;
-    _iot["CLint"]    = iot.CL_int;
+    _iot["TSwrite"] =   iot.TS_writeKey; 
+    _iot["TShttp"] =    iot.TS_httpKey;
+    _iot["TSuser"] =    iot.TS_userKey;
+    _iot["TSchID"] =    iot.TS_chID;
+    _iot["TSshow8"] =   iot.TS_show8;
+    _iot["TSint"] =     iot.TS_int;
+    _iot["TSon"] =      iot.TS_on;
+    _iot["PMQhost"] =   iot.P_MQTT_HOST;
+    _iot["PMQport"] =   iot.P_MQTT_PORT;
+    _iot["PMQuser"] =   iot.P_MQTT_USER;
+    _iot["PMQpass"] =   iot.P_MQTT_PASS;
+    _iot["PMQqos"] =    iot.P_MQTT_QoS;
+    _iot["PMQon"] =     iot.P_MQTT_on;
+    _iot["PMQint"] =    iot.P_MQTT_int;
+    _iot["TGon"]    =   iot.TG_on;
+    _iot["TGtoken"] =   iot.TG_token;
+    _iot["TGid"] =      iot.TG_id;
+    _iot["CLon"] =      iot.CL_on;
+    _iot["CLtoken"] =   iot.CL_token;
+    _iot["CLint"] =     iot.CL_int;
 
     JsonArray& _hw = root.createNestedArray("hardware");
     _hw.add(String("V")+String(1));
@@ -151,6 +150,7 @@ class NanoWebHandler: public AsyncWebHandler {
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
   String handleData(AsyncWebServerRequest *request, byte www) {
 
+    /*
     AsyncJsonResponse * response = new AsyncJsonResponse();
     response->addHeader("Server","ESP Async Web Server");
   
@@ -191,14 +191,18 @@ class NanoWebHandler: public AsyncWebHandler {
       else  master["typ"] = "auto";
     else master["typ"] = "off";  
 
+*/
     String jsonStr;
+    jsonStr = cloudData();
     
     if (www == 1) {
-      response->setLength();
-      request->send(response);
+      //response->setLength();
+      //request->send(response);
+      request->send(200, "application/json", jsonStr);
     } else if (www == 0) {
-      root.printTo(Serial);
-    } else  root.printTo(jsonStr);
+      //root.printTo(Serial);
+      Serial.println(jsonStr);
+    } //else  root.printTo(jsonStr);
   
     return jsonStr;
   }
@@ -452,14 +456,6 @@ public:
         return request->requestAuthentication();
       handleFilePuts(request);
 */
-    /*  
-    } else if (request->url() == LOGGING_PATH){
-      if(request->method() == HTTP_POST){
-        dataLogger.updateSetting(request);
-      } else{
-        dataLogger.getSettings(request);
-      }     
-  */
     
     // REQUEST: /stop wifi
     } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == NETWORK_STOP) { 
@@ -579,131 +575,12 @@ NanoWebHandler nanoWebHandler;
 
 // ---------------------------------------------------------------
 // WEBHANDLER
-class LogHandler:public AsyncWebHandler {
-  
-public:
-  
-  void handleRequest(AsyncWebServerRequest *request){
-    Serial.println("hallo");
-    if (request->url() == LOGLIST_PATH){
-      
-      if (request->hasParam("dl")){
-        int index = request->getParam("dl")->value().toInt();
-        char buf[36];
-        //brewLogger.getFilePath(buf,index);
-        if(SPIFFS.exists(buf)){
-          request->send(SPIFFS,buf,"application/octet-stream");
-        } else {
-          request->send(404); 
-        }
-        
-      } else if (request->hasParam("rm")){
-        Serial.println("hallo");
-        int index = request->getParam("rm")->value().toInt();
-        DPRINTF("Delete log file %d\n",index);
-        //brewLogger.rmLog(index);
-        //request->send(200,"application/json",brewLogger.fsinfo());
-                
-      } else if (request->hasParam("start")){
-        String filename = request->getParam("start")->value();
-        DPRINTF("start logging:%s\n",filename.c_str());
-        /*
-        if(brewLogger.startSession(filename.c_str())){
-          request->send(200);
-          notifyLogStatus();
-        }else
-          request->send(404);
-         
-          
-      } else if(request->hasParam("stop")){
-        DPRINTF("Stop logging\n");
-        //brewLogger.endSession();
-        request->send(200);
-        //notifyLogStatus();
-        
-      } else {
-        // default. list information
-        //String status=brewLogger.loggingStatus();
-        //request->send(200,"application/json",status);
-        */
-      }
-      return;
-    } // end of logist path
-    // charting
-    
-    int offset;
-    if (request->hasParam("offset")){
-      offset = request->getParam("offset")->value().toInt();
-    } else  offset = 0;
-    
-    size_t index;
-    bool indexValid;
-    if (request->hasParam("index")){
-      index = request->getParam("index")->value().toInt();
-      indexValid = true;
-    } else {
-      indexValid = false;
-    }
-    /*
-    if(!brewLogger.isLogging()){
-      // volatile logging
-      if(!indexValid){
-        // client in Logging mode. force to reload
-        offset=0;
-        index =0;
-      }
-      size_t size=brewLogger.volatileDataAvailable(index,offset);
-      size_t logoffset=brewLogger.volatileDataOffset();
-      
-      if(size >0){
-        AsyncWebServerResponse *response = request->beginResponse("application/octet-stream", size, 
-            [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-          return brewLogger.readVolatileData(buffer, maxLen,index);
-        });
-        response->addHeader("LogOffset",String(logoffset));
-        request->send(response);
-      }else{
-        request->send(204);
-      }     
-    } else {  
-      if(indexValid){
-        // client in volatile Logging mode. force to reload
-        offset=0;
-      }
-
-      size_t size=brewLogger.beginCopyAfter(offset);
-      if(size >0){
-        request->send("application/octet-stream", size, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t { 
-          return brewLogger.read(buffer, maxLen,index);
-        });
-      } else{
-        request->send(204);
-      }
-    } 
-*/
-    
-  }
-  
-  LogHandler(){}
-  
-  bool canHandle(AsyncWebServerRequest *request){
-    if(request->url() == CHART_DATA_PATH || request->url() ==LOGLIST_PATH) return true;
-    return false;
-  } 
-};
-
-LogHandler logHandler;
-
-
-
-// ---------------------------------------------------------------
-// WEBHANDLER
 class BodyWebHandler: public AsyncWebHandler {
 
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   bool setSystem(AsyncWebServerRequest *request, uint8_t *datas) {
 
-    DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+    printRequest(datas);
   
     DynamicJsonBuffer jsonBuffer;
     JsonObject& _system = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -747,7 +624,7 @@ class BodyWebHandler: public AsyncWebHandler {
 
     //  https://github.com/me-no-dev/ESPAsyncWebServer/issues/123
   
-    DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+    printRequest(datas);
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& _cha = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -776,7 +653,7 @@ class BodyWebHandler: public AsyncWebHandler {
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
   bool setNetwork(AsyncWebServerRequest *request, uint8_t *datas) {
 
-    DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+    printRequest(datas);
   
     DynamicJsonBuffer jsonBuffer;
     JsonObject& _network = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -793,34 +670,38 @@ class BodyWebHandler: public AsyncWebHandler {
   }
 
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-  bool setChart(AsyncWebServerRequest *request, uint8_t *datas) {
+  bool setIoT(AsyncWebServerRequest *request, uint8_t *datas) {
 
-    DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+    printRequest(datas);
   
     DynamicJsonBuffer jsonBuffer;
     JsonObject& _chart = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
     if (!_chart.success()) return 0;
 
+    bool refresh = iot.CL_on;
+
     if (_chart.containsKey("TSwrite"))  iot.TS_writeKey = _chart["TSwrite"].asString(); 
-    if (_chart.containsKey("TShttp")) iot.TS_httpKey = _chart["TShttp"].asString(); 
-    if (_chart.containsKey("TSuser")) iot.TS_userKey = _chart["TSuser"].asString(); 
-    if (_chart.containsKey("TSchID")) iot.TS_chID = _chart["TSchID"].asString();
-    if (_chart.containsKey("TSshow8")) iot.TS_show8 = _chart["TSshow8"];
-    if (_chart.containsKey("TSint")) iot.TS_int = _chart["TSint"];
-    if (_chart.containsKey("TSon")) iot.TS_on = _chart["TSon"];
-    if (_chart.containsKey("PMQhost")) iot.P_MQTT_HOST = _chart["PMQhost"].asString(); 
-    if (_chart.containsKey("PMQport")) iot.P_MQTT_PORT = _chart["PMQport"];
-    if (_chart.containsKey("PMQuser")) iot.P_MQTT_USER = _chart["PMQuser"].asString(); 
-    if (_chart.containsKey("PMQpass")) iot.P_MQTT_PASS = _chart["PMQpass"].asString();
-    if (_chart.containsKey("PMQqos")) iot.P_MQTT_QoS = _chart["PMQqos"]; 
-    if (_chart.containsKey("PMQon")) iot.P_MQTT_on = _chart["PMQon"]; 
-    if (_chart.containsKey("PMQint")) iot.P_MQTT_int = _chart["PMQint"];
-    if (_chart.containsKey("TGon"))  iot.TG_on = _chart["TGon"];
+    if (_chart.containsKey("TShttp"))   iot.TS_httpKey = _chart["TShttp"].asString(); 
+    if (_chart.containsKey("TSuser"))   iot.TS_userKey = _chart["TSuser"].asString(); 
+    if (_chart.containsKey("TSchID"))   iot.TS_chID = _chart["TSchID"].asString();
+    if (_chart.containsKey("TSshow8"))  iot.TS_show8 = _chart["TSshow8"];
+    if (_chart.containsKey("TSint"))    iot.TS_int = _chart["TSint"];
+    if (_chart.containsKey("TSon"))     iot.TS_on = _chart["TSon"];
+    if (_chart.containsKey("PMQhost"))  iot.P_MQTT_HOST = _chart["PMQhost"].asString(); 
+    if (_chart.containsKey("PMQport"))  iot.P_MQTT_PORT = _chart["PMQport"];
+    if (_chart.containsKey("PMQuser"))  iot.P_MQTT_USER = _chart["PMQuser"].asString(); 
+    if (_chart.containsKey("PMQpass"))  iot.P_MQTT_PASS = _chart["PMQpass"].asString();
+    if (_chart.containsKey("PMQqos"))   iot.P_MQTT_QoS = _chart["PMQqos"]; 
+    if (_chart.containsKey("PMQon"))    iot.P_MQTT_on = _chart["PMQon"]; 
+    if (_chart.containsKey("PMQint"))   iot.P_MQTT_int = _chart["PMQint"];
+    if (_chart.containsKey("TGon"))     iot.TG_on = _chart["TGon"];
     if (_chart.containsKey("TGtoken"))  iot.TG_token = _chart["TGtoken"].asString();
-    if (_chart.containsKey("TGid"))  iot.TG_id = _chart["TGid"].asString(); 
-    if (_chart.containsKey("CLon"))  iot.CL_on = _chart["CLon"];
+    if (_chart.containsKey("TGid"))     iot.TG_id = _chart["TGid"].asString(); 
+    if (_chart.containsKey("CLon"))     iot.CL_on = _chart["CLon"];
     if (_chart.containsKey("CLtoken"))  iot.CL_token = _chart["CLtoken"].asString();
-    if (_chart.containsKey("CLint"))  iot.CL_int = _chart["CLint"];
+    if (_chart.containsKey("CLint"))    iot.CL_int = _chart["CLint"];
+
+    if (!refresh && iot.CL_on) lastUpdateCloud = 0; // Daten senden forcieren
   
     if (!setconfig(eTHING,{})) return 0;    
     return 1;
@@ -829,7 +710,7 @@ class BodyWebHandler: public AsyncWebHandler {
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   bool setPitmaster(AsyncWebServerRequest *request, uint8_t *datas) {
 
-    DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+    printRequest(datas);
   
     DynamicJsonBuffer jsonBuffer;
     JsonObject& _pitmaster = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -884,15 +765,11 @@ class BodyWebHandler: public AsyncWebHandler {
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   bool setPID(AsyncWebServerRequest *request, uint8_t *datas) {
 
-    DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+    printRequest(datas);
   
     DynamicJsonBuffer jsonBuffer;
     JsonArray& json = jsonBuffer.parseArray((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
     if (!json.success()) return 0;
-  
-    //JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
-    //if (!json.success()) return 0;
-    //JsonArray& _pid = json["pid"];
   
     byte id;
     byte ii;
@@ -962,7 +839,7 @@ public:
     } else if (request->url() == SET_IOT) { 
       if(!request->authenticate(www_username, www_password))
         return request->requestAuthentication();    
-      if(!setChart(request, data)) request->send(200, "text/plain", "false");
+      if(!setIoT(request, data)) request->send(200, "text/plain", "false");
         request->send(200, "text/plain", "true");
     }  
   }

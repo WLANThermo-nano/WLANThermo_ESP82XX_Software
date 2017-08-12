@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.7.1"
+#define FIRMWAREVERSION "v0.7.2"
 #define APIVERSION      "v1"
 
 // CHANNELS
@@ -531,6 +531,8 @@ void sendServerLog();
 String serverLog();
 void sendDataCloud();
 
+String cloudData();
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
 void set_serial() {
@@ -960,5 +962,14 @@ void serverAnswer(String payload, size_t len) {
     payload = payload.substring(0,index);
     DPRINTLN(payload);
   }
+}
+
+String newToken() {
+  String timestamp = String(now(), HEX);
+  return (String) String(ESP.getChipId(), HEX) + timestamp + String(random(pow(16,(10 - timestamp.length()))), HEX);
+}
+
+void printRequest(uint8_t* datas) {
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
 }
 
