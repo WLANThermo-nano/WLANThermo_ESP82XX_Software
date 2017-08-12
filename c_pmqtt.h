@@ -118,8 +118,8 @@ void set_pmqtt() {
   pmqttClient.onSubscribe(onMqttSubscribe);
   pmqttClient.onUnsubscribe(onMqttUnsubscribe);
   pmqttClient.onMessage(onMqttMessage);
-  pmqttClient.setServer(charts.P_MQTT_HOST.c_str(), charts.P_MQTT_PORT);
-  pmqttClient.setCredentials(charts.P_MQTT_USER.c_str(), charts.P_MQTT_PASS.c_str());
+  pmqttClient.setServer(iot.P_MQTT_HOST.c_str(), iot.P_MQTT_PORT);
+  pmqttClient.setCredentials(iot.P_MQTT_USER.c_str(), iot.P_MQTT_PASS.c_str());
 }
 
 
@@ -141,7 +141,7 @@ void sendpmqtt() {
         String temp_adress = prefix + "temp";
         temp_adress += String(i + 1);
         String posttempStr = String(ch[i].temp, 1);
-        pmqttClient.publish(temp_adress.c_str(), charts.P_MQTT_QoS, false, posttempStr.c_str());
+        pmqttClient.publish(temp_adress.c_str(), iot.P_MQTT_QoS, false, posttempStr.c_str());
       }
     }
     for (int i = 0; i < 8; i++)  {
@@ -150,7 +150,7 @@ void sendpmqtt() {
         max_adress += String(i + 1);
         max_adress += "/max";
         String posttempStr = String(ch[i].max, 1);
-        pmqttClient.publish(max_adress.c_str(), charts.P_MQTT_QoS, false, posttempStr.c_str());
+        pmqttClient.publish(max_adress.c_str(), iot.P_MQTT_QoS, false, posttempStr.c_str());
       }
     }
     for (int i = 0; i < 8; i++)  {
@@ -159,18 +159,18 @@ void sendpmqtt() {
         min_adress += String(i + 1);
         min_adress += "/min";
         String posttempStr = String(ch[i].min, 1);
-        pmqttClient.publish(min_adress.c_str(), charts.P_MQTT_QoS, false, posttempStr.c_str());
+        pmqttClient.publish(min_adress.c_str(), iot.P_MQTT_QoS, false, posttempStr.c_str());
       }
     }
  
     String volt_adress = prefix + "voltage";
     String postvoltStr = String(battery.percentage);
-    pmqttClient.publish(volt_adress.c_str(), charts.P_MQTT_QoS, false, postvoltStr.c_str());
+    pmqttClient.publish(volt_adress.c_str(), iot.P_MQTT_QoS, false, postvoltStr.c_str());
 
  
     String wlan_adress = prefix + "wlan";
     String postwlanStr = String(rssi);
-    pmqttClient.publish(wlan_adress.c_str(), charts.P_MQTT_QoS, false, postwlanStr.c_str());
+    pmqttClient.publish(wlan_adress.c_str(), iot.P_MQTT_QoS, false, postwlanStr.c_str());
 
 
 

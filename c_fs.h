@@ -147,45 +147,45 @@ bool loadconfig(byte count) {
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,THING_FILE)) return false;
       
-      if (json.containsKey("TSwrite"))  charts.TS_writeKey = json["TSwrite"].asString();
+      if (json.containsKey("TSwrite"))  iot.TS_writeKey = json["TSwrite"].asString();
       else return false;
-      if (json.containsKey("TShttp"))  charts.TS_httpKey = json["TShttp"].asString();
+      if (json.containsKey("TShttp"))  iot.TS_httpKey = json["TShttp"].asString();
       else return false;
-      if (json.containsKey("TSchID"))  charts.TS_chID = json["TSchID"].asString();
+      if (json.containsKey("TSchID"))  iot.TS_chID = json["TSchID"].asString();
       else return false;
-      if (json.containsKey("TS8"))  charts.TS_show8 = json["TS8"];
+      if (json.containsKey("TS8"))  iot.TS_show8 = json["TS8"];
       else return false;
-      if (json.containsKey("TSuser"))  charts.TS_userKey = json["TSuser"].asString();
+      if (json.containsKey("TSuser"))  iot.TS_userKey = json["TSuser"].asString();
       else return false;
-      if (json.containsKey("TSint"))  charts.TS_int = json["TSint"];
+      if (json.containsKey("TSint"))  iot.TS_int = json["TSint"];
       else return false;
-      if (json.containsKey("TSon"))  charts.TS_on = json["TSon"];
+      if (json.containsKey("TSon"))  iot.TS_on = json["TSon"];
       else return false;
-      if (json.containsKey("PMQhost"))  charts.P_MQTT_HOST = json["PMQhost"].asString();
+      if (json.containsKey("PMQhost"))  iot.P_MQTT_HOST = json["PMQhost"].asString();
       else return false;
-      if (json.containsKey("PMQport"))  charts.P_MQTT_PORT = json["PMQport"];
+      if (json.containsKey("PMQport"))  iot.P_MQTT_PORT = json["PMQport"];
       else return false;
-      if (json.containsKey("PMQuser"))  charts.P_MQTT_USER = json["PMQuser"].asString();
+      if (json.containsKey("PMQuser"))  iot.P_MQTT_USER = json["PMQuser"].asString();
       else return false;
-      if (json.containsKey("PMQpass"))  charts.P_MQTT_PASS = json["PMQpass"].asString();
+      if (json.containsKey("PMQpass"))  iot.P_MQTT_PASS = json["PMQpass"].asString();
       else return false;
-      if (json.containsKey("PMQqos"))  charts.P_MQTT_QoS = json["PMQqos"];
+      if (json.containsKey("PMQqos"))  iot.P_MQTT_QoS = json["PMQqos"];
       else return false;
-      if (json.containsKey("PMQon"))  charts.P_MQTT_on = json["PMQon"];
+      if (json.containsKey("PMQon"))  iot.P_MQTT_on = json["PMQon"];
       else return false;
-      if (json.containsKey("PMQint"))  charts.P_MQTT_int = json["PMQint"];
+      if (json.containsKey("PMQint"))  iot.P_MQTT_int = json["PMQint"];
       else return false;
-      if (json.containsKey("TGon"))  charts.TG_on = json["TGon"];
+      if (json.containsKey("TGon"))  iot.TG_on = json["TGon"];
       else return false;
-      if (json.containsKey("TGtoken"))  charts.TG_token = json["TGtoken"].asString();
+      if (json.containsKey("TGtoken"))  iot.TG_token = json["TGtoken"].asString();
       else return false;
-      if (json.containsKey("TGid"))  charts.TG_id = json["TGid"].asString(); 
+      if (json.containsKey("TGid"))  iot.TG_id = json["TGid"].asString(); 
       else return false;
-      if (json.containsKey("CLon")) charts.CL_on = json["CLon"];
+      if (json.containsKey("CLon")) iot.CL_on = json["CLon"];
       else return false;
-      if (json.containsKey("CLtoken")) charts.CL_token = json["CLtoken"].asString();
+      if (json.containsKey("CLtoken")) iot.CL_token = json["CLtoken"].asString();
       else return false;
-      if (json.containsKey("CLint")) charts.CL_int = json["CLint"];
+      if (json.containsKey("CLint")) iot.CL_int = json["CLint"];
       else return false;
     }
     break;
@@ -356,26 +356,26 @@ bool setconfig(byte count, const char* data[2]) {
     {
       JsonObject& json = jsonBuffer.createObject();
       
-      json["TSwrite"] = charts.TS_writeKey;
-      json["TShttp"]  = charts.TS_httpKey;
-      json["TSuser"]  = charts.TS_userKey;
-      json["TSchID"]  = charts.TS_chID;
-      json["TS8"]     = charts.TS_show8;
-      json["TSint"]   = charts.TS_int;
-      json["TSon"]    = charts.TS_on;
-      json["PMQhost"]  = charts.P_MQTT_HOST;
-      json["PMQport"]  = charts.P_MQTT_PORT;
-      json["PMQuser"]  = charts.P_MQTT_USER;
-      json["PMQpass"]  = charts.P_MQTT_PASS;
-      json["PMQqos"]   = charts.P_MQTT_QoS;
-      json["PMQon"]   = charts.P_MQTT_on;
-      json["PMQint"]   = charts.P_MQTT_int;
-      json["TGon"]    = charts.TG_on;
-      json["TGtoken"] = charts.TG_token;
-      json["TGid"]    = charts.TG_id;
-      json["CLon"]    = charts.CL_on;
-      json["CLtoken"] = charts.CL_token;
-      json["CLint"]   = charts.CL_int;
+      json["TSwrite"] = iot.TS_writeKey;
+      json["TShttp"]  = iot.TS_httpKey;
+      json["TSuser"]  = iot.TS_userKey;
+      json["TSchID"]  = iot.TS_chID;
+      json["TS8"]     = iot.TS_show8;
+      json["TSint"]   = iot.TS_int;
+      json["TSon"]    = iot.TS_on;
+      json["PMQhost"]  = iot.P_MQTT_HOST;
+      json["PMQport"]  = iot.P_MQTT_PORT;
+      json["PMQuser"]  = iot.P_MQTT_USER;
+      json["PMQpass"]  = iot.P_MQTT_PASS;
+      json["PMQqos"]   = iot.P_MQTT_QoS;
+      json["PMQon"]   = iot.P_MQTT_on;
+      json["PMQint"]   = iot.P_MQTT_int;
+      json["TGon"]    = iot.TG_on;
+      json["TGtoken"] = iot.TG_token;
+      json["TGid"]    = iot.TG_id;
+      json["CLon"]    = iot.CL_on;
+      json["CLtoken"] = iot.CL_token;
+      json["CLint"]   = iot.CL_int;
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {
@@ -607,7 +607,7 @@ void start_fs() {
   // THINGSPEAK
   if (!loadconfig(eTHING)) {
     DPRINTPLN("[INFO]\tFailed to load Thingspeak config");
-    set_charts(0);
+    set_iot(0);
     setconfig(eTHING,{});  // Speicherplatz vorbereiten
   } else DPRINTPLN("[INFO]\tThingspeak config loaded");
 

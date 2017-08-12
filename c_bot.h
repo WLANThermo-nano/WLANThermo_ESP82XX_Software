@@ -30,33 +30,33 @@ static AsyncClient * tsalarmclient = NULL;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Charts
-void set_charts(bool init) {
+void set_iot(bool init) {
   
    if (init) {
-    charts.TS_writeKey = "";     
-    charts.TS_httpKey = "";       
-    charts.TS_userKey = ""; //"Q2EID9PNX0YQVGRH";       
-    charts.TS_chID = ""; 
-    charts.P_MQTT_USER = "";
-    charts.P_MQTT_PASS = ""; 
-    charts.P_MQTT_QoS = 0;
+    iot.TS_writeKey = "";     
+    iot.TS_httpKey = "";       
+    iot.TS_userKey = ""; //"Q2EID9PNX0YQVGRH";       
+    iot.TS_chID = ""; 
+    iot.P_MQTT_USER = "";
+    iot.P_MQTT_PASS = ""; 
+    iot.P_MQTT_QoS = 0;
     
    }
    
-   charts.TS_show8 = false;        
-   charts.TS_int = INTERVALCOMMUNICATION/1000;
-   charts.TS_on = true;
-   charts.P_MQTT_on = false;
-   charts.P_MQTT_HOST = "192.168.2.1";
-   charts.P_MQTT_PORT = 1883;
-   charts.P_MQTT_int = INTERVALCOMMUNICATION/1000;
-   charts.TG_on = 0;
-   charts.TG_token = "";
-   charts.TG_id = "";
+   iot.TS_show8 = false;        
+   iot.TS_int = INTERVALCOMMUNICATION/1000;
+   iot.TS_on = true;
+   iot.P_MQTT_on = false;
+   iot.P_MQTT_HOST = "192.168.2.1";
+   iot.P_MQTT_PORT = 1883;
+   iot.P_MQTT_int = INTERVALCOMMUNICATION/1000;
+   iot.TG_on = 0;
+   iot.TG_token = "";
+   iot.TG_id = "";
 
-   charts.CL_on = false;
-   charts.CL_token = "12345678";
-   charts.CL_int = INTERVALCOMMUNICATION/1000;
+   iot.CL_on = false;
+   iot.CL_token = "12345678";
+   iot.CL_int = INTERVALCOMMUNICATION/1000;
       
 }
 
@@ -74,7 +74,7 @@ String collectData() {
       postStr += String(ch[i].temp,1);
     }
   }
-  if (charts.TS_show8) {
+  if (iot.TS_show8) {
     postStr +="&8=";  
     postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
   } else if (ch[7].temp != INACTIVEVALUE) {
@@ -143,9 +143,9 @@ void sendSettings(){
     //postStr += handleSettings(request, 2);
     
     String adress = F("PUT /channels/");
-    adress += charts.TS_chID;
+    adress += iot.TS_chID;
     adress += F(".json?api_key=");
-    adress += charts.TS_userKey;
+    adress += iot.TS_userKey;
     adress += postStr;
     adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
     

@@ -321,8 +321,8 @@ Battery battery;
 uint32_t vol_sum = 0;
 int vol_count = 0;
 
-// CHARTS
-struct Charts {
+// IOT
+struct IoT {
    String TS_writeKey;          // THINGSPEAK WRITE API KEY
    String TS_httpKey;           // THINGSPEAK HTTP API KEY 
    String TS_userKey;           // THINGSPEAK USER KEY 
@@ -345,7 +345,17 @@ struct Charts {
    int CL_int;                  // NANO CLOUD INTERVALL
 };
 
-Charts charts;
+IoT iot;
+
+// Chart
+struct Chart {
+   bool on;                  // NANO CHART ON / OFF
+   String token;             // NANO CHART TOKEN
+   int int;                  // NANO CHART INTERVALL
+};
+
+Chart chart;
+
 
 // OLED
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL     
@@ -510,7 +520,7 @@ void set_pid();
 void stopautotune();
 
 // BOT
-void set_charts(bool init);
+void set_iot(bool init);
 String collectData();
 String createNote(bool ts);
 bool sendNote(int check);
@@ -583,29 +593,29 @@ void timer_alarm() {
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Charts Timer
-void timer_charts() {
+// IoT Timer
+void timer_iot() {
 
   // THINGSPEAK
-  if (millis() - lastUpdateThingspeak > (charts.TS_int * 1000)) {
+  if (millis() - lastUpdateThingspeak > (iot.TS_int * 1000)) {
 
-    if (!isAP && sys.update == 0 && charts.TS_on) {
-      if (charts.TS_writeKey != "" && charts.TS_chID != "") sendDataTS();
+    if (!isAP && sys.update == 0 && iot.TS_on) {
+      if (iot.TS_writeKey != "" && iot.TS_chID != "") sendDataTS();
     }
     lastUpdateThingspeak = millis();
   }
 
   // PRIVATE MQTT
-  if (millis() - lastUpdateMQTT > (charts.P_MQTT_int * 1000)) {
+  if (millis() - lastUpdateMQTT > (iot.P_MQTT_int * 1000)) {
 
-    if (!isAP && sys.update == 0 && charts.P_MQTT_on) sendpmqtt();
+    if (!isAP && sys.update == 0 && iot.P_MQTT_on) sendpmqtt();
     lastUpdateMQTT = millis();
   }
 
   // NANO CLOUD
-  if (millis() - lastUpdateCloud > (charts.CL_int * 1000)) {
+  if (millis() - lastUpdateCloud > (iot.CL_int * 1000)) {
 
-    if (!isAP && sys.update == 0 && charts.CL_on) {
+    if (!isAP && sys.update == 0 && iot.CL_on) {
         sendServerLog();
         sendDataCloud();
     }
@@ -830,32 +840,32 @@ String createParameter(int para) {
 
     case APITOKEN:
       command += F("&api_token=");
-      command += charts.CL_token;
+      command += iot.CL_token;
       break;
 
     case TSWRITEKEY:
       command += F("api_key=");
-      command += charts.TS_writeKey;
+      command += iot.TS_writeKey;
       break;
 
     case NOTETOKEN:
       command += F("&token=");
-      command += charts.TG_token;
+      command += iot.TG_token;
       break;
 
     case NOTEID:
       command += F("&chatID=");
-      command += charts.TG_id;
+      command += iot.TG_id;
       break;
 
     case NOTESERVICE:
       command += F("&service=");
-      command += charts.TG_on;
+      command += iot.TG_on;
       break;
 
     case THINGHTTPKEY:
       command += F("api_key=");
-      command += charts.TS_httpKey;
+      command += iot.TS_httpKey;
       break;
 
     case DEVICE:

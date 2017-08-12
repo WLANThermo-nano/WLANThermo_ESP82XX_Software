@@ -175,7 +175,7 @@ void loop() {
     timer_sensor();           // Temperture
     timer_alarm();            // Alarm
     pitmaster_control();      // Pitmaster
-    timer_charts();           // Charts
+    timer_iot();              // Charts
     timer_datalog();          // Datalog
     flash_control();          // Flash
     

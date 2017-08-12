@@ -48,7 +48,7 @@ void read_serial(char *buffer) {
     }
 
     // SET THINGSPEAK KEYs
-    else if (command == "setcharts") {
+    else if (command == "setiot") {
       //bodyWebHandler.setChart(PM_buffer);
       return;
     }
