@@ -538,6 +538,7 @@ void server_setup() {
   server.on("/newtoken",[](AsyncWebServerRequest *request){
     iot.CL_token = (String) String(ESP.getChipId(), HEX) + String(now(), HEX) + String(random(256), HEX);
     setconfig(eTHING,{});
+    lastUpdateCloud = 0; // Daten senden forcieren
     request->send(200, "text/plain", iot.CL_token);
   });
   
