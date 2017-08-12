@@ -2610,9 +2610,9 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jr = JSON.parse(response);
-			byId('TGon').checked = jr.charts.TGon;
-			byId('TGtoken').value = jr.charts.TGtoken;
-			byId('TGid').value = jr.charts.TGid;
+			byId('TGon').checked = jr.iot.TGon;
+			byId('TGtoken').value = jr.iot.TGtoken;
+			byId('TGid').value = jr.iot.TGid;
 			byId('push_notification').style.display = "inline";
 			showLoader('false');
 		})				
@@ -2626,10 +2626,10 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
 			jr = JSON.parse(response);
-			jr.charts.TGon = byId('TGon').checked;
-			jr.charts.TGtoken = byId('TGtoken').value;
-			jr.charts.TGid = byId('TGid').value;
-			var data = JSON.stringify(jr.charts);
+			jr.iot.TGon = byId('TGon').checked;
+			jr.iot.TGtoken = byId('TGtoken').value;
+			jr.iot.TGid = byId('TGid').value;
+			var data = JSON.stringify(jr.iot);
 			//alert(data);
 			showLoader('true');
 			loadJSON('setIoT', data, '60000', function (response) {
