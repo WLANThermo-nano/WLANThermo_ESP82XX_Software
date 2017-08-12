@@ -965,8 +965,17 @@ void serverAnswer(String payload, size_t len) {
 }
 
 String newToken() {
-  String timestamp = String(now(), HEX);
-  return (String) String(ESP.getChipId(), HEX) + timestamp + String(random(pow(16,(10 - timestamp.length()))), HEX);
+  String stamp = String(now(), HEX);
+  int x = 10 - stamp.length();          //pow(16,(10 - timestamp.length()));
+  long y = 1;    // long geht bis 16^7
+  if (x > 7) {
+    stamp += String(random(268435456), HEX);
+    x -= 7;
+  }
+  for (int i=0;i<x;i++) y *= 16;
+  stamp += String(random(y), HEX);
+  Serial.println(y);
+  return (String) String(ESP.getChipId(), HEX) + stamp;
 }
 
 void printRequest(uint8_t* datas) {
