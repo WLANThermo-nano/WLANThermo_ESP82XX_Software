@@ -1442,6 +1442,18 @@
 			left: 0;
 		}
 
+		 /* unvisited link */
+		a:link,a:visited,a:active {
+			color: #fff;
+			text-decoration: none;
+		}
+
+		/* mouse over link */
+		a:hover {
+			color: #337ab7;
+			text-decoration: none;
+		}
+
 		.checkbox label,.form-radio label {
 			position: relative;
 			cursor: pointer;
@@ -1809,13 +1821,14 @@
 			</a>
             <ul class="pure-menu-list">
                 <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
-		<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
-		<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
-		<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li>
-		<li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">IoT</a></li>
-		<li id="menuNotification" class="pure-menu-item"><a href="javascript:showPushNotification()" class="pure-menu-link">Push Notification</a></li>
+				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
+				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
+				<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li>
+				<li id="menuThingspeak" class="pure-menu-item"><a href="javascript:showThingspeak()" class="pure-menu-link">IoT</a></li>
+				<li id="menuNotification" class="pure-menu-item"><a href="javascript:showPushNotification()" class="pure-menu-link">Push Notification</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>
+			<!-- style="display:none" -->
         </div>
     </div>
 
@@ -2267,6 +2280,34 @@
 				<button class="pure-button pure-button-disabled">IoT</button>
 				<button class="pure-button" onclick="setThingspeak()">Speichern</button>
 			</div>
+			<h3 class="headtitle">NANO Cloud</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>
+							<div class="checkbox">
+							  <label>
+								<input id="CLon" type="checkbox" checked="checked"/><i class="helper"></i>Nano Cloud aktivieren
+							  </label>
+							</div>
+							<div class="form-group">
+							  <select id="CLinterval">
+								<option value="15">15 Sekunden</option>
+								<option value="30">30 Sekunden</option>
+								<option value="60">1 Minute</option>
+								<option value="120">2 Minuten</option>
+								<option value="300">5 Minuten</option>
+							  </select>
+							  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
+							</div>						
+							<div class="form-group">
+							  <label for="input"><a id="CLtoken" class="link" href="#">Visit W3Schools.com!</a></label><i class="bar"></i>
+							</div>							
+							<p class="pure-button pure-button-primary" onclick="newToken();">Token generieren</p>
+						</form>
+					</div>
+				</div>
+			</div>			
 			<h3 class="headtitle">Thingspeak</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
@@ -2375,34 +2416,7 @@
 					</div>
 				</div>
 			</div>
-			<h3 class="headtitle">NANO Cloud</h3>
-			<div class="pure-g">
-				<div class="pure-u-1-1 pure-u-lg-1-1">
-					<div class="1-box channel_conf">
-						<form>							
-							<div class="checkbox">
-							  <label>
-								<input id="CLon" type="checkbox" checked="checked"/><i class="helper"></i>Nano Cloud aktivieren
-							  </label>
-							</div>
-							<div class="form-group">
-							  <input type="text" id="CLtoken" maxlength="26" required="required"/>
-							  <label class="control-label" for="input">Cloud Token</label><i class="bar"></i>
-							</div>
-							<div class="form-group">
-							  <select id="CLinterval">
-								<option value="15">15 Sekunden</option>
-								<option value="30">30 Sekunden</option>
-								<option value="60">1 Minute</option>
-								<option value="120">2 Minuten</option>
-								<option value="300">5 Minuten</option>
-							  </select>
-							  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
-							</div>
-						</form>
-					</div>
-				</div>
-			</div>
+
         </div>
 		<!-- ################################################### -->
 		<div id="push_notification" class="content" style="display:none">
@@ -2567,15 +2581,23 @@
 			byId('PMQqos').value = jr.iot.PMQqos;
 			byId('PMQinterval').value = jr.iot.PMQint;
 			byId('CLon').checked = jr.iot.CLon;
-			byId('CLtoken').value = jr.iot.CLtoken;
 			byId('CLinterval').value = jr.iot.CLint;
+			byId('CLtoken').innerHTML = "http://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken;			
+			byId("CLtoken").setAttribute("href", "http://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken);
 			byId('thingspeak').style.display = "inline";
 			showLoader('false');
-		})
-		
+		})	
 	}	
 
-		function setThingspeak(){
+	function newToken(){
+		showLoader('true');
+		loadJSON('newtoken', '', '3000', function (response){
+		byId('CLtoken').innerHTML = "http://cloud.wlanthermo.de/index.html?api_token=" + response;			
+		byId("CLtoken").setAttribute("href", "http://cloud.wlanthermo.de/index.html?api_token=" + response);
+			showLoader('false');	
+		})
+	}
+	function setThingspeak(){
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
 			jr = JSON.parse(response);
@@ -3268,7 +3290,24 @@
 		if(val.split('.').length>2){val = val.replace(/\.+$/,"");}		
 		number.value = val;
 	}
-
+	
+	function timeConverter(UNIX_timestamp){
+	  var a = new Date(UNIX_timestamp * 1000);
+	  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+	  var year = a.getFullYear();
+	  var month = months[a.getMonth()];
+	  var date = a.getDate();
+	  var hour = a.getHours();
+	  hour = ("0" + hour).slice(-2);
+	  var min = a.getMinutes();
+	  min = ("0" + min).slice(-2);
+	  var sec = a.getSeconds();
+	  sec = ("0" + sec).slice(-2);
+	  var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+	  //var unix = Math.round(+new Date()/1000);
+	  //alert(unix + ' ' + UNIX_timestamp);
+	  return time;
+	}
 	readTemp();
 </script>
 
