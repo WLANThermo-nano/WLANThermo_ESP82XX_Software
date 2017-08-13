@@ -819,6 +819,7 @@ String getMacAddress()  {
 #define SAVEDATALINK "/cloud/saveData.php"
 #define SAVELOGSLINK "/saveLogs.php"
 #define SENDTSLINK "/update.json"
+#define SENDTHINGSPEAK "Thingspeak"
 #define THINGSPEAKSERVER "api.thingspeak.com"
 #define NANOSERVER "nano.wlanthermo.de"
 #define SENDNOTELINK "/sendTelegram.php"
@@ -955,7 +956,7 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
 void serverAnswer(String payload, size_t len) {
  
   if (payload.indexOf("200 OK") > -1) {
-    DPRINTP("[HTTP]\tServer: "); 
+    DPRINTP("[HTTP]\tServer Answer: "); 
     int index = payload.indexOf("\r\n\r\n");       // Trennung von Header und Body
     payload = payload.substring(index+7,len);      // Beginn des Body
     index = payload.indexOf("\r");                 // Ende Versionsnummer
@@ -981,4 +982,29 @@ String newToken() {
 void printRequest(uint8_t* datas) {
   DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
 }
+
+enum {CONNECTFAIL, SENDTO, DISCONNECT, CLIENTERRROR, CLIENTCONNECT};
+
+void printClient(const char* link, int arg) {
+
+  switch (arg) {
+
+    case CONNECTFAIL:   DPRINTP("[INFO]\tClient Connect Fail: ");
+      break;
+
+    case SENDTO:        DPRINTP("[INFO]\tClient Send to:");
+      break;
+
+    case DISCONNECT:    DPRINTP("[INFO]\tDisconnect Client: ");
+      break;
+
+    case CLIENTERRROR:  DPRINTP("[INFO]\tClient Connect Error: ");
+      break; 
+
+    case CLIENTCONNECT: DPRINTP("[INFO]\tClient Connect: ");
+      break; 
+  }
+  DPRINTLN(link);
+}
+
 

@@ -174,7 +174,7 @@ void sendDataTS(){
   if(!tsdataclient)  return;               //could not allocate client
 
   tsdataclient->onError([](void * arg, AsyncClient * client, int error){
-    DPRINTPLN("[INFO]\tThingspeak Data Client Connect Error");
+    printClient(SENDTHINGSPEAK,CLIENTERRROR);
     tsdataclient = NULL;
     delete client;
   }, NULL);
@@ -184,12 +184,13 @@ void sendDataTS(){
     tsdataclient->onError(NULL, NULL);
 
     client->onDisconnect([](void * arg, AsyncClient * c){
+      printClient(SENDTHINGSPEAK ,DISCONNECT);
       tsdataclient = NULL;
       delete c;
     }, NULL);
 
     //send the request
-    DPRINTPLN("[INFO]\tSend to Thingspeak"); 
+    printClient(SENDTHINGSPEAK,SENDTO);
     String adress = createCommand(POSTMETH,SENDTS,SENDTSLINK,THINGSPEAKSERVER,0);
     client->write(adress.c_str());
     //Serial.println(adress);
@@ -197,7 +198,7 @@ void sendDataTS(){
   }, NULL);
 
   if(!tsdataclient->connect(THINGSPEAKSERVER, 80)){
-    Serial.println("[INFO]\tThingspeak Server Connect Fail");
+    printClient(SENDTHINGSPEAK ,CONNECTFAIL);
     AsyncClient * client = tsdataclient;
     tsdataclient = NULL;
     delete client;
@@ -215,12 +216,10 @@ bool sendNote(int check){
     if(!tsalarmclient)  return false;               //could not allocate client
 
     tsalarmclient->onError([](void * arg, AsyncClient * client, int error){
-      DPRINTPLN("[INFO]\tThingspeak Alarm Client Connect Error");
+      printClient(THINGHTTPLINK,CLIENTERRROR);
       tsalarmclient = NULL;
       delete client;
     }, NULL);
-
-    return true;                                    // Nachricht kann gesendet werden
 
   } else if (check == 1) {            // Senden ueber Thingspeak
     
@@ -229,25 +228,24 @@ bool sendNote(int check){
       tsalarmclient->onError(NULL, NULL);
 
       client->onDisconnect([](void * arg, AsyncClient * c){
+        printClient(THINGHTTPLINK ,DISCONNECT);
         tsalarmclient = NULL;
         delete c;
       }, NULL);
 
       //send the request
-      DPRINTPLN("[INFO]\tSend Alarm to Thingspeak"); 
+      printClient(THINGHTTPLINK,SENDTO);
       String adress = createCommand(GETMETH,THINGHTTP,THINGHTTPLINK,THINGSPEAKSERVER,0);
       client->write(adress.c_str());
       //Serial.println(adress);
     }, NULL);
 
     if(!tsalarmclient->connect(THINGSPEAKSERVER, 80)){
-      Serial.println("[INFO]\tThingspeak Server Connect Fail");
+      printClient(THINGHTTPLINK ,CONNECTFAIL);
       AsyncClient * client = tsalarmclient;
       tsalarmclient = NULL;
       delete client;
     }
-
-    return true;
     
   } else if (check == 2) {          // Senden ueber Server
     
@@ -256,26 +254,26 @@ bool sendNote(int check){
       tsalarmclient->onError(NULL, NULL);
 
       client->onDisconnect([](void * arg, AsyncClient * c){
+        printClient(SENDNOTELINK ,DISCONNECT);
         tsalarmclient = NULL;
         delete c;
       }, NULL);
 
       //send the request
-      DPRINTPLN("[INFO]\tSend Alarm to Server"); 
+      printClient(SENDNOTELINK,SENDTO);
       String adress = createCommand(GETMETH,SENDNOTE,SENDNOTELINK,NANOSERVER,0);
       client->write(adress.c_str());
       //Serial.println(adress);
     }, NULL);
 
     if(!tsalarmclient->connect(NANOSERVER, 80)){
-      Serial.println("[INFO]\tNotification Server Connect Fail");
+      printClient(SENDNOTELINK ,CONNECTFAIL);
       AsyncClient * client = tsalarmclient;
       tsalarmclient = NULL;
       delete client;
     }
-
-    return true;
   }
+  return true;    // Nachricht kann gesendet werden
 }
 
 

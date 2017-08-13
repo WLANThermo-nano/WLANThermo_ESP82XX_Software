@@ -207,12 +207,12 @@ void check_http_update() {
 
       updateClient->onConnect([](void * arg, AsyncClient * client){
 
-        DPRINTPLN("[INFO]\tConnect Update Client");
+        printClient(CHECKUPDATELINK ,CLIENTCONNECT);
         
         updateClient->onError(NULL, NULL);
 
         client->onDisconnect([](void * arg, AsyncClient * c){
-          DPRINTPLN("[INFO]\tDisconnect Update Client");
+          printClient(CHECKUPDATELINK ,DISCONNECT);
           updateClient = NULL;
           delete c;
         }, NULL);
@@ -246,7 +246,6 @@ void check_http_update() {
         }, NULL);
 
         //send the request
-        DPRINTPLN("[INFO]\tCheck HTTP Update");
         String adress = createCommand(GETMETH,CHECKUPDATE,CHECKUPDATELINK,NANOSERVER,0);
         client->write(adress.c_str());
         //Serial.println(adress);
@@ -254,7 +253,7 @@ void check_http_update() {
       }, NULL);
 
       if(!updateClient->connect(NANOSERVER, 80)){
-        Serial.println("[INFO]\tUpdate Client Connect Fail");
+        printClient(CHECKUPDATELINK ,CONNECTFAIL);
         AsyncClient * client = updateClient;
         updateClient = NULL;
         delete client;

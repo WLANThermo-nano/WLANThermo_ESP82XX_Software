@@ -174,6 +174,7 @@ void sendServerLog() {
   if(!LogClient)  return;               //could not allocate client
 
   LogClient->onError([](void * arg, AsyncClient * client, int error){
+    printClient(SAVELOGSLINK,CLIENTERRROR);
     LogClient = NULL;
     delete client;
   }, NULL);
@@ -183,7 +184,7 @@ void sendServerLog() {
    LogClient->onError(NULL, NULL);
 
    client->onDisconnect([](void * arg, AsyncClient * c){
-    DPRINTPLN("[INFO]\tDisconnect Log Client");
+    printClient(SAVELOGSLINK ,DISCONNECT);
     LogClient = NULL;
     delete c;
    }, NULL);
@@ -194,7 +195,7 @@ void sendServerLog() {
    }, NULL);
 
    //send the request
-   DPRINTPLN("[INFO]\tSend Log to Server:");
+   printClient(SAVELOGSLINK,SENDTO); 
 
    String message = serverLog(); 
    String adress = createCommand(POSTMETH,NOPARA,SAVELOGSLINK,NANOSERVER,message.length());
@@ -205,7 +206,7 @@ void sendServerLog() {
  }, NULL);
 
  if(!LogClient->connect("nano.wlanthermo.de", 80)){
-   Serial.println("[INFO]\Log Client Connect Fail");
+   printClient(SAVELOGSLINK ,CONNECTFAIL);
    AsyncClient * client = LogClient;
    LogClient = NULL;
    delete client;
@@ -275,6 +276,7 @@ void sendDataCloud() {
   if(!DataClient)  return;               //could not allocate client
 
   DataClient->onError([](void * arg, AsyncClient * client, int error){
+    printClient(SAVEDATALINK,CLIENTERRROR);
     LogClient = NULL;
     delete client;
   }, NULL);
@@ -284,7 +286,7 @@ void sendDataCloud() {
    DataClient->onError(NULL, NULL);
 
    client->onDisconnect([](void * arg, AsyncClient * c){
-    DPRINTPLN("[INFO]\tDisconnect Data Cloud Client");
+    printClient(SAVEDATALINK ,DISCONNECT);
     DataClient = NULL;
     delete c;
    }, NULL);
@@ -295,7 +297,7 @@ void sendDataCloud() {
    }, NULL);
 
    //send the request
-   DPRINTPLN("[INFO]\tSend Data to Cloud:");
+   printClient(SAVEDATALINK,SENDTO);
    String message = cloudData();   
    String adress = createCommand(GETMETH,SAVEDATA,SAVEDATALINK,NANOSERVER,message.length());
    adress += message;
@@ -305,7 +307,7 @@ void sendDataCloud() {
   }, NULL);
 
   if(!DataClient->connect("nano.wlanthermo.de", 80)){
-   Serial.println("[INFO]\Data Client Connect Fail");
+   printClient(SAVEDATALINK ,CONNECTFAIL);
    AsyncClient * client = DataClient;
    DataClient = NULL;
    delete client;
