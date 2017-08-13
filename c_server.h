@@ -111,14 +111,14 @@ String serverLog() {
         _log["battery"] = mylog[i].battery;
         _log["pit_set"] = (mylog[i].soll==NULL)?NULL:mylog[i].soll/10.0;
         _log["pit_value"] = mylog[i].pitmaster; 
-        _log["ch1"] = (mylog[i].tem[0]==NULL)?NULL:mylog[i].tem[0]/10.0;
-        _log["ch2"] = (mylog[i].tem[1]==NULL)?NULL:mylog[i].tem[1]/10.0;
-        _log["ch3"] = (mylog[i].tem[2]==NULL)?NULL:mylog[i].tem[2]/10.0;
-        _log["ch4"] = (mylog[i].tem[3]==NULL)?NULL:mylog[i].tem[3]/10.0;
-        _log["ch5"] = (mylog[i].tem[4]==NULL)?NULL:mylog[i].tem[4]/10.0;
-        _log["ch6"] = (mylog[i].tem[5]==NULL)?NULL:mylog[i].tem[5]/10.0;
-        _log["ch7"] = (mylog[i].tem[6]==NULL)?NULL:mylog[i].tem[6]/10.0;
-        _log["ch8"] = (mylog[i].tem[7]==NULL)?NULL:mylog[i].tem[7]/10.0;
+        _log["ch1"] = (mylog[i].tem[0]==NULL)?999:mylog[i].tem[0]/10.0;
+        _log["ch2"] = (mylog[i].tem[1]==NULL)?999:mylog[i].tem[1]/10.0;
+        _log["ch3"] = (mylog[i].tem[2]==NULL)?999:mylog[i].tem[2]/10.0;
+        _log["ch4"] = (mylog[i].tem[3]==NULL)?999:mylog[i].tem[3]/10.0;
+        _log["ch5"] = (mylog[i].tem[4]==NULL)?999:mylog[i].tem[4]/10.0;
+        _log["ch6"] = (mylog[i].tem[5]==NULL)?999:mylog[i].tem[5]/10.0;
+        _log["ch7"] = (mylog[i].tem[6]==NULL)?999:mylog[i].tem[6]/10.0;
+        _log["ch8"] = (mylog[i].tem[7]==NULL)?999:mylog[i].tem[7]/10.0;
       } 
     }
   }
