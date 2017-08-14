@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.7.3"
+#define FIRMWAREVERSION "v0.7.4"
 #define APIVERSION      "v1"
 
 // CHANNELS
@@ -428,6 +428,7 @@ unsigned long lastFlashInWork;
 unsigned long lastUpdateRSSI;
 unsigned long lastUpdateThingspeak;
 unsigned long lastUpdateCloud;
+unsigned long lastUpdateLog;
 unsigned long lastUpdateMQTT;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -618,10 +619,18 @@ void timer_iot() {
   if (millis() - lastUpdateCloud > (iot.CL_int * 1000)) {
 
     if (!isAP && sys.update == 0 && iot.CL_on) {
-        sendServerLog();
         sendDataCloud();
     }
     lastUpdateCloud = millis();
+  }
+
+  // NANO LOGS
+  if (millis() - lastUpdateLog > INTERVALCOMMUNICATION) {
+
+    if (!isAP && sys.update == 0 && chart.on) {
+        sendServerLog();
+    }
+    lastUpdateLog = millis();
   }
   
 }

@@ -270,7 +270,12 @@ static AsyncClient * DataClient = NULL;
 // 
 void sendDataCloud() {
 
-  if(DataClient) return;                 //client already exists
+  if(DataClient) {
+    AsyncClient * client = DataClient;
+    DataClient = NULL;
+    delete client;
+    return;                 //client already exists
+  }
 
   DataClient = new AsyncClient();
   if(!DataClient)  return;               //could not allocate client
@@ -352,6 +357,11 @@ void server_setup() {
 
   server.on("/clearplot",[](AsyncWebServerRequest *request){
     log_count = 0; //TEST
+    request->send(200, "text/plain", "true");
+  });
+
+  server.on("/startlog",[](AsyncWebServerRequest *request){
+    chart.on = true;
     request->send(200, "text/plain", "true");
   });
 
