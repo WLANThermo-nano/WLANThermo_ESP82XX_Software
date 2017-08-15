@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.7.4"
+#define FIRMWAREVERSION "v0.7.5"
 #define APIVERSION      "v1"
 
 // CHANNELS
@@ -752,13 +752,10 @@ time_t mynow() {
 // Update Time
 void set_time() {
   if (!isAP) {
-    time_t present = 0;
-    int ii = 0;
-    while (present == 0 && ii < 3) {
-      present = getNtpTime(); 
-      ii++;
+    while (now() < 30) {        // maximal 30 sec suchen
+      time_t present = getNtpTime();
+      if (present) setTime(present); 
     }
-    setTime(present);
   }
   //setSyncProvider(getNtpTime);
   DPRINTP("[INFO]\t");
@@ -825,13 +822,16 @@ String getMacAddress()  {
 }
 
 
-#define SAVEDATALINK "/cloud/saveData.php"
+#define SAVEDATALINK "/saveData.php"
 #define SAVELOGSLINK "/saveLogs.php"
 #define SENDTSLINK "/update.json"
 #define SENDTHINGSPEAK "Thingspeak"
 #define THINGSPEAKSERVER "api.thingspeak.com"
 #define NANOSERVER "nano.wlanthermo.de"
-#define SENDNOTELINK "/sendTelegram.php"
+#define UPDATESERVER "update.wlanthermo.de"
+#define CLOUDSERVER "cloud.wlanthermo.de"
+#define MESSAGESERVER "message.wlanthermo.de"
+#define SENDNOTELINK "/message.php"
 #define THINGHTTPLINK "/apps/thinghttp/send_request"
 #define CHECKUPDATELINK "/checkUpdate.php"
 

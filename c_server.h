@@ -205,7 +205,7 @@ void sendServerLog() {
       
  }, NULL);
 
- if(!LogClient->connect("nano.wlanthermo.de", 80)){
+ if(!LogClient->connect(NANOSERVER, 80)){
    printClient(SAVELOGSLINK ,CONNECTFAIL);
    AsyncClient * client = LogClient;
    LogClient = NULL;
@@ -296,22 +296,17 @@ void sendDataCloud() {
     delete c;
    }, NULL);
 
-   client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
-    String payload((char*)data);
-    serverAnswer(payload, len);
-   }, NULL);
-
    //send the request
    printClient(SAVEDATALINK,SENDTO);
    String message = cloudData();   
-   String adress = createCommand(GETMETH,SAVEDATA,SAVEDATALINK,NANOSERVER,message.length());
+   String adress = createCommand(GETMETH,SAVEDATA,SAVEDATALINK,CLOUDSERVER,message.length());
    adress += message;
    client->write(adress.c_str());
    //Serial.println(adress);
       
   }, NULL);
 
-  if(!DataClient->connect("nano.wlanthermo.de", 80)){
+  if(!DataClient->connect(CLOUDSERVER, 80)){
    printClient(SAVEDATALINK ,CONNECTFAIL);
    AsyncClient * client = DataClient;
    DataClient = NULL;
@@ -341,11 +336,12 @@ void server_setup() {
   server.on("/info",[](AsyncWebServerRequest *request){
     FSInfo fs_info;
     SPIFFS.info(fs_info);
-    request->send(200,"","totalBytes:" +String(fs_info.totalBytes) +
-      " usedBytes:" + String(fs_info.usedBytes)+" blockSize:" + String(fs_info.blockSize)
-      +" pageSize:" + String(fs_info.pageSize)
-      +" heap:"+String(ESP.getFreeHeap())
-      +" serial:"+String(ESP.getChipId(), HEX));
+    request->send(200,"","totalBytes:" +String(fs_info.totalBytes) + "\n"
+      +"usedBytes: " + String(fs_info.usedBytes)+ "\n"
+      +"heap: "+String(ESP.getFreeHeap()) + "\n"
+      +"sn: "+String(ESP.getChipId(), HEX) + "\n"
+      +"batmin: "+String(battery.min) + "\n"
+      +"batmax: "+String(battery.max));
   });
 
   server.on("/god",[](AsyncWebServerRequest *request){

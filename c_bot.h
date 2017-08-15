@@ -261,12 +261,12 @@ bool sendNote(int check){
 
       //send the request
       printClient(SENDNOTELINK,SENDTO);
-      String adress = createCommand(GETMETH,SENDNOTE,SENDNOTELINK,NANOSERVER,0);
+      String adress = createCommand(GETMETH,SENDNOTE,SENDNOTELINK,MESSAGESERVER,0);
       client->write(adress.c_str());
       //Serial.println(adress);
     }, NULL);
 
-    if(!tsalarmclient->connect(NANOSERVER, 80)){
+    if(!tsalarmclient->connect(MESSAGESERVER, 80)){
       printClient(SENDNOTELINK ,CONNECTFAIL);
       AsyncClient * client = tsalarmclient;
       tsalarmclient = NULL;

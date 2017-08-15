@@ -114,7 +114,7 @@ void do_http_update() {
     if (sys.getupdate != "false") {
 
       // UPDATE Adresse
-      String adress = F("http://nano.wlanthermo.de/checkUpdate.php?");
+      String adress = F("http://update.wlanthermo.de/checkUpdate.php?");
       adress += createParameter(SERIALNUMBER);
       adress += createParameter(DEVICE);
       adress += createParameter(HARDWAREVS);
@@ -246,13 +246,13 @@ void check_http_update() {
         }, NULL);
 
         //send the request
-        String adress = createCommand(GETMETH,CHECKUPDATE,CHECKUPDATELINK,NANOSERVER,0);
+        String adress = createCommand(GETMETH,CHECKUPDATE,CHECKUPDATELINK,UPDATESERVER,0);
         client->write(adress.c_str());
         //Serial.println(adress);
     
       }, NULL);
 
-      if(!updateClient->connect(NANOSERVER, 80)){
+      if(!updateClient->connect(UPDATESERVER, 80)){
         printClient(CHECKUPDATELINK ,CONNECTFAIL);
         AsyncClient * client = updateClient;
         updateClient = NULL;
