@@ -57,7 +57,7 @@ int co = 32;
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
-#define SENSORTYPEN    10               // NUMBER OF SENSORS
+#define SENSORTYPEN    11               // NUMBER OF SENSORS
 #define LIMITUNTERGRENZE -20           // MINIMUM LIMIT
 #define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
 #define MAX1161x_ADDRESS 0x33          // MAX11615
