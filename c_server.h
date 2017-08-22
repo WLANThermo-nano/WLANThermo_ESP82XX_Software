@@ -341,7 +341,8 @@ void server_setup() {
       +"heap: "+String(ESP.getFreeHeap()) + "\n"
       +"sn: "+String(ESP.getChipId(), HEX) + "\n"
       +"batmin: "+String(battery.min) + "\n"
-      +"batmax: "+String(battery.max));
+      +"batmax: "+String(battery.max)
+      +"bat: "+String(battery.percentage));
   });
 
   server.on("/god",[](AsyncWebServerRequest *request){

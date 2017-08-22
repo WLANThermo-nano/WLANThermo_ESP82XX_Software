@@ -44,12 +44,14 @@ extern "C" {
 extern "C" uint32_t _SPIFFS_start;      // START ADRESS FS
 extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+// Nano V2: MISO > Supply Switch; CLK > PIT2
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.7.5"
+#define FIRMWAREVERSION "v0.7.6"
 #define APIVERSION      "v1"
 
 // CHANNELS
@@ -122,7 +124,8 @@ int co = 32;
 
 // PITMASTER
 #define PITMASTER1 15               // PITMASTER PIN
-#define PITMASTER2 14             // ab Platine V7.2
+#define PITMASTER2 14               // CLK // ab Platine V7.2
+#define PITSUPPLY  12               // MISO // ab Platine V9.3
 #define PITMIN 0                    // LOWER LIMIT SET
 #define PITMAX 100                  // UPPER LIMIT SET
 #define PITMASTERSIZE 5             // PITMASTER SETTINGS LIMIT
@@ -152,16 +155,9 @@ struct ChannelData {
 
 ChannelData ch[CHANNELS];
 
-String  ttypname[SENSORTYPEN] = {"Maverick",
-                      "Fantast-Neu",
-                      "Fantast",
-                      "iGrill2",
-                      "ET-73",
-                      "Perfektion",
-                      "5K3A1B",
-                      "MOUSER47K",
-                      "100K6A1B",
-                      "Weber_6743"};
+String  ttypname[SENSORTYPEN] = {"Maverick","Fantast-Neu","Fantast","iGrill2","ET-73",
+                                 "Perfektion","5K3A1B","MOUSER47K","100K6A1B","Weber_6743",
+                                 "Santos"};
 
 
 String  temp_unit = "C";
@@ -242,6 +238,7 @@ struct AutoTune {
    byte stop;
    int overtemp;
    long timelimit;
+   bool keepup;             // PITMASTER FORTSETZEN NACH ENDE
 };
 
 AutoTune autotune;
@@ -830,7 +827,7 @@ String getMacAddress()  {
 #define NANOSERVER "nano.wlanthermo.de"
 #define UPDATESERVER "update.wlanthermo.de"
 #define CLOUDSERVER "cloud.wlanthermo.de"
-#define MESSAGESERVER "message.wlanthermo.de"
+#define MESSAGESERVER "message.wlanthermo.de" 
 #define SENDNOTELINK "/message.php"
 #define THINGHTTPLINK "/apps/thinghttp/send_request"
 #define CHECKUPDATELINK "/checkUpdate.php"

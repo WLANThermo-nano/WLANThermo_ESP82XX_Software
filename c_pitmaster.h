@@ -35,6 +35,9 @@ void set_pitmaster(bool init) {
   pinMode(PITMASTER2, OUTPUT);
   digitalWrite(PITMASTER2, LOW);
 
+  pinMode(PITSUPPLY, OUTPUT);
+  digitalWrite(PITSUPPLY, LOW);
+
   if (init) {
     pitmaster.pid = 0;
     pitmaster.channel = 0;
@@ -163,6 +166,7 @@ void startautotunePID(int maxCyc, bool store, int over, long tlimit)  {
   autotune.temp = pitmaster.set;
   autotune.maxCycles = constrain(maxCyc, 5, 20);
   autotune.storeValues = store;
+  autotune.keepup = false;
   
   uint32_t tmi = millis();
   float tem = ch[pitmaster.channel].temp;
@@ -407,6 +411,7 @@ void pitmaster_control() {
   if (autotune.stop > 0) {
     if ((autotune.stop == 1) && autotune.storeValues) { // sauber beendet
       setconfig(ePIT,{});
+      if (autotune.keepup) pitmaster.active = true;     // Pitmaster fortsetzen
     }
     stopautotune();
     autotune.stop = 0;

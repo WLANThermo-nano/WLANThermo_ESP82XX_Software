@@ -102,7 +102,15 @@ void drawQuestion(int counter) {
         break;
 
       case AUTOTUNE:
-        if (counter == 0) display.drawString(3,3,"Autotune: gestartet!");
+        if (counter == 0) { 
+          display.drawString(3,3,"Autotune: gestartet!");
+           display.setTextAlignment(TEXT_ALIGN_CENTER);
+          display.drawString(64,20,"PID danach fortsetzen?");
+          //display.drawString(64,18,"fortsetzen?");
+          b1 = true;
+          b0 = true;
+          break;
+        }
         else if(counter == 1) display.drawString(3,3,"Autotune: beendet!");
         else display.drawString(3,3,"Autotune: abgebrochen!");
         b1 = false;

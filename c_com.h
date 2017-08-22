@@ -185,6 +185,25 @@ void read_serial(char *buffer) {
       //sendSettings();
       return;
     }
+    
+    // Set V2
+    else if (str == "v2") {
+      sys.hwversion = 2;
+      setconfig(eSYSTEM,{}); 
+      return;
+    }
+    
+    // Set Pitsupply
+    else if (str == "pitsupply") {
+      digitalWrite(PITSUPPLY, HIGH);
+      return;
+    }
+
+    // Set Pitsupply
+    else if (str == "pit2") {
+      digitalWrite(PITMASTER2, HIGH);
+      return;
+    }
   }
 
   DPRINTP("[INFO]\tYou entered: >");

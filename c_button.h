@@ -246,6 +246,10 @@ static inline void button_event() {
           ch[question.con].showalarm = false;
           break;
 
+        case AUTOTUNE:
+          autotune.keepup = true;
+          break;
+
       }
       question.typ = NO;
       displayblocked = false;
