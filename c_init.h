@@ -23,7 +23,7 @@
 #include <ESP8266WiFi.h>          // WIFI
 #include <ESP8266WiFiMulti.h>     // WIFI
 //#include <WiFiClientSecure.h>     // HTTPS
-#include <WiFiUdp.h>              // NTP
+//#include <WiFiUdp.h>              // NTP
 #include <TimeLib.h>              // TIME
 #include <EEPROM.h>               // EEPROM
 #include <FS.h>                   // FILESYSTEM
@@ -51,7 +51,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 int co = 32;
 // HARDWARE
-#define FIRMWAREVERSION "v0.7.6"
+#define FIRMWAREVERSION "v0.7.8"
 #define APIVERSION      "v1"
 
 // CHANNELS
@@ -745,6 +745,46 @@ time_t mynow() {
   
 }
 
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Date String to Date Element
+// Quelle: https://github.com/oh1ko/ESP82666_OLED_clock/blob/master/ESP8266_OLED_clock.ino
+tmElements_t * string_to_tm(tmElements_t *tme, char *str) {
+  // Sat, 28 Mar 2015 13:53:38 GMT
+
+  const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+  char *r, *i, *t;
+  r = strtok_r(str, " ", &i);
+
+  r = strtok_r(NULL, " ", &i);
+  tme->Day = atoi(r);
+
+  r = strtok_r(NULL, " ", &i);
+  for (int i = 0; i < 12; i++) {
+    if (!strcmp(months[i], r)) {
+      tme->Month = i + 1;
+      break;
+    }
+  }
+  
+  r = strtok_r(NULL, " ", &i);
+  tme->Year = atoi(r) - 1970;
+
+  r = strtok_r(NULL, " ", &i);
+  t = strtok_r(r, ":", &i);
+  tme->Hour = atoi(t);
+
+  t = strtok_r(NULL, ":", &i);
+  tme->Minute = atoi(t);
+
+  t = strtok_r(NULL, ":", &i);
+  tme->Second = atoi(t);
+
+  return tme;
+}
+
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Update Time
 void set_time() {
@@ -754,6 +794,7 @@ void set_time() {
       if (present) setTime(present); 
     }
   }
+  
   //setSyncProvider(getNtpTime);
   DPRINTP("[INFO]\t");
   DPRINTLN(digitalClockDisplay(mynow()));
@@ -869,7 +910,7 @@ String createParameter(int para) {
 
     case NOTESERVICE:
       command += F("&service=");
-      command += iot.TG_on;
+      command += "telegram";  //iot.TG_on;
       break;
 
     case THINGHTTPKEY:

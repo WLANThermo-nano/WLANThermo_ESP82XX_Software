@@ -54,6 +54,8 @@ void getRequest() {
 
    client->onDisconnect([](void * arg, AsyncClient * c){
     DPRINTPLN("[INFO]\tDisconnect myRequest Client");
+    //Serial.println(myrequest.response);
+    //myrequest.request->send(404);
     myrequest.request->send(200, "text/plain", myrequest.response);
     myrequest.response = "";
     aClient = NULL;
@@ -75,9 +77,9 @@ void getRequest() {
    url += F(" HTTP/1.1\n");
    url += F("Host: ");
    url += myrequest.host;
-   Serial.println(url);
+   //Serial.println(url);
    url += F("\n\n");
-
+   
    client->write(url.c_str());
     
  }, NULL);
@@ -357,6 +359,17 @@ void server_setup() {
     request->send(200, "text/plain", "true");
   });
 
+  server.on("/v2",[](AsyncWebServerRequest *request){
+    sys.hwversion = 2;
+    setconfig(eSYSTEM,{});
+    request->send(200, "text/plain", "v2");
+  });
+
+  server.on("/pitsupply",[](AsyncWebServerRequest *request){
+    if (sys.hwversion == 2) digitalWrite(PITSUPPLY, HIGH);
+    request->send(200, "text/plain", "aktiviert");
+  });
+   
   server.on("/startlog",[](AsyncWebServerRequest *request){
     chart.on = true;
     request->send(200, "text/plain", "true");

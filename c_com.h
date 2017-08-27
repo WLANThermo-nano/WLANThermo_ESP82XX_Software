@@ -199,7 +199,7 @@ void read_serial(char *buffer) {
       return;
     }
 
-    // Set Pitsupply
+    // Test pitmaster 2
     else if (str == "pit2") {
       digitalWrite(PITMASTER2, HIGH);
       return;

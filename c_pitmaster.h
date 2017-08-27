@@ -35,8 +35,10 @@ void set_pitmaster(bool init) {
   pinMode(PITMASTER2, OUTPUT);
   digitalWrite(PITMASTER2, LOW);
 
-  pinMode(PITSUPPLY, OUTPUT);
-  digitalWrite(PITSUPPLY, LOW);
+  if (sys.hwversion > 1) {
+    pinMode(PITSUPPLY, OUTPUT);
+    digitalWrite(PITSUPPLY, LOW);
+  }
 
   if (init) {
     pitmaster.pid = 0;

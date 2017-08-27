@@ -109,7 +109,7 @@ void get_rssi() {
   rssi = WiFi.RSSI();
 }
 
-
+/*
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Send NTP request to the time server
 void sendNTPpacket(IPAddress& address) {
@@ -164,7 +164,7 @@ time_t getNtpTime() {
   DPRINTPLN("[INFO]\tNo NTP Response!");
   return 0; // return 0 if unable to get the time
 }
-
+*/
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++

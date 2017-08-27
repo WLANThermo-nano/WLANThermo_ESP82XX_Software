@@ -222,9 +222,25 @@ void check_http_update() {
           String payload((char*)data);
           if (payload.indexOf("200 OK") > -1) {
         
+            // Date
+            int index = payload.indexOf("Date: ");
+            
+            char date_string[27];
+            for (int i = 0; i < 26; i++) {
+              char c = payload[index+i+6];
+              date_string[i] = c;
+            }
+
+            tmElements_t tmx;
+            string_to_tm(&tmx, date_string);
+            setTime(makeTime(tmx));
+
+            DPRINTP("[INFO]\tUTC: ");
+            DPRINTLN(digitalClockDisplay(now()));
+            
+            // Update
             DPRINTP("[HTTP]\tGET: ");
-         
-            int index = payload.indexOf("\r\n\r\n");       // Trennung von Header und Body
+            index = payload.indexOf("\r\n\r\n");       // Trennung von Header und Body
             payload = payload.substring(index+7,len);      // Beginn des Body
             index = payload.indexOf("\r");                 // Ende Versionsnummer
             payload = payload.substring(0,index);

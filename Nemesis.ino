@@ -99,7 +99,7 @@ void setup() {
     set_wifi();
 
     // Update Time
-    set_time();
+    //set_time();
     
     // Scan Network
     WiFi.scanNetworks(true);
@@ -131,6 +131,8 @@ void setup() {
 
     // Check HTTP Update
     check_http_update();
+    
+    chart.on = false;
   }
 }
 

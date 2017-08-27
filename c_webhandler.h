@@ -132,7 +132,7 @@ class NanoWebHandler: public AsyncWebHandler {
 
     JsonArray& _hw = root.createNestedArray("hardware");
     _hw.add(String("V")+String(1));
-    //_hw.add(String("V")+String(2));
+    if (sys.hwversion > 1) _hw.add(String("V")+String(2));
 
     String jsonStr;
     
