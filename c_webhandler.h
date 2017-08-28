@@ -65,6 +65,7 @@ class NanoWebHandler: public AsyncWebHandler {
 
     AsyncJsonResponse * response = new AsyncJsonResponse();
     response->addHeader("Server","ESP Async Web Server");
+    response->addHeader("Content-Type","application/json");
   
     JsonObject& root = response->getRoot();
     JsonObject& _system = root.createNestedObject("system");
@@ -123,6 +124,7 @@ class NanoWebHandler: public AsyncWebHandler {
     _iot["PMQqos"] =    iot.P_MQTT_QoS;
     _iot["PMQon"] =     iot.P_MQTT_on;
     _iot["PMQint"] =    iot.P_MQTT_int;
+    //_iot["MSGservice"] = iot.TG_serv;
     _iot["TGon"]    =   iot.TG_on;
     _iot["TGtoken"] =   iot.TG_token;
     _iot["TGid"] =      iot.TG_id;
@@ -133,6 +135,10 @@ class NanoWebHandler: public AsyncWebHandler {
     JsonArray& _hw = root.createNestedArray("hardware");
     _hw.add(String("V")+String(1));
     if (sys.hwversion > 1) _hw.add(String("V")+String(2));
+
+    JsonArray& _noteservice = root.createNestedArray("notification");
+    _noteservice.add("telegram");
+    _noteservice.add("pushover");
 
     String jsonStr;
     

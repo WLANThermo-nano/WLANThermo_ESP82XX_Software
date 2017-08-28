@@ -234,15 +234,20 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
 
         bool sendM = true;
         //if (!isAP && iot.TS_httpKey != "") {
-        if (!isAP) {
-          if (sendNote(0)) {       // Sender frei? Falls fehlerhaftes Senden, wird der Client selbst wieder frei
-            notification.ch = i+1;
-            if (ch[i].temp > ch[i].max) notification.limit = 1;
-            else if (ch[i].temp < ch[i].min) notification.limit = 0;
-            if (iot.TS_httpKey != "") sendNote(1);  // Notification per Thingspeak
-            else if (iot.TG_on > 0) sendNote(2);           // Notification per Server
-          } else sendM = false;       // kann noch nicht gesendet werden, also warten
-        }          // kein Internet, also weiter
+        if (!isAP) {      
+          notification.ch = i+1;
+          if (ch[i].temp > ch[i].max) notification.limit = 1;
+          else if (ch[i].temp < ch[i].min) notification.limit = 0;
+            
+          // Sender frei? Falls fehlerhaftes Senden, wird der Client selbst wieder frei
+          if (iot.TS_httpKey != "") {
+            if (sendNote(0)) sendNote(1);  // Notification per Thingspeak
+            else sendM = false;       // kann noch nicht gesendet werden, also warten
+          } else if (iot.TG_on > 0) {
+            if (sendNote(0)) sendNote(2);           // Notification per Server
+            else sendM = false;       // kann noch nicht gesendet werden, also warten
+          } // keine Notification Daten, also weiter
+        } // kein Internet, also weiter       
 
         if (sendM) {
           ch[i].isalarm = true;

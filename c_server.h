@@ -405,9 +405,9 @@ void server_setup() {
         myrequest.url = request->getParam("url")->value();
         myrequest.host = request->getParam("host")->value();
         myrequest.method = request->getParam("method")->value();
+        myrequest.request = request;
         getRequest(); 
         //ESP.wdtEnable(10);
-        myrequest.request = request;
       } else request->send(200, "text/plain", "false");
   });
 
