@@ -219,11 +219,10 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
       // Alarm anzeigen
       } else if (ch[i].isalarm && ch[i].showalarm) {
         // do alarm
-        setalarm = true;
+        setalarm = true;  // Alarm noch nicht quittiert
 
         // Show Alarm
         if (ch[i].show && !displayblocked) {
-          displayblocked = true;
           ch[i].show = false;
           question.typ = HARDWAREALARM;
           question.con = i;
@@ -232,19 +231,35 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
       
       } else if (!ch[i].isalarm && ch[i].temp != INACTIVEVALUE) {
         // first rising limits
-        ch[i].isalarm = true;
-        ch[i].showalarm = true;
-        ch[i].show = true;
-        setalarm = true;
 
-        if (!isAP) {
-          if (charts.TShttpKey != "") {
-            if (ch[i].temp > ch[i].max) sendMessage(i+1,1);
-            else if (ch[i].temp < ch[i].min) sendMessage(i+1,0);
-          }
-        }
+        bool sendM = true;
+        //if (!isAP && iot.TS_httpKey != "") {
+        if (!isAP) {      
+          notification.ch = i+1;
+          if (ch[i].temp > ch[i].max) notification.limit = 1;
+          else if (ch[i].temp < ch[i].min) notification.limit = 0;
+            
+          // Sender frei? Falls fehlerhaftes Senden, wird der Client selbst wieder frei
+          if (iot.TS_httpKey != "") {
+            if (sendNote(0)) sendNote(1);  // Notification per Thingspeak
+            else sendM = false;       // kann noch nicht gesendet werden, also warten
+          } else if (iot.TG_on > 0) {
+            if (sendNote(0)) sendNote(2);           // Notification per Server
+            else sendM = false;       // kann noch nicht gesendet werden, also warten
+          } // keine Notification Daten, also weiter
+        } // kein Internet, also weiter       
+
+        if (sendM) {
+          ch[i].isalarm = true;
+          ch[i].showalarm = true;
+          ch[i].show = true;
+          setalarm = true;
+        } 
       }
-    }
+    } else {
+      ch[i].isalarm = false;
+      ch[i].showalarm = false;
+    }   
   }
 
   // Hardware-Alarm-Variable: sys.hwalarm

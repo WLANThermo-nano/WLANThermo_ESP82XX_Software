@@ -62,6 +62,9 @@ float calcT(int r, byte typ){
   case 9: // Weber_6743
     Rn = 102.315; a = 3.3558796e-03; b = 2.7111149e-04; c = 3.1838428e-06; 
     break;
+  case 10: // Santos
+    Rn = 200.82; a = 3.3561093e-03; b = 2.3552814e-04; c = 2.1375541e-06; 
+    break;
    
   default:  
     return INACTIVEVALUE;

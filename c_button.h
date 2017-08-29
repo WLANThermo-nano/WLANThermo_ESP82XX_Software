@@ -115,10 +115,6 @@ static inline void button_event() {
     }
   }
 
-  // Tiefer im Menü
-  if (buttonResult[1]==DOUBLECLICK) {}
-  
-
   // Bei LONGCLICK rechts großer Zahlensprung jedoch gebremst
   if (buttonResult[0] == FIRSTDOWN && (millis()-buttonDownTime[0]>400)) {
     
@@ -136,6 +132,7 @@ static inline void button_event() {
           inMenu = menu_count;
           displayblocked = false;
           b_counter = framepos[menu_count];
+          current_frame = subframepos[menu_count];
           ui.switchToFrame(b_counter);
           return;
       
@@ -196,6 +193,7 @@ static inline void button_event() {
       switch (inMenu) {
         case TEMPSUB:                     // Temperaturkontextmenu aufgerufen
           inMenu = TEMPKONTEXT;
+          current_frame = subframepos[0];
           ui.switchToFrame(framepos[0]+1);
           return;
 
@@ -248,12 +246,17 @@ static inline void button_event() {
           ch[question.con].showalarm = false;
           break;
 
+        case AUTOTUNE:
+          autotune.keepup = true;
+          break;
+
       }
       question.typ = NO;
       displayblocked = false;
       return;
     }
-
+    
+    isback = 0;
     if (inWork) {
 
       // Bei SHORTCLICK kleiner Zahlensprung
@@ -290,26 +293,25 @@ static inline void button_event() {
           break;
 
         case TEMPKONTEXT:
-          if (b_counter < framepos[1]-1) b_counter++;
-          else b_counter = framepos[0]+1;
-          if (b_counter == framepos[1]-1) isback = 1;
-          else isback = 0;
+          b_counter = framepos[3];
+          if (current_frame < subframepos[1]-1) current_frame++;
+          else current_frame = subframepos[0];
+          if (current_frame == subframepos[1]-1) {
+            isback = 1;
+            b_counter = framepos[4];        // BACK-Page
+          }
           ui.switchToFrame(b_counter);
           break;
 
         case PITSUB:
-          if (b_counter < framepos[2]-1) b_counter++;
-          else  b_counter = framepos[1];
-          if (b_counter == framepos[2]-1) isback = 1;
-          else isback = 0;
-          ui.switchToFrame(b_counter);
-          break;
-
         case SYSTEMSUB:
-          if (b_counter < frameCount-1) b_counter++;
-          else b_counter = framepos[2];
-          if (b_counter == frameCount-1) isback = 1;
-          else isback = 0;
+          b_counter = framepos[inMenu];
+          if (current_frame < subframepos[inMenu+1]-1) current_frame++;
+          else  current_frame = subframepos[inMenu];
+          if (current_frame == subframepos[inMenu+1]-1) {
+            isback = 1;
+            b_counter = framepos[4];        // BACK-Page
+          }
           ui.switchToFrame(b_counter);
           break;
       }
@@ -318,7 +320,7 @@ static inline void button_event() {
   }
   
   
-  // Button links gedrückt: Rückwärts / runterzählen / Frage mit Nein beantwortet
+  // Button links Shortklick: Rückwärts / runterzählen / Frage mit Nein beantwortet
   if (buttonResult[1] == SHORTCLICK) {
 
     // Frage wurde verneint -> alles bleibt beim Alten
@@ -336,6 +338,7 @@ static inline void button_event() {
       return;
     }
 
+    isback = 0;
     if (inWork) {
 
       mupi = -1;
@@ -370,35 +373,26 @@ static inline void button_event() {
           break;
 
         case TEMPKONTEXT:
-          if (b_counter > framepos[0]+1) {
-            b_counter--;
-            isback = 0;
-          }
+          b_counter = framepos[3];
+          if (current_frame > subframepos[0])
+            current_frame--;
           else {
-            b_counter = framepos[1]-1;
+            current_frame = subframepos[1]-1;
             isback = 1;
+            b_counter = framepos[4];
           }
           ui.switchToFrame(b_counter);
           break;
 
         case PITSUB:
-          if (b_counter > framepos[1]) {
-            b_counter--;
-            isback = 0;
-          } else {
-            b_counter = framepos[2]-1;
-            isback = 1;
-          }
-          ui.switchToFrame(b_counter);
-          break;
-
         case SYSTEMSUB:
-          if (b_counter > framepos[2]) {
-            b_counter--;
-            isback = 0;
-          } else {
-            b_counter = frameCount-1;
+          b_counter = framepos[inMenu];
+          if (current_frame > subframepos[inMenu])
+            current_frame--;
+          else {
+            current_frame = subframepos[inMenu+1]-1;
             isback = 1;
+            b_counter = framepos[4];
           }
           ui.switchToFrame(b_counter);
           break;
@@ -407,9 +401,9 @@ static inline void button_event() {
     }
   }
 
-    
+  // EVENT ---------------------------------------------------------
   if (event[0]) {  
-    switch (ui.getCurrentFrameCount()) {
+    switch (current_frame) {
         
       case 1:  // Upper Limit
         if (event[1]) tempor = ch[current_ch].max;
@@ -522,6 +516,12 @@ static inline void button_event() {
           sys.fastmode = tempor;
           setconfig(eSYSTEM,{});
         }
+        break;
+
+      case 17:  // UPDATE
+        if (event[1]) tempor = sys.fastmode;
+        sys.getupdate = FIRMWAREVERSION;
+        sys.update = 1;
         break;
 
       default:

@@ -25,64 +25,6 @@
 int pidMax = 100;      // Maximum (PWM) value, the heater should be set
 
 
-struct PID {
-  String name;
-  byte id;
-  byte aktor;                     // 0: SSR, 1:FAN, 2:Servo
-  //byte port;                  // IO wird über typ bestimmt
-  float Kp;                     // P-Konstante oberhalb pswitch
-  float Ki;                     // I-Konstante oberhalb pswitch
-  float Kd;                     // D-Konstante oberhalb pswitch
-  float Kp_a;                   // P-Konstante unterhalb pswitch
-  float Ki_a;                   // I-Konstante unterhalb pswitch
-  float Kd_a;                   // D-Konstante unterhalb pswitch
-  int Ki_min;                   // Minimalwert I-Anteil
-  int Ki_max;                   // Maximalwert I-Anteil
-  float pswitch;                // Umschaltungsgrenze
-  bool reversal;                // VALUE umkehren
-  int DCmin;                    // Duty Cycle Min
-  int DCmax;                    // Duty Cycle Max
-  int SVmin;                    // SERVO IMPULS MIN
-  int SVmax;                    // SERVO IMPULS MAX
-  float esum;                   // Startbedingung I-Anteil
-  float elast;                  // Startbedingung D-Anteil
-  
-};
-
-PID pid[PITMASTERSIZE];
-
-
-struct AutoTune {
-   bool storeValues;
-   float temp;             // BETRIEBS-TEMPERATUR
-   int  maxCycles;        // WIEDERHOLUNGEN
-   int cycles;            // CURRENT WIEDERHOLUNG
-   int heating;            // HEATING FLAG
-   uint32_t t0;
-   uint32_t t1;            // ZEITKONSTANTE 1
-   uint32_t t2;           // ZEITKONSTANTE 2
-   int32_t t_high;        // FLAG HIGH
-   int32_t t_low;         // FLAG LOW
-   int32_t bias;
-   int32_t d;
-   float Kp;
-   float Ki;
-   float Kd;
-   float Kp_a;
-   float Ki_a;
-   float Kd_a;
-   float maxTemp;
-   float minTemp;
-   bool initialized;
-   float value;
-   float previousTemp;
-   float maxTP;             // MAXIMALE STEIGUNG = WENDEPUNKT
-   uint32_t tWP;            // ZEITPUNKT WENDEPUNKT  
-   float TWP;               // TEMPERATUR WENDEPUNKT
-};
-
-AutoTune autotune;
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Set Pitmaster Pin
 void set_pitmaster(bool init) {
@@ -92,6 +34,11 @@ void set_pitmaster(bool init) {
 
   pinMode(PITMASTER2, OUTPUT);
   digitalWrite(PITMASTER2, LOW);
+
+  if (sys.hwversion > 1) {
+    pinMode(PITSUPPLY, OUTPUT);
+    digitalWrite(PITSUPPLY, LOW);
+  }
 
   if (init) {
     pitmaster.pid = 0;
@@ -105,10 +52,12 @@ void set_pitmaster(bool init) {
   if (!pitmaster.resume) pitmaster.active = false; 
 
   pitmaster.value = 0;
-  pitmaster.manuel = false;
+  pitmaster.manual = false;
   pitmaster.event = false;
   pitmaster.msec = 0;
   pitmaster.pause = 1000;
+
+  dutycycle.on = false;
 
 }
 
@@ -117,10 +66,10 @@ void set_pitmaster(bool init) {
 // Set Default PID-Settings
 void set_pid() {
   
-  pidsize = 1; //3;
-  pid[0] = {"SSR SousVide", 0, 0, 165, 0.591, 1000, 100, 0.08, 5, 0, 95, 0.9, 0, 0, 80, 0, 0, 0, 0};
-  //pid[1] = {"TITAN 50x50", 1, 1, 3.8, 0.01, 128, 6.0, 0.001, 10, 0, 95, 0.9, 0, 22, 100, 0, 0, 0, 0};
-  //pid[2] = {"TITAN 60x60", 2, 1, 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 0, 33, 100, 0, 0, 0, 0};
+  pidsize = 3; //3;
+  pid[0] = {"SSR SousVide", 0, 0, 165, 0.591, 1000, 100, 0.08, 5, 0, 95, 0.9, 0, 0, 100, 0, 0, 0, 0};
+  pid[1] = {"TITAN 50x50", 1, 1, 3.8, 0.01, 128, 6.2, 0.001, 5, 0, 95, 0.9, 0, 25, 100, 0, 0, 0, 0};
+  pid[2] = {"Kamado 50x50", 2, 1, 7.0, 0.019, 630, 6.2, 0.001, 5, 0, 95, 0.9, 0, 25, 100, 0, 0, 0, 0};
 
 }
 
@@ -203,47 +152,58 @@ static inline float max(float a,float b)  {
         return a;
 }
 
+void stopautotune() {
+  autotune.value = 0;
+  autotune.initialized = false;
+  question.typ = AUTOTUNE;
+  drawQuestion(autotune.stop);
+}
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // AUTOTUNE
-void startautotunePID(int maxCycles, bool storeValues)  {
+void startautotunePID(int maxCyc, bool store, int over, long tlimit)  {
+  
+  autotune.cycles = 0;           // Durchläufe
+  autotune.heating = true;      // Flag
+  autotune.temp = pitmaster.set;
+  autotune.maxCycles = constrain(maxCyc, 5, 20);
+  autotune.storeValues = store;
+  autotune.keepup = false;
+  
+  uint32_t tmi = millis();
+  float tem = ch[pitmaster.channel].temp;
 
-    if (!autotune.initialized) {
+  // t0, t1, t2, t_high, bias, d, Kp, Ki, Kd, maxTemp, minTemp, pTemp, maxTP, tWP, TWP
   
-      autotune.cycles = 0;           // Durchläufe
-      autotune.heating = true;      // Flag
-      autotune.temp = pitmaster.set;
-      autotune.maxCycles = constrain(maxCycles, 5, 20);
-      autotune.storeValues = storeValues;
-  
-      uint32_t temp_millis = millis();
-      autotune.t0 = temp_millis;    // Zeitpunkt t0
-      autotune.t1 = temp_millis;    // Zeitpunkt t1
-      autotune.t2 = temp_millis;    // Zeitpunkt t2
-      autotune.t_high = 0;
-      autotune.bias = pidMax/2;         // Startwert = halber Wert
-      autotune.d = pidMax/2;          // Startwert = halber Wert
+  autotune.t0 = tmi;    // Zeitpunkt t0
+  autotune.t1 = tmi;    // Zeitpunkt t1
+  autotune.t2 = tmi;    // Zeitpunkt t2
+  autotune.t_high = 0;
+  autotune.bias = pidMax/2;         // Startwert = halber Wert
+  autotune.d = pidMax/2;          // Startwert = halber Wert
 
-      float tem = ch[pitmaster.channel].temp; 
-      autotune.Kp = 0;
-      autotune.Ki = 0; 
-      autotune.Kd = 0;
-      autotune.maxTemp = tem; 
-      autotune.minTemp = tem;
-      autotune.previousTemp = tem;  // Startwert
-      autotune.maxTP = 0.0;
-      autotune.tWP = temp_millis;
-      autotune.TWP = tem;
+  autotune.Kp = 0;
+  autotune.Ki = 0; 
+  autotune.Kd = 0;
+  autotune.maxTemp = tem; 
+  autotune.minTemp = tem;
+  autotune.pTemp = tem;  // Startwert
+  autotune.maxTP = 0.0;
+  autotune.tWP = tmi;
+  autotune.TWP = tem;
+
+  autotune.overtemp = over; //40
+  autotune.timelimit = tlimit; //(10L*60L*1000L*4L)
   
-      DPRINTPLN("[AUTOTUNE]\t Start!");
- 
-      disableAllHeater();         // switch off all heaters.
-      
-      autotune.value = pidMax;   // Aktor einschalten
-    }
-    
-    autotune.initialized = true;
-    pitmaster.active = true;
-    
+  DPRINTPLN("[AUTOTUNE]\t Start!");
+  
+  disableAllHeater();         // switch off all heaters.
+  autotune.value = pidMax;   // Aktor einschalten
+  autotune.initialized = true;  
+  pitmaster.active = true;
+  autotune.start = tem;
+
+  log_count = 0; //TEST
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -264,19 +224,27 @@ float autotunePID() {
    
    */
 
+  // Show start on OLED
+  if (autotune.start) {
+    
+    question.typ = AUTOTUNE;
+    drawQuestion(0);
+    autotune.start = false;
+  }
+
   float currentTemp = ch[pitmaster.channel].temp;
   unsigned long time = millis();
 
   if (autotune.cycles == 0) { 
-    float TP = (currentTemp - autotune.previousTemp)/ (float)pitmaster.pause;
+    float TP = (currentTemp - autotune.pTemp)/ (float)pitmaster.pause;
     if (autotune.maxTP < TP) {
       autotune.maxTP = TP;
       autotune.tWP = time;
-      autotune.TWP = (currentTemp + autotune.previousTemp)/2.0;
+      autotune.TWP = (currentTemp + autotune.pTemp)/2.0;
       DPRINTP("[AUTOTUNE]\tWendepunktbestimmung: ");
       DPRINTLN(TP*1000);
     }
-    autotune.previousTemp = currentTemp;
+    autotune.pTemp = currentTemp;
   }
   
   autotune.maxTemp = max(autotune.maxTemp,currentTemp);
@@ -397,20 +365,18 @@ float autotunePID() {
     }
   }
     
-  if (currentTemp > (autotune.temp + 40))  {   // FEHLER
+  if (currentTemp > (autotune.temp + autotune.overtemp))  {   // FEHLER
     DPRINTPLN("[ERROR]\tAutotune failure: Overtemperature");
     disableAllHeater();
-    autotune.value = 0;
-    autotune.initialized = false;
+    autotune.stop = 2;
     return 0;
   }
     
-  if (((time - autotune.t1) + (time - autotune.t2)) > (10L*60L*1000L*2L)) {   // 20 Minutes
+  if (((time - autotune.t1) + (time - autotune.t2)) > autotune.timelimit) {   // 20 Minutes
         
     DPRINTPLN("[ERROR]\tAutotune failure: TIMEOUT");
     disableAllHeater();
-    autotune.value = 0;
-    autotune.initialized = false;
+    autotune.stop = 2;
     return 0;
   }
     
@@ -418,8 +384,7 @@ float autotunePID() {
             
     DPRINTPLN("[AUTOTUNE]\tFinished!");
     disableAllHeater();
-    autotune.value = 0;
-    autotune.initialized = false;
+    autotune.stop = 1;
             
     if (autotune.storeValues)  {
       
@@ -444,6 +409,27 @@ float autotunePID() {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Control - Manuell PWM
 void pitmaster_control() {
+
+  if (autotune.stop > 0) {
+    if ((autotune.stop == 1) && autotune.storeValues) { // sauber beendet
+      setconfig(ePIT,{});
+      if (autotune.keepup) pitmaster.active = true;     // Pitmaster fortsetzen
+    }
+    stopautotune();
+    autotune.stop = 0;
+  }
+
+  // DC-Test beenden
+  if (dutycycle.on && (millis() - dutycycle.timer > 10000)) {
+    if (dutycycle.saved == 0) {   // off
+      pitmaster.active = false;
+      pitmaster.manual = false;
+    } else if (dutycycle.saved > 0) pitmaster.value = dutycycle.saved;  //manual
+    else pitmaster.manual = false;  // auto
+    dutycycle.on = false;
+    DPRINTLN("[INFO]\tDC-Test beendet.");
+  }
+  
   // ESP PWM funktioniert nur bis 10 Hz Trägerfrequenz stabil, daher eigene Taktung
   if (pitmaster.active == 1) {
   
@@ -457,23 +443,60 @@ void pitmaster_control() {
     if (millis() - pitmaster.last > pitmaster.pause) {
   
       float y;
+      pitmaster.last = millis();
 
-      if (autotune.initialized)       pitmaster.value = autotunePID();
-      else if (!pitmaster.manuel)     pitmaster.value = PID_Regler();
-      // falls manuel wird value vorgegeben
+      // DUTY CYCLE PROCESS
+      if (dutycycle.on)  {
+        if (!dutycycle.dc && (millis() - dutycycle.timer < 1000))
+          pitmaster.value = 50;
+        else pitmaster.value = dutycycle.value;
+        if (dutycycle.aktor == 1) {  // FAN
+          if (sys.pitsupply && sys.hwversion > 1) digitalWrite(PITSUPPLY, HIGH);   // 12V Supply
+          else digitalWrite(PITSUPPLY, LOW);
+          analogWrite(PITMASTER1,map(pitmaster.value,0,100,0,1024));
+        }
+        else if (dutycycle.aktor == 0) {    // SSR
+          pitmaster.msec = map(pitmaster.value,0,100,0,pitmaster.pause); 
+          if (sys.hwversion > 1) digitalWrite(PITSUPPLY, HIGH);   // 12V Supply
+          if (pitmaster.msec > 0) digitalWrite(PITMASTER1, HIGH);
+          if (pitmaster.msec < pitmaster.pause) pitmaster.event = true; // außer bei 100%
+        }
+        return;
+      }
+      else if (autotune.initialized)  pitmaster.value = autotunePID();
+      else if (!pitmaster.manual)     pitmaster.value = PID_Regler();
+      // falls manual wird value vorgegeben
+
+      // NORMAL PITMASTER PROCESS
+      if (pid[pitmaster.pid].aktor == 1) {              // FAN
+        int _DCmin = map(pid[pitmaster.pid].DCmin,0,100,0,1024);
+        int _DCmax = map(pid[pitmaster.pid].DCmax,0,100,0,1024);
+        if (sys.pitsupply && sys.hwversion > 1) digitalWrite(PITSUPPLY, HIGH);   // 12V Supply
+        else digitalWrite(PITSUPPLY, LOW);
+        if (pitmaster.value == 0) {   // bei 0 soll der Lüfter auch stehen
+          analogWrite(PITMASTER1,0);
+          pitmaster.timer0 = millis();  
+        } else {
+          if (millis() - pitmaster.timer0 < 1500)  {  // ein Zyklus
+            analogWrite(PITMASTER1,map(30,0,100,_DCmin,_DCmax));   // BOOST
+          } else
+            analogWrite(PITMASTER1,map(pitmaster.value,0,100,_DCmin,_DCmax));
+        }
       
-      if (pid[pitmaster.pid].aktor == 1)                // FAN
-        analogWrite(PITMASTER1,map(pitmaster.value,0,100,0,1024));
-      else if (pid[pitmaster.pid].aktor == 0){          // SSR
-        pitmaster.msec = map(pitmaster.value,0,100,0,pitmaster.pause); 
+      } else if (pid[pitmaster.pid].aktor == 0){          // SSR
+        int _DCmin = map(pid[pitmaster.pid].DCmin,0,100,0,pitmaster.pause);
+        int _DCmax = map(pid[pitmaster.pid].DCmax,0,100,0,pitmaster.pause);
+        pitmaster.msec = map(pitmaster.value,0,100,_DCmin,_DCmax); 
+        if (sys.hwversion > 1) digitalWrite(PITSUPPLY, HIGH);   // 12V Supply
         if (pitmaster.msec > 0) digitalWrite(PITMASTER1, HIGH);
         if (pitmaster.msec < pitmaster.pause) pitmaster.event = true;  // außer bei 100%
       }
-    
-      pitmaster.last = millis();
     }
-  } else {
-    digitalWrite(PITMASTER1, LOW);
+  } else {    // TURN OFF PITMASTER
+    if (pid[pitmaster.pid].aktor == 1)  // FAN
+      analogWrite(PITMASTER1, LOW);
+    else digitalWrite(PITMASTER1, LOW); // SSR
+    if (sys.hwversion > 1) digitalWrite(PITSUPPLY, LOW);   // 12V Supply
     pitmaster.value = 0;
     pitmaster.event = false;
     pitmaster.msec = 0;
@@ -483,9 +506,28 @@ void pitmaster_control() {
 
 
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Control Duty Cycle
+void DC_control(bool dc, byte aktor, int val) {
 
-
-
+  if (!dutycycle.on) {
+    dutycycle.dc = dc;
+    dutycycle.aktor = aktor;
+    dutycycle.value = val;
+    dutycycle.on = true;
+    dutycycle.timer = millis();
+    if (pitmaster.active) 
+      if (pitmaster.manual) dutycycle.saved = pitmaster.value;  // bereits im manual Modus
+      else if (autotune.initialized) {
+        dutycycle.saved = 0; // autotune abbrechen
+        autotune.stop = 2;
+      }
+      else dutycycle.saved = -1;   // bereits im auto Modus
+    else dutycycle.saved = 0;
+    pitmaster.active = true;
+    pitmaster.manual = true;    // nur für die Anzeige
+  }
+}
 
 
 

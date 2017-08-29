@@ -20,8 +20,11 @@
 
 // EXECPTION LIST
 // https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
+// WATCHDOG
+// https://techtutorialsx.com/2017/01/21/esp8266-watchdog-functions/
 
 // Entwicklereinstellungen
+//#define ASYNC_TCP_SSL_ENABLED 1
 #define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
 
@@ -44,6 +47,7 @@
 // INCLUDE SUBROUTINES
 
 #include "c_init.h"
+#include "c_webhandler.h"
 #include "c_button.h"
 #include "c_median.h"
 #include "c_sensor.h"
@@ -56,6 +60,7 @@
 #include "c_wifi.h"
 #include "c_frames.h"
 #include "c_bot.h"
+#include "c_pmqtt.h"
 #include "c_ota.h"
 #include "c_server.h"
 
@@ -79,14 +84,22 @@ void setup() {
     check_sector();
     setEE(); start_fs();
 
-    // Initalize MQTT
-    set_mqtt();
+    // Initalize Aktor
+    set_piepser();
+
+    // GodMode aktiv
+    if (sys.god) {
+      piepserON(); delay(500); piepserOFF();
+    }
+
+    // Initalize P_MQTT
+    set_pmqtt();
     
     // Initialize Wifi
     set_wifi();
 
     // Update Time
-    set_time();
+    //set_time();
     
     // Scan Network
     WiFi.scanNetworks(true);
@@ -105,7 +118,6 @@ void setup() {
     // Initialize Sensors
     set_sensor();
     set_channels(0);
-    set_piepser();
 
     // Initialize Buttons
     set_button();
@@ -163,7 +175,7 @@ void loop() {
     timer_sensor();           // Temperture
     timer_alarm();            // Alarm
     pitmaster_control();      // Pitmaster
-    timer_charts();           // Charts
+    timer_iot();              // Charts
     timer_datalog();          // Datalog
     flash_control();          // Flash
     

@@ -34,63 +34,28 @@ void read_serial(char *buffer) {
     String command = str.substring(0,index);
     DPRINTP("[INFO]\tSerial Command: ");
     DPRINTLN(command);
-    
+
+    // Umsortieren
     for (int i = 0;i<index+1;i++) {
-    *buffer++;
+      *buffer++;
     }
-    
-    //Serial.println(buffer);
     uint8_t * PM_buffer = reinterpret_cast<uint8_t *>(buffer);
 
     // ADD WIFI SETTINGS
     if (command == "setnetwork") {
-       AsyncWebServerRequest *request;
-       handleSetNetwork(request,PM_buffer);
+       bodyWebHandler.setNetwork(PM_buffer);
        return;
     }
 
-    // SET THINGSPEAK KEYs
-    else if (command == "setcharts") {
-      AsyncWebServerRequest *request;
-      handleSetChart(request,PM_buffer);
-      return;
-    }
-
-    // SET SYSTEM
-    else if (command == "setsystem") {
-      AsyncWebServerRequest *request;
-      handleSetSystem(request,PM_buffer);
-      return;
-    }
-
-    // SET CHANNELS
-    else if (command == "setchannels") {
-      AsyncWebServerRequest *request;
-      handleSetChannels(request,PM_buffer);
-      return;
-    }
-
-    // AUTOTUNE
-    else if (command == "autotune") {
-      startautotunePID(5, true);
-      return;
-    }
-
-    // SET PITMASTER
-    else if (command == "setpitmaster") {
-      AsyncWebServerRequest *request;
-      handleSetPitmaster(request,PM_buffer); 
+     // UPDATE auf bestimmte Version
+    else if (command == "update") {
+      String payload((char*)buffer);
+      if (payload.indexOf("v") == 0) {
+        sys.getupdate = payload;  // kein Speichern, da während des Updates eh gespeichert wird
+        sys.update = 1;  
+      } else  DPRINTPLN("[INFO]\tUpdateversion nicht erkannt!");
       return;    
     }
-
-    // SET PITMASTER MANUEL
-    else if (command == "setmanuel") {
-      pitmaster.active = true;
-      pitmaster.manuel = true;
-      String val(buffer);
-      pitmaster.value = val.toInt();
-      return;
-    }    
   
   } else {
   
@@ -110,31 +75,27 @@ void read_serial(char *buffer) {
       Serial.println();
       return;
     }
-    
+    /*
     else if (str == "data") {
-      AsyncWebServerRequest *request;
-      handleData(request, false);
+      nanoWebHandler.handleData(false);
       return;
     }
   
     else if (str == "settings") {
-      AsyncWebServerRequest *request;
-      handleSettings(request, false);
+      nanoWebHandler.handleSettings(false);
       return;
     }
   
     else if (str == "networklist") {
-      AsyncWebServerRequest *request;
-      handleWifiResult(request, false);
+      nanoWebHandler.handleWifiResult(false);
       return;
     }
     
     else if (str == "networkscan") {
-      AsyncWebServerRequest *request;
-      handleWifiScan(request, false);
+      nanoWebHandler.handleWifiScan(false);
       return;
     }
-
+*/
     else if (str == "clearwifi") {
       setconfig(eWIFI,{}); // clear Wifi settings
       return;
@@ -145,27 +106,8 @@ void read_serial(char *buffer) {
       return;
     }
   
-    else if (str == "pittest") {
-      pitmaster.active = true;
-      pitmaster.manuel = true;
-      pitmaster.value = 90;
-      return;
-    }
-  
     else if (str == "configreset") {
-      set_channels(1);
-      setconfig(eCHANNEL,{});
-      loadconfig(eCHANNEL);
-      set_system();
-      setconfig(eSYSTEM,{});
-      loadconfig(eSYSTEM);
-      set_pitmaster(1);
-      set_pid();
-      setconfig(ePIT,{});
-      loadconfig(ePIT);
-      set_charts(1);
-      setconfig(eTHING,{});
-      loadconfig(eTHING);
+      nanoWebHandler.configreset();
       return;
     }
 
@@ -179,13 +121,6 @@ void read_serial(char *buffer) {
 
     else if (str == "getSSID") {
       Serial.println(WiFi.SSID());
-      return;
-    }
-
-    else if (str == "getTS") {
-      Serial.println(charts.TSwriteKey);
-      Serial.println(charts.TShttpKey);
-      Serial.println(charts.TSchID);
       return;
     }
 
@@ -216,7 +151,7 @@ void read_serial(char *buffer) {
 
     // AUTOTUNE
     else if (str == "autotune") {
-      startautotunePID(5, true);
+      startautotunePID(5, true, 40, 40L*60L*1000L);
       return;
     }
 
@@ -247,7 +182,26 @@ void read_serial(char *buffer) {
 
     // Test
     else if (str == "sendSetting") {
-      sendSettings();
+      //sendSettings();
+      return;
+    }
+    
+    // Set V2
+    else if (str == "v2") {
+      sys.hwversion = 2;
+      setconfig(eSYSTEM,{}); 
+      return;
+    }
+    
+    // Set Pitsupply
+    else if (str == "pitsupply") {
+      digitalWrite(PITSUPPLY, HIGH);
+      return;
+    }
+
+    // Test pitmaster 2
+    else if (str == "pit2") {
+      digitalWrite(PITMASTER2, HIGH);
       return;
     }
   }

@@ -109,7 +109,7 @@ void get_rssi() {
   rssi = WiFi.RSSI();
 }
 
-
+/*
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Send NTP request to the time server
 void sendNTPpacket(IPAddress& address) {
@@ -164,7 +164,7 @@ time_t getNtpTime() {
   DPRINTPLN("[INFO]\tNo NTP Response!");
   return 0; // return 0 if unable to get the time
 }
-
+*/
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -207,6 +207,7 @@ int scan_wifi() {
 
   // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/scan-class.md#scannetworks
   // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/station-class.md#setautoreconnect
+  // http://arduino-esp8266.readthedocs.io/en/latest/esp8266wifi/scan-class.html#scannetworksasync
   DPRINT(n);
   DPRINTPLN(" network(s) found");
   
@@ -235,7 +236,6 @@ void wifimonitoring() {
     DPRINTP("[INFO]\tIP address: ");
     DPRINTLN(WiFi.localIP());
 
-    displayblocked = true;
     question.typ = IPADRESSE;
     drawQuestion(0);
 
@@ -274,35 +274,6 @@ void wifimonitoring() {
         DPRINTPLN("[INFO]\tClient hat sich von AP getrennt -> AP abgeschaltet");
       }
   }
-}
-
-
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// MQTT
-void connectToMqtt() {
-  DPRINTLN();
-  DPRINTP("[INFO]\tWiFi connected to: ");
-  DPRINTLN(WiFi.SSID());
-  DPRINTP("[INFO]\tIP address: ");
-  DPRINTLN(WiFi.localIP());
-  DPRINTPLN("[INFO]\tConnecting to MQTT...");
-  mqttClient.connect();
-}
-
-void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-  connectToMqtt();
-}
-
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
-  DPRINTPLN("[INFO]\tDisconnected from MQTT.");
-  if (WiFi.isConnected()) connectToMqtt;
-}
-
-void set_mqtt() {
-  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-  mqttClient.onDisconnect(onMqttDisconnect);
-  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
 }
 
 
@@ -345,7 +316,7 @@ void stop_wifi() {
   
   if (millis() - isAPcount > 1000) {
     DPRINTPLN("[INFO]\tStop Wifi");
-    mqttClient.disconnect();
+    pmqttClient.disconnect();
     wifi_station_disconnect();
     wifi_set_opmode(NULL_MODE);
     wifi_set_sleep_type(MODEM_SLEEP_T);
