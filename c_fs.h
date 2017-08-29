@@ -272,6 +272,8 @@ bool loadconfig(byte count) {
       else return false;
       if (json.containsKey("god"))      sys.god = json["god"];
       else return false;
+      if (json.containsKey("pitsup"))      sys.pitsupply = json["pitsup"];
+      //else return false;
       
     }
     break;
@@ -443,6 +445,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["batmin"] =      battery.min;
       json["logsec"] =      log_sector;
       json["god"] =         sys.god;
+      json["pitsup"] =      sys.pitsupply;
     
       size_t size = json.measureLength() + 1;
       clearEE(EESYSTEM,EESYSTEMBEGIN);  // Bereich reinigen

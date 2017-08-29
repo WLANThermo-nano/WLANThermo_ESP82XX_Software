@@ -22,13 +22,13 @@
  * Example:
  *
  * Check for new update
- * http://nano.wlanthermo.de/checkUpdate.php?device="nano"&serial="Serialnummer"&hw_version="v1"&sw_version="currentVersion"
+ * http://update.wlanthermo.de/checkUpdate.php?device="nano"&serial="Serialnummer"&hw_version="v1"&sw_version="currentVersion"
  * ----------------------------------------------------------------------------------------------------------------------------------------
  * Download Firmware-version XYZ
- * http://nano.wlanthermo.de/checkUpdate.php?device="nano"serial="Serialnummer"&hw_version="v1"&sw_version="currentVersion"&getFirmware="XYZ"
+ * http://update.wlanthermo.de/checkUpdate.php?device="nano"serial="Serialnummer"&hw_version="v1"&sw_version="currentVersion"&getFirmware="XYZ"
  * ----------------------------------------------------------------------------------------------------------------------------------------
  * Download Spiffs-version XYZ
- * http://nano.wlanthermo.de/checkUpdate.php?device="nano"serial="Serialnummer"&hw_version="v1"&sw_version="currentVersion"&getSpiffs="XYZ"
+ * http://update.wlanthermo.de/checkUpdate.php?device="nano"serial="Serialnummer"&hw_version="v1"&sw_version="currentVersion"&getSpiffs="XYZ"
  * ----------------------------------------------------------------------------------------------------------------------------------------
  */ 
 

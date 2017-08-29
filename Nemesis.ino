@@ -131,8 +131,6 @@ void setup() {
 
     // Check HTTP Update
     check_http_update();
-    
-    chart.on = false;
   }
 }
 

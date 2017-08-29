@@ -23,17 +23,16 @@
 #include <ESP8266WiFi.h>          // WIFI
 #include <ESP8266WiFiMulti.h>     // WIFI
 //#include <WiFiClientSecure.h>     // HTTPS
-//#include <WiFiUdp.h>              // NTP
 #include <TimeLib.h>              // TIME
 #include <EEPROM.h>               // EEPROM
 #include <FS.h>                   // FILESYSTEM
 #include <ArduinoJson.h>          // JSON
-#include <ESP8266mDNS.h>        
-#include <ESPAsyncTCP.h>
+#include <ESP8266mDNS.h>          // mDNS
+#include <ESPAsyncTCP.h>          // ASYNCTCP
 #include <ESPAsyncWebServer.h>    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
-#include "AsyncJson.h"
-#include <AsyncMqttClient.h>
-#include <StreamString.h>
+#include "AsyncJson.h"            // ASYNCJSON
+#include <AsyncMqttClient.h>      // ASYNCMQTT
+//#include <StreamString.h>
 
 extern "C" {
 #include "user_interface.h"
@@ -49,9 +48,9 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
-int co = 32;
+
 // HARDWARE
-#define FIRMWAREVERSION "v0.7.9"
+#define FIRMWAREVERSION "v0.8.0"
 #define APIVERSION      "v1"
 
 // CHANNELS
@@ -155,13 +154,14 @@ struct ChannelData {
 
 ChannelData ch[CHANNELS];
 
+// SENSORTYP
 String  ttypname[SENSORTYPEN] = {"Maverick","Fantast-Neu","Fantast","iGrill2","ET-73",
                                  "Perfektion","5K3A1B","MOUSER47K","100K6A1B","Weber_6743",
                                  "Santos"};
-
-
+// TEMPERATURE UNIT
 String  temp_unit = "C";
-//String colors[8] = {"#6495ED", "#CD2626", "#66CDAA", "#F4A460", "#D02090", "#FFEC8B", "#BA55D3", "#008B8B"};
+
+// CHANNEL COLORS
 String colors[8] = {"#0C4C88","#22B14C","#EF562D","#FFC100","#A349A4","#804000","#5587A2","#5C7148"};
 
 // PITMASTER
@@ -182,6 +182,7 @@ struct Pitmaster {
 Pitmaster pitmaster;
 int pidsize;
 
+// PID PROFIL
 struct PID {
   String name;
   byte id;
@@ -207,6 +208,7 @@ struct PID {
 };
 PID pid[PITMASTERSIZE];
 
+// AUTOTUNE
 struct AutoTune {
    bool storeValues;
    float temp;             // BETRIEBS-TEMPERATUR
@@ -243,6 +245,7 @@ struct AutoTune {
 
 AutoTune autotune;
 
+// DUTYCYCLE
 struct DutyCycle {
   long timer;
   int value;
@@ -273,14 +276,13 @@ uint32_t log_sector;                // erster Sector von APP2
 uint32_t freeSpaceStart;            // First Sector of OTA
 uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
+// NOTIFICATION
 struct Notification {
   byte ch;                          // CHANNEL
   bool limit;                       // LIMIT: 0 = LOW TEMPERATURE, 1 = HIGH TEMPERATURE
 };
 
 Notification notification;
-
-
 
 // SYSTEM
 struct System {
@@ -295,12 +297,12 @@ struct System {
    String getupdate;
    bool autoupdate;
    bool god;
+   bool pitsupply;        
 };
 
 System sys;
 bool stby = false;                // USB POWER SUPPLY?            
 byte pulsalarm = 1;
-
 
 // BATTERY
 struct Battery {
@@ -342,15 +344,14 @@ struct IoT {
 
 IoT iot;
 
-// Chart
+// CLOUD CHART/LOG
 struct Chart {
-   bool on;                  // NANO CHART ON / OFF
-   String token;             // NANO CHART TOKEN
-   int interval;                  // NANO CHART INTERVALL
+   bool on = false;                  // NANO CHART ON / OFF
+//   String token;             // NANO CHART TOKEN
+//   int interval;                  // NANO CHART INTERVALL
 };
 
 Chart chart;
-
 
 // OLED
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL     
@@ -358,6 +359,7 @@ bool LADENSHOW = false;           // LOADING INFORMATION?
 bool displayblocked = false;                     // No OLED Update
 enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE, AUTOTUNE};
 
+// OLED QUESTION
 struct MyQuestion {
    int typ;    
    int con;            
@@ -387,9 +389,6 @@ struct HoldSSID {
    String pass;
 };
 HoldSSID holdssid;
-
-// NTP
-byte packetBuffer[ NTP_PACKET_SIZE];    //buffer to hold incoming and outgoing packets
 
 // BUTTONS
 byte buttonPins[]={btn_r,btn_l};          // Pins
@@ -528,6 +527,9 @@ void sendDataCloud();
 
 String cloudData();
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
 void set_serial() {
@@ -554,6 +556,7 @@ void set_system() {
   sys.god = false;
   battery.max = BATTMAX;
   battery.min = BATTMIN;
+  sys.pitsupply = false;
 }
 
 
@@ -626,7 +629,6 @@ void timer_iot() {
   }
   
 }
-
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // DataLog Timer
@@ -846,6 +848,25 @@ String getMacAddress()  {
 }
 
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Cloud Token Generator
+String newToken() {
+  String stamp = String(now(), HEX);
+  int x = 10 - stamp.length();          //pow(16,(10 - timestamp.length()));
+  long y = 1;    // long geht bis 16^7
+  if (x > 7) {
+    stamp += String(random(268435456), HEX);
+    x -= 7;
+  }
+  for (int i=0;i<x;i++) y *= 16;
+  stamp += String(random(y), HEX);
+  return (String) String(ESP.getChipId(), HEX) + stamp;
+}
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// GET/POST-Request
+
 #define SAVEDATALINK "/saveData.php"
 #define SAVELOGSLINK "/saveLogs.php"
 #define SENDTSLINK "/update.json"
@@ -922,7 +943,6 @@ String createParameter(int para) {
   return command;
 }
 
-
 String createCommand(bool meth, int para, const char * link, const char * host, int content) {
 
   String command;
@@ -996,20 +1016,6 @@ void serverAnswer(String payload, size_t len) {
     payload = payload.substring(0,index);
     DPRINTLN(payload);
   }
-}
-
-String newToken() {
-  String stamp = String(now(), HEX);
-  int x = 10 - stamp.length();          //pow(16,(10 - timestamp.length()));
-  long y = 1;    // long geht bis 16^7
-  if (x > 7) {
-    stamp += String(random(268435456), HEX);
-    x -= 7;
-  }
-  for (int i=0;i<x;i++) y *= 16;
-  stamp += String(random(y), HEX);
-  Serial.println(y);
-  return (String) String(ESP.getChipId(), HEX) + stamp;
 }
 
 void printRequest(uint8_t* datas) {

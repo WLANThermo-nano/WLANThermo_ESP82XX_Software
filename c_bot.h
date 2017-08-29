@@ -40,7 +40,6 @@ void set_iot(bool init) {
     iot.P_MQTT_USER = "";
     iot.P_MQTT_PASS = ""; 
     iot.P_MQTT_QoS = 0;
-    
    }
    
    iot.TS_show8 = false;        

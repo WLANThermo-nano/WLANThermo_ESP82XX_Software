@@ -365,8 +365,13 @@ void server_setup() {
   });
 
   server.on("/pitsupply",[](AsyncWebServerRequest *request){
-    if (sys.hwversion == 2) digitalWrite(PITSUPPLY, HIGH);
-    request->send(200, "text/plain", "aktiviert");
+    if (sys.hwversion > 1 && !sys.pitsupply) {
+      sys.pitsupply = true;
+      request->send(200, "text/plain", "aktiviert");
+    } else {
+      sys.pitsupply = false;
+      request->send(200, "text/plain", "deaktiviert");
+    }
   });
    
   server.on("/startlog",[](AsyncWebServerRequest *request){
