@@ -2265,7 +2265,6 @@
 							  <select id="hwversion"></select><label class="control-label" for="select">Hardwareversion</label><i class="bar"></i>
 							</div>
 							<div class="checkbox"><label><input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i>Hardwarealarm</label></div>
-							<div class="checkbox"><label><input id="summer" type="checkbox"/><i class="helper"></i>Sommerzeit</label></div>
 							<div class="checkbox"><label><input id="fastmode" type="checkbox"/><i class="helper"></i>Schnelllauf</label></div>
 							<div class="checkbox"><label><input id="searchUpdate" type="checkbox"/><i class="helper"></i>Nach Updates suchen</label></div>								
 						</form>
@@ -2797,7 +2796,6 @@
 			byId('thermoname').innerHTML = jr.system.host;
 			byId('unit').value = jr.system.unit;
 			byId('hwalarm').checked = jr.system.hwalarm;
-			byId('summer').checked = jr.system.summer;
 			byId('fastmode').checked = jr.system.fastmode;
 			byId('searchUpdate').checked = jr.system.autoupd;
 			clearOption('hwversion');
@@ -2821,7 +2819,6 @@
 			jr.system.language = byId('language').value;
 			jr.system.unit = byId('unit').value;
 			jr.system.hwalarm = byId('hwalarm').checked;
-			jr.system.summer = byId('summer').checked;
 			jr.system.fastmode = byId('fastmode').checked;		
 			jr.system.autoupd = byId('searchUpdate').checked;			
 			var data = JSON.stringify(jr.system);
