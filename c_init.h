@@ -287,10 +287,8 @@ struct System {
    byte hwversion;           // HARDWARE VERSION
    bool fastmode;              // FAST DISPLAY MODE
    String apname;             // AP NAME
-   bool summer;              // SUMMER TIME
    String host;                     // HOST NAME
    String language;           // SYSTEM LANGUAGE
-   int timeZone;              // TIMEZONE
    bool hwalarm;              // HARDWARE ALARM 
    byte updatecount;           // 
    int update;             // FIRMWARE UPDATE -1 = check, 0 = no, 1 = spiffs, 2 = firmware
@@ -442,8 +440,7 @@ static inline void button_event();                // Response Button Status
 void controlAlarm(bool action);                              // Control Hardware Alarm
 void set_piepser();
 void piepserOFF();
-void piepserON();
-time_t mynow();      
+void piepserON();      
 
 // SENSORS
 byte set_sensor();                                // Initialize Sensors
@@ -550,8 +547,6 @@ void set_system() {
   sys.hwalarm = false; 
   sys.apname = APNAME;
   sys.language = "de";
-  sys.timeZone = 1;
-  sys.summer = false;
   sys.fastmode = false;
   sys.hwversion = 1;
   if (sys.update == 0) sys.getupdate = "false";   // Änderungen am EE während Update
@@ -737,16 +732,6 @@ String digitalClockDisplay(time_t t){
 }
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// SYSTEM TIME based on UTC
-time_t mynow() {
-
-  if (sys.summer) return now() + (sys.timeZone+1) * SECS_PER_HOUR;
-  else return now() + sys.timeZone * SECS_PER_HOUR;
-  
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Date String to Date Element
 // Quelle: https://github.com/oh1ko/ESP82666_OLED_clock/blob/master/ESP8266_OLED_clock.ino
 tmElements_t * string_to_tm(tmElements_t *tme, char *str) {
@@ -784,7 +769,7 @@ tmElements_t * string_to_tm(tmElements_t *tme, char *str) {
   return tme;
 }
 
-
+/*
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Update Time
 void set_time() {
@@ -799,6 +784,7 @@ void set_time() {
   DPRINTP("[INFO]\t");
   DPRINTLN(digitalClockDisplay(mynow()));
 }
+*/
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -207,6 +207,7 @@ int scan_wifi() {
 
   // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/scan-class.md#scannetworks
   // https://github.com/esp8266/Arduino/blob/master/doc/esp8266wifi/station-class.md#setautoreconnect
+  // http://arduino-esp8266.readthedocs.io/en/latest/esp8266wifi/scan-class.html#scannetworksasync
   DPRINT(n);
   DPRINTPLN(" network(s) found");
   

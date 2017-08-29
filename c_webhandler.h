@@ -70,9 +70,7 @@ class NanoWebHandler: public AsyncWebHandler {
     JsonObject& root = response->getRoot();
     JsonObject& _system = root.createNestedObject("system");
 
-    _system["time"] =       String(mynow());
-    _system["utc"] =        sys.timeZone;
-    _system["summer"] =     sys.summer;
+    _system["time"] =       String(now());
     _system["ap"] =         sys.apname;
     _system["host"] =       sys.host;
     _system["language"] =   sys.language;
@@ -163,8 +161,7 @@ class NanoWebHandler: public AsyncWebHandler {
     JsonObject& root = response->getRoot();
     JsonObject& system = root.createNestedObject("system");
 
-    system["time"] = String(mynow());
-    system["utc"] = sys.timeZone;
+    system["time"] = String(now());
     system["soc"] = battery.percentage;
     system["charge"] = !battery.charge;
     system["rssi"] = rssi;
@@ -596,11 +593,9 @@ class BodyWebHandler: public AsyncWebHandler {
   
     if (_system.containsKey("hwalarm")) sys.hwalarm = _system["hwalarm"];
     if (_system.containsKey("host")) sys.host = _system["host"].asString();
-    if (_system.containsKey("utc")) sys.timeZone = _system["utc"];
     if (_system.containsKey("language")) sys.language = _system["language"].asString();
     if (_system.containsKey("unit"))  unit = _system["unit"].asString();
     if (_system.containsKey("autoupd"))  sys.autoupdate = _system["autoupd"];
-    if (_system.containsKey("summer")) sys.summer = _system["summer"];
     if (_system.containsKey("fastmode")) sys.fastmode = _system["fastmode"];
     if (_system.containsKey("ap")) sys.apname = _system["ap"].asString();
     if (_system.containsKey("hwversion")) {
@@ -618,9 +613,6 @@ class BodyWebHandler: public AsyncWebHandler {
       get_Temperature();                              // Update Temperature
       DPRINTLN("[INFO]\tChange Unit");
     }
-  
-    DPRINT("[INFO]\t");   // kein Progmem möglich
-    DPRINTLN(digitalClockDisplay(mynow()));
   
     return 1;
   }

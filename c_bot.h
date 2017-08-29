@@ -35,7 +35,7 @@ void set_iot(bool init) {
    if (init) {
     iot.TS_writeKey = "";     
     iot.TS_httpKey = "";       
-    iot.TS_userKey = ""; //"Q2EID9PNX0YQVGRH";       
+    iot.TS_userKey = "";     
     iot.TS_chID = ""; 
     iot.P_MQTT_USER = "";
     iot.P_MQTT_PASS = ""; 
@@ -45,7 +45,7 @@ void set_iot(bool init) {
    
    iot.TS_show8 = false;        
    iot.TS_int = INTERVALCOMMUNICATION/1000;
-   iot.TS_on = true;
+   iot.TS_on = false;
    iot.P_MQTT_on = false;
    iot.P_MQTT_HOST = "192.168.2.1";
    iot.P_MQTT_PORT = 1883;
