@@ -1,6 +1,8 @@
 # Nemesis
 
-ESP8582 based WLAN Thermometer
+ESP8582 based WLAN Thermometer Nano
+
+Functional Description: https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki
 
 This works with the ESP8266 Arduino platform with a recent stable release(2.0.0 or newer) 
 https://github.com/esp8266/Arduino and the Arduino Time Library https://github.com/PaulStoffregen/Time.
