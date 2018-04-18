@@ -53,8 +53,8 @@ float calcT(int r, byte typ){
   case 6:  // NTC 5K3A1B (orange Kopf)
     Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243;  
     break; 
-  case 7: // NTC 47K MOUSER aus B25/50 = 4050
-    Rn = 47; a = 0.003354; b = 0.0002469; c = 0;
+  case 7: // Acurite
+    Rn = 50.21; a = 3.3555291e-03; b = 2.5249073e-04; c = 2.5667292e-06;
     break;
   case 8: // NTC 100K6A1B (lila Kopf)
     Rn = 100; a = 0.00335639; b = 0.000241116; c = 0.00000243362; 
@@ -65,6 +65,14 @@ float calcT(int r, byte typ){
   case 10: // Santos
     Rn = 200.82; a = 3.3561093e-03; b = 2.3552814e-04; c = 2.1375541e-06; 
     break;
+  case 11:
+    //Rn = ((r * 2.048 )/ 4096.0)*1000.0;
+    //Serial.println(ampere);
+    return ampere;
+  case 12:
+    //Rn = ((r * 2.048 )/ 4096.0)*1000.0;
+    //Serial.println(r);
+    return Rmess*((4096.0/(4096-r)) - 1);
    
   default:  
     return INACTIVEVALUE;
@@ -85,18 +93,24 @@ void get_Temperature() {
   for (int i=0; i < CHANNELS; i++)  {
 
     float value;
-  
-    //if (CHANNELS > 3 && i == CHANNELS-1) {
-      // Letzter Kanal ist immer Umgebungstemperatur und der ist Kanal 7
-      //value = calcT(get_adc_average(6),ch[i].typ);
-    //}
+ 
     // NTC der Reihe nach auslesen
-    //else  {
-      value = calcT(get_adc_average(i),ch[i].typ);
-    //}
+    value = calcT(get_adc_average(i),ch[i].typ);
+ 
+    // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
+    // KTYPE wandert dann auf Kanal 5
+    if (sys.typk && sys.hwversion == 1) {
+      if (i == 4) value = get_thermocouple(false);
+      if (i == 5) value = get_thermocouple(true);
+      //if (i == 5) value = INACTIVEVALUE;
+    }
+    //if (i == 0) value = battery.voltage/100.0;
+    //if (i == 1) value = 10.0*batteryMonitor.getVCell();
+    //if (i == 2) value = 10.0*batteryMonitor.getVoltage();
+    //if (i == 3) value = batteryMonitor.getSoC();
 
     // Umwandlung C/F
-    if ((temp_unit == "F") && value!=INACTIVEVALUE) {  // Vorsicht mit INACTIVEVALUE
+    if ((sys.unit == "F") && value!=INACTIVEVALUE) {  // Vorsicht mit INACTIVEVALUE
       value *= 9.0;
       value /= 5.0;
       value += 32;
@@ -112,8 +126,8 @@ void get_Temperature() {
       ch[i].match = constrain(match, 0, 20);
     }
     else ch[i].match = 0;
-
   }
+
 }
 
 
@@ -127,14 +141,13 @@ void set_channels(bool init) {
     ch[i].temp = INACTIVEVALUE;
     ch[i].match = 0;
     ch[i].isalarm = false;
-    ch[i].showalarm = false;
-    ch[i].show = false;
+    ch[i].showalarm = 0;
 
     if (init) {
       ch[i].name = ("Kanal " + String(i+1));
       ch[i].typ = 0;
     
-      if (temp_unit == "F") {
+      if (sys.unit == "F") {
         ch[i].min = ULIMITMINF;
         ch[i].max = OLIMITMINF;
       } else {
@@ -160,7 +173,7 @@ void transform_limits() {
     max = ch[i].max;
     min = ch[i].min;
 
-    if (temp_unit == "F") {               // Transform to °F
+    if (sys.unit == "F") {               // Transform to °F
       max *= 9.0;
       max /= 5.0;
       max += 32;

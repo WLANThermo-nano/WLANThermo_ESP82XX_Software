@@ -106,11 +106,11 @@ void do_http_update() {
     sys.update = 0;
     setconfig(eSYSTEM,{});
     sys.update = -1;   // Neue Suche anstoßen
-    DPRINTPLN("[INFO]\tUPDATE FINISHED");
+    IPRINTPLN("u:finish");    // Update finished
     return;
   }
   
-  if((isAP == 0)) {
+  if((wifi.mode == 1)) {                 // nur bei STA
     if (sys.getupdate != "false") {
 
       // UPDATE Adresse
@@ -120,14 +120,14 @@ void do_http_update() {
       adress += createParameter(HARDWAREVS);
       adress += createParameter(SOFTWAREVS);
 
-      // UPDATE 1x Wiederholen falls schief gelaufen
-      if (sys.updatecount < 2) sys.updatecount++;   // eine Wiederholung
+      // UPDATE 2x Wiederholen falls schief gelaufen
+      if (sys.updatecount < 3) sys.updatecount++;   // Wiederholung
       else  {
         sys.update = 0;
         setconfig(eSYSTEM,{});
         question.typ = OTAUPDATE;
         drawQuestion(0);
-        DPRINTPLN("[INFO]\tUPDATE_CANCELED");
+        IPRINTPLN("u:cancel");      // Update canceled
         displayblocked = false;
         sys.updatecount = 0;
         return;
@@ -141,7 +141,7 @@ void do_http_update() {
         sys.update = 2;  // Nächster Updatestatus
         drawUpdate("Webinterface");
         setconfig(eSYSTEM,{});                                      // SPEICHERN
-        DPRINTPLN("[INFO]\tDo SPIFFS Update ...");
+        IPRINTPLN("u:SPIFFS ...");
         ret = ESPhttpUpdate.updateSpiffs(adress + "&getSpiffs=" + sys.getupdate);
 
     
@@ -149,7 +149,8 @@ void do_http_update() {
         sys.update = 3;
         drawUpdate("Firmware");
         setconfig(eSYSTEM,{});                                      // SPEICHERN
-        DPRINTPLN("[INFO]\tDo Firmware Update ...");
+        IPRINTPLN("u:FW ...");
+        Serial.println(adress + "&getFirmware=" + sys.getupdate);
         ret = ESPhttpUpdate.update(adress + "&getFirmware=" + sys.getupdate);
     
       } 
@@ -176,7 +177,7 @@ void do_http_update() {
           break;
       }
     } else {
-      DPRINTPLN("[INFO]\tKein UPDATE vorhanden");
+      IPRINTPLN("u:no");
       sys.update = 0;   // Vorgang beenden
     }
   }
@@ -185,13 +186,14 @@ void do_http_update() {
 
 // see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
 static AsyncClient * updateClient = NULL;
+bool updateClientssl;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Check if there is http update
 void check_http_update() {
 
   if (sys.update < 1) {
-    if((isAP == 0 && sys.autoupdate)) {
+    if((wifi.mode == 1 && sys.autoupdate)) {
 
       if(updateClient) return;                 //client already exists
 
@@ -208,6 +210,7 @@ void check_http_update() {
       updateClient->onConnect([](void * arg, AsyncClient * client){
 
         printClient(CHECKUPDATELINK ,CLIENTCONNECT);
+        updateClientssl = false;
         
         updateClient->onError(NULL, NULL);
 
@@ -220,31 +223,47 @@ void check_http_update() {
         client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
           
           String payload((char*)data);
-          if (payload.indexOf("200 OK") > -1) {
-        
+          //Serial.println(payload);
+          
+          if ((payload.indexOf("200 OK") > -1) || updateClientssl) {
+          
             // Date
             int index = payload.indexOf("Date: ");
+            if (index > -1) {
             
-            char date_string[27];
-            for (int i = 0; i < 26; i++) {
-              char c = payload[index+i+6];
-              date_string[i] = c;
+              char date_string[27];
+              for (int i = 0; i < 26; i++) {
+                char c = payload[index+i+6];
+                date_string[i] = c;
+              }
+
+              tmElements_t tmx;
+              string_to_tm(&tmx, date_string);
+              setTime(makeTime(tmx));
+
+              IPRINTP("UTC: ");
+              DPRINTLN(digitalClockDisplay(now()));
+
             }
 
-            tmElements_t tmx;
-            string_to_tm(&tmx, date_string);
-            setTime(makeTime(tmx));
-
-            DPRINTP("[INFO]\tUTC: ");
-            DPRINTLN(digitalClockDisplay(now()));
-            
+            if (payload.indexOf("Connection: close") > -1) {
+              updateClientssl = true;// SSL Verbindung
+              return;
+            }
+           
             // Update
-            DPRINTP("[HTTP]\tGET: ");
-            index = payload.indexOf("\r\n\r\n");       // Trennung von Header und Body
-            payload = payload.substring(index+7,len);      // Beginn des Body
+            if (updateClientssl) {
+              index = payload.indexOf("\n");    // Neue Zeile
+              payload = payload.substring(index+1,len);
+            } else {
+              index = payload.indexOf("\r\n\r\n");       // Trennung von Header und Body
+              payload = payload.substring(index+7,len);      // Beginn des Body
+            }
+            
             index = payload.indexOf("\r");                 // Ende Versionsnummer
             payload = payload.substring(0,index);
 
+            DPRINTP("[HTTP]\tGET: ");
             if (payload == "false") {
               DPRINTPLN("Kein Update");
               sys.getupdate = payload;
@@ -257,6 +276,7 @@ void check_http_update() {
               sys.getupdate = "false";
             }
             setconfig(eSYSTEM,{});    // Speichern
+            updateClientssl = false;
           }
            
         }, NULL);

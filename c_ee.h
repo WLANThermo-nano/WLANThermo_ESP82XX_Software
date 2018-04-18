@@ -26,7 +26,7 @@ void setEE() {
   
   // EEPROM Sector: 0xFB, ab Sector 0xFC liegen System Parameter
   
-  DPRINTP("[INFO]\tInitalize EEPROM at Sector: 0x"); // letzter Sector von APP2
+  IPRINTP("EEPROM: 0x"); // letzter Sector von APP2
   DPRINT((((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE),HEX);
   DPRINTP(" (");
   DPRINT(EEPROM_SIZE, DEC);  // ESP.getFreeSketchSpace()
@@ -35,10 +35,10 @@ void setEE() {
   EEPROM.begin(EEPROM_SIZE);
 
   // WIFI SETTINGS:         0    - 300
-  // SYSTEM SETTINGS:       300  - 550
-  // CHANNEL SETTINGS:      550  - 1050
-  // THINGSPEAK SETTINGS:   1050 - 1340
-  // PITMASTER SETTINGS:    1340 - 2040
+  // SYSTEM SETTINGS:       300  - 680
+  // CHANNEL SETTINGS:      680  - 1180
+  // THINGSPEAK SETTINGS:   1180 - 1600
+  // PITMASTER SETTINGS:    1600 - 2300
   
 }
 
@@ -46,7 +46,7 @@ void setEE() {
 // Write to EEPROM
 void writeEE(const char* json, int len, int startP) {
   
-  DPRINTP("[INFO]\tWriting to EE: (");
+  IPRINTP("wEE: (");
   DPRINT(len);
   DPRINTP(") ");
   DPRINTLN(json);
@@ -66,7 +66,7 @@ void readEE(char *buffer, int len, int startP) {
     buffer[i-startP] = char(EEPROM.read(i));
   }
   
-  DPRINTP("[INFO]\tReading from EE: ");
+  IPRINTP("rEE: ");
   DPRINTLN(buffer);
 }
 
@@ -75,7 +75,7 @@ void readEE(char *buffer, int len, int startP) {
 // Clear EEPROM
 void clearEE(int len, int startP) {  
   
-  DPRINTF("[INFO]\tClear EEPROM from: %u to: %u\r\n", startP, startP+len-1); 
+  IPRINTF("cEE: %u to: %u\r\n", startP, startP+len-1); 
 
   for (int i = startP; i < (startP+len); ++i) {
     EEPROM.write(i, 0);
@@ -94,16 +94,16 @@ void check_sector() {
   freeSpaceEnd = (uint32_t)&_SPIFFS_start - 0x40200000 - FLASH_SECTOR_SIZE;
   log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
 
-  DPRINTP("[INFO]\tFirmwareversion: ");
+  IPRINTP("FV: ");
   DPRINTLN(FIRMWAREVERSION);
-  DPRINTP("[INFO]\tInitalize SKETCH at Sector: 0x01 (");
+  IPRINTP("SKETCH: 0x01 (");
   DPRINT((ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1)/1024);
   DPRINTPLN("K)");
-  DPRINTP("[INFO]\tInitalize DATALG at Sector: 0x");
-  DPRINT(log_sector,HEX);
-  DPRINTP(" (");
-  DPRINT((freeSpaceEnd - freeSpaceStart)/1024, DEC);  // ESP.getFreeSketchSpace()
-  DPRINTPLN("K)");
+  //IPRINTP("DATALG: 0x");
+  //DPRINT(log_sector,HEX);
+  //DPRINTP(" (");
+  //DPRINT((freeSpaceEnd - freeSpaceStart)/1024, DEC);  // ESP.getFreeSketchSpace()
+  //DPRINTPLN("K)");
     
   //DPRINTLN(ESP.getFlashChipRealSize()/1024);
   //DPRINTLN(ESP.getFlashChipSize() - 0x4000);

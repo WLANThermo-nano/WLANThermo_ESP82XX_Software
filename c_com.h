@@ -32,7 +32,7 @@ void read_serial(char *buffer) {
   // Falls zusätzliche Attribute vorhanden
   if (index > 0) {
     String command = str.substring(0,index);
-    DPRINTP("[INFO]\tSerial Command: ");
+    IPRINTP("Serial: ");
     DPRINTLN(command);
 
     // Umsortieren
@@ -53,7 +53,7 @@ void read_serial(char *buffer) {
       if (payload.indexOf("v") == 0) {
         sys.getupdate = payload;  // kein Speichern, da während des Updates eh gespeichert wird
         sys.update = 1;  
-      } else  DPRINTPLN("[INFO]\tUpdateversion nicht erkannt!");
+      } else  {IPRINTPLN("Update unbekannt!");}
       return;    
     }
   
@@ -64,28 +64,20 @@ void read_serial(char *buffer) {
     if (str == "help") {
       Serial.println();
       Serial.println(F("Syntax: \"command\":{\"Attribut\":\"Value\"]}"));
-      Serial.println(F("Possible commands without additional attributs"));
-      Serial.println(F("restart\t\t-> Restart ESP"));
-      Serial.println(F("data\t\t-> Read data.json"));
-      Serial.println(F("settings\t-> Read settings.json"));
-      Serial.println(F("networklist\t-> Get Networks"));
-      Serial.println(F("networkscan\t-> Start Network Scan"));
-      Serial.println(F("clearwifi\t-> Reset WIFI Settings"));
-      Serial.println(F("stopwifi\t-> Stop WIFI"));
       Serial.println();
       return;
     }
-    /*
+
     else if (str == "data") {
-      nanoWebHandler.handleData(false);
+      Serial.println(cloudData(false));
       return;
     }
   
     else if (str == "settings") {
-      nanoWebHandler.handleSettings(false);
+      Serial.println(cloudSettings());
       return;
     }
-  
+  /*
     else if (str == "networklist") {
       nanoWebHandler.handleWifiResult(false);
       return;
@@ -98,11 +90,13 @@ void read_serial(char *buffer) {
 */
     else if (str == "clearwifi") {
       setconfig(eWIFI,{}); // clear Wifi settings
+      wifi.mode = 5;
+      sys.restartnow = true;
       return;
     }
 
     else if (str == "stopwifi") {
-      isAP = 3; // Turn Wifi off
+      wifi.mode = 3;  // Turn Wifi off
       return;
     }
   
@@ -114,19 +108,15 @@ void read_serial(char *buffer) {
     else if (str == "piepser") {
       Serial.println("Piepsertest");
       piepserON();
-      delay(1000);
+      delay(2000);
       piepserOFF();
-      return;
-    }
-
-    else if (str == "getSSID") {
-      Serial.println(WiFi.SSID());
       return;
     }
 
     // RESTART SYSTEM
     else if (str == "restart") {
-      ESP.restart();
+      sys.restartnow = true;
+      return;
     }
 
     // LET ESP SLEEP
@@ -136,22 +126,16 @@ void read_serial(char *buffer) {
       delay(100); // notwendig um Prozesse zu beenden
     }
 
-    // GET FIRMWAREVERSION
-    else if (str == "getVersion") {
-      Serial.println(FIRMWAREVERSION);
-      return;
-    }
-
     // Reset PITMASTER PID
     else if (str == "setPID") {
-      set_pid();  // Default PID-Settings
-      if (setconfig(ePIT,{})) DPRINTPLN("[INFO]\tReset pitmaster config");
+      set_pid(0);  // Default PID-Settings
+      if (setconfig(ePIT,{})) {IPRINTPLN("r:pm");}
       return;
     }
 
     // AUTOTUNE
     else if (str == "autotune") {
-      startautotunePID(5, true, 40, 40L*60L*1000L);
+      startautotunePID(5, true, 40, 40L*60L*1000L, 0);
       return;
     }
 
@@ -173,18 +157,6 @@ void read_serial(char *buffer) {
       sys.update = -1;
       return;
     }
-
-    // GET MAC
-    else if (str == "mac") {
-      DPRINTLN(getMacAddress());
-      return;
-    }
-
-    // Test
-    else if (str == "sendSetting") {
-      //sendSettings();
-      return;
-    }
     
     // Set V2
     else if (str == "v2") {
@@ -192,24 +164,19 @@ void read_serial(char *buffer) {
       setconfig(eSYSTEM,{}); 
       return;
     }
-    
-    // Set Pitsupply
-    else if (str == "pitsupply") {
-      digitalWrite(PITSUPPLY, HIGH);
-      return;
-    }
 
-    // Test pitmaster 2
-    else if (str == "pit2") {
-      digitalWrite(PITMASTER2, HIGH);
+    // Test Wifi Flash Clear
+    else if (str == "erasewifi") {
+      EraseWiFiFlash();
       return;
     }
+    
   }
 
-  DPRINTP("[INFO]\tYou entered: >");
+  IPRINTP("You entered: >");
   DPRINT(buffer);
   DPRINTPLN("<");
-  DPRINTPLN("[INFO]\tUnkwown command");     // Befehl nicht erkannt  
+  DPRINTPLN("Unkwown command");     // Befehl nicht erkannt  
 }
 
 

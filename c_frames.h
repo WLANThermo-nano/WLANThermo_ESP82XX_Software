@@ -24,6 +24,8 @@ byte flash = 0;                       // Flash Battery Symbol in Status Row
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Frame while system start 
 void drawConnect() {
+
+    displayblocked = true;
     
     display.clear();
     display.setColor(WHITE);
@@ -43,7 +45,7 @@ void drawLoading() {
   display.setTextAlignment(TEXT_ALIGN_CENTER);
   display.setFont(ArialMT_Plain_10);
   
-  if (!battery.charge) {
+  if (battery.charge) {
     display.fillRect(18,3,2,4); //Draw battery end button
     display.fillRect(16,8,1,1); //Untere Ecke
     display.drawRect(0,1,16,7); //Draw Outline
@@ -101,7 +103,7 @@ void drawQuestion(int counter) {
         b0 = 2;
         break;
 
-      case AUTOTUNE:
+      case TUNE:
         if (counter == 0) { 
           display.drawString(3,3,"Autotune: gestartet!");
            display.setTextAlignment(TEXT_ALIGN_CENTER);
@@ -199,41 +201,41 @@ void drawMenu() {
 // STATUS ROW
 void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
 
-  int battPixel = (battery.percentage*MAXBATTERYBAR)/100;  
+  int battPixel = 0.5+((battery.percentage*MAXBATTERYBAR)/100.0);  
   flash = !flash; //Toggle flash flag for icon blinking later
   
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(Noto_Sans_8);
-  
-  if (pitmaster.active)
-    if (autotune.initialized)
-      display->drawString(33,0, "A"+ String(autotune.cycles) +" / " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
-    else if (pitmaster.manual)
-      display->drawString(33,0, "M  " + String(pitmaster.value,0) + "%");
-    else  
-      display->drawString(33,0, "P  " + String(pitmaster.set,1) + " / " + String(pitmaster.value,0) + "%");
-  else  display->drawString(24,0,String(battery.percentage)); 
+
+  switch (pitMaster[0].active) {
+    case PITOFF: if (millis() > BATTERYSTARTUP) display->drawString(24,0,String(battery.percentage)); break;
+    case DUTYCYCLE: // show "M"
+    case MANUAL: display->drawString(33,0, "M  " + String(pitMaster[0].value,0) + "%"); break;
+    case AUTO: display->drawString(33,0, "P  " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); break;
+    case AUTOTUNE: display->drawString(33,0, "A"+ String(autotune.cycles) +" / " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); break;
+  }  
   
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  if (isAP == 1)  display->drawString(128,0,"AP");
-  else if (isAP == 2) display->drawString(128,0,"NO");
-  else if (isAP == 0)  {
-    //display->drawString(128,0,String(rssi)+" dBm");
+  if (wifi.mode == 2 && millis() > 10000)  display->drawString(128,0,"AP");
+  else if (wifi.mode == 0) display->drawString(128,0,"NO");
+  else if (wifi.mode == 1)  {
+      //display->drawString(128,0,String(wifi.rssi)+" dBm");
     display->fillRect(116,8,2,1); //Draw ground line
     display->fillRect(120,8,2,1); //Draw ground line
     display->fillRect(124,8,2,1); //Draw ground line
 
-    if (rssi > -105) display->fillRect(116,5,2,3); //Draw 1 line
-    if (rssi > -95) display->fillRect(120,3,2,5); //Draw 2 line
-    if (rssi > -80) display->fillRect(124,1,2,7); //Draw 3 line
+    if (wifi.rssi > -105) display->fillRect(116,5,2,3); //Draw 1 line
+    if (wifi.rssi > -95) display->fillRect(120,3,2,5); //Draw 2 line
+    if (wifi.rssi > -80) display->fillRect(124,1,2,7); //Draw 3 line
   }
 
   //display->drawString(80,0,String(map(pit_y,0,pit_pause,0,100)) + "%");
 
   if (sys.fastmode) display->drawString(100,0,"F");
+
   
   if (flash && battery.percentage < 10) {} // nothing for flash effect
-  else if (!battery.charge) {
+  else if (battery.charge) {
     display->fillRect(18,3,2,4); //Draw battery end button
     display->fillRect(16,8,1,1); //Untere Ecke
     display->drawRect(0,1,16,7); //Draw Outline
@@ -249,6 +251,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
   display->drawRect(0,1,16,7); //Draw Outline
   display->fillRect(2,3,battPixel,4);  // Draw Battery Status
   }
+ 
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -260,35 +263,48 @@ void drawTemp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(19+x, 20+y, String(current_ch+1));                // Channel
-  display->drawString(114+x, 20+y, ch[current_ch].name);    // Channel Name
+  display->drawString(114+x, 20+y, ch[current_ch].name);    // Channel Name //utf8ascii() 
   display->setFont(ArialMT_Plain_16);
   if (ch[current_ch].isalarm && !pulsalarm) {
     if (ch[current_ch].temp!=INACTIVEVALUE) {
-      if (temp_unit == "F") display->drawCircle(100,41,2);  // Grad-Zeichen
+      if (sys.unit == "F") display->drawCircle(100,41,2);  // Grad-Zeichen
       else display->drawCircle(99,41,2);  // Grad-Zeichen
-      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ "  " + temp_unit); // Channel Temp
+      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ "  " + sys.unit); // Channel Temp
     } else display->drawString(114+x, 36+y, "OFF");
   } else if (!ch[current_ch].isalarm) {
     if (ch[current_ch].temp!=INACTIVEVALUE) {
-      if (temp_unit == "F") display->drawCircle(100,41,2);  // Grad-Zeichen
+      if (sys.unit == "F") display->drawCircle(100,41,2);  // Grad-Zeichen
       else display->drawCircle(99,41,2);  // Grad-Zeichen
-      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ "  " + temp_unit); // Channel Temp
+      display->drawString(114+x, 36+y, String(ch[current_ch].temp,1)+ "  " + sys.unit); // Channel Temp
     } else display->drawString(114+x, 36+y, "OFF");
   }
 
-  if (pitmaster.active) {
-    if (current_ch == pitmaster.channel) {
-      display->setFont(ArialMT_Plain_10);
-      if (autotune.initialized) display->drawString(44+x, 31+y, "A");
-      else if (!pitmaster.manual) display->drawString(44+x, 31+y, "P");
-      else return;
-      int _cur = ch[current_ch].temp*10;
-      int _set = pitmaster.set*10; 
-      if (_cur > _set)
-        display->drawXbm(x+37,24+y,arrow_height,arrow_width,xbmarrow2); 
-      else if (_cur < _set) 
-        display->drawXbm(x+37,24+y,arrow_height,arrow_width,xbmarrow1);
-      else display->drawXbm(x+37,24+y,arrow_width,arrow_height,xbmarrow);
+  Pitmaster pitmaster;
+
+  for (int i = 0; i < PITMASTERSIZE; i++) {
+
+    pitmaster = pitMaster[i];
+    
+    if (i == 1 && pitmaster.channel == pitMaster[0].channel) return;
+   
+    // Show Pitmaster Activity on Icon
+    if (pitmaster.active > 0) {
+      if (current_ch == pitmaster.channel) {
+        display->setFont(ArialMT_Plain_10);
+        switch (pitmaster.active) {
+          case DUTYCYCLE: // show "M"
+          case MANUAL: display->drawString(44+x, 31+y, "M"); return;
+          case AUTO: display->drawString(44+x, 31+y, "P"); break;
+          case AUTOTUNE: display->drawString(44+x, 31+y, "A"); break;
+        }
+        int _cur = ch[current_ch].temp*10;
+        int _set = pitmaster.set*10; 
+        if (_cur > _set)
+          display->drawXbm(x+37,24+y,arrow_height,arrow_width,xbmarrow2); 
+        else if (_cur < _set) 
+          display->drawXbm(x+37,24+y,arrow_height,arrow_width,xbmarrow1);
+        else display->drawXbm(x+37,24+y,arrow_width,arrow_height,xbmarrow);
+      }
     }
   }
 }
@@ -312,15 +328,15 @@ void drawkontext(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int
     case 1:         // UPPER LIMIT
       display->drawLine(33+x,25+y,50,25);
       display->drawCircle(95,23,1);  // Grad-Zeichen 
-      if (inWork) display->drawString(104+x, 19+y, String(tempor,1)+ "  " + temp_unit);
-      else display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ "  " + temp_unit);  // Upper Limit 
+      if (inWork) display->drawString(104+x, 19+y, String(tempor,1)+ "  " + sys.unit);
+      else display->drawString(104+x, 19+y, String(ch[current_ch].max,1)+ "  " + sys.unit);  // Upper Limit 
       break;
 
     case 2:         // LOWER LIMIT
       display->drawLine(33+x,39+y,50,39);
       display->drawCircle(95,38,1);  // Grad-Zeichen  
-      if (inWork) display->drawString(104+x, 34+y, String(tempor,1)+ "  " + temp_unit);
-      else display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ "  " + temp_unit);  // Lower Limit
+      if (inWork) display->drawString(104+x, 34+y, String(tempor,1)+ "  " + sys.unit);
+      else display->drawString(104+x, 34+y, String(ch[current_ch].min,1)+ "  " + sys.unit);  // Lower Limit
       break;
 
     case 3:         // TYP                   
@@ -329,9 +345,8 @@ void drawkontext(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int
       break;
 
     case 4:         // ALARM         
-      if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
-      else if (!inWork && ch[current_ch].alarm) display->drawString(114+x, 36+y, "YES");
-      else display->drawString(114+x, 36+y, "NO");   // Alarm
+      if (inWork) display->drawString(114+x, 36+y, alarmname[(int) tempor]);
+      else display->drawString(114+x, 36+y, alarmname[ch[current_ch].alarm]);   // Alarm
       break;
   }
 }
@@ -348,24 +363,23 @@ void drawpit(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
 
     case 6:         // PID PROFIL           
       if (inWork) display->drawString(116+x, 36+y, pid[(int) tempor].name);
-      else display->drawString(116+x, 36+y, pid[pitmaster.pid].name);
+      else display->drawString(116+x, 36+y, pid[pitMaster[0].pid].name);
       break;
 
     case 7:         // PITMASTER CHANNEL         
       if (inWork) display->drawString(116+x, 36+y, String((int)tempor +1));
-      else  display->drawString(116+x, 36+y, String(pitmaster.channel+1));
+      else  display->drawString(116+x, 36+y, String(pitMaster[0].channel+1));
       break;
 
     case 8:         // SET TEMPERATUR  
       display->drawCircle(107,40,1);  // Grad-Zeichen       
-      if (inWork) display->drawString(116+x, 36+y, String(tempor,1)+ "  " + temp_unit);
-      else  display->drawString(116+x, 36+y, String(pitmaster.set,1)+ "  " + temp_unit);
+      if (inWork) display->drawString(116+x, 36+y, String(tempor,1)+ "  " + sys.unit);
+      else  display->drawString(116+x, 36+y, String(pitMaster[0].set,1)+ "  " + sys.unit);
       break;
 
     case 9:         // PITMASTER TYP         
-      if (inWork && tempor) display->drawString(116+x, 36+y, "YES");
-      else if (!inWork && pitmaster.active) display->drawString(116+x, 36+y, "YES");
-      else display->drawString(116+x, 36+y, "NO");  
+      if ((inWork && tempor) || (!inWork && pitMaster[0].active > 0)) display->drawString(116+x, 36+y, "AUTO");
+      else display->drawString(116+x, 36+y, "OFF");  
       break;
   
   }
@@ -384,15 +398,15 @@ void drawsys(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
   switch (current_frame) {
 
     case 11:         // SSID
-      if (isAP == 1)      display->drawString(120, 36, sys.apname);
-      else if (isAP == 0) display->drawString(120, 36, WiFi.SSID());
-      else if (isAP == 2) display->drawString(120, 36, "");
+      if (wifi.mode == 2)      display->drawString(120, 36, sys.apname);
+      else if (wifi.mode == 1) display->drawString(120, 36, WiFi.SSID());
+      else if (wifi.mode == 0) display->drawString(120, 36, "");
       break;
     
     case 12:         // IP
-      if (isAP == 1)      display->drawString(120, 36, WiFi.softAPIP().toString());
-      else if (isAP == 0) display->drawString(120, 36, WiFi.localIP().toString());
-      else if (isAP == 2) display->drawString(120, 36, "");
+      if (wifi.mode == 2)      display->drawString(120, 36, WiFi.softAPIP().toString());
+      else if (wifi.mode == 1) display->drawString(120, 36, WiFi.localIP().toString());
+      else if (wifi.mode == 0) display->drawString(120, 36, "");
       break;
 
     case 13:         // HOST
@@ -402,23 +416,11 @@ void drawsys(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
     case 14:         // UNIT
       display->drawCircle(105,40,1);  // Grad-Zeichen
       if (inWork && tempor) display->drawString(114+x, 36+y, "F");
-      else if (!inWork) display->drawString(114+x, 36+y, temp_unit);
+      else if (!inWork) display->drawString(114+x, 36+y, sys.unit);
       else display->drawString(114+x, 36+y, "C");
       break;
 
-    case 15:         // HW-ALARM
-      if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
-      else if (!inWork && sys.hwalarm) display->drawString(114+x, 36+y, "YES");
-      else display->drawString(114+x, 36+y, "NO");
-      break;
-
-    case 16:         // FASTMODE
-      if (inWork && tempor) display->drawString(114+x, 36+y, "YES");
-      else if (!inWork && sys.fastmode) display->drawString(114+x, 36+y, "YES");
-      else display->drawString(114+x, 36+y, "NO");
-      break;
-
-    case 17:         // FIRMWARE VERSION
+    case 15:         // FIRMWARE VERSION
       display->drawString(114+x,36+y,FIRMWAREVERSION);
       break;
   }
@@ -450,7 +452,7 @@ void set_OLED() {
   // The ESP is capable of rendering 60fps in 80Mhz mode
   // but that won't give you much time for anything else
   // run it in 160Mhz mode or just set it to 30 fps
-  ui.setTargetFPS(30);
+  ui.setTargetFPS(30);    //30
 
   // Add frames
   ui.setFrames(frames, 5);
@@ -459,7 +461,7 @@ void set_OLED() {
   ui.setOverlays(overlays, 1);
 
   ui.setTimePerFrame(10000);
-  ui.setTimePerTransition(300);
+  ui.setTimePerTransition(300);   //300
   ui.disableAutoTransition();
   ui.disableIndicator();
 
