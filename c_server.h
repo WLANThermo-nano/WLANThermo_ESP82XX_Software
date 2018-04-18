@@ -58,7 +58,7 @@ String cloudData(bool cloud) {
       data["alarm"] = ch[i].alarm;
       data["color"] = ch[i].color;
     }
-/*
+
     if (cloud) {
       JsonObject& master = root.createNestedObject("pitmaster");
 
@@ -73,9 +73,7 @@ String cloudData(bool cloud) {
         case AUTO:     master["typ"] = "auto";   break;
         case AUTOTUNE: master["typ"] = "autotune"; break;
       }
-    } else { 
-
- */   
+    } else {    
 
       String sc[2] = {"#ff0000", "#FE2EF7"};
       String vc[2] = {"#000000", "#848484"};
@@ -99,7 +97,7 @@ String cloudData(bool cloud) {
         ma["set_color"] = sc[i];
         ma["value_color"] = vc[i];
       }
-  //  }
+    }
 
   
 
