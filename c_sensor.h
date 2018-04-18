@@ -120,164 +120,6 @@ class HTU21DF {
 
 HTU21DF htu;
 
-
-/*
-#define MAX17043_ADDRESS  0x36
-
-class MAX17043 {
-
-  // Quelle: https://github.com/lucadentella/ArduinoLib_MAX17043/blob/master/examples/VoltageSoC/VoltageSoC.ino
-
-  private:
-
-    void readRegister(byte address, byte &MSB, byte &LSB) {
-
-      Wire.beginTransmission(MAX17043_ADDRESS);
-      Wire.write(address);
-      Wire.endTransmission();
-  
-      Wire.requestFrom(MAX17043_ADDRESS, 2);
-      MSB = Wire.read();
-      LSB = Wire.read();
-    }
-
-    void writeRegister(byte address, byte MSB, byte LSB) {
-      Wire.beginTransmission(MAX17043_ADDRESS);
-      Wire.write(address);
-      Wire.write(MSB);
-      Wire.write(LSB);
-      Wire.endTransmission();
-    }
-
-    void readConfigRegister(byte &MSB, byte &LSB) {
-      readRegister(0x0C, MSB, LSB);
-    }
-
-    uint16_t read16(uint8_t address)  {
-      uint8_t msb, lsb;
-      int16_t timeout = 1000;
-
-      Wire.beginTransmission(MAX17043_ADDRESS);
-      Wire.write(address);
-      Wire.endTransmission(false);
-
-      Wire.requestFrom(MAX17043_ADDRESS, 2);
-      while ((Wire.available() < 2) && (timeout-- > 0))
-        delay(1);
-      msb = Wire.read();
-      lsb = Wire.read();
-
-      return ((uint16_t) msb << 8) | lsb;
-    }
-
-
-  public:
-
-    float getVoltage()  {
-      uint16_t vCell;
-      vCell = read16(0x02);
-      // vCell is a 12-bit register where each bit represents 1.25mV
-      vCell = (vCell) >> 4;
-
-      return ((float) vCell / 800.0);
-
-    }
-  
-    float getVCell() {
-
-      byte MSB = 0;
-      byte LSB = 0;
-  
-      readRegister(0x02, MSB, LSB);
-      int value = (MSB << 4) | (LSB >> 4);
-      return map(value, 0x000, 0xFFF, 0, 50000) / 10000.0;
-      //return value * 0.00125;
-
-    
-      //temp = ((xl|(xm << 8)) >> 4);
-      //xo = 1.25* temp;
-    }
-
-    float getSoC() {
-  
-      byte MSB = 0;
-      byte LSB = 0;
-  
-      readRegister(0x04, MSB, LSB);
-      float decimal = LSB / 256.0;
-      return MSB + decimal; 
-    }
-
-    void reset() {
-  
-      writeRegister(0xFE, 0x00, 0x54);
-    }
-
-    void quickStart() {
-  
-      writeRegister(0x06, 0x40, 0x00);
-    }
-
-    int getVersion() {
-
-      byte MSB = 0;
-      byte LSB = 0;
-      readRegister(0x08, MSB, LSB);
-      return (MSB << 8) | LSB;
-    }
-
-    byte getCompensateValue() {
-
-      byte MSB = 0;
-      byte LSB = 0;
-  
-      readRegister(0x0C, MSB, LSB);
-      return MSB;
-    }
-
-    byte getAlertThreshold() {
-
-      byte MSB = 0;
-      byte LSB = 0;
-  
-      readRegister(0x0C, MSB, LSB); 
-      return 32 - (LSB & 0x1F);
-    }
-
-    void setAlertThreshold(byte threshold) {
-
-      byte MSB = 0;
-      byte LSB = 0;
-  
-      readRegister(0x0C, MSB, LSB); 
-      if(threshold > 32) threshold = 32;
-      threshold = 32 - threshold;
-  
-      writeRegister(0x0C, MSB, (LSB & 0xE0) | threshold);
-    }
-
-    boolean inAlert() {
-
-      byte MSB = 0;
-      byte LSB = 0;
-  
-      readRegister(0x0C, MSB, LSB); 
-      return LSB & 0x20;
-    }
-
-    void clearAlert() {
-
-      byte MSB = 0;
-      byte LSB = 0;
-  
-      readRegister(0x0C, MSB, LSB); 
-    }
-};
-
-MAX17043 batteryMonitor;
-*/
-
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Sensors
 byte set_sensor() {
@@ -292,14 +134,6 @@ byte set_sensor() {
     pinMode(THERMOCOUPLE_CS, OUTPUT);
     digitalWrite(THERMOCOUPLE_CS, HIGH);
   }
-
-  /*
-  batteryMonitor.reset();
-  batteryMonitor.quickStart();
-
-  Serial.print("MAX17043-Version:\t\t");
-  Serial.println(batteryMonitor.getVersion());
-  */
 
   if (htu.begin()) Serial.println("Found HTU21D");
   else Serial.println("No HTU21D");
@@ -525,21 +359,6 @@ void cal_soc() {
       case 3: htu.readHumidity(); break;
     } 
   }
-    
-  /*
-  float cellVoltage = batteryMonitor.getVCell();
-  Serial.print("Voltage:\t\t");
-  Serial.print(cellVoltage, 4);
-  Serial.print(" | ");
-  cellVoltage = batteryMonitor.getVoltage();
-  Serial.print(cellVoltage, 4);
-  Serial.println("V");
-
-  float stateOfCharge = batteryMonitor.getSoC();
-  Serial.print("State of charge:\t");
-  Serial.print(stateOfCharge);
-  Serial.println("%");
-  */
 
 }
 
