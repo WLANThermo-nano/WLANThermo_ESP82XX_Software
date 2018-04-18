@@ -25,8 +25,9 @@
 
 // Entwicklereinstellungen
 //#define ASYNC_TCP_SSL_ENABLED 1
-#define OTA                                 // ENABLE OTA UPDATE
+//#define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
+//#define MPR
 
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)
@@ -34,12 +35,23 @@
   #define DPRINTP(...)   Serial.print(F(__VA_ARGS__))
   #define DPRINTPLN(...) Serial.println(F(__VA_ARGS__))
   #define DPRINTF(...)   Serial.printf(__VA_ARGS__)
+  #define IPRINT(...)    Serial.print("[INFO]\t");Serial.print(__VA_ARGS__)
+  #define IPRINTLN(...)  Serial.print("[INFO]\t");Serial.println(__VA_ARGS__)
+  #define IPRINTP(...)   Serial.print("[INFO]\t");Serial.print(F(__VA_ARGS__))
+  #define IPRINTPLN(...) Serial.print("[INFO]\t");Serial.println(F(__VA_ARGS__))
+  #define IPRINTF(...)   Serial.print("[INFO]\t");Serial.printf(__VA_ARGS__)
+  
 #else
   #define DPRINT(...)     //blank line
   #define DPRINTLN(...)   //blank line 
   #define DPRINTP(...)    //blank line
   #define DPRINTPLN(...)  //blank line
   #define DPRINTF(...)    //blank line
+  #define IPRINT(...)     //blank line
+  #define IPRINTLN(...)   //blank line
+  #define IPRINTP(...)    //blank line
+  #define IPRINTPLN(...)  //blank line
+  #define IPRINTF(...)    //blank line
 #endif
 
 
@@ -64,31 +76,30 @@
 #include "c_ota.h"
 #include "c_server.h"
 
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETUP
 void setup() {  
 
   // Initialize Serial 
-  set_serial(); //Serial.setDebugOutput(true);
+  set_serial(); Serial.setDebugOutput(true);
   
   // Initialize OLED
   set_OLED();
 
-  // Current Battery Voltage
-  get_Vbat();
-  
-  if (!stby) {
+  // Open Config-File
+  check_sector();
+  setEE(); start_fs();
 
-    // Open Config-File
-    check_sector();
-    setEE(); start_fs();
+  // Current Battery Voltage
+  get_Vbat(); get_rssi();
+  
+  if (!sys.stby) {
 
     // Initalize Aktor
     set_piepser();
 
     // GodMode aktiv
-    if (sys.god) {
+    if (sys.god & (1<<0)) {
       piepserON(); delay(500); piepserOFF();
     }
 
@@ -97,14 +108,6 @@ void setup() {
     
     // Initialize Wifi
     set_wifi();
-
-    // Update Time
-    //set_time();
-    
-    // Scan Network
-    WiFi.scanNetworks(true);
-    scantime = millis();
-    //scantime = String(mynow());
 
     // Initialize Server
     server_setup();
@@ -123,14 +126,17 @@ void setup() {
     set_button();
         
     // Current Wifi Signal Strength
+    get_Vbat();
     get_rssi();
     cal_soc();
     
     // Initialize Pitmaster
     set_pitmaster(0); 
 
-    // Check HTTP Update
-    check_http_update();
+    // Check Reset Info
+    if (checkResetInfo()) {
+      //if (SPIFFS.remove(LOG_FILE)) Serial.println("Neues Log angelegt");
+    }
   }
 }
 
@@ -138,14 +144,28 @@ void setup() {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // LOOP
 void loop() {
-
+  
   // Standby oder Mess-Betrieb
   if (standby_control()) return;
+
+  // Close Start Screen
+  if (millis() > 3000 && question.typ == SYSTEMSTART) {
+    displayblocked = false;   // Close Start Screen (if not already done)
+    question.typ = NO;
+  }
+
+  // Manual Restart
+  if (sys.restartnow) {
+    if (wifi.mode == 5) WiFi.disconnect();
+    delay(100);
+    yield();
+    ESP.restart();
+  }
 
   // WiFi Monitoring
   wifimonitoring();
 
-  // Detect Serial
+  // Detect Serial Input
   static char serialbuffer[300];
   if (readline(Serial.read(), serialbuffer, 300) > 0) {
     read_serial(serialbuffer);
@@ -174,12 +194,20 @@ void loop() {
 
     timer_sensor();           // Temperture
     timer_alarm();            // Alarm
-    pitmaster_control();      // Pitmaster
+    pitmaster_control(0);      // Pitmaster 1
+    pitmaster_control(1);      // Pitmaster 2
     timer_iot();              // Charts
-    timer_datalog();          // Datalog
-    flash_control();          // Flash
+    //timer_datalog();          // Datalog
+    //savelog();
+    flash_control();          // OLED Flash
+    //ampere_control();
+    sendNotification();       // Notification
+
+    if (sys.sendSettingsflag && iot.P_MQTT_on) {
+      if (sendpmqtt() && sendSettings()) sys.sendSettingsflag = false;
+    }
     
-    delay(5);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
+    delay(10);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
   }
   
 }

@@ -19,9 +19,8 @@
  ****************************************************/
 
 #include <Wire.h>                 // I2C
-#include <SPI.h>                  // SPI
-#include <ESP8266WiFi.h>          // WIFI
-#include <ESP8266WiFiMulti.h>     // WIFI
+//#include <SPI.h>                  // SPI
+//#include <ESP8266WiFi.h>          // WIFI
 //#include <WiFiClientSecure.h>     // HTTPS
 #include <TimeLib.h>              // TIME
 #include <EEPROM.h>               // EEPROM
@@ -50,8 +49,8 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.8.0"
-#define APIVERSION      "v1"
+#define FIRMWAREVERSION "v0.9.9.3"
+#define APIVERSION      "2"
 
 // CHANNELS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
@@ -71,10 +70,12 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // BATTERY
 #define BATTMIN 3600                  // MINIMUM BATTERY VOLTAGE in mV
-#define BATTMAX 4185                  // MAXIMUM BATTERY VOLTAGE in mV 
+#define BATTMAX 4170                  // MAXIMUM BATTERY VOLTAGE in mV 
 #define ANALOGREADBATTPIN 0           // INTERNAL ADC PIN
 #define BATTDIV 5.9F
 #define CHARGEDETECTION 16              // LOAD DETECTION PIN
+#define CORRECTIONTIME 60000
+#define BATTERYSTARTUP 10000
 
 // OLED
 #define OLED_ADRESS 0x3C              // OLED I2C ADRESS
@@ -84,12 +85,13 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define INTERVALBATTERYMODE 1000
 #define INTERVALSENSOR 1000
 #define INTERVALCOMMUNICATION 30000
+#define INTERVALBATTERYSIM 30000
 #define FLASHINWORK 500
 
 // BUS
 #define SDA 0
 #define SCL 2
-#define THERMOCOUPLE_CS 12          // 12
+#define THERMOCOUPLE_CS 12          // Nur Test-Versionen, Konflikt Pitsupply
 
 // BUTTONS
 #define btn_r  4                    // Pullup vorhanden
@@ -105,15 +107,14 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define APNAME "NANO-AP"
 #define APPASSWORD "12345678"
 #define HOSTNAME "NANO-"
-#define NTP_PACKET_SIZE 48          // NTP time stamp is in the first 48 bytes of the message
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
-#define EEPROM_SIZE 2176            // EEPROM SIZE
+#define EEPROM_SIZE 2304            // EEPROM SIZE
 #define EEWIFIBEGIN         0
 #define EEWIFI              300
 #define EESYSTEMBEGIN       EEWIFIBEGIN+EEWIFI
-#define EESYSTEM            250
+#define EESYSTEM            380
 #define EECHANNELBEGIN      EESYSTEMBEGIN+EESYSTEM
 #define EECHANNEL           500
 #define EETHINGBEGIN        EECHANNELBEGIN+EECHANNEL
@@ -127,9 +128,13 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define PITSUPPLY  12               // MISO // ab Platine V9.3
 #define PITMIN 0                    // LOWER LIMIT SET
 #define PITMAX 100                  // UPPER LIMIT SET
-#define PITMASTERSIZE 5             // PITMASTER SETTINGS LIMIT
+#define PITMASTERSIZE 2             // PITMASTER SETTINGS LIMIT
+#define PIDSIZE 3
 #define PITMASTERSETMIN 50
 #define PITMASTERSETMAX 200
+#define SERVOPULSMIN 550  // 25 Grad    // 785
+#define SERVOPULSMAX 2250
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -145,68 +150,69 @@ struct ChannelData {
    float max;               // MAXIMUM TEMPERATURE
    float min;               // MINIMUM TEMPERATURE
    byte  typ;               // TEMPERATURE SENSOR
-   bool  alarm;             // SET CHANNEL ALARM
-   bool  isalarm;           // Limits überschritten
-   bool  show;              // Anzeigen am OLED       
-   bool  showalarm;         // Alarm nicht weiter anzeigen
+   byte  alarm;             // SET CHANNEL ALARM (0: off, 1:push, 2:summer, 3:all)
+   bool  isalarm;           // Limits überschritten   
+   byte  showalarm;         // Alarm anzeigen   (0:off, 1:show, 2:first show)
    String color;            // COLOR
 };
 
 ChannelData ch[CHANNELS];
 
+enum {ALARM_OFF,ALARM_PUSH,ALARM_HW,ALARM_ALL};
+String alarmname[4] = {"off","push","summer","all"};
+
 // SENSORTYP
 String  ttypname[SENSORTYPEN] = {"Maverick","Fantast-Neu","Fantast","iGrill2","ET-73",
-                                 "Perfektion","5K3A1B","MOUSER47K","100K6A1B","Weber_6743",
+                                 "Perfektion","5K3A1B","Acurite","100K6A1B","Weber_6743",
                                  "Santos"};
-// TEMPERATURE UNIT
-String  temp_unit = "C";
 
 // CHANNEL COLORS
 String colors[8] = {"#0C4C88","#22B14C","#EF562D","#FFC100","#A349A4","#804000","#5587A2","#5C7148"};
 
 // PITMASTER
+enum {PITOFF, MANUAL, AUTO, AUTOTUNE, DUTYCYCLE};
+enum {SSR, FAN, SERVO, DAMPER};
+
 struct Pitmaster {
-   byte pid;           // PITMASTER PID-Setting
-   float set;            // SET-TEMPERATUR
-   bool  active;           // IS PITMASTER ACTIVE
+   byte pid;              // PITMASTER PID-Setting
+   float set;             // SET-TEMPERATUR
+   byte active;           // IS PITMASTER ACTIVE
    byte  channel;         // PITMASTER CHANNEL
    float value;           // PITMASTER VALUE IN %
-   int manual;            // MANUEL PITMASTER VALUE IN %
-   bool event;
-   int16_t msec;          // PITMASTER VALUE IN MILLISEC
-   unsigned long last;
-   int pause;             // PITMASTER PAUSE
+   uint16_t dcmin;        // PITMASTER DUTY CYCLE LIMIT MIN
+   uint16_t dcmax;        // PITMASTER DUTY CYCLE LIMIT MIN
+   byte io;               // PITMASTER HARDWARE IO
+   bool event;            // SSR HIGH EVENT
+   uint16_t msec;         // PITMASTER VALUE IN MILLISEC (SSR) / MICROSEC (SERVO)
+   unsigned long last;    // PITMASTER VALUE TIMER
+   uint16_t pause;        // PITMASTER PAUSE
    bool resume;           // Continue after restart 
-   long timer0;           
+   long timer0;           // PITMASTER TIMER VARIABLE (FAN) / (SERVO)
+   float esum;            // PITMASTER I-PART DIFFERENZ SUM
+   float elast;           // PITMASTER D-PART DIFFERENZ LAST
 };
-Pitmaster pitmaster;
+
+Pitmaster pitMaster[PITMASTERSIZE];
 int pidsize;
 
 // PID PROFIL
 struct PID {
   String name;
   byte id;
-  byte aktor;                     // 0: SSR, 1:FAN, 2:Servo
-  //byte port;                  // IO wird über typ bestimmt
-  float Kp;                     // P-Konstante oberhalb pswitch
-  float Ki;                     // I-Konstante oberhalb pswitch
-  float Kd;                     // D-Konstante oberhalb pswitch
-  float Kp_a;                   // P-Konstante unterhalb pswitch
-  float Ki_a;                   // I-Konstante unterhalb pswitch
-  float Kd_a;                   // D-Konstante unterhalb pswitch
-  int Ki_min;                   // Minimalwert I-Anteil
-  int Ki_max;                   // Maximalwert I-Anteil
-  float pswitch;                // Umschaltungsgrenze
-  bool reversal;                // VALUE umkehren
-  int DCmin;                    // Duty Cycle Min
-  int DCmax;                    // Duty Cycle Max
-  int SVmin;                    // SERVO IMPULS MIN
-  int SVmax;                    // SERVO IMPULS MAX
-  float esum;                   // Startbedingung I-Anteil
-  float elast;                  // Startbedingung D-Anteil
-  
+  byte aktor;                   // 0: SSR, 1:FAN, 2:Servo, 3:Damper
+  float Kp;                     // P-FAKTOR ABOVE PSWITCH
+  float Ki;                     // I-FAKTOR ABOVE PSWITCH
+  float Kd;                     // D-FAKTOR ABOVE PSWITCH
+  float Kp_a;                   // P-FAKTOR BELOW PSWITCH
+  float Ki_a;                   // I-FAKTOR ABOVE PSWITCH
+  float Kd_a;                   // D-FAKTOR ABOVE PSWITCH
+  int Ki_min;                   // MINIMUM VALUE I-PART   // raus ?
+  int Ki_max;                   // MAXIMUM VALUE I-PART   // raus ?
+  float pswitch;                // SWITCHING LIMIT        // raus ?
+  float DCmin;                  // PID DUTY CYCLE MIN
+  float DCmax;                  // PID DUTY CYCLE MAX
 };
-PID pid[PITMASTERSIZE];
+PID pid[PIDSIZE];
 
 // AUTOTUNE
 struct AutoTune {
@@ -245,18 +251,18 @@ struct AutoTune {
 
 AutoTune autotune;
 
-// DUTYCYCLE
+// DUTYCYCLE TEST
 struct DutyCycle {
   long timer;
-  int value;
-  bool dc;
+  int value;        // Value * 10
+  bool dc;          // min or max
   byte aktor;
-  bool on;
   int saved;
 };
 
-DutyCycle dutycycle;
+DutyCycle dutyCycle[PITMASTERSIZE];
 
+/*
 // DATALOGGER
 struct datalogger {
  uint16_t tem[8];     //8
@@ -272,36 +278,53 @@ datalogger mylog[MAXLOGCOUNT];
 datalogger archivlog[MAXLOGCOUNT];
 unsigned long log_count = 0;
 int log_checksum = 0;
+
+*/
+
 uint32_t log_sector;                // erster Sector von APP2
 uint32_t freeSpaceStart;            // First Sector of OTA
 uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
 // NOTIFICATION
 struct Notification {
-  byte ch;                          // CHANNEL
-  bool limit;                       // LIMIT: 0 = LOW TEMPERATURE, 1 = HIGH TEMPERATURE
+  byte index;                       // INDEX BIN
+  byte ch;                          // CHANNEL BIN
+  byte limit;                       // LIMIT: 0 = LOW TEMPERATURE, 1 = HIGH TEMPERATURE
+  byte type;                        // TYPE: 0 = NORMAL MODE, 1 = TEST MESSAGE
+  String temp1;                     // TEMPORARY TOKEN 1 FOR TEST MESSAGE
+  String temp2;                     // TEMPORARY TOKEN 2 FOR TEST MESSAGE
 };
 
 Notification notification;
 
 // SYSTEM
 struct System {
+   String unit = "C";         // TEMPERATURE UNIT
    byte hwversion;           // HARDWARE VERSION
    bool fastmode;              // FAST DISPLAY MODE
    String apname;             // AP NAME
    String host;                     // HOST NAME
    String language;           // SYSTEM LANGUAGE
-   bool hwalarm;              // HARDWARE ALARM 
    byte updatecount;           // 
    int update;             // FIRMWARE UPDATE -1 = check, 0 = no, 1 = spiffs, 2 = firmware
    String getupdate;
    bool autoupdate;
-   bool god;
-   bool pitsupply;        
+   byte god;
+   bool pitsupply;      
+   byte control;  
+   bool stby;                   // STANDBY
+   bool restartnow; 
+   bool typk;
+   bool damper;
+   bool sendSettingsflag;          // SENDSETTINGS FLAG
+   const char* www_username = "admin";
+   String www_password = "admin";
+   bool advanced;
+   //bool nobattery;
 };
 
 System sys;
-bool stby = false;                // USB POWER SUPPLY?            
+
 byte pulsalarm = 1;
 
 // BATTERY
@@ -309,14 +332,19 @@ struct Battery {
   int voltage;                    // CURRENT VOLTAGE
   bool charge;                    // CHARGE DETECTION
   int percentage;                 // BATTERY CHARGE STATE in %
-  bool setreference;              // LOAD COMPLETE SAVE VOLTAGE
+  int setreference;              // LOAD COMPLETE SAVE VOLTAGE
   int max;                        // MAX VOLTAGE
-  int min;
+  int min;                        // MIN VOLTAGE
+  int correction = 0;   
+  byte state;                   // 0:LOAD, 1:SHUTDOWN,  3:COMPLETE
+  int sim;                        // SIMULATION VOLTAGE
+  byte simc;                      // SIMULATION COUNTER
 };
 
 Battery battery;
 uint32_t vol_sum = 0;
 int vol_count = 0;
+
 
 // IOT
 struct IoT {
@@ -333,7 +361,7 @@ struct IoT {
    String P_MQTT_PASS;          // PRIVATE MQTT BROKER PASSWD
    byte P_MQTT_QoS;             // PRIVATE MQTT BROKER QoS
    bool P_MQTT_on;              // PRIVATE MQTT BROKER ON/OFF
-   int P_MQTT_int;              // PRIVATE MQTT BROKER IN SEC
+   int P_MQTT_int;              // PRIVATE MQTT BROKER IN SEC 
    int TG_on;                   // TELEGRAM NOTIFICATION SERVICE
    String TG_token;             // TELEGRAM API TOKEN
    String TG_id;                // TELEGRAM CHAT ID 
@@ -347,8 +375,6 @@ IoT iot;
 // CLOUD CHART/LOG
 struct Chart {
    bool on = false;                  // NANO CHART ON / OFF
-//   String token;             // NANO CHART TOKEN
-//   int interval;                  // NANO CHART INTERVALL
 };
 
 Chart chart;
@@ -357,7 +383,7 @@ Chart chart;
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL     
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool displayblocked = false;                     // No OLED Update
-enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE, AUTOTUNE};
+enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE, TUNE, SYSTEMSTART};
 
 // OLED QUESTION
 struct MyQuestion {
@@ -370,23 +396,29 @@ MyQuestion question;
 // FILESYSTEM
 enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
-// WIFI
-ESP8266WiFiMulti wifiMulti;               // MULTIWIFI instance
-WiFiUDP udp;                              // UDP instance
-byte isAP = 2;                    // WIFI MODE  (0 = STA, 1 = AP, 2 = NO, 3 = Turn off)
-unsigned long isAPcount;
-String wifissid[5];
-String wifipass[5];
-int lenwifi = 0;
-long rssi = 0;                   // Buffer rssi
+// https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266WiFi/src/ESP8266WiFiType.h
 
-long scantime;
-bool disconnectAP;
+// WIFI
+struct Wifi {
+  byte mode;                       // WIFI MODE  (0 = OFF, 1 = STA, 2 = AP, 3/4 = Turn off), 5 = DICONNECT
+  unsigned long turnoffAPtimer;    // TURN OFF AP TIMER
+  byte savedlen;                   // LENGTH SAVED WIFI DATE
+  String savedssid[5];             // SAVED SSID
+  String savedpass[5];             // SAVED PASSWORD
+  int rssi;                        // BUFFER RSSI
+  byte savecount;                  // COUNTER
+  unsigned long reconnecttime;
+  unsigned long scantime;          // LAST SCAN TIME
+  bool disconnectAP;               // DISCONNECT AP
+  bool revive;
+};
+Wifi wifi;
+
 struct HoldSSID {
-   unsigned long connect;
-   bool hold;             
-   String ssid;
-   String pass;
+   unsigned long connect;           // NEW WIFI DATA TIMER  (-1: in Process)
+   byte hold;                       // NEW WIFI DATA      
+   String ssid;                     // NEW SSID
+   String pass;                     // NEW PASSWORD
 };
 HoldSSID holdssid;
 
@@ -403,15 +435,13 @@ enum {TEMPSUB, PITSUB, SYSTEMSUB, MAINMENU, TEMPKONTEXT, BACK};
 bool inWork = 0;
 bool isback = 0;
 byte framepos[5] = {0, 2, 3, 1, 4};  // TempSub, PitSub, SysSub, TempKon, Back
-byte subframepos[4] = {1, 6, 11, 19};    // immer ein Back dazwischen
+byte subframepos[4] = {1, 6, 11, 17};    // immer ein Back dazwischen // menutextde ebenfalls anpassen
 int current_frame = 0;  
 bool flashinwork = true;
 float tempor;                       // Zwischenspeichervariable
 
 // WEBSERVER
 AsyncWebServer server(80);        // https://github.com/me-no-dev/ESPAsyncWebServer
-const char* www_username = "admin";
-const char* www_password = "admin";
 
 // TIMER
 unsigned long lastUpdateBatteryMode;
@@ -424,6 +454,10 @@ unsigned long lastUpdateThingspeak;
 unsigned long lastUpdateCloud;
 unsigned long lastUpdateLog;
 unsigned long lastUpdateMQTT;
+
+unsigned long lastUpdateBattery;
+
+rst_info *myResetInfo;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -446,6 +480,8 @@ byte set_sensor();                                // Initialize Sensors
 int  get_adc_average (byte ch);                   // Reading ADC-Channel Average
 void get_Vbat();                                   // Reading Battery Voltage
 void cal_soc();
+void battery_set_full(bool full);
+void battery_reset_reference();
 
 // TEMPERATURE (TEMP)
 float calcT(int r, byte typ);                     // Calculate Temperature from ADC-Bytes
@@ -470,9 +506,9 @@ void set_OLED();                                  // Configuration OLEDDisplay
 bool loadfile(const char* filename, File& configFile);
 bool savefile(const char* filename, File& configFile);
 bool checkjson(JsonVariant json, const char* filename);
-bool loadconfig(byte count);
+bool loadconfig(byte count, bool old);
 bool setconfig(byte count, const char* data[2]);
-bool modifyconfig(byte count, const char* data[12]);
+bool modifyconfig(byte count, bool neu);
 void start_fs();                                  // Initialize FileSystem
 void read_serial(char *buffer);                   // React to Serial Input 
 int readline(int readch, char *buffer, int len);  // Put together Serial Input
@@ -485,6 +521,7 @@ double median_get();                              // get Median from Buffer
 
 // OTA
 void set_ota();                                   // Configuration OTA
+void check_http_update();
 
 // WIFI
 void set_wifi();                                  // Connect WiFi
@@ -492,12 +529,16 @@ void get_rssi();
 void reconnect_wifi();
 void stop_wifi();
 void check_wifi();
-time_t getNtpTime();
 WiFiEventHandler wifiConnectHandler;
+WiFiEventHandler wifiDHCPTimeout, wifiDisconnectHandler, softAPDisconnectHandler;  
+void connectToMqtt();
+void EraseWiFiFlash();
+void connectWiFi();
 
 //MQTT
 AsyncMqttClient pmqttClient;
-void sendpmqtt();
+bool sendpmqtt();
+bool sendSettings();
 
 // EEPROM
 void setEE();
@@ -506,26 +547,26 @@ void readEE(char *buffer, int len, int startP);
 void clearEE(int startP, int endP);
 
 // PITMASTER
-void startautotunePID(int maxCyc, bool store, int over, long tlimit);
-void pitmaster_control();
+void startautotunePID(int maxCyc, bool store, int over, long tlimit, byte id);
+void pitmaster_control(byte id);
 void disableAllHeater();
 void set_pitmaster(bool init);
-void set_pid();
-void stopautotune();
+void set_pid(byte index);
+void stopautotune(byte id);
 
 // BOT
 void set_iot(bool init);
 String collectData();
 String createNote(bool ts);
 bool sendNote(int check);
-void sendSettings();
 void sendDataTS();
 
 void sendServerLog();
 String serverLog();
 void sendDataCloud();
 
-String cloudData();
+String cloudData(bool cloud);
+String cloudSettings();
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -536,7 +577,37 @@ void set_serial() {
   Serial.begin(115200);
   DPRINTLN();
   DPRINTLN();
+  IPRINTLN(ESP.getResetReason());
+
+  myResetInfo = ESP.getResetInfoPtr();
+  //Serial.printf("myResetInfo->reason %x \n", myResetInfo->reason); // reason is uint32
+  
 }
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Check why reset
+bool checkResetInfo() {
+
+  // Source: Arduino/cores/esp8266/Esp.cpp
+  // Source: Arduino/tools/sdk/include/user_interface.h
+
+  switch (myResetInfo->reason) {
+
+    case REASON_DEFAULT_RST: 
+    case REASON_SOFT_RESTART:       // SOFTWARE RESTART
+    case REASON_EXT_SYS_RST:          // EXTERNAL (FLASH)
+    case REASON_DEEP_SLEEP_AWAKE:     // WAKE UP
+      return true;  
+
+    case REASON_EXCEPTION_RST:      // EXEPTION
+    case REASON_WDT_RST:            // HARDWARE WDT
+    case REASON_SOFT_WDT_RST:       // SOFTWARE WDT
+      break;
+  }
+
+  return false;
+}
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize System-Settings, if not loaded from EE
@@ -546,7 +617,6 @@ void set_system() {
   host += String(ESP.getChipId(), HEX);
   
   sys.host = host;
-  sys.hwalarm = false; 
   sys.apname = APNAME;
   sys.language = "de";
   sys.fastmode = false;
@@ -554,12 +624,17 @@ void set_system() {
   if (sys.update == 0) sys.getupdate = "false";   // Änderungen am EE während Update
   sys.autoupdate = 1;
   sys.god = false;
+  sys.typk = false;
   battery.max = BATTMAX;
   battery.min = BATTMIN;
+  battery.setreference = 0;
   sys.pitsupply = false;
+  sys.damper = false;
+
+  sys.restartnow = false;
 }
 
-
+String connectionStatus ( int which );
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Temperature and Battery Measurement Timer
 void timer_sensor() {
@@ -567,13 +642,16 @@ void timer_sensor() {
   if (millis() - lastUpdateSensor > INTERVALSENSOR) {
     get_Temperature();
     get_Vbat();
+    if (millis() < BATTERYSTARTUP) cal_soc();
     lastUpdateSensor = millis();
+    //Serial.println(connectionStatus(WiFi.status()));
   }
 
-  if (millis() - lastUpdateRSSI > INTERVALCOMMUNICATION) {
+  if (millis() - lastUpdateRSSI > INTERVALBATTERYSIM) {
     get_rssi(); 
     cal_soc();
     lastUpdateRSSI = millis();
+    
   }
 }
 
@@ -597,7 +675,7 @@ void timer_iot() {
   // THINGSPEAK
   if (millis() - lastUpdateThingspeak > (iot.TS_int * 1000)) {
 
-    if (!isAP && sys.update == 0 && iot.TS_on) {
+    if (wifi.mode == 1 && sys.update == 0 && iot.TS_on) {
       if (iot.TS_writeKey != "" && iot.TS_chID != "") sendDataTS();
     }
     lastUpdateThingspeak = millis();
@@ -606,14 +684,14 @@ void timer_iot() {
   // PRIVATE MQTT
   if (millis() - lastUpdateMQTT > (iot.P_MQTT_int * 1000)) {
 
-    if (!isAP && sys.update == 0 && iot.P_MQTT_on) sendpmqtt();
+    if (wifi.mode == 1 && sys.update == 0 && iot.P_MQTT_on) sendpmqtt();
     lastUpdateMQTT = millis();
   }
 
   // NANO CLOUD
   if (millis() - lastUpdateCloud > (iot.CL_int * 1000)) {
 
-    if (!isAP && sys.update == 0 && iot.CL_on) {
+    if (wifi.mode == 1 && sys.update == 0 && iot.CL_on && now() > 100000) {  // nicht senden, falls utc noch nicht eingetroffen
         sendDataCloud();
     }
     lastUpdateCloud = millis();
@@ -622,19 +700,20 @@ void timer_iot() {
   // NANO LOGS
   if (millis() - lastUpdateLog > INTERVALCOMMUNICATION) {
 
-    if (!isAP && sys.update == 0 && chart.on) {
-        sendServerLog();
+    if (wifi.mode == 1 && sys.update == 0 && chart.on) {
+        //sendServerLog();
     }
     lastUpdateLog = millis();
   }
   
 }
 
+/*
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // DataLog Timer
 void timer_datalog() {  
   
-  if (millis() - lastUpdateDatalog > 3000) {
+  if (millis() - lastUpdateDatalog > 60000) {
 
     int logc;
     int checksum = 0;
@@ -652,9 +731,9 @@ void timer_datalog() {
       } else
         mylog[logc].tem[i] = NULL;
     }
-    mylog[logc].pitmaster = (uint8_t) pitmaster.value;            // 8  bit // 1 byte
-    if (pitmaster.active) {
-      mylog[logc].soll = (uint16_t) (pitmaster.set * 10);           // 16 bit // 2 byte
+    mylog[logc].pitmaster = (uint8_t) pitMaster[0].value;            // 8  bit // 1 byte
+    if (pitMaster[0].active) {
+      mylog[logc].soll = (uint16_t) (pitMaster[0].set * 10);           // 16 bit // 2 byte
       checksum += mylog[logc].soll;
     } else  mylog[logc].soll = NULL;
     mylog[logc].timestamp = now();                                // 64 bit // 8 byte
@@ -670,7 +749,7 @@ void timer_datalog() {
     log_count++;
     // 2*8 + 1 + 2 + 8 + 1 = 28
 
-    /*
+    // /
     if (log_count%MAXLOGCOUNT == 0 && log_count != 0) {
         
       if (log_sector > freeSpaceEnd/SPI_FLASH_SEC_SIZE) 
@@ -680,12 +759,13 @@ void timer_datalog() {
       log_sector++;
       setconfig(eSYSTEM,{});  
     }
-    */
+   //  /
     
     lastUpdateDatalog = millis();
   }
 }
 
+*/
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Flash
@@ -771,36 +851,18 @@ tmElements_t * string_to_tm(tmElements_t *tme, char *str) {
   return tme;
 }
 
-/*
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Update Time
-void set_time() {
-  if (!isAP) {
-    while (now() < 30) {        // maximal 30 sec suchen
-      time_t present = getNtpTime();
-      if (present) setTime(present); 
-    }
-  }
-  
-  //setSyncProvider(getNtpTime);
-  DPRINTP("[INFO]\t");
-  DPRINTLN(digitalClockDisplay(mynow()));
-}
-*/
-
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Standby oder Mess-Betrieb
 bool standby_control() {
-  if (stby) {
+  if (sys.stby) {
 
     drawLoading();
     if (!LADENSHOW) {
       //drawLoading();
       LADENSHOW = true;
-      DPRINTPLN("[INFO]\tChange to Standby");
+      IPRINTPLN("Standby");
       //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
-      //pitmaster.active = false;
       disableAllHeater();
       server.reset();   // Webserver leeren
       piepserOFF();
@@ -811,7 +873,7 @@ bool standby_control() {
       get_Vbat();
       lastUpdateBatteryMode = millis();  
 
-      if (!stby) ESP.restart();
+      if (!sys.stby) ESP.restart();
     }
     
     return 1;
@@ -873,7 +935,7 @@ String newToken() {
 #define SENDTHINGSPEAK "Thingspeak"
 #define THINGSPEAKSERVER "api.thingspeak.com"
 #define NANOSERVER "nano.wlanthermo.de"
-#define UPDATESERVER "update.wlanthermo.de"
+#define UPDATESERVER "update.wlanthermo.de"   // früher nano.wlanthermo.de
 #define CLOUDSERVER "cloud.wlanthermo.de"
 #define MESSAGESERVER "message.wlanthermo.de" 
 #define SENDNOTELINK "/message.php"
@@ -882,7 +944,7 @@ String newToken() {
 
 enum {SERIALNUMBER, APITOKEN, TSWRITEKEY, NOTETOKEN, NOTEID, NOTESERVICE,
       THINGHTTPKEY, DEVICE, HARDWAREVS, SOFTWAREVS};  // Parameters
-enum {NOPARA, SAVEDATA, SENDTS, SENDNOTE, THINGHTTP, CHECKUPDATE};                       // Config
+enum {NOPARA, SENDTS, SENDNOTE, THINGHTTP, CHECKUPDATE};                       // Config
 enum {GETMETH, POSTMETH};                                                   // Method
 
 String createParameter(int para) {
@@ -907,17 +969,40 @@ String createParameter(int para) {
 
     case NOTETOKEN:
       command += F("&token=");
-      command += iot.TG_token;
+      if (notification.temp1 != "") {
+        command += notification.temp1;
+        // notification.temp1 = "";         // erst bei NOTESERVICE
+      } else command += iot.TG_token;
       break;
 
     case NOTEID:
       command += F("&chatID=");
-      command += iot.TG_id;
+      if (notification.temp2 != "") {
+        command += notification.temp2;
+        notification.temp2 = "";
+      } else command += iot.TG_id;
       break;
 
     case NOTESERVICE:
       command += F("&service=");
-      command += "telegram";  //iot.TG_on;
+      if (notification.temp1 != "") {
+        if (notification.temp1.length() == 30) {
+          command += F("pushover");
+          notification.temp1 = "";
+          break;
+        } else if (notification.temp1.length() == 40) {
+          command += F("prowl");
+          notification.temp1 = "";
+          break;
+        }
+      } else if (iot.TG_token.length() == 30) {
+        command += F("pushover");
+        break;
+      } else if (iot.TG_token.length() == 40) {
+        command += F("prowl");
+        break;
+      }
+      command += F("telegram");  
       break;
 
     case THINGHTTPKEY:
@@ -951,11 +1036,6 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
   command += (para != NOPARA) ? "?" : "";
 
   switch (para) {
-    
-    case SAVEDATA:
-      command += createParameter(SERIALNUMBER);
-      command += createParameter(APITOKEN);
-      break;
 
     case SENDTS:
       command += createParameter(TSWRITEKEY);
@@ -997,12 +1077,51 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
     command += F("\n");
   }
 
-  command += F("User-Agent: ESP8266\n");
+  command += F("User-Agent: WLANThermo nano\n");
   command += F("Host: ");
   command += String(host);
   command += F("\n\n");
 
   return  command;
+}
+
+void sendNotification() {
+  
+  if (wifi.mode == 1) {                   // Wifi available
+
+    if (notification.type > 0) {                      // GENERAL NOTIFICATION       
+        
+      if (iot.TG_on > 0 || notification.temp1 != "") {
+        if (sendNote(0)) sendNote(2);           // Notification per Nano-Server
+      //} else if (iot.TS_httpKey != "" && iot.TS_on)  {
+      //  if (sendNote(0)) sendNote(1);           // Notification per Thingspeak
+      }
+        
+    } else if (notification.index > 0) {              // CHANNEL NOTIFICATION
+
+      for (int i=0; i < CHANNELS; i++) {
+        if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
+            
+          bool sendN = true;
+          if (iot.TS_httpKey != "" && iot.TS_on) {
+            if (sendNote(0)) {
+              notification.ch = i;
+              sendNote(1);           // Notification per Thingspeak
+            } else sendN = false;
+          } else if (iot.TG_on > 0) {
+            if (sendNote(0)) {
+              notification.ch = i;
+              sendNote(2);           // Notification per Nano-Server
+            } else sendN = false;
+          }
+          if (sendN) {
+            notification.index &= ~(1<<i);           // Kanal entfernen, sonst erneuter Aufruf
+            return;                                  // nur ein Senden pro Durchlauf
+          }
+        }
+      }    
+    }
+  }
 }
 
 
@@ -1028,22 +1147,28 @@ void printClient(const char* link, int arg) {
 
   switch (arg) {
 
-    case CONNECTFAIL:   DPRINTP("[INFO]\tClient Connect Fail: ");
+    case CONNECTFAIL:   IPRINTP("f: ");    // Client Connect Fail
       break;
 
-    case SENDTO:        DPRINTP("[INFO]\tClient Send to:");
+    case SENDTO:        IPRINTP("s:");      // Client Send to
       break;
 
-    case DISCONNECT:    DPRINTP("[INFO]\tDisconnect Client: ");
+    case DISCONNECT:    IPRINTP("d:");     //Disconnect Client
       break;
 
-    case CLIENTERRROR:  DPRINTP("[INFO]\tClient Connect Error: ");
+    case CLIENTERRROR:  IPRINTP("f:");     // Client Connect Error:
       break; 
 
-    case CLIENTCONNECT: DPRINTP("[INFO]\tClient Connect: ");
+    case CLIENTCONNECT: IPRINTP("c: ");    // Client Connect
       break; 
   }
   DPRINTLN(link);
 }
 
+
+uint16_t getDC(uint16_t impuls) {
+  // impuls = value * 10  // 1.Nachkommastelle
+  float val = ((float)(impuls - SERVOPULSMIN*10)/(SERVOPULSMAX - SERVOPULSMIN))*100;
+  return (val < 500)?ceil(val):floor(val);   // nach oben : nach unten
+}
 

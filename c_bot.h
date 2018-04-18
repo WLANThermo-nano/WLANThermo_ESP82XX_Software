@@ -29,10 +29,10 @@ static AsyncClient * tsalarmclient = NULL;
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Initialize Charts
+// Initialize IoT
 void set_iot(bool init) {
   
-   if (init) {
+   if (init) {                // clear all
     iot.TS_writeKey = "";     
     iot.TS_httpKey = "";       
     iot.TS_userKey = "";     
@@ -83,86 +83,7 @@ String collectData() {
   return postStr;
 }
 
-
-String createNote(bool ts) {
   
-  String postStr;
-  postStr += (ts)?F("&message="):F("&msg=");
-  if (ts) postStr += (notification.limit)?F("hoch"):F("niedrig"); 
-  else postStr += (notification.limit)?F("up"):F("down");
-  postStr += "&ch=";
-  postStr += String(notification.ch);
-
-  return postStr;
-}
-  
-/*
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send Settings to Thingspeak
-void sendSettings(){
-
-  if(tssettingclient) return;                 //client already exists
-
-  tssettingclient = new AsyncClient();
-  if(!tssettingclient)  return;               //could not allocate client
-
-  tssettingclient->onError([](void * arg, AsyncClient * client, int error){
-    Serial.println("[INFO]\tConnect Error");
-    tssettingclient = NULL;
-    delete client;
-  }, NULL);
-
-  tssettingclient->onConnect([](void * arg, AsyncClient * client){
-    
-    Serial.println(millis());
-    
-    tssettingclient->onError(NULL, NULL);
-
-    client->onDisconnect([](void * arg, AsyncClient * c){
-      Serial.println(millis());
-      tssettingclient = NULL;
-      delete c;
-    }, NULL);
-
-    client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
-      Serial.print("\r\nData: ");
-      Serial.println(len);
-      uint8_t * d = (uint8_t*)data;
-      for(size_t i=0; i<len;i++)
-        Serial.write(d[i]);
-    }, NULL);
-
-    //send the request
-    String postStr;
-    
-    AsyncWebServerRequest *request;
-    
-    // Metadata
-    postStr = "&metadata=";
-    //postStr += handleSettings(request, 2);
-    
-    String adress = F("PUT /channels/");
-    adress += iot.TS_chID;
-    adress += F(".json?api_key=");
-    adress += iot.TS_userKey;
-    adress += postStr;
-    adress += F(" HTTP/1.1\nHost: api.thingspeak.com\n\n");
-    
-    client->write(adress.c_str());
-    
-    
-  }, NULL);
-
-  if(!tssettingclient->connect(SERVER1, 80)){
-    Serial.println("[INFO]\tConnect Fail");
-    AsyncClient * client = tssettingclient;
-    tssettingclient = NULL;
-    delete client;
-  }
-}
-
-*/
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Send Temp-Data to Thingspeak
 void sendDataTS(){
@@ -204,8 +125,34 @@ void sendDataTS(){
   }
 }
 
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send Notification to Thingspeak
+// Create Notification Message
+String createNote(bool ts) {
+
+  String postStr;
+
+  if (notification.type > 0) {    // Test Message
+    postStr += (ts)?F("&message="):F("&msg=");
+    postStr += F("up");
+    postStr += F("&ch=1");
+    notification.type = 0;
+    
+  } else {
+    bool limit = notification.limit & (1<<notification.ch);
+  
+    postStr += (ts)?F("&message="):F("&msg=");
+    if (ts) postStr += (limit)?F("hoch"):F("niedrig"); 
+    else postStr += (limit)?F("up"):F("down");
+    postStr += F("&ch=");
+    postStr += String(notification.ch+1);    
+  } 
+
+  return postStr;
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Send Notification
 bool sendNote(int check){
 
   if (check == 0) {
@@ -262,7 +209,7 @@ bool sendNote(int check){
       printClient(SENDNOTELINK,SENDTO);
       String adress = createCommand(GETMETH,SENDNOTE,SENDNOTELINK,MESSAGESERVER,0);
       client->write(adress.c_str());
-      //Serial.println(adress);
+      Serial.println(adress);
     }, NULL);
 
     if(!tsalarmclient->connect(MESSAGESERVER, 80)){
@@ -274,65 +221,4 @@ bool sendNote(int check){
   }
   return true;    // Nachricht kann gesendet werden
 }
-
-
-/*
-#include "include/ssl.h"
-static AsyncClient * aClient = NULL;
-
-#define SERVER2 "192.168.254.16"
-const char *sslHost = "192.168.254.16";
-const uint16_t sslPort = 443;
-
-void runAsyncClient(){
-  if(aClient)//client already exists
-    return;
-
-  aClient = new AsyncClient();
-  if(!aClient)//could not allocate client
-    return;
-
-  aClient->onError([](void * arg, AsyncClient * client, int error){
-    Serial.println("Connect Error");
-    aClient = NULL;
-    delete client;
-  }, NULL);
-
-  aClient->onConnect([](void * arg, AsyncClient * client){
-    Serial.println("Connected");
-    //securePrintInfo(client->getSSL());
-    aClient->onError(NULL, NULL);
-
-    client->onDisconnect([](void * arg, AsyncClient * c){
-      Serial.println("Disconnected");
-      aClient = NULL;
-      delete c;
-    }, NULL);
-
-    client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
-      Serial.print("\r\nData: ");
-      Serial.println(len);
-      uint8_t * d = (uint8_t*)data;
-      for(size_t i=0; i<len;i++)
-        Serial.write(d[i]);
-    }, NULL);
-
-    //send the request
-    char m[256];
-    sprintf(m, "GET /test.htm HTTP/1.0\r\nHost: %s\r\n\r\n", sslHost);
-    int wrote = client->write(m, strlen(m));
-    Serial.printf("Sent: %u => %d\r\n", strlen(m), wrote);
-  }, NULL);
-
-  if(!aClient->connect(SERVER2, 443, true)){
-    Serial.println("Connect Fail");
-    AsyncClient * client = aClient;
-    aClient = NULL;
-    delete client;
-  }
-}
-*/
-
-// https://api.telegram.org/bot280220123:AAHdw_5QeO1lfIhXU8ja_IlpSSg2gYTJXtU/sendMessage
-//chat_id=256288661&text=ACHTUNG:+Kanal+%%ch%%+ist+zu+%%message%%
 

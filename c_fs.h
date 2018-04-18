@@ -25,6 +25,7 @@
 #define THING_FILE    "/thing.json"
 #define PIT_FILE      "/pit.json"
 #define SYSTEM_FILE   "/system.json"
+#define LOG_FILE      "/log.txt"
 
 /*
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -69,13 +70,49 @@ bool savefile(const char* filename, File& configFile) {
 }
 */
 
+/*
+// Save Log
+bool savelog() {
+  
+  if (millis() - lastUpdateDatalog > 60000) {
+
+    File f = SPIFFS.open(LOG_FILE, "a");
+
+    for (int i=0; i < CHANNELS; i++)  {
+      if (ch[0].temp != INACTIVEVALUE) {
+        f.print(String(ch[0].temp,1));    // 8 * 16 bit  // 8 * 2 byte
+      } else {
+        f.print("");
+      }
+      f.print("|");
+    }
+    //mylog[logc].timestamp = now();                                // 64 bit // 8 byte
+
+    f.print((uint8_t) battery.percentage);           // 8  bit // 1 byte
+    f.print("|");
+    if (pitmaster1.active) {
+      f.print((uint8_t) pitmaster1.value);            // 8  bit // 1 byte
+      f.print("|");
+      f.println((uint16_t) (pitmaster1.set * 10));           // 16 bit // 2 byte
+    } else {
+      f.println("");
+    }
+    
+    f.close();
+    Serial.println("Logeintrag");
+    lastUpdateDatalog = millis();
+  }
+}
+
+*/
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Check JSON
 bool checkjson(JsonVariant json, const char* filename) {
   
   if (!json.success()) {
     
-    DPRINTP("[INFO]\tFailed to parse: ");
+    IPRINTP("f: ");
     DPRINTLN(filename);
     
     return false;
@@ -87,7 +124,7 @@ bool checkjson(JsonVariant json, const char* filename) {
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Load xxx.json at system start
-bool loadconfig(byte count) {
+bool loadconfig(byte count, bool old) {
 
   const size_t bufferSize = 6*JSON_ARRAY_SIZE(CHANNELS) + JSON_OBJECT_SIZE(9) + 320;
   DynamicJsonBuffer jsonBuffer(bufferSize);
@@ -99,12 +136,13 @@ bool loadconfig(byte count) {
     {
 
       std::unique_ptr<char[]> buf(new char[EECHANNEL]);
-      readEE(buf.get(),EECHANNEL, EECHANNELBEGIN);
+      if (!old) readEE(buf.get(),EECHANNEL, EECHANNELBEGIN);
+      else readEE(buf.get(),EECHANNEL, 550);
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,CHANNEL_FILE)) return false;
       
-      if (json.containsKey("temp_unit"))  temp_unit = json["temp_unit"].asString();
+      if (json.containsKey("temp_unit"))  sys.unit = json["temp_unit"].asString();
       else return false;
       
       for (int i=0; i < CHANNELS; i++){
@@ -125,12 +163,14 @@ bool loadconfig(byte count) {
 
       JsonArray& _wifi = jsonBuffer.parseArray(buf.get());
       if (!checkjson(_wifi,WIFI_FILE)) return false;
+
+      wifi.savedlen = 0;
       
       // Wie viele WLAN Schlüssel sind vorhanden
       for (JsonArray::iterator it=_wifi.begin(); it!=_wifi.end(); ++it) {  
-        wifissid[lenwifi] = _wifi[lenwifi]["SSID"].asString();
-        wifipass[lenwifi] = _wifi[lenwifi]["PASS"].asString();  
-        lenwifi++;
+        wifi.savedssid[wifi.savedlen] = _wifi[wifi.savedlen]["SSID"].asString();
+        wifi.savedpass[wifi.savedlen] = _wifi[wifi.savedlen]["PASS"].asString();  
+        wifi.savedlen++;
       }
     }
     break;
@@ -138,7 +178,8 @@ bool loadconfig(byte count) {
     case 2:     // IOT
     { 
       std::unique_ptr<char[]> buf(new char[EETHING]);
-      readEE(buf.get(),EETHING, EETHINGBEGIN);
+      if (!old) readEE(buf.get(),EETHING, EETHINGBEGIN);
+      else readEE(buf.get(),EETHING, 1050);
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,THING_FILE)) return false;
@@ -189,12 +230,32 @@ bool loadconfig(byte count) {
     case 3:     // PITMASTER
     {
       std::unique_ptr<char[]> buf(new char[EEPITMASTER]);
-      readEE(buf.get(),EEPITMASTER, EEPITMASTERBEGIN);
+      if (!old) readEE(buf.get(),EEPITMASTER, EEPITMASTERBEGIN);
+      else readEE(buf.get(),EEPITMASTER, 1470);
 
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,PIT_FILE)) return false;
 
+      JsonArray& _master = json["pm"];
+
+      byte pitsize = 0;
+
+      for (JsonArray::iterator it=_master.begin(); it!=_master.end(); ++it) {
+        pitMaster[pitsize].channel = _master[pitsize]["ch"];
+        pitMaster[pitsize].pid = _master[pitsize]["pid"];
+        pitMaster[pitsize].set = _master[pitsize]["set"];
+        pitMaster[pitsize].active = _master[pitsize]["act"];
+        pitMaster[pitsize].resume = _master[pitsize]["res"];
+
+        if (pitMaster[pitsize].active == MANUAL && pitMaster[pitsize].resume) 
+          pitMaster[pitsize].value = _master[pitsize]["val"];
+
+        pitsize++;
+      }
+/*
       JsonObject& _master = json["pm"];
+
+      Pitmaster pitmaster = pitmaster1;
 
       if (_master.containsKey("ch"))  pitmaster.channel   = _master["ch"]; 
       else return false;
@@ -202,7 +263,10 @@ bool loadconfig(byte count) {
       pitmaster.set       = _master["set"];
       pitmaster.active    = _master["act"];
       pitmaster.resume    = _master["res"];
-  
+
+      if (pitmaster.active == MANUAL && pitmaster.resume) 
+        if (_master.containsKey("val")) pitmaster.value = _master["val"];
+  */
       JsonArray& _pid = json["pid"];
 
       pidsize = 0;
@@ -221,13 +285,11 @@ bool loadconfig(byte count) {
         pid[pidsize].Ki_min = _pid[pidsize]["Ki_min"];                   
         pid[pidsize].Ki_max = _pid[pidsize]["Ki_max"];                  
         pid[pidsize].pswitch = _pid[pidsize]["switch"];               
-        pid[pidsize].reversal = _pid[pidsize]["rev"];                
+        //pid[pidsize].reversal = _pid[pidsize]["rev"];                
         pid[pidsize].DCmin    = _pid[pidsize]["DCmin"];              
         pid[pidsize].DCmax    = _pid[pidsize]["DCmax"];              
-        pid[pidsize].SVmin    = _pid[pidsize]["SVmin"];             
-        pid[pidsize].SVmax    = _pid[pidsize]["SVmax"];   
-        pid[pidsize].esum = 0;             
-        pid[pidsize].elast = 0;       
+        //pid[pidsize].SVmin    = _pid[pidsize]["SVmin"];             
+        //pid[pidsize].SVmax    = _pid[pidsize]["SVmax"];         
         pidsize++;
       }
     }
@@ -243,8 +305,6 @@ bool loadconfig(byte count) {
       if (!checkjson(json,SYSTEM_FILE)) return false;
   
       if (json.containsKey("host"))     sys.host = json["host"].asString();
-      else return false;
-      if (json.containsKey("hwalarm"))  sys.hwalarm = json["hwalarm"];
       else return false;
       if (json.containsKey("ap"))       sys.apname = json["ap"].asString();
       else return false;
@@ -273,7 +333,15 @@ bool loadconfig(byte count) {
       if (json.containsKey("god"))      sys.god = json["god"];
       else return false;
       if (json.containsKey("pitsup"))      sys.pitsupply = json["pitsup"];
+      if (json.containsKey("typk"))        sys.typk = json["typk"];
       //else return false;
+      if (json.containsKey("batfull"))      battery.setreference = json["batfull"];
+      //else return false;
+      if (json.containsKey("pass"))      sys.www_password = json["pass"].asString();
+
+      if (json.containsKey("damper"))      sys.damper = json["damper"];
+      //if (json.containsKey("adp"))      sys.advanced = json["adp"];
+      //if (json.containsKey("nobat"))    sys.nobattery = json["nobat"];
       
     }
     break;
@@ -302,7 +370,7 @@ bool setconfig(byte count, const char* data[2]) {
     {
       JsonObject& json = jsonBuffer.createObject();
 
-      json["temp_unit"] = temp_unit;
+      json["temp_unit"] = sys.unit;
 
       JsonArray& _name = json.createNestedArray("tname");
       JsonArray& _typ = json.createNestedArray("ttyp");
@@ -368,8 +436,7 @@ bool setconfig(byte count, const char* data[2]) {
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {
-        DPRINTPLN("[INFO]\tZu viele BOT Daten!");
-        DPRINTLN("[INFO]\tFailed to save Thingspeak config");
+        IPRINTPLN("f:full");
         return false;
       } else {
         clearEE(EETHING,EETHINGBEGIN);  // Bereich reinigen
@@ -383,13 +450,17 @@ bool setconfig(byte count, const char* data[2]) {
     case 3:        // PITMASTER
     {
       JsonObject& json = jsonBuffer.createObject();
-      JsonObject& _master = json.createNestedObject("pm");
+      JsonArray& _master = json.createNestedArray("pm");
       
-      _master["ch"]     = pitmaster.channel;
-      _master["pid"]    = pitmaster.pid;
-      _master["set"]    = pitmaster.set;
-      _master["act"]    = pitmaster.active;
-      _master["res"]    = pitmaster.resume;
+      for (int i = 0; i < PITMASTERSIZE; i++) {
+        JsonObject& _ma = _master.createNestedObject();
+      _ma["ch"]     = pitMaster[i].channel;
+      _ma["pid"]    = pitMaster[i].pid;
+      _ma["set"]    = double_with_n_digits(pitMaster[i].set,1);
+      _ma["act"]    = pitMaster[i].active;
+      _ma["res"]    = pitMaster[i].resume;
+      _ma["val"]    = pitMaster[i].value;
+      }
   
       JsonArray& _pit = json.createNestedArray("pid");
   
@@ -398,26 +469,24 @@ bool setconfig(byte count, const char* data[2]) {
         _pid["name"]     = pid[i].name;
         _pid["id"]       = pid[i].id;
         _pid["aktor"]    = pid[i].aktor;
-        _pid["Kp"]       = pid[i].Kp;  
-        _pid["Ki"]       = pid[i].Ki;    
-        _pid["Kd"]       = pid[i].Kd;                   
-        _pid["Kp_a"]     = pid[i].Kp_a;               
-        _pid["Ki_a"]     = pid[i].Ki_a;                  
-        _pid["Kd_a"]     = pid[i].Kd_a;             
+        _pid["Kp"]       = double_with_n_digits(pid[i].Kp,1);  
+        _pid["Ki"]       = double_with_n_digits(pid[i].Ki,3);    
+        _pid["Kd"]       = double_with_n_digits(pid[i].Kd,1);                   
+        _pid["Kp_a"]     = double_with_n_digits(pid[i].Kp_a,1);               
+        _pid["Ki_a"]     = double_with_n_digits(pid[i].Ki_a,3);                  
+        _pid["Kd_a"]     = double_with_n_digits(pid[i].Kd_a,1);             
         _pid["Ki_min"]   = pid[i].Ki_min;             
         _pid["Ki_max"]   = pid[i].Ki_max;             
-        _pid["switch"]   = pid[i].pswitch;           
-        _pid["rev"]      = pid[i].reversal;                
-        _pid["DCmin"]    = pid[i].DCmin;             
-        _pid["DCmax"]    = pid[i].DCmax;             
-        _pid["SVmin"]    = pid[i].SVmin;             
-        _pid["SVmax"]    = pid[i].SVmax;
+        _pid["switch"]   = pid[i].pswitch;                           
+        _pid["DCmin"]    = double_with_n_digits(pid[i].DCmin,1);             
+        _pid["DCmax"]    = double_with_n_digits(pid[i].DCmax,1);             
+        //_pid["SVmin"]    = pid[i].SVmin;             
+        //_pid["SVmax"]    = pid[i].SVmax;
       }
        
       size_t size = json.measureLength() + 1;
       if (size > EEPITMASTER) {
-        DPRINTPLN("[INFO]\tZu viele PITMASTER Daten!");
-        DPRINTPLN("[INFO]\tFailed to save Pitmaster config");
+        IPRINTPLN("f:full");
         return false;
       } else {
         clearEE(EEPITMASTER,EEPITMASTERBEGIN);  // Bereich reinigen
@@ -433,7 +502,6 @@ bool setconfig(byte count, const char* data[2]) {
       JsonObject& json = jsonBuffer.createObject();
       
       json["host"] =        sys.host;
-      json["hwalarm"] =     sys.hwalarm;
       json["ap"] =          sys.apname;
       json["lang"] =        sys.language;
       json["fast"] =        sys.fastmode;
@@ -445,7 +513,13 @@ bool setconfig(byte count, const char* data[2]) {
       json["batmin"] =      battery.min;
       json["logsec"] =      log_sector;
       json["god"] =         sys.god;
+      json["typk"] =        sys.typk;
       json["pitsup"] =      sys.pitsupply;
+      json["batfull"] =     battery.setreference;
+      json["pass"] =        sys.www_password;
+      json["damper"] =      sys.damper;
+      //json["adp"] =        sys.advanced;
+      //json["nobat"] =       sys.nobattery;
     
       size_t size = json.measureLength() + 1;
       clearEE(EESYSTEM,EESYSTEMBEGIN);  // Bereich reinigen
@@ -465,15 +539,14 @@ bool setconfig(byte count, const char* data[2]) {
     return false;
   
   }
-
-  DPRINTPLN("[INFO]\tSaved!");
+  sys.sendSettingsflag = true;
   return true;
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Modify xxx.json
-bool modifyconfig(byte count, const char* data[12]) {
+bool modifyconfig(byte count, bool neu) {
   
   DynamicJsonBuffer jsonBuffer;
 
@@ -484,27 +557,36 @@ bool modifyconfig(byte count, const char* data[12]) {
 
     case 1:         // WIFI
     {
-      // Alte Daten auslesen
-      std::unique_ptr<char[]> buf(new char[EEWIFI]);
-      readEE(buf.get(), EEWIFI, EEWIFIBEGIN);
+      
+      JsonArray& json = jsonBuffer.createArray();
 
-      JsonArray& json = jsonBuffer.parseArray(buf.get());
-      if (!checkjson(json,WIFI_FILE)) {
-        setconfig(eWIFI,{});
-        return false;
+      if (neu) {
+        question.typ = IPADRESSE;     // Notification IP Adresse
+        drawQuestion(0);
+        //if (wifi.savedlen > 0)        // schon Daten vorhanden
+          wifi.savedlen++;  // neue Daten
+      }
+      
+      Serial.println("Sort SSID: ");
+      Serial.println(wifi.savedlen);
+      
+      JsonObject& _wifi = json.createNestedObject();
+      _wifi["SSID"] = holdssid.ssid;
+      _wifi["PASS"] = holdssid.pass;
+
+      for (int i = 0; i < wifi.savedlen; ++i) {
+        if ((wifi.savedssid[i] != holdssid.ssid) && (wifi.savedssid[i] != "")) {  // doppelt aussortieren
+          JsonObject& _wifi = json.createNestedObject();
+          _wifi["SSID"] = wifi.savedssid[i];
+          _wifi["PASS"] = wifi.savedpass[i];
+        }
       }
 
-      // Neue Daten eintragen
-      JsonObject& _wifi = json.createNestedObject();
-
-      _wifi["SSID"] = data[0];
-      _wifi["PASS"] = data[1];
-      
       // Speichern
       size_t size = json.measureLength() + 1;
       
       if (size > EEWIFI) {
-        DPRINTPLN("[INFO]\tZu viele WIFI Daten!");
+        IPRINTPLN("f:full");
         return false;
       } else {
         clearEE(EEWIFI,EEWIFIBEGIN);  // Bereich reinigen
@@ -536,8 +618,8 @@ bool modifyconfig(byte count, const char* data[12]) {
 
 void serialNote(const char * data, bool art) {
 
-  if (art) DPRINTP("[INFO]\tLoaded ");
-  else     DPRINTP("[INFO]\tFailed to load ");
+  if (art) {IPRINTP("l: ");}      // Load
+  else     {IPRINTP("f: ");}      // Failed Load
   DPRINTLN(data);
 }
 
@@ -547,11 +629,11 @@ void serialNote(const char * data, bool art) {
 void start_fs() {
   
   if (!SPIFFS.begin()) {
-    DPRINTPLN("[INFO]\tFailed to mount file system");
+    DPRINTPLN("f:FS");
     return;
   }
 
-  DPRINTP("[INFO]\tInitalize SPIFFS at Sector: 0x");
+  IPRINTP("SPIFFS: 0x");
   DPRINT((((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE), HEX);
   DPRINTP(" (");
   DPRINT(((uint32_t)&_SPIFFS_end - (uint32_t)&_SPIFFS_start)/1024, DEC);
@@ -561,73 +643,73 @@ void start_fs() {
   String fileName;
   Dir dir = SPIFFS.openDir("/");
   while (dir.next()) {
-    DPRINTP("[INFO]\tFS File: ");
+    IPRINTP("FS: ");
     //fileName = dir.fileName();
     //size_t fileSize = dir.fileSize();
     //DPRINTF("[INFO]\tFS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
     DPRINT(dir.fileName());
     File f = dir.openFile("r");
-    DPRINTP("\tSize: ");
+    DPRINTP("\t: ");
     DPRINTLN(formatBytes(f.size()));
   }
 
   FSInfo fs_info;
   SPIFFS.info(fs_info);
-  DPRINTP("[INFO]\tTotalBytes: ");
+  IPRINTP("Total: ");
   DPRINT(formatBytes(fs_info.totalBytes));
-  DPRINTP("\tUsedBytes: ");
+  DPRINTP("\tUsed: ");
   DPRINTLN(formatBytes(fs_info.usedBytes));
-  //Serial.println(fs_info.blockSize);
-  //Serial.println(fs_info.pageSize);
 
   //u32_t total, used;
   //int res = SPIFFS_info(&fs, &total, &used);
   
-  // CHANNEL
-  if (!loadconfig(eCHANNEL)) {
-    serialNote(CHANNEL_FILE,0);
-    set_channels(1);
-    setconfig(eCHANNEL,{});  // Speicherplatz vorbereiten
-    ESP.restart();
-  } else serialNote(CHANNEL_FILE,1);
-
-
   // WIFI
-  if (!loadconfig(eWIFI)) {
+  if (!loadconfig(eWIFI,0)) {
     serialNote(WIFI_FILE,0);
     setconfig(eWIFI,{});  // Speicherplatz vorbereiten
   } else serialNote(WIFI_FILE,1);
 
-
-  // IOT
-  if (!loadconfig(eTHING)) {
-    serialNote(THING_FILE,0);
-    set_iot(0);
-    setconfig(eTHING,{});  // Speicherplatz vorbereiten
-  } else serialNote(THING_FILE,1);
-
-
-  // PITMASTER
-  if (!loadconfig(ePIT)) {
-    serialNote(PIT_FILE,0);
-    set_pid();  // Default PID-Settings
-    set_pitmaster(1);
-    setconfig(ePIT,{});  // Reset pitmaster config
-  } else serialNote(PIT_FILE,1);
-
-
   // SYSTEM
-  if (!loadconfig(eSYSTEM)) {
+  if (!loadconfig(eSYSTEM,0)) {
     serialNote(SYSTEM_FILE,0);
     set_system();
     setconfig(eSYSTEM,{});  // Speicherplatz vorbereiten
     ESP.restart();
   } else serialNote(SYSTEM_FILE,1);
+  
+  // CHANNEL
+  if (!loadconfig(eCHANNEL,0)) {
+    if (!loadconfig(eCHANNEL,1)) {  // Alte Speicherwerte checken
+      serialNote(CHANNEL_FILE,0);   // Reset der Werte
+      set_channels(1);
+      setconfig(eCHANNEL,{});  // Speicherplatz vorbereiten
+      ESP.restart();
+    }
+  } else serialNote(CHANNEL_FILE,1);
+  
+  // IOT
+  if (!loadconfig(eTHING,0)) {
+    if (!loadconfig(eTHING,1)) {
+      serialNote(THING_FILE,0);
+      set_iot(0);
+      setconfig(eTHING,{});  // Speicherplatz vorbereiten
+    }
+  } else serialNote(THING_FILE,1);
+
+  // PITMASTER
+  if (!loadconfig(ePIT,0)) {
+    if (!loadconfig(ePIT,1)) {
+      serialNote(PIT_FILE,0);
+      set_pid(0);  // Default PID-Settings
+      set_pitmaster(1);
+      setconfig(ePIT,{});  // Reset pitmaster config
+    }
+  } else serialNote(PIT_FILE,1);
 
 }
 
 
-
+/*
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Test zum Speichern von Datalog
 
@@ -639,9 +721,9 @@ void write_flash(uint32_t _sector) {
   noInterrupts();
   if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK) {  // ESP.flashEraseSector
     spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) mylog, sizeof(mylog));  //ESP.flashWrite
-    DPRINTP("[LOG]\tSpeicherung im Sector: ");
-    DPRINTLN(_sector, HEX);
-  } else DPRINTPLN("[INFO]\tFehler beim Speichern im Flash");
+    //DPRINTP("[LOG]\tSpeicherung im Sector: ");
+    //DPRINTLN(_sector, HEX);
+  } //else DPRINTPLN("[INFO]\tFehler beim Speichern im Flash");
   interrupts(); 
 }
 
@@ -654,7 +736,7 @@ void read_flash(uint32_t _sector) {
   interrupts();
 }
 
-
+*/
 
 
 

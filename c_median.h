@@ -23,7 +23,7 @@
  ****************************************************/
 
 
-#define MEDIAN_SIZE   10
+#define MEDIAN_SIZE   16        // Einfluss auf Batterie-Simulation
 uint16_t _cnt;
 uint16_t _idx;
 boolean _sorted;
