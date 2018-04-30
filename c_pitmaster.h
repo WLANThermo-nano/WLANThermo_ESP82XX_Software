@@ -496,7 +496,9 @@ void DC_start(bool dc, byte aktor, int val, byte id) {
     dutyCycle[id].value = val;
     dutyCycle[id].timer = millis();
 
-    if (aktor == SERVO && sys.hwversion > 1) pitMaster[0].io = PITMASTER2;  // Servo-Spezial
+    pitMaster[id].last = 0;
+
+    //if (aktor == SERVO && sys.hwversion > 1) pitMaster[0].io = PITMASTER2;  // Servo-Spezial
 
     switch (pitMaster[id].active) {
       case PITOFF: dutyCycle[id].saved = PITOFF; break;
@@ -506,6 +508,7 @@ void DC_start(bool dc, byte aktor, int val, byte id) {
         autotune.stop = 2;
         break;
       case AUTO: dutyCycle[id].saved = -1; break;
+      case VOLTAGE: dutyCycle[id].saved = PITOFF; break;
     }
     pitMaster[id].active = DUTYCYCLE;
   }
@@ -542,8 +545,11 @@ void check_pit_pause(byte id) {
     aktor = dutyCycle[id].aktor;
     dcmin = 0;
     dcmax = 1000;                               // 1. Nachkommastelle
-  }
-  else {
+  } else if (pitMaster[id].active == VOLTAGE) {
+    aktor = FAN;
+    dcmin = 0;
+    dcmax = 1000; 
+  } else {
     aktor = pid[pitMaster[id].pid].aktor;
     dcmin = pid[pitMaster[id].pid].DCmin*10;    // 1. Nachkommastelle
     dcmax = pid[pitMaster[id].pid].DCmax*10;    // 1. Nachkommastelle
@@ -585,6 +591,8 @@ int myPitmaster(Pitmaster pitmaster) {
   else
     return 0;
 }
+
+unsigned long servochange = 0;
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -640,6 +648,15 @@ void pitmaster_control(byte id) {
         case MANUAL:    // falls manual wird value vorgegeben
           aktor = pid[pitMaster[id].pid].aktor;
           break;
+
+        case VOLTAGE:    // falls voltage wird value vorgegeben
+          aktor = FAN;
+          if (millis() - servochange > 1100) { 
+            pitMaster[id].value = 0;
+            //Serial.println("Abschaltung");
+          }
+          else pitMaster[id].value = 50;
+          break;
       }
 
       // PITMASTER AKTOR
@@ -671,8 +688,15 @@ void pitmaster_control(byte id) {
           break;
         
         case SERVO:   // Achtung bei V2 mit den 12V bei Anschluss an Stromversorgung
-          pitsupply(0, id);  // keine 12V Supply
-          pitMaster[id].msec = mapfloat(pitMaster[id].value,0,100,pitMaster[id].dcmin,pitMaster[id].dcmax);
+          // PITMASTER 1 = VOLTAGE
+          // PITMASTER 2 = SERVO  (gedrehte Pitmaster)
+          //pitsupply(0, id);  // keine 12V Supply
+          uint16_t smsec = mapfloat(pitMaster[id].value,0,100,pitMaster[id].dcmin,pitMaster[id].dcmax);
+          if (abs(pitMaster[id].msec - smsec) > 40) { // in msec
+            servochange = millis();
+            pitMaster[id].msec = smsec;
+          }
+           
           //Serial.println(pitMaster[id].msec);
           if (pid[pitMaster[0].pid].aktor == DAMPER) {      // Einfacher Damper
             pitMaster[id].msec = pitMaster[id].dcmin;

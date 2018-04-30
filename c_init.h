@@ -170,8 +170,8 @@ String  ttypname[SENSORTYPEN] = {"Maverick","Fantast-Neu","Fantast","iGrill2","E
 String colors[8] = {"#0C4C88","#22B14C","#EF562D","#FFC100","#A349A4","#804000","#5587A2","#5C7148"};
 
 // PITMASTER
-enum {PITOFF, MANUAL, AUTO, AUTOTUNE, DUTYCYCLE};
-enum {SSR, FAN, SERVO, DAMPER};
+enum {PITOFF, MANUAL, AUTO, AUTOTUNE, DUTYCYCLE, VOLTAGE};
+enum {SSR, FAN, SERVO, DAMPER, SUPPLY};
 
 struct Pitmaster {
    byte pid;              // PITMASTER PID-Setting
@@ -553,6 +553,7 @@ void disableAllHeater();
 void set_pitmaster(bool init);
 void set_pid(byte index);
 void stopautotune(byte id);
+void DC_start(bool dc, byte aktor, int val, byte id);
 
 // BOT
 void set_iot(bool init);
@@ -628,7 +629,6 @@ void set_system() {
   battery.max = BATTMAX;
   battery.min = BATTMIN;
   battery.setreference = 0;
-  sys.pitsupply = false;
   sys.damper = false;
 
   sys.restartnow = false;

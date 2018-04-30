@@ -428,6 +428,7 @@ void server_setup() {
         byte aktor = request->getParam("aktor")->value().toInt();
         int val = request->getParam("val")->value().toInt();        // Value * 10
         byte id = 0;  // Pitmaster1
+        if (aktor == SERVO && sys.hwversion > 1) bodyWebHandler.setservoV2(true);
         if (val >= SERVOPULSMIN*10 && val <= SERVOPULSMAX*10 && aktor == SERVO) val = getDC(val);
         else val = constrain(val,0,1000);
         DC_start(dc, aktor, val, id);  

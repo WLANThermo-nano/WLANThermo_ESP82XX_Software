@@ -475,6 +475,47 @@ class BodyWebHandler: public AsyncWebHandler {
     return tex;
   }
 
+  
+  void servoV2(bool dc = false) {  
+      
+    if (dc) {
+      pitMaster[0].io = PITMASTER2;         // SERVO SWITCH
+      pitMaster[1].io = PITMASTER1;
+      DC_start(dc, FAN, 500, 1);          // dc = 1 damit kein Softstart
+      //bbq[1].DC_start(dc, SUPPLY, 500);   // Oberer Grenzwert, SUPPLY, 50%
+      return;
+    }
+
+    if (pid[pitMaster[0].pid].aktor == SERVO && pitMaster[0].active > 0 && pitMaster[1].active != VOLTAGE) {
+      pitMaster[0].io = PITMASTER2;         // SERVO SWITCH
+      pitMaster[1].io = PITMASTER1;
+      pitMaster[1].value = 50;
+      pitMaster[1].active = VOLTAGE;
+
+    } else if ((pid[pitMaster[0].pid].aktor != SERVO || pitMaster[0].active == PITOFF)  && pitMaster[1].active == VOLTAGE) {
+      pitMaster[0].io = PITMASTER2;
+      pitMaster[1].active = PITOFF;
+    }
+  }
+
+  void damperV2() {  
+    
+    if (pid[pitMaster[0].pid].aktor == DAMPER) {
+
+      if (pid[2].aktor == SERVO) {   
+        pitMaster[1].pid = 2;
+        pitMaster[1].channel = pitMaster[0].channel;
+        pitMaster[1].set = pitMaster[0].set;
+        pitMaster[1].active = pitMaster[0].active;
+        pitMaster[1].value = pitMaster[0].value;  // Manual             
+      } // FAN trotzdem laufen lassen? Oder Speichern abbrechen?
+
+    } else if (pid[pitMaster[0].pid].aktor != DAMPER && (pitMaster[1].active != VOLTAGE)) {  // bbq[1].getStatus() != PITOFF
+      pitMaster[1].active = PITOFF;
+    }
+  }
+
+
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   bool setSystem(AsyncWebServerRequest *request, uint8_t *datas) {
 
@@ -686,21 +727,9 @@ class BodyWebHandler: public AsyncWebHandler {
     }
 
     // Spezial-Funktionen
-    if (pid[pitMaster[0].pid].aktor == DAMPER && sys.hwversion > 1) { 
-      pitMaster[0].io = PITMASTER1;   // Zurücksetzen falls vorher Servo gewählt
-      // aktiviere zweiten Pitmaster nur wenn ein Servo-Profil vorhanden
-      if (pid[2].aktor == SERVO) {                
-        pitMaster[1].pid = 2;
-        pitMaster[1].channel = pitMaster[0].channel;
-        pitMaster[1].set = pitMaster[0].set;
-        pitMaster[1].active = pitMaster[0].active;
-        pitMaster[1].value = pitMaster[0].value;  // Manual
-      } // FAN trotzdem laufen lassen? Oder Speichern abbrechen?
-      
-    } else if (pid[pitMaster[0].pid].aktor == SERVO && sys.hwversion > 1) { 
-      pitMaster[0].io = PITMASTER2;  // SERVO DUPLICATE
-      // muss auch bei DutyCycle
-      
+    if (sys.hwversion > 1) {
+      servoV2();
+      damperV2();
     } else {
       pitMaster[1].active = PITOFF;
       pitMaster[0].io = PITMASTER1;     // Zurücksetzen
@@ -758,6 +787,11 @@ class BodyWebHandler: public AsyncWebHandler {
 public:
   
   BodyWebHandler(void){}
+
+  //
+  void setservoV2(bool dc) {
+    servoV2(dc);
+  }
 
   // {"ssid":"xxx","password":"xxx"}
   bool setNetwork(uint8_t *datas) {
