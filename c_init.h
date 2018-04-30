@@ -629,6 +629,7 @@ void set_system() {
   battery.max = BATTMAX;
   battery.min = BATTMIN;
   battery.setreference = 0;
+  sys.pitsupply = false;           // nur mit Mod
   sys.damper = false;
 
   sys.restartnow = false;
