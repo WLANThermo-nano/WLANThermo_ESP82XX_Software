@@ -706,6 +706,20 @@ void start_fs() {
     }
   } else serialNote(PIT_FILE,1);
 
+  IPRINTP("M24C02: ");
+  if (m24.exist()) {
+    DPRINTP("0x");
+    DPRINTLN(m24.getadress(), HEX);
+    if (m24.getadress() == 0x52) {
+      if (sys.hwversion != 2) {
+        sys.hwversion = 2;
+        sys.pitsupply = true;
+        setconfig(eSYSTEM,{});
+        IPRINTPLN("Umstellung auf V2");
+      }
+    }
+  } else DPRINTPLN("No");
+
 }
 
 

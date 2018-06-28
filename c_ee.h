@@ -20,6 +20,115 @@
 
  // HELP: https://github.com/bblanchon/ArduinoJson
 
+ // Quelle: externer I2C EEPROM
+ // https://github.com/CombiesGit/I2C_EEPROM/blob/master/inc/eephandler.h
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Extern EEPROM
+class M24C02 {
+
+  private:
+
+    bool _exist;
+    byte _address;
+
+    void (*onwaiting)() = 0;        // onWaiting Callback nullptr
+  
+  
+    // prüft, ob Baustein unter der Adresse beschäftigt ist
+    bool busy() {
+        
+      Wire.beginTransmission(_address); 
+      return (bool) Wire.endTransmission();  
+    }
+  
+    // aktives Warten, Rechenzeit wird abgegeben
+    void wait() {
+      
+      while (busy())
+        if (onwaiting) {
+          onwaiting(); // Callback aufrufen
+        } 
+    }
+
+    void byteRead(uint8_t address, uint8_t * value) {
+
+      wait();         
+      Wire.beginTransmission(_address);
+      Wire.write(address);       
+      Wire.endTransmission();    
+      Wire.requestFrom(_address,1);
+      * value = Wire.read();            
+    }
+
+    void byteWrite(uint8_t address, uint8_t * value) {
+      
+      wait();
+      Wire.beginTransmission(_address); 
+      Wire.write(address);      
+      Wire.write(*value);
+      Wire.endTransmission();              
+    }
+
+  
+  public:
+
+    bool exist() {
+      return _exist;
+    }
+
+    boolean begin(void) {
+
+      for(byte address = 80; address < 85; address++ ) {
+        
+        Wire.beginTransmission(address);
+        byte error = Wire.endTransmission();
+ 
+        if (error == 0) {
+          _exist = 1;
+          _address = address;
+          break;
+        }
+      }
+      return _exist;
+    }
+
+    int getadress() {
+      if (_exist) return _address;
+      else return 0;
+    }
+
+    // einzelnes Byte schreiben 
+    void write(uint8_t address,uint8_t value) {
+      byteWrite(address, &value);
+    }
+  
+    // einzelnes Byte lesen
+    uint8_t read(uint8_t address) {
+      uint8_t result = 0; 
+      byteRead(address, &result);
+      return  result; 
+    }
+  
+    // lesen beliebiger Datentypen
+    template< typename T >
+    void get(uint8_t address, T &customvar) {
+      uint8_t *ptr = (uint8_t*) &customvar;
+      for(int i = 0; i < sizeof(T); i++)
+        *ptr++ = read(address + i);
+    }
+
+    template< typename T >
+    void put(uint16_t address,T &customvar) {
+      uint8_t *ptr = (uint8_t*) &customvar;
+      for(int i = 0; i < sizeof(T); i++)
+       write(address + i,*ptr++);
+    }
+
+};
+
+M24C02 m24;
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initalize EEPROM
 void setEE() {
@@ -39,6 +148,8 @@ void setEE() {
   // CHANNEL SETTINGS:      680  - 1180
   // THINGSPEAK SETTINGS:   1180 - 1600
   // PITMASTER SETTINGS:    1600 - 2300
+
+  m24.begin();
   
 }
 

@@ -149,9 +149,41 @@ float PID_Regler(byte id){
   // Differential-Anteil
   float edif = (e - pitMaster[id].elast)/(pitMaster[id].pause/1000.0);   
   pitMaster[id].elast = e;
-  float d_out = kd * edif;                  
+  float d_out = kd * edif;     
+
+  // i-Anteil wechsl: https://github.com/WLANThermo/WLANThermo_v2/blob/b7bd6e1b56fe5659e8750c17c6dd1cd489872f6c/software/usr/sbin/wlt_2_pitmaster.py
 
   // Integral-Anteil
+  float i_out;
+  if (ki != 0) {
+    
+    // Sprünge im Reglerausgangswert bei Anpassung von Ki vermeiden
+    if (ki != pitMaster[id].Ki_alt) {
+      pitMaster[id].esum = (pitMaster[id].esum * pitMaster[id].Ki_alt) / ki;
+      pitMaster[id].Ki_alt = ki;
+    }
+    
+    // Anti-Windup I-Anteil
+    // Keine Erhöhung I-Anteil wenn Regler bereits an der Grenze ist
+    if ((p_out + d_out) < PITMAX) {
+      pitMaster[id].esum += e * (pitMaster[id].pause/1000.0);
+    }
+    
+    // Anti-Windup I-Anteil (Limits)
+    if (pitMaster[id].esum * ki > pid[ii].Ki_max) pitMaster[id].esum = pid[ii].Ki_max/ki;
+    else if (pitMaster[id].esum * ki < pid[ii].Ki_min) pitMaster[id].esum = pid[ii].Ki_min/ki;
+    
+    i_out = ki * pitMaster[id].esum;
+    
+  } else {
+    // Historie vergessen, da wir nach Ki = 0 von 0 aus anfangen
+    pitMaster[id].esum = 0;
+    i_out = 0;
+    pitMaster[id].Ki_alt = 0;
+  }
+
+  /*
+    // Integral-Anteil
   // Anteil nur erweitert, falls Begrenzung nicht bereits erreicht
   if ((p_out + d_out) < PITMAX) {
     pitMaster[id].esum += e * (pitMaster[id].pause/1000.0);             
@@ -161,6 +193,7 @@ float PID_Regler(byte id){
   if (pitMaster[id].esum * ki > pid[ii].Ki_max) pitMaster[id].esum = pid[ii].Ki_max/ki;
   else if (pitMaster[id].esum * ki < pid[ii].Ki_min) pitMaster[id].esum = pid[ii].Ki_min/ki;
   float i_out = ki * pitMaster[id].esum;
+  */
                     
   // PID-Regler berechnen
   float y = p_out + i_out + d_out;  
@@ -657,6 +690,11 @@ void pitmaster_control(byte id) {
           }
           else pitMaster[id].value = 50;
           break;
+
+        //case GCODE:
+          // aktor = ;                // GCODE
+          // pitMaster[id].value = gcode_pitmaster(id);  // GCODE
+         // break;
       }
 
       // PITMASTER AKTOR

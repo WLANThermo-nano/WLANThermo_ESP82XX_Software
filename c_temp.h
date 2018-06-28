@@ -82,7 +82,7 @@ float calcT(int r, byte typ){
   float v = log(Rt/Rn);
   float erg = (1/(a + b*v + c*v*v)) - 273.15;
   
-  return (erg>-10)?erg:INACTIVEVALUE;
+  return (erg>-31)?erg:INACTIVEVALUE;
 }
 
 

@@ -56,7 +56,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
 #define SENSORTYPEN    11               // NUMBER OF SENSORS
-#define LIMITUNTERGRENZE -20           // MINIMUM LIMIT
+#define LIMITUNTERGRENZE -31           // MINIMUM LIMIT
 #define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
 #define MAX1161x_ADDRESS 0x33          // MAX11615
 #define ULIMITMIN 10.0
@@ -190,6 +190,7 @@ struct Pitmaster {
    long timer0;           // PITMASTER TIMER VARIABLE (FAN) / (SERVO)
    float esum;            // PITMASTER I-PART DIFFERENZ SUM
    float elast;           // PITMASTER D-PART DIFFERENZ LAST
+   float Ki_alt;
 };
 
 Pitmaster pitMaster[PITMASTERSIZE];

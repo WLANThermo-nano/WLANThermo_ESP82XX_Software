@@ -47,6 +47,17 @@ void read_serial(char *buffer) {
        return;
     }
 
+    else if (command == "setEE") {
+      if (m24.exist()) {
+        String payload((char*)buffer);
+        char test[10];
+        payload.toCharArray(test, 10);
+        Serial.println(test);
+        m24.put(0,test);
+      }
+      return;
+    }
+
      // UPDATE auf bestimmte Version
     else if (command == "update") {
       String payload((char*)buffer);
@@ -65,6 +76,15 @@ void read_serial(char *buffer) {
       Serial.println();
       Serial.println(F("Syntax: \"command\":{\"Attribut\":\"Value\"]}"));
       Serial.println();
+      return;
+    }
+
+    else if (str == "getEE") {
+      if (m24.exist()) {
+        char test[10];
+        m24.get(0,test);
+        Serial.println(test);     
+      }
       return;
     }
 

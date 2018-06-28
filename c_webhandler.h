@@ -485,7 +485,7 @@ class BodyWebHandler: public AsyncWebHandler {
       //bbq[1].DC_start(dc, SUPPLY, 500);   // Oberer Grenzwert, SUPPLY, 50%
       return;
     }
-
+    Serial.println("V2-Aktorik");
     if (pid[pitMaster[0].pid].aktor == SERVO && pitMaster[0].active > 0 && pitMaster[1].active != VOLTAGE) {
       pitMaster[0].io = PITMASTER2;         // SERVO SWITCH
       pitMaster[1].io = PITMASTER1;

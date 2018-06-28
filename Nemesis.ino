@@ -65,9 +65,9 @@
 #include "c_sensor.h"
 #include "c_pitmaster.h"
 #include "c_temp.h"
+#include "c_ee.h"
 #include "c_fs.h"
 #include "c_com.h"
-#include "c_ee.h"
 #include "c_icons.h"
 #include "c_wifi.h"
 #include "c_frames.h"
@@ -79,6 +79,8 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETUP
 void setup() {  
+
+  //delay(1000);
 
   // Initialize Serial 
   set_serial(); Serial.setDebugOutput(true);
@@ -92,7 +94,7 @@ void setup() {
 
   // Current Battery Voltage
   get_Vbat(); get_rssi();
-  
+
   if (!sys.stby) {
 
     // Initalize Aktor
@@ -102,7 +104,7 @@ void setup() {
     if (sys.god & (1<<0)) {
       piepserON(); delay(500); piepserOFF();
     }
-
+  
     // Initalize P_MQTT
     set_pmqtt();
     
@@ -137,6 +139,7 @@ void setup() {
     if (checkResetInfo()) {
       //if (SPIFFS.remove(LOG_FILE)) Serial.println("Neues Log angelegt");
     }
+
   }
 }
 
