@@ -56,9 +56,9 @@ class M24C02 {
       wait();         
       Wire.beginTransmission(_address);
       Wire.write(address);       
-      Wire.endTransmission();    
-      Wire.requestFrom(_address,1);
-      * value = Wire.read();            
+      Wire.endTransmission();  
+      Wire.requestFrom((int)_address,1);
+      * value = Wire.read();          
     }
 
     void byteWrite(uint8_t address, uint8_t * value) {

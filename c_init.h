@@ -321,6 +321,8 @@ struct System {
    const char* www_username = "admin";
    String www_password = "admin";
    bool advanced;
+   String item;
+   //char item[8];
    //bool nobattery;
 };
 
@@ -477,7 +479,7 @@ void piepserOFF();
 void piepserON();      
 
 // SENSORS
-byte set_sensor();                                // Initialize Sensors
+void set_sensor();                                // Initialize Sensors
 int  get_adc_average (byte ch);                   // Reading ADC-Channel Average
 void get_Vbat();                                   // Reading Battery Voltage
 void cal_soc();
@@ -945,7 +947,7 @@ String newToken() {
 #define CHECKUPDATELINK "/checkUpdate.php"
 
 enum {SERIALNUMBER, APITOKEN, TSWRITEKEY, NOTETOKEN, NOTEID, NOTESERVICE,
-      THINGHTTPKEY, DEVICE, HARDWAREVS, SOFTWAREVS};  // Parameters
+      THINGHTTPKEY, DEVICE, HARDWAREVS, SOFTWAREVS, ITEM};  // Parameters
 enum {NOPARA, SENDTS, SENDNOTE, THINGHTTP, CHECKUPDATE};                       // Config
 enum {GETMETH, POSTMETH};                                                   // Method
 
@@ -1025,6 +1027,11 @@ String createParameter(int para) {
       command += F("&sw_version=");
       command += FIRMWAREVERSION;
       break;
+
+    case ITEM:
+      command += F("&item=");
+      command += sys.item;
+      break;
   }
 
   return command;
@@ -1062,7 +1069,9 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
       command += createParameter(SERIALNUMBER);
       command += createParameter(DEVICE);
       command += createParameter(HARDWAREVS);
-      command += createParameter(SOFTWAREVS);            
+      command += createParameter(SOFTWAREVS);
+      if (sys.item != "") 
+        command += createParameter(ITEM);            
       break;
 
     default:

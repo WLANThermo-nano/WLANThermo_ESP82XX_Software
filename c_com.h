@@ -50,10 +50,13 @@ void read_serial(char *buffer) {
     else if (command == "setEE") {
       if (m24.exist()) {
         String payload((char*)buffer);
-        char test[10];
-        payload.toCharArray(test, 10);
-        Serial.println(test);
-        m24.put(0,test);
+        if (payload.length() == 10) {
+          char item[10];
+          payload.toCharArray(item, 11);
+          m24.put(0,item);
+          Serial.println(item);
+          sys.item = payload;
+        }
       }
       return;
     }
@@ -81,9 +84,7 @@ void read_serial(char *buffer) {
 
     else if (str == "getEE") {
       if (m24.exist()) {
-        char test[10];
-        m24.get(0,test);
-        Serial.println(test);     
+        Serial.println(sys.item);     
       }
       return;
     }

@@ -29,6 +29,7 @@
 
 // https://github.com/adafruit/Adafruit_HTU21DF_Library/blob/master/Adafruit_HTU21DF.cpp
 
+/*
 #define HTU21DF_I2CADDR       0x40
 #define HTU21DF_READTEMP      0xE3
 #define HTU21DF_READHUM       0xE5
@@ -120,9 +121,11 @@ class HTU21DF {
 
 HTU21DF htu;
 
+*/
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Sensors
-byte set_sensor() {
+void set_sensor() {
 
   // Piepser
   pinMode(MOSI, OUTPUT);
@@ -135,8 +138,8 @@ byte set_sensor() {
     digitalWrite(THERMOCOUPLE_CS, HIGH);
   }
 
-  if (htu.begin()) Serial.println("Found HTU21D");
-  else Serial.println("No HTU21D");
+  //if (htu.begin()) Serial.println("Found HTU21D");
+  //else Serial.println("No HTU21D");
   
 
   // MAX1161x
@@ -152,7 +155,11 @@ byte set_sensor() {
   Wire.beginTransmission(MAX1161x_ADDRESS);
   Wire.write(reg);
   byte error = Wire.endTransmission();
-  return error;
+  IPRINTP("MAX11615: ");
+  if (error == 0) {
+    DPRINTP("0x");
+    DPRINTLN(MAX1161x_ADDRESS, HEX);
+  } else DPRINTPLN("No");
   
 }
 
@@ -350,6 +357,7 @@ void cal_soc() {
 
   }
 
+  /*
   // HTU21D
   if (htu.exist()) {
     switch (htu.getState()) {
@@ -358,7 +366,7 @@ void cal_soc() {
       case 2: htu.trigHumidity(); break;
       case 3: htu.readHumidity(); break;
     } 
-  }
+  }*/
 
 }
 

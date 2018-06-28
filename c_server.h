@@ -37,6 +37,7 @@ String cloudData(bool cloud) {
     system["charge"] = battery.charge;
     system["rssi"] = wifi.rssi;
     system["unit"] = sys.unit;
+    system["item"] = sys.item;
     //system["sn"] = String(ESP.getChipId(), HEX);
     if (cloud) {
       system["serial"] = String(ESP.getChipId(), HEX);
@@ -102,12 +103,13 @@ String cloudData(bool cloud) {
   
 
 
-    
+    /*
     if (htu.exist()) {
       JsonObject& _htu = root.createNestedObject("htu");
       _htu["temp"] = htu.temp();
       _htu["hum"] = htu.hum();
     }
+    */
 
     //JsonObject& api = root.createNestedObject("api");
     //api["version"] = APIVERSION;
