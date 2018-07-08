@@ -53,8 +53,9 @@ float calcT(int r, byte typ){
   case 6:  // NTC 5K3A1B (orange Kopf)
     Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243;  
     break; 
-  case 7: // Acurite
-    Rn = 50.21; a = 3.3555291e-03; b = 2.5249073e-04; c = 2.5667292e-06;
+  case 7: // INKBIRD
+    Rn = 48.6; a = 3.35442124e-03; b = 2.56134397e-04; c = 1.9536396e-06;
+    //Rn = 48.94; a = 3.35438959e-03; b = 2.55353377e-04; c = 1.86726509e-06;
     break;
   case 8: // NTC 100K6A1B (lila Kopf)
     Rn = 100; a = 0.00335639; b = 0.000241116; c = 0.00000243362; 

@@ -135,6 +135,8 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define SERVOPULSMIN 550  // 25 Grad    // 785
 #define SERVOPULSMAX 2250
 
+#define PRODUCTNUMBERLENGTH 11
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -163,7 +165,7 @@ String alarmname[4] = {"off","push","summer","all"};
 
 // SENSORTYP
 String  ttypname[SENSORTYPEN] = {"Maverick","Fantast-Neu","Fantast","iGrill2","ET-73",
-                                 "Perfektion","5K3A1B","Acurite","100K6A1B","Weber_6743",
+                                 "Perfektion","5K3A1B","Inkbird","100K6A1B","Weber_6743",
                                  "Santos"};
 
 // CHANNEL COLORS
@@ -1029,7 +1031,7 @@ String createParameter(int para) {
       break;
 
     case ITEM:
-      command += F("&item=");
+      command += F("&product=");
       command += sys.item;
       break;
   }

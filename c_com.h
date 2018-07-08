@@ -50,9 +50,9 @@ void read_serial(char *buffer) {
     else if (command == "setEE") {
       if (m24.exist()) {
         String payload((char*)buffer);
-        if (payload.length() == 10) {
-          char item[10];
-          payload.toCharArray(item, 11);
+        if (payload.length() == PRODUCTNUMBERLENGTH) {
+          char item[PRODUCTNUMBERLENGTH];
+          payload.toCharArray(item, PRODUCTNUMBERLENGTH+1);
           m24.put(0,item);
           Serial.println(item);
           sys.item = payload;

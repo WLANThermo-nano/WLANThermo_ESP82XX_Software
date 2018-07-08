@@ -37,7 +37,7 @@ String cloudData(bool cloud) {
     system["charge"] = battery.charge;
     system["rssi"] = wifi.rssi;
     system["unit"] = sys.unit;
-    system["item"] = sys.item;
+    //system["item"] = sys.item;
     //system["sn"] = String(ESP.getChipId(), HEX);
     if (cloud) {
       system["serial"] = String(ESP.getChipId(), HEX);
@@ -290,6 +290,7 @@ void server_setup() {
     request->send(200,"","bytes: " + String(fs_info.usedBytes) + " | " + String(fs_info.totalBytes) + "\n"
       +"heap: "      + String(ESP.getFreeHeap()) + "\n"
       +"sn: "        + String(ESP.getChipId(), HEX) + "\n"
+      +"pn: "        + sys.item + "\n"
       +"batlimit: "+String(battery.min) + " | " + String(battery.max) + "\n"
       +"bat: "       + String(battery.voltage) + " | " + String(battery.sim) + " | " + String(battery.simc) + "\n"
       +"batstat: "  + String(battery.state) + " | " +String(battery.setreference) + "\n"

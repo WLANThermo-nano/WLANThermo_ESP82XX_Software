@@ -718,7 +718,7 @@ void start_fs() {
         IPRINTPLN("Umstellung auf V2");
       }
     }
-    char item[10];    // item ist 10 Zeichen + Schlusszeichen
+    char item[PRODUCTNUMBERLENGTH];    // item ist 10 Zeichen + Schlusszeichen
     m24.get(0,item);
     if (item[0] == 'n') {   // Kennung
       String str(item);
