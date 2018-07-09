@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.9.9"
+#define FIRMWAREVERSION "v0.9.10"
 #define APIVERSION      "2"
 
 // CHANNELS
