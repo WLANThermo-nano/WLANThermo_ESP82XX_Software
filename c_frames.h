@@ -224,8 +224,9 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
   }  
   
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  if (wifi.mode == 2 && millis() > 10000)  display->drawString(128,0,"AP");
-  else if (wifi.mode == 0) display->drawString(128,0,"NO");
+  if (wifi.mode == 6 && millis() > 10000)  display->drawString(128,0,"NO");
+  else if (wifi.mode == 0) display->drawString(128,0,"OFF");
+  else if (wifi.mode == 2) display->drawString(128,0,"AP");
   else if (wifi.mode == 1)  {
       //display->drawString(128,0,String(wifi.rssi)+" dBm");
     display->fillRect(116,8,2,1); //Draw ground line
@@ -408,13 +409,13 @@ void drawsys(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
     case 11:         // SSID
       if (wifi.mode == 2)      display->drawString(120, 36, sys.apname);
       else if (wifi.mode == 1) display->drawString(120, 36, WiFi.SSID());
-      else if (wifi.mode == 0) display->drawString(120, 36, "");
+      else if (wifi.mode == 0 || wifi.mode == 6) display->drawString(120, 36, "");
       break;
     
     case 12:         // IP
       if (wifi.mode == 2)      display->drawString(120, 36, WiFi.softAPIP().toString());
       else if (wifi.mode == 1) display->drawString(120, 36, WiFi.localIP().toString());
-      else if (wifi.mode == 0) display->drawString(120, 36, "");
+      else if (wifi.mode == 0 || wifi.mode == 6) display->drawString(120, 36, "");
       break;
 
     case 13:         // HOST

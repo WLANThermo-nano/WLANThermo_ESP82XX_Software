@@ -405,7 +405,7 @@ enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
 // WIFI
 struct Wifi {
-  byte mode;                       // WIFI MODE  (0 = OFF, 1 = STA, 2 = AP, 3/4 = Turn off), 5 = DICONNECT
+  byte mode;                       // WIFI MODE  (0 = OFF, 1 = STA, 2 = AP, 3/4 = Turn off), 5 = DISCONNECT, 6 = OPEN
   unsigned long turnoffAPtimer;    // TURN OFF AP TIMER
   byte savedlen;                   // LENGTH SAVED WIFI DATE
   String savedssid[5];             // SAVED SSID
@@ -416,6 +416,7 @@ struct Wifi {
   unsigned long scantime;          // LAST SCAN TIME
   bool disconnectAP;               // DISCONNECT AP
   bool revive;
+  bool takeAP;
 };
 Wifi wifi;
 
