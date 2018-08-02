@@ -470,9 +470,18 @@ static inline void button_event() {
       // Frage wurde mit YES bestätigt
       switch (question.typ) {
         case CONFIGRESET:
-          set_channels(1);
-          setconfig(eCHANNEL,{});
-          loadconfig(eCHANNEL,0);
+          nanoWebHandler.configreset();
+          break;
+
+        case RESETWIFI:
+          setconfig(eWIFI,{}); // clear Wifi settings
+          wifi.mode = 5;  // interner Speicher leeren
+          sys.restartnow = true;
+          break;
+
+        case RESETFW:
+          sys.getupdate = FIRMWAREVERSION;
+          sys.update = 1;
           break;
 
         case HARDWAREALARM:
@@ -726,8 +735,19 @@ static inline void button_event() {
         break;
 
       case 11: // SSID -> Clear Wifi
-        //setconfig(eWIFI,{}); // clear Wifi settings
-        // Hinweis notwendig
+        if (event[1]) {
+          inWork = false;
+          question.typ = RESETWIFI;
+          drawQuestion(0);
+        }
+        break;
+
+      case 13: // Host -> Configreset
+        if (event[1]) {
+          inWork = false;
+          question.typ = CONFIGRESET;
+          drawQuestion(0);
+        }
         break;
         
       case 14:  // Unit Change
@@ -749,8 +769,11 @@ static inline void button_event() {
         break;
 
       case 15:  // UPDATE
-        sys.getupdate = FIRMWAREVERSION;
-        sys.update = 1;
+        if (event[1]) {
+          inWork = false;
+          question.typ = RESETFW;
+          drawQuestion(0);
+        }
         break;
 
       default:

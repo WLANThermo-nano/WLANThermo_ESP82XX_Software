@@ -85,7 +85,15 @@ void drawQuestion(int counter) {
     switch (question.typ) {                   // Which Question?
 
       case CONFIGRESET:
-        display.drawString(32,3,"Reset Config?");
+        display.drawString(3,3,"Reset Config?");
+        break;
+
+      case RESETWIFI:
+        display.drawString(3,3,"Reset Wifi?");
+        break;
+
+      case RESETFW:
+        display.drawString(3,3,"Reset Firmware?");
         break;
 
       case IPADRESSE:

@@ -111,7 +111,7 @@ void read_serial(char *buffer) {
 */
     else if (str == "clearwifi") {
       setconfig(eWIFI,{}); // clear Wifi settings
-      wifi.mode = 5;
+      wifi.mode = 5;  // interner Speicher leeren
       sys.restartnow = true;
       return;
     }

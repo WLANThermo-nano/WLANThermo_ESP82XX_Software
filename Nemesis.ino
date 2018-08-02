@@ -147,6 +147,12 @@ void setup() {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // LOOP
 void loop() {
+
+  // Detect Serial Input
+  static char serialbuffer[300];
+  if (readline(Serial.read(), serialbuffer, 300) > 0) {
+    read_serial(serialbuffer);
+  }
   
   // Standby oder Mess-Betrieb
   if (standby_control()) return;
@@ -168,11 +174,7 @@ void loop() {
   // WiFi Monitoring
   wifimonitoring();
 
-  // Detect Serial Input
-  static char serialbuffer[300];
-  if (readline(Serial.read(), serialbuffer, 300) > 0) {
-    read_serial(serialbuffer);
-  }
+  
   
   // Detect OTA
   #ifdef OTA

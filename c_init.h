@@ -166,7 +166,7 @@ String alarmname[4] = {"off","push","summer","all"};
 // SENSORTYP
 String  ttypname[SENSORTYPEN] = {"Maverick","Fantast-Neu","Fantast","iGrill2","ET-73",
                                  "Perfektion","5K3A1B","Inkbird","100K6A1B","Weber_6743",
-                                 "Santos"};
+                                 "Santos"}; // 
 
 // CHANNEL COLORS
 String colors[8] = {"#0C4C88","#22B14C","#EF562D","#FFC100","#A349A4","#804000","#5587A2","#5C7148"};
@@ -388,7 +388,7 @@ Chart chart;
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL     
 bool LADENSHOW = false;           // LOADING INFORMATION?
 bool displayblocked = false;                     // No OLED Update
-enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE, TUNE, SYSTEMSTART};
+enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE, TUNE, SYSTEMSTART, RESETWIFI, RESETFW};
 
 // OLED QUESTION
 struct MyQuestion {
