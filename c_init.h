@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.9.10"
+#define FIRMWAREVERSION "v0.9.11"
 #define APIVERSION      "2"
 
 // CHANNELS
@@ -313,8 +313,7 @@ struct System {
    String getupdate;
    bool autoupdate;
    byte god;
-   bool pitsupply;      
-   byte control;  
+   bool pitsupply;        
    bool stby;                   // STANDBY
    bool restartnow; 
    bool typk;
@@ -405,7 +404,7 @@ enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
 // WIFI
 struct Wifi {
-  byte mode;                       // WIFI MODE  (0 = OFF, 1 = STA, 2 = AP, 3/4 = Turn off), 5 = DISCONNECT, 6 = OPEN
+  byte mode;                       // WIFI MODE  (0 = OFF, 1 = STA, 2 = AP, 3/4 = Turn off), 5 = DISCONNECT, 6 = CONNECTING, 7 = OPEN
   unsigned long turnoffAPtimer;    // TURN OFF AP TIMER
   byte savedlen;                   // LENGTH SAVED WIFI DATE
   String savedssid[5];             // SAVED SSID
@@ -417,6 +416,8 @@ struct Wifi {
   bool disconnectAP;               // DISCONNECT AP
   bool revive;
   bool takeAP;
+  long timerAP;
+  byte neu;                         // SAVE-MODE: (0 = no save, 1 = only sort, 2 = add new)
 };
 Wifi wifi;
 

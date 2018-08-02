@@ -568,7 +568,7 @@ bool modifyconfig(byte count, bool neu) {
       }
       
       Serial.println("Sort SSID: ");
-      Serial.println(wifi.savedlen);
+      Serial.print(wifi.savedlen);
       
       JsonObject& _wifi = json.createNestedObject();
       _wifi["SSID"] = holdssid.ssid;

@@ -173,7 +173,6 @@ void loop() {
 
   // WiFi Monitoring
   wifimonitoring();
-
   
   
   // Detect OTA
