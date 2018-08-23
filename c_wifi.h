@@ -100,9 +100,6 @@ void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
   // Neuaufbau
   if (holdssid.hold == 2) {} // neue Wifi-Daten Verbindungsprozess
   else wifi.mode = 6;     // Verbindungsverlust im Betrieb
-
-  // Anmeldeversuch fehlgeschlagen
-  //if (holdssid.hold == 2) holdssid.hold = 0;
   
   //pmqttClient.disconnect();
 }
@@ -152,7 +149,7 @@ void set_wifi() {
 // Connect WiFi with saved Data
 void connectWiFi() {
 
-    WiFi.begin(holdssid.ssid.c_str(), holdssid.pass.c_str());
+  WiFi.begin(holdssid.ssid.c_str(), holdssid.pass.c_str());
 }
 
 
@@ -212,7 +209,7 @@ void stop_wifi() {
   }
   
   if (millis() - wifi.turnoffAPtimer > 1000) {
-    IPRINTPLN("Stop Wifi");
+    Serial.println("wifi: stop");
     pmqttClient.disconnect();
     wifi_station_disconnect();
     wifi_set_opmode(NULL_MODE);

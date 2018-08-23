@@ -54,8 +54,13 @@ void read_serial(char *buffer) {
           char item[PRODUCTNUMBERLENGTH];
           payload.toCharArray(item, PRODUCTNUMBERLENGTH+1);
           m24.put(0,item);
+          m24.get(0,item);
+          IPRINTP("M24C02: ");
           Serial.println(item);
-          sys.item = payload;
+          if (item[0] == 'n') {   // Kennung
+            String str(item);
+            sys.item = str;
+          }
         }
       }
       return;
@@ -84,6 +89,7 @@ void read_serial(char *buffer) {
 
     else if (str == "getEE") {
       if (m24.exist()) {
+        Serial.print("pn: ");
         Serial.println(sys.item);     
       }
       return;

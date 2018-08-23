@@ -879,8 +879,8 @@ bool standby_control() {
     
     if (millis() - lastUpdateBatteryMode > INTERVALBATTERYMODE) {
       get_Vbat();
-      lastUpdateBatteryMode = millis();  
-
+      lastUpdateBatteryMode = millis(); 
+       
       if (!sys.stby) ESP.restart();
     }
     

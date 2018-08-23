@@ -54,7 +54,8 @@ float calcT(int r, byte typ){
     Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243;  
     break; 
   case 7: // INKBIRD
-    Rn = 48.6; a = 3.35442124e-03; b = 2.56134397e-04; c = 1.9536396e-06;
+    Rn = 48.59; a = 3.3552456e-03; b = 2.5608666e-04; c = 1.9317204e-06;
+    //Rn = 48.6; a = 3.35442124e-03; b = 2.56134397e-04; c = 1.9536396e-06;
     //Rn = 48.94; a = 3.35438959e-03; b = 2.55353377e-04; c = 1.86726509e-06;
     break;
   case 8: // NTC 100K6A1B (lila Kopf)
@@ -74,6 +75,8 @@ float calcT(int r, byte typ){
     //Rn = ((r * 2.048 )/ 4096.0)*1000.0;
     //Serial.println(r);
     return Rmess*((4096.0/(4096-r)) - 1);
+
+  // 20K: Rn = 20.0; a = 3.35438355e-03; b = 2.41848755e-04; c = 2.77972882e-06;
    
   default:  
     return INACTIVEVALUE;
