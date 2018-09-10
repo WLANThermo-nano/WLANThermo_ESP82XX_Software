@@ -50,8 +50,9 @@ float calcT(int r, byte typ){
   case 5:  // PERFEKTION
     Rn = 200.1; a =  3.3561990e-03; b = 2.4352911e-04; c = 3.4519389e-06;  
     break; 
-  case 6:  // NTC 5K3A1B (orange Kopf)
-    Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243;  
+  case 6:  // 50K 
+    Rn = 50.0; a = 3.35419603e-03; b = 2.41943663e-04; c = 2.77057578e-06;
+    //Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243; // NTC 5K3A1B (orange Kopf)
     break; 
   case 7: // INKBIRD
     Rn = 48.59; a = 3.3552456e-03; b = 2.5608666e-04; c = 1.9317204e-06;
@@ -77,6 +78,7 @@ float calcT(int r, byte typ){
     return Rmess*((4096.0/(4096-r)) - 1);
 
   // 20K: Rn = 20.0; a = 3.35438355e-03; b = 2.41848755e-04; c = 2.77972882e-06;
+  // 50K: Rn = 50.0; a = 3.35419603e-03; b = 2.41943663e-04; c = 2.77057578e-06;
    
   default:  
     return INACTIVEVALUE;

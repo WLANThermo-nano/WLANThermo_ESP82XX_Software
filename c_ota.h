@@ -193,7 +193,7 @@ bool updateClientssl;
 void check_http_update() {
 
   if (sys.update < 1) {
-    if((wifi.mode == 1 && sys.autoupdate)) {
+    if((wifi.mode == 1)) {
 
       if(updateClient) return;                 //client already exists
 
@@ -264,6 +264,8 @@ void check_http_update() {
             payload = payload.substring(0,index);
 
             DPRINTP("[HTTP]\tGET: ");
+            
+            if(!sys.autoupdate) payload = "false";
             if (payload == "false") {
               DPRINTPLN("Kein Update");
               sys.getupdate = payload;

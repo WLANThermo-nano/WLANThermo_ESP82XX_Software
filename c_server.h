@@ -189,7 +189,10 @@ String cloudSettings() {
   _system["version"] =    FIRMWAREVERSION;
   _system["getupdate"] =  sys.getupdate;
   _system["autoupd"] =    sys.autoupdate;
-  _system["hwversion"] =  String("V")+String(sys.hwversion);
+  if (sys.hwversion == 2)
+    _system["hwversion"] =  String("V1+");
+  else 
+    _system["hwversion"] =  String("V")+String(sys.hwversion);
   //_system["advanced"] =  sys.advanced;
   
   JsonArray& _typ = root.createNestedArray("sensors");
@@ -243,7 +246,7 @@ String cloudSettings() {
 
   JsonArray& _hw = root.createNestedArray("hardware");
   _hw.add(String("V")+String(1));
-  if (sys.hwversion > 1) _hw.add(String("V")+String(2));
+  if (sys.hwversion > 1) _hw.add(String("V1+"));
 
   JsonArray& _noteservice = root.createNestedArray("notification");
   _noteservice.add("telegram");
@@ -392,18 +395,20 @@ void server_setup() {
     request->redirect("/");
   }).setFilter(ON_STA_FILTER);
 
+/*
   server.on("/ampere",[](AsyncWebServerRequest *request){
     ch[5].typ = 11;
     setconfig(eCHANNEL,{});
     request->send(200, TEXTPLAIN, TEXTTRUE);
   });
 
+
   server.on("/ohm",[](AsyncWebServerRequest *request){
     ch[0].typ = 12;
     setconfig(eCHANNEL,{});
     request->send(200, TEXTPLAIN, TEXTTRUE);
   });
-
+*/
   server.on("/newtoken",[](AsyncWebServerRequest *request){
     ESP.wdtDisable(); 
     iot.CL_token = newToken();

@@ -715,7 +715,7 @@ void start_fs() {
         sys.hwversion = 2;
         sys.pitsupply = true;
         setconfig(eSYSTEM,{});
-        IPRINTPLN("Umstellung auf V2");
+        IPRINTPLN("Umstellung auf V1+");
       }
     }
     char item[PRODUCTNUMBERLENGTH];    // item ist 10 Zeichen + Schlusszeichen

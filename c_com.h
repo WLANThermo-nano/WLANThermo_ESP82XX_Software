@@ -60,6 +60,9 @@ void read_serial(char *buffer) {
           if (item[0] == 'n') {   // Kennung
             String str(item);
             sys.item = str;
+            piepserON();
+            delay(1500);
+            piepserOFF();
           }
         }
       }
@@ -132,14 +135,6 @@ void read_serial(char *buffer) {
       return;
     }
 
-    else if (str == "piepser") {
-      Serial.println("Piepsertest");
-      piepserON();
-      delay(2000);
-      piepserOFF();
-      return;
-    }
-
     // RESTART SYSTEM
     else if (str == "restart") {
       sys.restartnow = true;
@@ -157,12 +152,6 @@ void read_serial(char *buffer) {
     else if (str == "setPID") {
       set_pid(0);  // Default PID-Settings
       if (setconfig(ePIT,{})) {IPRINTPLN("r:pm");}
-      return;
-    }
-
-    // AUTOTUNE
-    else if (str == "autotune") {
-      startautotunePID(5, true, 40, 40L*60L*1000L, 0);
       return;
     }
 

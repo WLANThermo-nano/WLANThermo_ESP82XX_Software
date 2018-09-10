@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.9.11"
+#define FIRMWAREVERSION "v0.9.12"
 #define APIVERSION      "2"
 
 // CHANNELS
@@ -165,7 +165,7 @@ String alarmname[4] = {"off","push","summer","all"};
 
 // SENSORTYP
 String  ttypname[SENSORTYPEN] = {"Maverick","Fantast-Neu","Fantast","iGrill2","ET-73",
-                                 "Perfektion","5K3A1B","Inkbird","100K6A1B","Weber_6743",
+                                 "Perfektion","50K","Inkbird","100K6A1B","Weber_6743",
                                  "Santos"}; // 
 
 // CHANNEL COLORS
@@ -699,7 +699,7 @@ void timer_iot() {
   // NANO CLOUD
   if (millis() - lastUpdateCloud > (iot.CL_int * 1000)) {
 
-    if (wifi.mode == 1 && sys.update == 0 && iot.CL_on && now() > 100000) {  // nicht senden, falls utc noch nicht eingetroffen
+    if (wifi.mode == 1 && sys.update == 0 && iot.CL_on) {// && now() > 100000) {  // nicht senden, falls utc noch nicht eingetroffen
         sendDataCloud();
     }
     lastUpdateCloud = millis();
@@ -1093,6 +1093,7 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
   }
 
   command += F("User-Agent: WLANThermo nano\n");
+  command += F("SN: "); command += String(ESP.getChipId(), HEX); command += F("\n"); 
   command += F("Host: ");
   command += String(host);
   command += F("\n\n");

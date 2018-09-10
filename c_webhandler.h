@@ -545,7 +545,8 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_system.containsKey("hwversion")) {
       _name = _system["hwversion"].asString();
       _name.replace("V","");
-      sys.hwversion = _name.toInt();
+      if (_name.indexOf('+') > 0) sys.hwversion = 2;    // V1+
+      else  sys.hwversion = _name.toInt();
     }
 
     setconfig(eSYSTEM,{});                                      // SPEICHERN

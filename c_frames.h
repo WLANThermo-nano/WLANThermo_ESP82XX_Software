@@ -61,7 +61,9 @@ void drawLoading() {
     display.fillRect(16,8,1,1); //Untere Ecke
     display.drawRect(0,1,16,7); //Draw Outline
     display.fillRect(2,3,MAXBATTERYBAR,4);  // Draw Battery Status
-    display.drawString(64, 30, "LADEN BEENDET");
+    if (sys.god & (1<<1)) {}
+    else
+      display.drawString(64, 30, "LADEN BEENDET");
   }
 
   display.display();
