@@ -2259,6 +2259,18 @@
 					</div>
 				</div>
 			</div>
+			<div id="advanced_settings_show">
+				<h3 class="headtitle">Advanced</h3>
+				<div class="pure-g">
+					<div class="pure-u-1-1 pure-u-lg-1-1">
+						<div class="1-box channel_conf">
+							<form>
+								<div class="checkbox"><label><input id="pid_opl" type="checkbox" /><i class="helper"></i>Deckelüberwachung</label></div>
+							</form>	
+						</div>
+					</div>
+				</div>
+			</div>
         </div>
 		<!-- ################################################### -->
 		<div id="channel_settings" class="content" style="display:none">
@@ -3052,6 +3064,7 @@
 				byId('pitmaster_set_show').style.display = "none";
 				byId('pitmaster_profile_show').style.display = "none";
 				byId('pid_settings_show').style.display = "none";
+				byId('advanced_settings_show').style.display = "none";
 				break;
 			case 'manual':
 				byId('pitmaster_value_show').style.display = "inline";	
@@ -3059,14 +3072,15 @@
 				byId('pitmaster_set_show').style.display = "none";
 				byId('pitmaster_profile_show').style.display = "inline";
 				byId('pid_settings_show').style.display = "none";
-
+				byId('advanced_settings_show').style.display = "none";
 				break;
 			case 'autotune':
 				byId('pitmaster_profile_show').style.display = "inline";
 				byId('pitmaster_value_show').style.display = "none";
 				byId('pitmaster_channel_show').style.display = "inline";
 				byId('pitmaster_set_show').style.display = "inline";
-				byId('pid_settings_show').style.display = "none";				
+				byId('pid_settings_show').style.display = "none";	
+				byId('advanced_settings_show').style.display = "none";				
 				break;
 			case 'auto':
 				byId('pitmaster_profile_show').style.display = "inline";
@@ -3074,6 +3088,7 @@
 				byId('pitmaster_channel_show').style.display = "inline";
 				byId('pitmaster_set_show').style.display = "inline";			
 				byId('pid_settings_show').style.display = "inline";
+				byId('advanced_settings_show').style.display = "inline";
 				break;
 			default:
 				byId('pitmaster_profile_show').style.display = "inline";
@@ -3081,6 +3096,7 @@
 				byId('pitmaster_channel_show').style.display = "inline";
 				byId('pitmaster_set_show').style.display = "inline";
 				byId('pid_settings_show').style.display = "inline";
+				byId('advanced_settings_show').style.display = "inline";
 		} 		
 	}
 	function setPitmaster(){
@@ -3125,6 +3141,7 @@
 			byId('pid_Kd_a').value = jr.pid[profile].Kd_a;
 			byId('pid_DCmin').value = jr.pid[profile].DCmmin;
 			byId('pid_DCmax').value = jr.pid[profile].DCmmax;
+			byId('pid_opl').checked = jr.pid[profile].opl;
 			showLoader('false');
 		})			
 	}
@@ -3158,6 +3175,7 @@
 			jr.pid[profile].Kd_a = byId('pid_Kd_a').value;
 			jr.pid[profile].DCmmin = byId('pid_DCmin').value;
 			jr.pid[profile].DCmmax = byId('pid_DCmax').value;
+			jr.pid[profile].opl = byId('pid_opl').checked;
 			var data = JSON.stringify(jr.pid);
 			loadJSON('setpid', data, '60000', function (response) {
 				togglePitmasterView();
@@ -3467,7 +3485,8 @@
 	}
 	
 	function validateNumber(number,decimal) {
-		val = number.value.replace(/[^0-9.,]/g,'').replace(/[,]/g, '.');
+		//val = number.value.replace(/[^0-9.,]/g,'').replace(/[,]/g, '.');
+		val = number.value.replace(/[^0-9\-.,]+\-/g,'').replace(/[,]/g, '.');  
 		switch(decimal) {
 			case '1': 
 				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];}
