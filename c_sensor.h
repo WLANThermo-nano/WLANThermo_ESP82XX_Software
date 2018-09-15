@@ -258,9 +258,9 @@ void get_Vbat() {
         }
       }
 
-      if (battery.voltage > 4000) {
+      if (battery.voltage > 3900) {
 
-        if (battery.sim > 4000) {
+        if (battery.sim > 3900) {
 
           // Reduktion nach der Aufnahme eines neuen Werts
           if (battery.simc > MEDIAN_SIZE-1) { // angepasst an den Median

@@ -134,6 +134,9 @@ void get_Temperature() {
     else ch[i].match = 0;
   }
 
+  // Open Lid Detection
+  open_lid();
+
 }
 
 

@@ -221,7 +221,11 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
     case PITOFF: if (millis() > BATTERYSTARTUP) display->drawString(24,0,String(battery.percentage)); break;
     case DUTYCYCLE: // show "M"
     case MANUAL: display->drawString(33,0, "M  " + String(pitMaster[0].value,0) + "%"); break;
-    case AUTO: display->drawString(33,0, "P  " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); break;
+    case AUTO: 
+      if (opl.detected)  display->drawString(33,0, "OPL: " + String(opl.temp,1));
+      else display->drawString(33,0, "P  " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); 
+      break;
+    
     case AUTOTUNE: display->drawString(33,0, "A"+ String(autotune.cycles) +" / " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); break;
   }  
   

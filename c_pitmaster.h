@@ -67,6 +67,68 @@ void init_pitmaster(bool init, byte id) {
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Open Lid
+void open_lid_init() {
+
+      // nur Pitmaster 1
+      opl.detected = false;
+      //opl.ref = {0.0, 0.0, 0.0, 0.0, 0.0};
+      for (int i = 0; i < 5; i++) {
+        opl.ref[i] = 0;
+      }
+      opl.temp = 0;
+      opl.count = 0;
+}
+
+#define OPL_FALL  97
+#define OPL_RISE  100
+#define OPL_PAUSE 180
+
+void open_lid() {
+
+    if (pitMaster[0].active == AUTO && pid[pitMaster[0].pid].opl) {
+      opl.ref[0] = opl.ref[1];
+      opl.ref[1] = opl.ref[2];
+      opl.ref[2] = opl.ref[3];
+      opl.ref[3] = opl.ref[4];
+      opl.ref[4] = ch[pitMaster[0].channel].temp;
+
+      
+    
+      float temp_ref = (opl.ref[0] + opl.ref[1] + opl.ref[2]) / 3;
+
+      // erkennen ob Temperatur wieder eingependelt oder Timeout
+    
+      if (opl.detected) {  // Open Lid Detected
+       
+        opl.count--;
+
+        // extremes Überschwingen vermeiden
+        if (opl.temp > pitMaster[0].set && ch[pitMaster[0].channel].temp < pitMaster[0].set) opl.temp = pitMaster[0].set;
+    
+        if (opl.count <= 0)  // Timeout
+          opl.detected = false;
+      
+        else if (ch[pitMaster[0].channel].temp > (opl.temp * (OPL_RISE/100.0)))    // Lid Closed
+          opl.detected = false;
+      
+      } else if (ch[pitMaster[0].channel].temp < (temp_ref * (OPL_FALL/100.0))) {    // Opened lid detected!
+        // Wenn Temp innerhalb der letzten beiden Messzyklen den falling Wert unterschreitet
+    
+        opl.detected = true;
+        //opl.temp = opl.ref[0];  // war bsiher pit_now, das ist aber schon zu niedrig     
+        opl.temp = opl.ref[0];         
+        opl.count = OPL_PAUSE / (INTERVALSENSOR/1000.0);
+
+        Serial.println("OPL");
+      } 
+    
+    } else  {
+      opl.detected = false;
+    }
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Set Pitmaster Pin
 void set_pitmaster(bool init) {
   
@@ -84,6 +146,8 @@ void set_pitmaster(bool init) {
     pinMode(PITSUPPLY, OUTPUT);
     digitalWrite(PITSUPPLY, LOW);
   }
+
+  open_lid_init();
 
 }
 
@@ -109,6 +173,7 @@ void set_pid(byte index) {
 float PID_Regler(byte id){ 
 
   // see: http://rn-wissen.de/wiki/index.php/Regelungstechnik
+  // see: http://www.ni.com/white-paper/3782/en/
 
   float x = ch[pitMaster[id].channel].temp;         // IST
   float w = pitMaster[id].set;                      // SOLL
@@ -625,6 +690,121 @@ int myPitmaster(Pitmaster pitmaster) {
     return 0;
 }
 
+/*
+struct Gcode {
+    long time;          // Zeitvorgabe
+    uint32_t last;      // letzter Pitmasterdurchlauf
+    byte mode;          // uebergebener Pitmaster Mode
+    byte val;           // uebergebener Wert
+    bool hold;          // Timer angehalten, Temperatur noch nicht erreicht
+}
+Gcode gcode;
+
+enum {GCODEM, GCODEP1, GCODEP2, GCODEP3, GCODEP4 GCODEOFF};
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// GCODE-Pitmaster
+float gcode_pitmaster(byte id) {
+
+  // Zeitvariable die angibt, ob neue Zeile gelesen wird oder noch nicht
+  if (!gcode.hold && gcode.time != -1) {
+    gcode.time -= millis() - gcode.last;
+    if (gcode.time < 0) gcode.time = 0;
+  }
+
+  gcode.last = millis();
+
+  // Befehle
+  // Jeweils ein Befehl pro Zeile
+  // K1 = Kanal 1 etc.                im Pitmaster speichern
+  // A0 = Aktor 0 (SSR, FAN, SERVO)   im Pitmaster speichern
+  // C0 = PID 0
+  
+  // M100 = Mode-Manuell 100%         eigene Variable (zwei: Modus und Wert)
+  // P = Mode-Auto (P0 = normaler PID; P2 = PID mit Zeitverzögerung; P3 = manuell heizen; P2 = manuell kühlen
+  // P2 = wenn ist > soll dann 100% sonst 0%
+  
+  // S120 = Solltemperatur 120        im Pitmaster speichern
+
+  // Zeit am Ende
+  // T1000 = Zeit 1000                eigene Variable
+  // T0 = unendlich
+
+  // Interpreter
+  if {gcode.time <= 0) {
+
+    while 1 {
+      // Zeile lesen bis eine Zeitvorgabe kommt
+      File f = SPIFFS.open("/pitmaster.gcode", "r");
+      // wenn Ende gefunden dann ein GCODEOFF schicken und abschalten
+      String command = f.readStringUntil('\n');
+      command = command.substring(0,command.indexOf(';')); 
+      Serial.println(command);
+      f.close();
+
+      char com = command.charAt(0);
+      command = command.remove(0);
+      int val = command.toInt();
+
+      if (com == "K") pitMaster[id].channel = val -1;
+      else if (com == "C") pitMaster[id].pid = val;
+      else if (com == "A") pid[pitMaster[id].pid].aktor = val;
+      else if (com == "M") {
+        gcode.mode = GCODEM;
+        gcode.val = val;
+      }
+      else if (com == "P") {
+        gcode.mode = val+1;
+        if (val == 2) gcode.hold = true; // Warten auf Temperatur erreicht
+        // hier wird noch ein Abschalten des Hold benötigt, sowie ein grafischer Hinweis
+      }
+      else if (com == "S") pitMaster[id].set = val;
+      else if (com == "T") {
+        if (val == 0) gcode.time = -1;  // unendlich lang
+        else gcode.time = val;
+        break; // Leseschleife unterbrechen
+      }
+    }
+  }
+
+  // Pitmastervorgabe anhand des gewaehlten Modus
+  switch (gcode.mode) {
+
+    case GCODEM:
+      return gcode.val;
+
+    case GCODEP0:
+      return PID_Regler(id);
+
+    case GCODEP0:
+      return PID_Regler(id);
+
+    case GCODEP2:
+      if (ch[pitMaster[id].channel].temp < pitMaster[id].set) return 100;
+      else return 0;
+
+    case GCODEP3:
+      if (ch[pitMaster[id].channel].temp > pitMaster[id].set) return 100;
+      else return 0;
+
+    default:
+      return 0;
+  }
+}
+
+  
+  // Schaltung Hauptschalter:
+
+
+  // ist > soll, dann manuell 100%
+  // ist < soll, dann manuell 0%
+
+  
+    return 0;
+}
+
+*/
 unsigned long servochange = 0;
 
 
@@ -674,8 +854,10 @@ void pitmaster_control(byte id) {
           break;
 
         case AUTO:
-          pitMaster[id].value = PID_Regler(id);      //myPitmaster();
           aktor = pid[pitMaster[id].pid].aktor;
+          if (!opl.detected)
+            pitMaster[id].value = PID_Regler(id);      //myPitmaster();
+          else pitMaster[id].value = 0; 
           break;
 
         case MANUAL:    // falls manual wird value vorgegeben
@@ -684,7 +866,7 @@ void pitmaster_control(byte id) {
 
         case VOLTAGE:    // falls voltage wird value vorgegeben
           aktor = FAN;
-          if (millis() - servochange > 1100) { 
+          if (millis() - servochange > 3000) { 
             pitMaster[id].value = 0;
             //Serial.println("Abschaltung");
           }
@@ -751,6 +933,7 @@ void pitmaster_control(byte id) {
     }
   } else {    // TURN OFF PITMASTER
     disableHeater(id);
+    if(id == 0) open_lid_init();
   }
   
 }

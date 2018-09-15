@@ -289,7 +289,8 @@ bool loadconfig(byte count, bool old) {
         pid[pidsize].DCmin    = _pid[pidsize]["DCmin"];              
         pid[pidsize].DCmax    = _pid[pidsize]["DCmax"];              
         //pid[pidsize].SVmin    = _pid[pidsize]["SVmin"];             
-        //pid[pidsize].SVmax    = _pid[pidsize]["SVmax"];         
+        //pid[pidsize].SVmax    = _pid[pidsize]["SVmax"];  
+        pid[pidsize].opl  =  _pid[pidsize]["ol"];      
         pidsize++;
       }
     }
@@ -482,6 +483,7 @@ bool setconfig(byte count, const char* data[2]) {
         _pid["DCmax"]    = double_with_n_digits(pid[i].DCmax,1);             
         //_pid["SVmin"]    = pid[i].SVmin;             
         //_pid["SVmax"]    = pid[i].SVmax;
+        _pid["ol"]    = pid[i].opl;   
       }
        
       size_t size = json.measureLength() + 1;

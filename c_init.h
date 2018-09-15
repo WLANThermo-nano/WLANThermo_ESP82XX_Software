@@ -214,6 +214,7 @@ struct PID {
   float pswitch;                // SWITCHING LIMIT        // raus ?
   float DCmin;                  // PID DUTY CYCLE MIN
   float DCmax;                  // PID DUTY CYCLE MAX
+  byte opl;
 };
 PID pid[PIDSIZE];
 
@@ -400,6 +401,18 @@ MyQuestion question;
 // FILESYSTEM
 enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
 
+
+struct OpenLid {
+   bool detected;         // Open Lid Detected
+   float ref[5] = {0.0, 0.0, 0.0, 0.0, 0.0};          // Open Lid Temperatur Memory
+   float temp;            // Temperatur by Open Lid
+   int  count;            // Open Lid Count
+};
+
+OpenLid opl;
+
+
+
 // https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266WiFi/src/ESP8266WiFiType.h
 
 // WIFI
@@ -561,6 +574,8 @@ void set_pitmaster(bool init);
 void set_pid(byte index);
 void stopautotune(byte id);
 void DC_start(bool dc, byte aktor, int val, byte id);
+void open_lid();
+void open_lid_init();
 
 // BOT
 void set_iot(bool init);

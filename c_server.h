@@ -214,6 +214,7 @@ String cloudSettings() {
     _pid["Kd_a"] =    limit_float(pid[i].Kd_a, -1);
     _pid["DCmmin"] =  pid[i].DCmin;
     _pid["DCmmax"] =  pid[i].DCmax;
+    _pid["opl"] =  pid[i].opl;
   }
 
   JsonArray& _aktor = root.createNestedArray("aktor");
@@ -334,10 +335,12 @@ void server_setup() {
 
   server.on("/v2",[](AsyncWebServerRequest *request){
     sys.hwversion = 2;
+    sys.pitsupply = true;
     setconfig(eSYSTEM,{});
     request->send(200, TEXTPLAIN, "v2");
   });
 
+/*
   server.on("/pitsupply",[](AsyncWebServerRequest *request){
     if (sys.hwversion > 1 && !sys.pitsupply) {
       sys.pitsupply = true;
@@ -349,6 +352,7 @@ void server_setup() {
       request->send(200, TEXTPLAIN, TEXTOFF);
     }
   });
+*/
 
   server.on("/damper",[](AsyncWebServerRequest *request){
     if (request->method() == HTTP_GET) {
@@ -442,19 +446,6 @@ void server_setup() {
         DC_start(dc, aktor, val, id);  
         IPRINTP("DC-Test: ");
         DPRINTLN(val/10.0);
-        ESP.wdtEnable(10);
-        request->send(200, TEXTPLAIN, TEXTTRUE);
-      } else request->send(200, TEXTPLAIN, TEXTFALSE);
-  });
-
-  server.on("/autotune",[](AsyncWebServerRequest *request) { 
-      if(request->hasParam("cycle")&&request->hasParam("over")&&request->hasParam("timelimit")){
-        ESP.wdtDisable(); 
-        long limit = request->getParam("timelimit")->value().toInt();
-        int over = request->getParam("over")->value().toInt();
-        int cycle = request->getParam("cycle")->value().toInt();
-        byte id = 0;  // Pitmaster1
-        startautotunePID(cycle, true, over, limit, id);
         ESP.wdtEnable(10);
         request->send(200, TEXTPLAIN, TEXTTRUE);
       } else request->send(200, TEXTPLAIN, TEXTFALSE);

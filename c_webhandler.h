@@ -694,6 +694,8 @@ class BodyWebHandler: public AsyncWebHandler {
       if (_pitmaster.containsKey("channel")) {
         byte cha = _pitmaster["channel"];
         pitMaster[id].channel = cha - 1;
+
+        open_lid_init(); // Speicher zurücksetzen
       }
       else return 0;
   
@@ -777,6 +779,7 @@ class BodyWebHandler: public AsyncWebHandler {
           pid[id].DCmax = getDC(val*10)/10.0;    
         } else pid[id].DCmax = constrain(val*10,0,1000)/10.0;    // 1. Nachkommastelle
       }    
+      if (_pid.containsKey("opl"))   pid[id].opl     = _pid["opl"];
       ii++;
     }
   
