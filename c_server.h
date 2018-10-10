@@ -26,11 +26,13 @@
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //
-String cloudData(bool cloud) {
+String cloudData(bool cloud, bool get_sys, uint8_t get_ch, uint8_t get_pit) {
 
   DynamicJsonBuffer jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
-  JsonObject& system = root.createNestedObject("system");
+
+  if (get_sys) {
+    JsonObject& system = root.createNestedObject("system");
 
     system["time"] = String(now());
     system["soc"] = battery.percentage;
@@ -43,12 +45,16 @@ String cloudData(bool cloud) {
       system["serial"] = String(ESP.getChipId(), HEX);
       system["api_token"] = iot.CL_token; 
     }
+  }
 
+  if (get_ch) {
     JsonArray& channel = root.createNestedArray("channel");
 
+    int j = 0;
+    if (get_ch < CHANNELS) j = get_ch-1;
     //float temo[8] = {68.8, 67.4, 57.6, 110.3, 289.1, 16.1, 1, 1};
 
-    for (int i = 0; i < CHANNELS; i++) {
+    for (int i = j; i < get_ch; i++) {
     JsonObject& data = channel.createNestedObject();
       data["number"]= i+1;
       data["name"]  = ch[i].name;
@@ -59,7 +65,9 @@ String cloudData(bool cloud) {
       data["alarm"] = ch[i].alarm;
       data["color"] = ch[i].color;
     }
+  }
 
+  if (get_pit) {
     if (cloud) {
       JsonObject& master = root.createNestedObject("pitmaster");
 
@@ -81,7 +89,7 @@ String cloudData(bool cloud) {
       
       JsonArray& master = root.createNestedArray("pitmaster");
 
-      for (int i = 0; i < 1; i++) {  // PITMASTERSIZE
+      for (int i = 0; i < get_pit; i++) {  // PITMASTERSIZE
         JsonObject& ma = master.createNestedObject();
         ma["id"] = i;
         ma["channel"] = pitMaster[i].channel+1;
@@ -99,8 +107,7 @@ String cloudData(bool cloud) {
         ma["value_color"] = vc[i];
       }
     }
-
-  
+  }
 
 
     /*
@@ -114,10 +121,10 @@ String cloudData(bool cloud) {
     //JsonObject& api = root.createNestedObject("api");
     //api["version"] = APIVERSION;
 
-    String jsonStr;
-    root.printTo(jsonStr);
+  String jsonStr;
+  root.printTo(jsonStr);
   
-    return jsonStr;
+  return jsonStr;
 }
 
 
@@ -174,87 +181,99 @@ void sendDataCloud() {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //
-String cloudSettings() {
+String cloudSettings(bool get_sys, bool get_sen, uint8_t get_pid, bool get_akt, bool get_iot, bool get_not) {
 
   DynamicJsonBuffer jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
-  JsonObject& _system = root.createNestedObject("system");
-
-  _system["time"] =       String(now());
-  _system["ap"] =         sys.apname;
-  _system["host"] =       sys.host;
-  _system["language"] =   sys.language;
-  _system["unit"] =       sys.unit;
-  _system["fastmode"] =   sys.fastmode;
-  _system["version"] =    FIRMWAREVERSION;
-  _system["getupdate"] =  sys.getupdate;
-  _system["autoupd"] =    sys.autoupdate;
-  if (sys.hwversion == 2)
-    _system["hwversion"] =  String("V1+");
-  else 
-    _system["hwversion"] =  String("V")+String(sys.hwversion);
-  //_system["advanced"] =  sys.advanced;
   
-  JsonArray& _typ = root.createNestedArray("sensors");
-  for (int i = 0; i < SENSORTYPEN; i++) {
-    _typ.add(ttypname[i]);
+  if (get_sys) {
+    JsonObject& _system = root.createNestedObject("system");
+    _system["time"] =       String(now());
+    _system["ap"] =         sys.apname;
+    _system["host"] =       sys.host;
+    _system["language"] =   sys.language;
+    _system["unit"] =       sys.unit;
+    _system["fastmode"] =   sys.fastmode;
+    _system["version"] =    FIRMWAREVERSION;
+    _system["getupdate"] =  sys.getupdate;
+    _system["autoupd"] =    sys.autoupdate;
+    if (sys.hwversion == 2)
+      _system["hwversion"] =  String("V1+");
+    else 
+      _system["hwversion"] =  String("V")+String(sys.hwversion);
+    //_system["advanced"] =  sys.advanced;
+
+    JsonArray& _hw = root.createNestedArray("hardware");
+    _hw.add(String("V")+String(1));
+    if (sys.hwversion > 1) _hw.add(String("V1+"));
+
+    JsonObject& api = root.createNestedObject("api");
+    api["version"] = APIVERSION;
   }
 
-  JsonArray& _pit = root.createNestedArray("pid");
-  for (int i = 0; i < pidsize; i++) {
-    JsonObject& _pid = _pit.createNestedObject();
-    _pid["name"] =    pid[i].name;
-    _pid["id"] =      pid[i].id;
-    _pid["aktor"] =   pid[i].aktor;
-    _pid["Kp"] =      limit_float(pid[i].Kp, -1);
-    _pid["Ki"] =      limit_float(pid[i].Ki, -1);
-    _pid["Kd"] =      limit_float(pid[i].Kd, -1);
-    _pid["Kp_a"] =    limit_float(pid[i].Kp_a, -1);
-    _pid["Ki_a"] =    limit_float(pid[i].Ki_a, -1);
-    _pid["Kd_a"] =    limit_float(pid[i].Kd_a, -1);
-    _pid["DCmmin"] =  pid[i].DCmin;
-    _pid["DCmmax"] =  pid[i].DCmax;
-    _pid["opl"] =  pid[i].opl;
+  if (get_sen) {
+    JsonArray& _typ = root.createNestedArray("sensors");
+    for (int i = 0; i < SENSORTYPEN; i++) {
+     _typ.add(ttypname[i]);
+    }
   }
 
-  JsonArray& _aktor = root.createNestedArray("aktor");
-  _aktor.add("SSR");
-  _aktor.add("FAN");
-  _aktor.add("SERVO");
-  if (sys.damper) _aktor.add("DAMPER"); 
+  if (get_pid) {
+    JsonArray& _pit = root.createNestedArray("pid");
+    for (int i = 0; i < pidsize; i++) {
+      JsonObject& _pid = _pit.createNestedObject();
+      _pid["name"] =    pid[i].name;
+      _pid["id"] =      pid[i].id;
+      _pid["aktor"] =   pid[i].aktor;
+      _pid["Kp"] =      limit_float(pid[i].Kp, -1);
+      _pid["Ki"] =      limit_float(pid[i].Ki, -1);
+      _pid["Kd"] =      limit_float(pid[i].Kd, -1);
+      _pid["Kp_a"] =    limit_float(pid[i].Kp_a, -1);
+      _pid["Ki_a"] =    limit_float(pid[i].Ki_a, -1);
+      _pid["Kd_a"] =    limit_float(pid[i].Kd_a, -1);
+      _pid["DCmmin"] =  pid[i].DCmin;
+      _pid["DCmmax"] =  pid[i].DCmax;
+      _pid["opl"] =  pid[i].opl;
+    }
+  }
 
-  JsonObject& _iot = root.createNestedObject("iot");
-  _iot["TSwrite"] =   iot.TS_writeKey; 
-  _iot["TShttp"] =    iot.TS_httpKey;
-  _iot["TSuser"] =    iot.TS_userKey;
-  _iot["TSchID"] =    iot.TS_chID;
-  _iot["TSshow8"] =   iot.TS_show8;
-  _iot["TSint"] =     iot.TS_int;
-  _iot["TSon"] =      iot.TS_on;
-  _iot["PMQhost"] =   iot.P_MQTT_HOST;
-  _iot["PMQport"] =   iot.P_MQTT_PORT;
-  _iot["PMQuser"] =   iot.P_MQTT_USER;
-  _iot["PMQpass"] =   iot.P_MQTT_PASS;
-  _iot["PMQqos"] =    iot.P_MQTT_QoS;
-  _iot["PMQon"] =     iot.P_MQTT_on;
-  _iot["PMQint"] =    iot.P_MQTT_int;
-  _iot["TGon"]    =   iot.TG_on;
-  _iot["TGtoken"] =   iot.TG_token;
-  _iot["TGid"] =      iot.TG_id;
-  _iot["CLon"] =      iot.CL_on;
-  _iot["CLtoken"] =   iot.CL_token;
-  _iot["CLint"] =     iot.CL_int;
+  if (get_akt) {
+    JsonArray& _aktor = root.createNestedArray("aktor");
+    _aktor.add("SSR");
+    _aktor.add("FAN");
+    _aktor.add("SERVO");
+    if (sys.damper) _aktor.add("DAMPER"); 
+  }
 
-  JsonArray& _hw = root.createNestedArray("hardware");
-  _hw.add(String("V")+String(1));
-  if (sys.hwversion > 1) _hw.add(String("V1+"));
-
-  JsonArray& _noteservice = root.createNestedArray("notification");
-  _noteservice.add("telegram");
-  _noteservice.add("pushover");
-
-  JsonObject& api = root.createNestedObject("api");
-  api["version"] = APIVERSION;
+  if (get_iot) {
+    JsonObject& _iot = root.createNestedObject("iot");
+    _iot["TSwrite"] =   iot.TS_writeKey; 
+    _iot["TShttp"] =    iot.TS_httpKey;
+    _iot["TSuser"] =    iot.TS_userKey;
+    _iot["TSchID"] =    iot.TS_chID;
+    _iot["TSshow8"] =   iot.TS_show8;
+    _iot["TSint"] =     iot.TS_int;
+    _iot["TSon"] =      iot.TS_on;
+    _iot["PMQhost"] =   iot.P_MQTT_HOST;
+    _iot["PMQport"] =   iot.P_MQTT_PORT;
+    _iot["PMQuser"] =   iot.P_MQTT_USER;
+    _iot["PMQpass"] =   iot.P_MQTT_PASS;
+    _iot["PMQqos"] =    iot.P_MQTT_QoS;
+    _iot["PMQon"] =     iot.P_MQTT_on;
+    _iot["PMQint"] =    iot.P_MQTT_int;
+    _iot["TGon"]    =   iot.TG_on;
+    _iot["TGtoken"] =   iot.TG_token;
+    _iot["TGid"] =      iot.TG_id;
+    _iot["CLon"] =      iot.CL_on;
+    _iot["CLtoken"] =   iot.CL_token;
+    _iot["CLint"] =     iot.CL_int;
+  }
+  
+  if (get_not) {
+    JsonArray& _noteservice = root.createNestedArray("notification");
+    _noteservice.add("telegram");
+    _noteservice.add("pushover");
+  }
 
   String jsonStr;
   root.printTo(jsonStr);
@@ -300,7 +319,9 @@ void server_setup() {
       +"batstat: "  + String(battery.state) + " | " +String(battery.setreference) + "\n"
       +"ssid: "     + ssidstr + "\n"
       +"wifimode: " + String(WiFi.getMode()) + "\n"
-      +"mac:" + String(getMacAddress())
+      +"mac:" + String(getMacAddress()) + "\n"
+      +"rS: "      + String(ESP.getFlashChipRealSize()) + "\n"
+      +"iS: "      + String(ESP.getFlashChipSize())
       );
   });
 
@@ -340,6 +361,11 @@ void server_setup() {
     request->send(200, TEXTPLAIN, "v2");
   });
 
+/*
+  server.on("/temperatur",[](AsyncWebServerRequest *request){
+    request->send(200, APPLICATIONJSON, cloudData(0,0,5,0));
+  });
+*/
 /*
   server.on("/pitsupply",[](AsyncWebServerRequest *request){
     if (sys.hwversion > 1 && !sys.pitsupply) {
@@ -470,6 +496,21 @@ void server_setup() {
 
   });
 
+/*
+  server.on("/validateUser",[](AsyncWebServerRequest *request) { 
+      if(request->hasParam("user")&&request->hasParam("passwd")){
+        ESP.wdtDisable(); 
+        String _user = request->getParam("user")->value();
+        String _pw = request->getParam("passwd")->value();
+        ESP.wdtEnable(10);
+        if (_user == sys.www_username && _pw == sys.www_password)
+          request->send(200, TEXTPLAIN, TEXTTRUE);
+        else
+          request->send(200, TEXTPLAIN, TEXTFALSE);
+      } else request->send(200, TEXTPLAIN, TEXTFALSE);
+  });
+*/
+ 
   // to avoid multiple requests to ESP
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html"); // gibt alles im Ordner frei
     
@@ -477,6 +518,8 @@ void server_setup() {
   server.onNotFound([](AsyncWebServerRequest *request){
     request->send(404);
   });
+
+  //setWebSocket();
       
   server.begin();
   IPRINTPLN("HTTP server started");

@@ -1,4 +1,4 @@
- /*************************************************** 
+/*************************************************** 
     Copyright (C) 2016  Steffen Ochs, Phantomias2006
 
     This program is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@
 //#define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
 //#define MPR
-
+ 
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)
   #define DPRINTLN(...)  Serial.println(__VA_ARGS__)
@@ -75,6 +75,7 @@
 #include "c_pmqtt.h"
 #include "c_ota.h"
 #include "c_server.h"
+//#include "c_ws.h"
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETUP
@@ -206,10 +207,8 @@ void loop() {
     flash_control();          // OLED Flash
     //ampere_control();
     sendNotification();       // Notification
-
-    if (sys.sendSettingsflag && iot.P_MQTT_on) {
-      if (sendpmqtt() && sendSettings()) sys.sendSettingsflag = false;
-    }
+    
+    checkMqtt();
     
     delay(10);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
   }

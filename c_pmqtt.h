@@ -41,13 +41,16 @@
 // Start MQTT
 void connectToMqtt() {
   if (iot.P_MQTT_on) pmqttClient.connect();
+  wifi.mqttreconnect = 0;
+  IPRINTPLN("t:MQTT");
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // MQTT Handler
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   IPRINTPLN("d:MQTT");
-  if (WiFi.isConnected()) connectToMqtt;
+  wifi.mqttreconnect = millis();    // Reconnect initialisieren
+  sys.sendSettingsflag = false;
 }
 
 void onMqttConnect(bool sessionPresent) {
@@ -60,7 +63,8 @@ void onMqttConnect(bool sessionPresent) {
   uint16_t packetIdSub = pmqttClient.subscribe(adress.c_str(), 2);
   MQPRINTP("[MQTT]\tSubscribing at QoS 2, packetId: ");
   MQPRINTLN(packetIdSub);
-  sendSettings();
+  //pmqttClient.publish("WLanThermo/NANO-850e43/status/data", 0, false, "test 1");
+  sys.sendSettingsflag = true;
 }
 
 void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
@@ -108,6 +112,12 @@ void onMqttMessage(char* topic, char* datas, AsyncMqttClientMessageProperties pr
   //}
 }
 
+void onMqttPublish(uint16_t packetId) {
+  MQPRINTPLN("[MQTT]\tPublish acknowledged.");
+  MQPRINTP("  packetId: ");
+  MQPRINTLN(packetId);
+}
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Configuration MQTT
 void set_pmqtt() {
@@ -116,10 +126,22 @@ void set_pmqtt() {
   pmqttClient.onSubscribe(onMqttSubscribe);
   pmqttClient.onUnsubscribe(onMqttUnsubscribe);
   pmqttClient.onMessage(onMqttMessage);
+  pmqttClient.onPublish(onMqttPublish);
   pmqttClient.setServer(iot.P_MQTT_HOST.c_str(), iot.P_MQTT_PORT);
-  pmqttClient.setCredentials(iot.P_MQTT_USER.c_str(), iot.P_MQTT_PASS.c_str());
+  if (iot.P_MQTT_USER != "" && iot.P_MQTT_PASS != "")
+    pmqttClient.setCredentials(iot.P_MQTT_USER.c_str(), iot.P_MQTT_PASS.c_str());
 }
 
+String prefixgen(uint8_t stil = 0) {
+  String prefix = F("WLanThermo/");
+  prefix += sys.host;
+
+  switch (stil) {
+    case 1: return prefix + F("/status/data");
+    case 2: return prefix + F("/status/settings");
+    default: return prefix + F("/#");
+  }
+}
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // send datas
@@ -128,18 +150,12 @@ bool sendpmqtt() {
   if (pmqttClient.connected()) {
 
     unsigned long vorher = millis();
-    String prefix = F("WLanThermo/");
-    prefix += sys.host;
-    prefix += F("/status");
-    String prefix_data = prefix + ("/data");
-    String payload_data = cloudData(false);
-    pmqttClient.publish(prefix_data.c_str(), iot.P_MQTT_QoS, false, payload_data.c_str());
-    MQPRINTF("[MQTT]\tp: %ums\r\n", millis() - vorher);
+    String payload_data = cloudData(0);
+    pmqttClient.publish(prefixgen(1).c_str(), iot.P_MQTT_QoS, false, payload_data.c_str());
+    MQPRINTF("[MQTT]\tdata: %ums\r\n", millis() - vorher);
     return true;
 
   } else {
-    MQPRINTPLN("[MQTT]\tf:");
-    pmqttClient.connect();
     return false;
   }
 }
@@ -147,20 +163,20 @@ bool sendpmqtt() {
 bool sendSettings() {
   
     if (pmqttClient.connected()) {
-  
       unsigned long settings_vorher = millis();
-      String prefix = F("WLanThermo/");
-      prefix += sys.host;
-      prefix += F("/status");
-      String prefix_settings = prefix + ("/settings");
       String payload_settings = cloudSettings();
-      pmqttClient.publish(prefix_settings.c_str(), iot.P_MQTT_QoS, false, payload_settings.c_str());
-      MQPRINTF("[MQTT]\tp: %ums\r\n", millis() - settings_vorher);
+      pmqttClient.publish(prefixgen(2).c_str(), iot.P_MQTT_QoS, false, payload_settings.c_str());
+      MQPRINTF("[MQTT]\tsettings: %ums\r\n", millis() - settings_vorher);
       return true;
   
     } else {
-      MQPRINTPLN("[MQTT]\tf:");
-      pmqttClient.connect();
       return false;
     }
+}
+
+void checkMqtt() {
+  if (!iot.P_MQTT_on && pmqttClient.connected()) pmqttClient.disconnect();
+  else if (sys.sendSettingsflag) {
+    if (sendpmqtt() && sendSettings()) sys.sendSettingsflag = false;
   }
+}  

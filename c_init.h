@@ -49,7 +49,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // SETTINGS
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.9.12"
+#define FIRMWAREVERSION "v0.9.13"
 #define APIVERSION      "2"
 
 // CHANNELS
@@ -69,7 +69,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define OLIMITMAXF 392.0
 
 // BATTERY
-#define BATTMIN 3600                  // MINIMUM BATTERY VOLTAGE in mV
+#define BATTMIN 3550                  // MINIMUM BATTERY VOLTAGE in mV
 #define BATTMAX 4170                  // MAXIMUM BATTERY VOLTAGE in mV 
 #define ANALOGREADBATTPIN 0           // INTERNAL ADC PIN
 #define BATTDIV 5.9F
@@ -431,6 +431,7 @@ struct Wifi {
   bool takeAP;
   long timerAP;
   byte neu;                         // SAVE-MODE: (0 = no save, 1 = only sort, 2 = add new)
+  unsigned long mqttreconnect;
 };
 Wifi wifi;
 
@@ -588,8 +589,12 @@ void sendServerLog();
 String serverLog();
 void sendDataCloud();
 
-String cloudData(bool cloud);
-String cloudSettings();
+//String cloudData(bool cloud);
+String cloudData(bool cloud, bool get_sys = true, uint8_t get_ch = CHANNELS, uint8_t get_pit = 1);
+//String cloudSettings();
+String cloudSettings(bool get_sys = true, bool get_sen = true, uint8_t get_pid = pidsize, bool get_akt = true, bool get_iot = true, bool get_not = true);
+
+//void setWebSocket();
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 

@@ -69,6 +69,7 @@ void onWifiConnect(const WiFiEventStationModeGotIP& event) {
   wifi.mode = 1;                                                // WiFi-Mode = STA
   
   connectToMqtt();                 // Start MQTT
+  //wifi.mqttreconnect = 1;
 
   // Änderung an den Wifidaten: muss sortiert und gespeichert werden?
   if (holdssid.hold && WiFi.SSID() == holdssid.ssid) {
@@ -102,6 +103,7 @@ void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
   else wifi.mode = 6;     // Verbindungsverlust im Betrieb
   
   //pmqttClient.disconnect();
+  wifi.mqttreconnect = 0;
 }
 
 void onsoftAPDisconnect(const WiFiEventSoftAPModeStationDisconnected& event) {
@@ -297,6 +299,9 @@ void wifimonitoring() {
         modifywifi();
         wifi.neu = 0; 
       }
+
+      // MQTT reaktivieren, falls Verbindung verloren
+      if (wifi.mqttreconnect && millis() - wifi.mqttreconnect > 300000) connectToMqtt;
       break;
 
     case 2:                        // AP-Mode

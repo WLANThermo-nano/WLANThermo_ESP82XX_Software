@@ -82,7 +82,7 @@ void open_lid_init() {
 
 #define OPL_FALL  97
 #define OPL_RISE  100
-#define OPL_PAUSE 180
+#define OPL_PAUSE 300
 
 void open_lid() {
 
@@ -95,7 +95,7 @@ void open_lid() {
 
       
     
-      float temp_ref = (opl.ref[0] + opl.ref[1] + opl.ref[2]) / 3;
+      float temp_ref = (opl.ref[0] + opl.ref[1] + opl.ref[2]) / 3.0;
 
       // erkennen ob Temperatur wieder eingependelt oder Timeout
     

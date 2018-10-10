@@ -541,7 +541,7 @@ bool setconfig(byte count, const char* data[2]) {
     return false;
   
   }
-  sys.sendSettingsflag = true;
+  if (pmqttClient.connected()) sys.sendSettingsflag = true;
   return true;
 }
 
