@@ -568,10 +568,9 @@ void open_lid_init();
 // BOT
 void set_iot(bool init);
 void set_push();
-String collectData();
-String createNote(bool ts);
+
+String createNote();
 bool sendNote(int check);
-void sendDataTS();
 
 void sendServerLog();
 String serverLog();
@@ -695,13 +694,6 @@ void maintimer(bool stby = false) {
       if (!(oscounter % 1)) {       // 250 ms
         controlAlarm(pulsalarm);
         pulsalarm = !pulsalarm;
-      }
-
-      // THINGSPEAK
-      if (!(oscounter % iot.TS_int*4)) {       // variable
-        if (wifi.mode == 1 && sys.update == 0 && iot.TS_on) {
-          if (iot.TS_writeKey != "" && iot.TS_chID != "") sendDataTS();
-        }
       }
 
       // PRIVATE MQTT
@@ -882,7 +874,7 @@ String newToken() {
 
 enum {SERIALNUMBER, APITOKEN, TSWRITEKEY, NOTETOKEN, NOTEID, NOTEREPEAT, NOTESERVICE,
       THINGHTTPKEY, DEVICE, HARDWAREVS, SOFTWAREVS, ITEM};  // Parameters
-enum {NOPARA, SENDTS, SENDNOTE, THINGHTTP, CHECKUPDATE};                       // Config
+enum {NOPARA, SENDNOTE, CHECKUPDATE};                       // Config
 enum {GETMETH, POSTMETH};                                                   // Method
 
 String createParameter(int para) {
@@ -967,10 +959,6 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
 
   switch (para) {
 
-    case SENDTS:
-      command += createParameter(TSWRITEKEY);
-      command += collectData();
-      break;
 
     case SENDNOTE:
       command += createParameter(SERIALNUMBER);
@@ -979,12 +967,7 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
       command += createParameter(NOTEREPEAT);
       command += F("&lang=de");
       command += createParameter(NOTESERVICE);
-      command += createNote(0);
-      break;
-
-    case THINGHTTP:
-      command += createParameter(THINGHTTPKEY);
-      command += createNote(1);
+      command += createNote();
       break;
 
     case CHECKUPDATE:
@@ -1035,12 +1018,7 @@ void sendNotification() {
         if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
             
           bool sendN = true;
-          if (iot.TS_httpKey != "" && iot.TS_on) {
-            if (sendNote(0)) {
-              notification.ch = i;
-              sendNote(1);           // Notification per Thingspeak
-            } else sendN = false;
-          } else if (pushd.on > 0) {
+          if (pushd.on > 0) {
             if (sendNote(0)) {
               notification.ch = i;
               sendNote(2);           // Notification per Nano-Server
