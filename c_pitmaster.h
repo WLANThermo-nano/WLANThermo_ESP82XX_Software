@@ -57,12 +57,8 @@ void init_pitmaster(bool init, byte id) {
   pitMaster[id].resume = 1;   // später wieder raus
   if (!pitMaster[id].resume) pitMaster[id].active = PITOFF; 
 
-  if (pitMaster[id].active != MANUAL) pitMaster[id].value = 0;
-  pitMaster[id].event = false;
-  pitMaster[id].msec = 0;
-  pitMaster[id].pause = 1000;
-  pitMaster[id].esum = 0;
-  pitMaster[id].elast = 0;
+  if (pitMaster[id].active != MANUAL) pitMaster[id].value = 0;  // vll auch noch in disableHeater
+  disableHeater(id, true);
   
 }
 
@@ -132,19 +128,24 @@ void open_lid() {
 // Set Pitmaster Pin
 void set_pitmaster(bool init) {
   
-  pitMaster[0].io = PITMASTER1;
+  //pitMaster[0].io = PITMASTER1;     // nur in disableHeater
   pinMode(PITMASTER1, OUTPUT);
   digitalWrite(PITMASTER1, LOW);
   init_pitmaster(init, 0);
   
-  pitMaster[1].io = PITMASTER2;
+  //pitMaster[1].io = PITMASTER2;     // nur in disableHeater
   pinMode(PITMASTER2, OUTPUT);
   digitalWrite(PITMASTER2, LOW);
   init_pitmaster(init, 1);
 
-  if (sys.hwversion > 1) {
+  if (sys.hwversion > 1) {  // v2: pitsupply enable
     pinMode(PITSUPPLY, OUTPUT);
     digitalWrite(PITSUPPLY, LOW);
+    pitMaster[1].active = PITOFF; // damit der Switch funktioniert
+    bodyWebHandler.setservoV2(0);
+    bodyWebHandler.setdamperV2();
+  } else {  // v1: only 1 pitmaster
+    pitMaster[1].active = PITOFF;
   }
 
   open_lid_init();
@@ -290,23 +291,40 @@ void pitsupply(bool out, byte id) {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // TURN PITMASTER OFF
-void disableHeater(byte id) {
+void disableHeater(byte id, bool hold) {
   // Anschlüsse ausschalten
-  if (pid[pitMaster[id].pid].aktor == FAN || pid[pitMaster[id].pid].aktor == DAMPER) { // FAN
-    analogWrite(pitMaster[id].io, LOW);
-  } else {
-    digitalWrite(pitMaster[id].io, LOW); // SSR
-  }
-    
-  //digitalWrite(PITMASTER2, LOW);
-  pitsupply(0, id); // 12V Supply abschalten, falls nötig
-  
-  pitMaster[id].active = PITOFF;
-  pitMaster[id].value = 0;
-  pitMaster[id].event = false;
-  pitMaster[id].msec = 0;
 
-  clear_PID_Regler(id);
+  if (!pitMaster[id].disabled) {
+  
+    PMPRINTF("OFF: %u,\t %u,\t %u\r\n", id, pitMaster[id].io, pid[pitMaster[id].pid].aktor);
+
+    // https://github.com/esp8266/Arduino/issues/2175
+    // erst ab v2.4.0
+    //pinMode(pitMaster[id].io, OUTPUT);      
+    //digitalWrite(pitMaster[id].io,LOW);     // automatic reset Output Mode
+  
+    if (pitMaster[id].pwm) analogWrite(pitMaster[id].io, LOW);  // FAN
+    else digitalWrite(pitMaster[id].io, LOW); // SSR + Servo
+    pitMaster[id].pwm = false;
+    
+    pitsupply(0, id); // 12V Supply abschalten, falls nötig
+
+    // Reset IO-Ports
+    if (id == 0) pitMaster[id].io = PITMASTER1;
+    else if (id == 1) pitMaster[id].io = PITMASTER2;
+
+    if (!hold) {
+    pitMaster[id].active = PITOFF;      // turn off
+    pitMaster[id].value = 0;            // reset value
+    }
+    pitMaster[id].event = false;        // reset ssr event
+    pitMaster[id].msec = 0;             // reset time variable
+    pitMaster[id].stakt = 0;            // disable Servo Control
+
+    clear_PID_Regler(id);               // rest pid
+
+    pitMaster[id].disabled = true;
+  }
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -596,8 +614,7 @@ void DC_start(bool dc, byte aktor, int val, byte id) {
 
     pitMaster[id].last = 0;
 
-    //if (aktor == SERVO && sys.hwversion > 1) pitMaster[0].io = PITMASTER2;  // Servo-Spezial
-
+    // save current state
     switch (pitMaster[id].active) {
       case PITOFF: dutyCycle[id].saved = PITOFF; break;
       case MANUAL: dutyCycle[id].saved = pitMaster[id].value; break;
@@ -608,6 +625,8 @@ void DC_start(bool dc, byte aktor, int val, byte id) {
       case AUTO: dutyCycle[id].saved = -1; break;
       case VOLTAGE: dutyCycle[id].saved = PITOFF; break;
     }
+
+    // set duty cycle state
     pitMaster[id].active = DUTYCYCLE;
   }
 }
@@ -668,7 +687,7 @@ void check_pit_pause(byte id) {
       pitMaster[id].dcmax = map(dcmax,0,1000,0,1024);
       break;   
     case SERVO:  
-      pause = 20;   // 50 Hz
+      pause = 1000;   // 50 Hz kompatibel
       pitMaster[id].dcmin = map(dcmin,0,1000,SERVOPULSMIN,SERVOPULSMAX);
       pitMaster[id].dcmax = map(dcmax,0,1000,SERVOPULSMIN,SERVOPULSMAX);
       break;   
@@ -805,7 +824,7 @@ float gcode_pitmaster(byte id) {
 }
 
 */
-unsigned long servochange = 0;
+
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -820,6 +839,8 @@ void pitmaster_control(byte id) {
   
   // ESP PWM funktioniert nur bis 10 Hz Trägerfrequenz stabil, daher eigene Taktung
   if (pitMaster[id].active > 0) {
+
+    pitMaster[id].disabled = false;
 
     // Check Pitmaster Pause
     check_pit_pause(id);
@@ -866,11 +887,7 @@ void pitmaster_control(byte id) {
 
         case VOLTAGE:    // falls voltage wird value vorgegeben
           aktor = FAN;
-          if (millis() - servochange > 3000) { 
-            pitMaster[id].value = 0;
-            //Serial.println("Abschaltung");
-          }
-          else pitMaster[id].value = 50;
+          //pitMaster[id].value = 0;
           break;
 
         //case GCODE:
@@ -885,6 +902,7 @@ void pitmaster_control(byte id) {
         case SSR:  
           pitsupply(1, id);   // immer 12V Supply
           pitMaster[id].msec = map(pitMaster[id].value,0,100,pitMaster[id].dcmin,pitMaster[id].dcmax); 
+          PMPRINTF("SSR: %u,\t %u,\t %ums\r\n", id, pitMaster[id].io, pitMaster[id].msec);
           if (pitMaster[id].msec > 0) digitalWrite(pitMaster[id].io, HIGH);
           if (pitMaster[id].msec < pitMaster[id].pause) pitMaster[id].event = true;  // außer bei 100%
           break;
@@ -894,6 +912,8 @@ void pitmaster_control(byte id) {
           // PITMASTER 2 = SERVO 
         case FAN:  
           pitsupply(sys.pitsupply, id);   // 12V Supply nur falls aktiviert
+          pitMaster[id].pwm = true;      // kennzeichne pwm
+          PMPRINTF("FAN: %u,\t %u,\t %u%%\r\n", id, pitMaster[id].io, (int)pitMaster[id].value);
           if (pitMaster[id].value == 0) {   
             analogWrite(pitMaster[id].io,0);  // bei 0 soll der Lüfter auch stehen
             pitMaster[id].timer0 = millis();  
@@ -908,26 +928,30 @@ void pitmaster_control(byte id) {
           break;
         
         case SERVO:   // Achtung bei V2 mit den 12V bei Anschluss an Stromversorgung
-          // PITMASTER 1 = VOLTAGE
+          // PITMASTER 1 = VOLTAGE or fix VUSB
           // PITMASTER 2 = SERVO  (gedrehte Pitmaster)
           //pitsupply(0, id);  // keine 12V Supply
+          
           uint16_t smsec = mapfloat(pitMaster[id].value,0,100,pitMaster[id].dcmin,pitMaster[id].dcmax);
+
+          // kleine Bewegungen vermeiden
           if (abs(pitMaster[id].msec - smsec) > 40) { // in msec
-            servochange = millis();
-            pitMaster[id].msec = smsec;
+            pitMaster[id].nmsec = smsec;
           }
-           
-          //Serial.println(pitMaster[id].msec);
+
+          // vereinfachte Damper-Logik
           if (pid[pitMaster[0].pid].aktor == DAMPER) {      // Einfacher Damper
-            pitMaster[id].msec = pitMaster[id].dcmin;
-            if (pitMaster[0].value > 0) pitMaster[id].msec = pitMaster[id].dcmax;
+            pitMaster[id].nmsec = pitMaster[id].dcmin;
+            if (pitMaster[0].value > 0) pitMaster[id].nmsec = pitMaster[id].dcmax;
           }
-          pitMaster[id].timer0 = micros();
-          noInterrupts();
-          digitalWrite(pitMaster[id].io, HIGH);
-          while (micros() - pitMaster[id].timer0 < pitMaster[id].msec) {}  //delayMicroseconds() ist zu ungenau
-          digitalWrite(pitMaster[id].io, LOW);
-          interrupts();
+          PMPRINTF("SVO: %u,\t %u,\t %uus\r\n", id, pitMaster[id].io, pitMaster[id].nmsec);
+          // Servosteuerung aktivieren
+          if (pitMaster[id].stakt == 0) pitMaster[id].stakt = millis();
+          
+          // Hardware Timer timer0 / timer1 blocked by STA
+          // Software Timer os_timer no us (only with USE_US_TIMER but destroyed millis()/micros()
+
+          // Servo läuft nach restart nicht weiter
           break;   
       }
     }
@@ -937,6 +961,48 @@ void pitmaster_control(byte id) {
   }
   
 }
+
+
+byte servointerrupt;
+
+void updateServo() {
+
+  servointerrupt = 1;
+
+  for (int id = 0; id < PITMASTERSIZE; id++) {
+
+    if (pitMaster[id].stakt > 0) {                        // Servo aktiviert
+      if (millis() - pitMaster[id].stakt > 19)   {    // 50 Hz Takt
+        pitMaster[id].stakt = millis(); 
+        //Serial.println(micros() - pitMaster[id].timer0);
+        delayMicroseconds(5); // weniger Zittern am Servo
+
+        // Servoposition langsam annähern
+        if (pitMaster[id].msec == 0) pitMaster[id].msec = pitMaster[id].nmsec;
+        else if (pitMaster[id].nmsec - pitMaster[id].msec > 25) pitMaster[id].msec += 25;
+        else if (pitMaster[id].msec - pitMaster[id].nmsec > 25) pitMaster[id].msec -= 25;
+        else pitMaster[id].msec = pitMaster[id].nmsec;
+
+        // Reihenfolge wichtig
+        //noInterrupts();   // erzeugt Störungen im StepUp
+        digitalWrite(pitMaster[id].io, HIGH);
+        pitMaster[id].timer0 = micros();
+        while (micros() - pitMaster[id].timer0 < pitMaster[id].msec) {}  //delayMicroseconds() ist zu ungenau
+        digitalWrite(pitMaster[id].io, LOW);
+        //interrupts();
+        
+        servointerrupt = servointerrupt*1;        // Signal abgeschlossen, frei für Rest
+      } else servointerrupt = servointerrupt*0;   // Signal noch nicht abgeschlossen
+    } else servointerrupt = servointerrupt*1;     // nichts zum abschließen
+  
+  }
+
+  // Abschalt-Delay wird so lange geblockt, bis alle Servos frei
+  // aktuell immer nur ein Servo gleichzeitig, also kein Problem
+  // könnte zum komplette blocken vom Delay kommen, aber bei nur einem Timer stimmt der zweite nicht mehr
+
+}
+
 
 
 

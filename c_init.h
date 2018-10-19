@@ -186,6 +186,8 @@ struct Pitmaster {
    byte io;               // PITMASTER HARDWARE IO
    bool event;            // SSR HIGH EVENT
    uint16_t msec;         // PITMASTER VALUE IN MILLISEC (SSR) / MICROSEC (SERVO)
+   uint16_t nmsec;
+   unsigned long stakt;   //
    unsigned long last;    // PITMASTER VALUE TIMER
    uint16_t pause;        // PITMASTER PAUSE
    bool resume;           // Continue after restart 
@@ -193,6 +195,8 @@ struct Pitmaster {
    float esum;            // PITMASTER I-PART DIFFERENZ SUM
    float elast;           // PITMASTER D-PART DIFFERENZ LAST
    float Ki_alt;
+   bool disabled;         // PITMASTER DISABLE HEATER
+   bool pwm;              // PITMASTER USES PWM (FAN)    
 };
 
 Pitmaster pitMaster[PITMASTERSIZE];
@@ -571,6 +575,7 @@ void clearEE(int startP, int endP);
 void startautotunePID(int maxCyc, bool store, int over, long tlimit, byte id);
 void pitmaster_control(byte id);
 void disableAllHeater();
+void disableHeater(byte id, bool hold = false);
 void set_pitmaster(bool init);
 void set_pid(byte index);
 void stopautotune(byte id);
@@ -1207,4 +1212,6 @@ uint16_t getDC(uint16_t impuls) {
   float val = ((float)(impuls - SERVOPULSMIN*10)/(SERVOPULSMAX - SERVOPULSMIN))*100;
   return (val < 500)?ceil(val):floor(val);   // nach oben : nach unten
 }
+
+
 

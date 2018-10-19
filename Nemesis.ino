@@ -97,7 +97,7 @@ void setup() {
   get_Vbat(); get_rssi();
 
   if (!sys.stby) {
-
+    
     // Initalize Aktor
     set_piepser();
 
@@ -209,8 +209,11 @@ void loop() {
     sendNotification();       // Notification
     
     checkMqtt();
-    
-    delay(10);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
+
+    updateServo();
+    if (servointerrupt) {   // nur innerhalb eines Servo-Takts
+      delay(10);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
+    }
   }
   
 }

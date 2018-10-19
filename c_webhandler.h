@@ -489,12 +489,14 @@ class BodyWebHandler: public AsyncWebHandler {
     if (pid[pitMaster[0].pid].aktor == SERVO && pitMaster[0].active > 0 && pitMaster[1].active != VOLTAGE) {
       pitMaster[0].io = PITMASTER2;         // SERVO SWITCH
       pitMaster[1].io = PITMASTER1;
-      pitMaster[1].value = 50;
+      pitMaster[1].value = 50;        // 6V
       pitMaster[1].active = VOLTAGE;
-
+      //Serial.println("IO-Switch");
+    
     } else if ((pid[pitMaster[0].pid].aktor != SERVO || pitMaster[0].active == PITOFF)  && pitMaster[1].active == VOLTAGE) {
-      pitMaster[0].io = PITMASTER2;
+      // kein IO-Wechsel, nur in disableHeater
       pitMaster[1].active = PITOFF;
+      //Serial.println("abschalten");
     }
   }
 
@@ -699,8 +701,16 @@ class BodyWebHandler: public AsyncWebHandler {
       }
       else return 0;
   
-      if (_pitmaster.containsKey("pid")) pitMaster[ii].pid = _pitmaster["pid"];
-      else return 0;
+      if (_pitmaster.containsKey("pid")) {
+        byte temppid = _pitmaster["pid"];
+        if (temppid != pitMaster[ii].pid) {
+          pitMaster[id].disabled = false;
+          disableHeater(id);
+          //Serial.println("PID-Wechsel");
+        }
+        pitMaster[ii].pid = temppid;
+      
+      } else return 0;
       if (_pitmaster.containsKey("set")) pitMaster[ii].set = _pitmaster["set"];
       else return 0;
   
@@ -795,6 +805,10 @@ public:
   //
   void setservoV2(bool dc) {
     servoV2(dc);
+  }
+
+  void setdamperV2() {
+    damperV2();
   }
 
   // {"ssid":"xxx","password":"xxx"}
