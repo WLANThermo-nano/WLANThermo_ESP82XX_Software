@@ -2561,7 +2561,7 @@
 				  <td><span onclick="setPushNotification();">Speichern<span class="icon-arrow_right"></span></span></td>
 				</tr>
 			</table>
-			<div class="float-left text-align-left"><h3 class="headtitle">Push Einstellungen</h3></div>
+			<div class="float-left text-align-left"><h3 class="headtitle">Externer Benachrichtungsdienst</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('Push Einstellungen',help_notification)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>
 			<div class="pure-g">
@@ -2572,7 +2572,7 @@
 							  <label>
 								<input id="TGon" type="checkbox" checked="checked"/><i class="helper"></i>Push-Dienst aktivieren
 							  </label>
-							</div>						
+							</div>								
 							<div class="form-group">
 							  <input type="text" class="temp_input" id="TGtoken" maxlength="50" required="required"/>
 							  <label class="control-label" for="input">API Token/Key</label><i class="bar"></i>
@@ -2581,6 +2581,27 @@
 							  <input type="text" class="temp_input" id="TGid" maxlength="30" required="required"/>
 							  <label class="control-label" for="input">Chat ID / User Key</label><i class="bar"></i>
 							</div>
+							<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
+								<tr>
+								  <td>
+									<div class="form-group">
+									  <select id="push_service"></select>
+									  <label class="control-label" onchange="" for="select">Dienst</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>	
+									<div class="form-group">
+									  <select id="push_repeat">
+										<option value="1">1x</option>
+										<option value="3">3x</option>
+										<option value="5">5x</option>
+										<option value="10">10x</option>
+									  </select>
+									  <label class="control-label" for="select">Wiederholungen</label><i class="bar"></i>
+									 </div>							  
+								  </td>
+								</tr>
+							</table>
 							<p class="pure-button pure-button-primary" onclick="sendPushNotification();">Testnachricht senden</p>
 							<!-- <a class="pure-button" href="" onclick="getChatID();">A Pure Button</a> -->
 							<!-- <p class="pure-button pure-button-primary" onclick="getChatID();">ChatID ermitteln</p> -->
@@ -2644,7 +2665,7 @@
 	var help_wifi = '<p><span>Verbinde dein WLANThermo mit deinem Heimnetzwerk und erweitere somit die Funktionsvielfalt deines WLANThermo.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/WLAN"><span style="color:#3366ff">Wiki - WLAN</span></a></p>';
 	var help_settings = '<p><span>Konfiguriere dein WLANThermo Nano mit Hilfe der Systemeinstellungen und mach es zu DEINEM WLANThermo.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/System-Einstellungen"><span style="color:#3366ff">Wiki - System</span></a></p>';
 	var help_pitmaster = '<p><span>Willst du deine Grilltemperaturen nicht nur beobachten, sondern auch regeln? Dann besorge dir die passende Pitmaster-Hardware und leg los. Ben&ouml;tigt Pitmaster-Hardware.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Pitmaster"><span style="color:#3366ff">Wiki - Pitmaster</span></a></p>';
-	var help_notification = '<p><span>Lass dich bei einem Kanalalarm mit einer Push-Nachricht über den Nachrichtendienst Telegramm oder den Notification-Dienst Pushover benachrichtigen. Ben&ouml;tigt Internetzugang.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Push-Notification"><span style="color:#3366ff">Wiki - Notification</span></a></p>';
+	var help_notification = '<p><span>Lass dich bei einem Kanalalarm mit einer Push-Nachricht über den Nachrichtendienst Telegram oder Pushover benachrichtigen. Ben&ouml;tigt Internetzugang.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Push-Notification"><span style="color:#3366ff">Wiki - Notification</span></a></p>';
 	var help_mqtt = '<p><span>Kopple dein WLANThermo Nano mit deiner Homeautomatic und nutze dafür die MQTT-Schnittstelle deines WLANThermo. Ben&ouml;tigt einen MQTT-Broker.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Private-MQTT"><span style="color:#3366ff">Wiki - Private-MQTT</span></a></p>';
 	var help_cloud = '<p><span>Der Nano Cloud Service erm&ouml;glicht dir den gesch&uuml;tzten Zugriff auf deine Temperaturdaten auch au&szlig;erhalb deines Heim-Netzwerks. Ben&ouml;tigt Internetzugang. </span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Nano-Cloud-Service"><span style="color:#3366ff">Wiki - Nano Cloud</span></a></p>';
 	var help_channel = '<p><span>Mit Hilfe der Kanal-Einstellungen passt du den Messkanal an den angeschlossenen F&uuml;hler an. Zus&auml;tzlich kannst du Grenzwerte für die Alarmfunktion vorgeben.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Kanal-Einstellungen"><span style="color:#3366ff">Wiki - Kanal</span></a></p>';
@@ -2797,9 +2818,15 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jr = JSON.parse(response);
-			byId('TGon').checked = jr.iot.TGon;
-			byId('TGtoken').value = jr.iot.TGtoken;
-			byId('TGid').value = jr.iot.TGid;
+			clearOption('push_service');
+			for (var i = 0; i < jr.notes.ext.services.length; i++) {
+				byId('push_service').options[byId('push_service').options.length] = new Option(jr.notes.ext.services[i], i);
+			}
+			byId('push_service').value = jr.notes.ext.service;
+			byId('TGon').checked = jr.notes.ext.on;
+			byId('TGtoken').value = jr.notes.ext.token;
+			byId('TGid').value = jr.notes.ext.id;
+			byId('push_repeat').value = jr.notes.ext.repeat;
 			byId('push_notification').style.display = "inline";
 			showLoader('false');
 		})				
@@ -2813,12 +2840,14 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
 			jr = JSON.parse(response);
-			jr.iot.TGon = byId('TGon').checked;
-			jr.iot.TGtoken = byId('TGtoken').value;
-			jr.iot.TGid = byId('TGid').value;
-			var data = JSON.stringify(jr.iot);
+			jr.notes.ext.on = byId('TGon').checked;
+			jr.notes.ext.token = byId('TGtoken').value;
+			jr.notes.ext.id = byId('TGid').value;
+			jr.notes.ext.service = byId('push_service').value;
+			jr.notes.ext.repeat = byId('push_repeat').value;
+			var data = JSON.stringify(jr.notes.ext);
 			showLoader('true');
-			loadJSON('setIoT', data, '60000', function (response) {
+			loadJSON('setPush', data, '60000', function (response) {
 				showIndex();
 				showLoader('false');
 			})		
@@ -2826,10 +2855,24 @@
 	}
 
 	function sendPushNotification(){
-		data = '?token=' + byId('TGtoken').value + '&id=' + byId('TGid').value;
-		loadJSON('message' + data, '', '60000', function (response) {
-			//alert(data);
+		//data = '?token=' + byId('TGtoken').value + '&id=' + byId('TGid').value;
+		//loadJSON('message' + data, '', '60000', function (response) {
+			//alert(data);	
+		//})
+		loadJSON('settings', '', '3000', function (response){
+			jr = JSON.parse(response);
+			jr.notes.ext.on = 2;		// sende Testnachricht
+			jr.notes.ext.token = byId('TGtoken').value;
+			jr.notes.ext.id = byId('TGid').value;
+			jr.notes.ext.service = byId('push_service').value;
+			jr.notes.ext.repeat = byId('push_repeat').value;
+			var data = JSON.stringify(jr.notes.ext);
+			showLoader('true');
+			loadJSON('setPush', data, '60000', function (response) {
+				showLoader('false');
+			})		
 		})	
+	
 	}
 	
 	function showSetWLAN(){

@@ -25,6 +25,56 @@
 // WebSocketClient: https://github.com/Links2004/arduinoWebSockets/issues/119
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Notification JSON Object
+void noteObj(JsonObject  &jObj) {
+
+  jObj["task"] = "Alert";
+
+  // Kanäle & Message
+  JsonArray& _ch = jObj.createNestedArray("channels");
+  JsonArray& _message = jObj.createNestedArray("messages");
+
+  for (int i = 0; i < CHANNELS; i++) {
+    if (ch[i].alarm == 1 || ch[i].alarm == 3){      // push or all
+      if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
+        _ch.add(i+1);                               // Füge Kanal hinzu
+        _message.add(notification.limit & (1<<i));  // Füge Art hinzu
+      }
+    }
+  }
+
+  // an welche Dienste soll geschickt werden?
+  JsonArray& services = jObj.createNestedArray("services");
+/*
+  if (notification.temp1.length() == 30 || notification.token.length() == 30) {
+    JsonObject& _obj2 = services.createNestedObject();
+    _obj2["service"] =  "pushover";
+    if (notification.temp1.length() == 30) {
+      _obj1["key1"] =  notification.temp1;
+      _obj2["key2"] =  notification.temp2;
+    } else {
+      _obj1["key1"] =  notification.token;
+      _obj2["key2"] =  notification.id;
+    }
+  
+  } else if (notification.temp1.length() == 40 || notification.token.length() == 40) {
+    JsonObject& _obj3 = services.createNestedObject();
+    _obj3["service"] =  "prowl";
+  } else  
+  
+    JsonObject& _obj1 = services.createNestedObject();
+    _obj1["service"] =  "telegram";
+    _obj1["key1"] =  "xxx";
+    _obj1["key2"] =  "xxx";
+    
+    JsonObject& _obj3 = services.createNestedObject();
+    _obj3["service"] =  "mail";
+    _obj3["adress"] =  "xxx";
+ */ 
+  
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //
 String cloudData(bool cloud, bool get_sys, uint8_t get_ch, uint8_t get_pit) {
 
@@ -261,18 +311,33 @@ String cloudSettings(bool get_sys, bool get_sen, uint8_t get_pid, bool get_akt, 
     _iot["PMQqos"] =    iot.P_MQTT_QoS;
     _iot["PMQon"] =     iot.P_MQTT_on;
     _iot["PMQint"] =    iot.P_MQTT_int;
-    _iot["TGon"]    =   iot.TG_on;
-    _iot["TGtoken"] =   iot.TG_token;
-    _iot["TGid"] =      iot.TG_id;
     _iot["CLon"] =      iot.CL_on;
     _iot["CLtoken"] =   iot.CL_token;
     _iot["CLint"] =     iot.CL_int;
   }
   
   if (get_not) {
-    JsonArray& _noteservice = root.createNestedArray("notification");
-    _noteservice.add("telegram");
-    _noteservice.add("pushover");
+    JsonObject& _note = root.createNestedObject("notes");
+      
+      JsonArray& _firebase = _note.createNestedArray("fcm");
+      for (int i = 0; i < 3; i++) {
+        JsonObject& _fcm = _firebase.createNestedObject();
+        _fcm["id"] =    i;
+        _fcm["on"] = (byte) true;
+        //_fcm["token"] = "cerAGIyShJk:APA91bGX6XYvWm7W-KQN1FUw--IDiceKfKnpa0AZ3B2gNhldbkNkz7c1-Js0ma5QA8v2nBcZsf7ndPEWBGfRogHU6RzOI08IAhOyL5cXpUeAKDOTaO5O6XMHq89IHh8UaycRi4evFMbM";
+        _fcm["pseudo"] = "AdminSamsung";
+      }
+
+    JsonObject& _ext = _note.createNestedObject("ext");
+      _ext["on"]    =   pushd.on;
+      _ext["token"] =   pushd.token;
+      _ext["id"] =      pushd.id;
+      _ext["repeat"] =  pushd.repeat;
+      _ext["service"] = pushd.service;
+    
+      JsonArray& _noteservice = _ext.createNestedArray("services");
+        _noteservice.add("telegram");   // 0
+        _noteservice.add("pushover");   // 1
   }
 
   String jsonStr;
@@ -325,21 +390,6 @@ void server_setup() {
       );
   });
 
-  server.on("/setbattmax",[](AsyncWebServerRequest *request){
-    if (request->method() == HTTP_GET) {
-      request->send(200, "text/html", "<form method='POST' action='/setbattmax'>Maximale Batteriespannung in mV eingeben: <input type='number' name='battmax'><br><br><input type='submit' value='Speichern'></form>");
-    } else if (request->method() == HTTP_POST) {
-      if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
-        return request->requestAuthentication();
-      if (request->hasParam("battmax", true)) { 
-        int battmax = request->getParam("battmax", true)->value().toInt(); 
-        battery.max = constrain(battmax,BATTMIN, 4200);
-        setconfig(eSYSTEM,{});
-        request->send(200, TEXTPLAIN, "Gespeichert");
-      }
-    } else request->send(500, TEXTPLAIN, BAD_PATH);
-  });
-
   server.on("/nobattery",[](AsyncWebServerRequest *request){
     sys.god ^= (1<<1);    // XOR
     setconfig(eSYSTEM,{});
@@ -364,19 +414,6 @@ void server_setup() {
 /*
   server.on("/temperatur",[](AsyncWebServerRequest *request){
     request->send(200, APPLICATIONJSON, cloudData(0,0,5,0));
-  });
-*/
-/*
-  server.on("/pitsupply",[](AsyncWebServerRequest *request){
-    if (sys.hwversion > 1 && !sys.pitsupply) {
-      sys.pitsupply = true;
-      setconfig(eSYSTEM,{});
-      request->send(200, TEXTPLAIN, TEXTON);
-    } else {
-      sys.pitsupply = false;
-      setconfig(eSYSTEM,{});
-      request->send(200, TEXTPLAIN, TEXTOFF);
-    }
   });
 */
 
@@ -446,17 +483,6 @@ void server_setup() {
     lastUpdateCloud = 0; // Daten senden forcieren
     ESP.wdtEnable(10);
     request->send(200, TEXTPLAIN, iot.CL_token);
-  });
-  
-  server.on("/message",[](AsyncWebServerRequest *request) { 
-      if(request->hasParam("token")&&request->hasParam("id")){
-        ESP.wdtDisable(); 
-        notification.temp1 = request->getParam("token")->value();
-        notification.temp2 = request->getParam("id")->value();
-        notification.type = 1;    // Verbindungstest
-        ESP.wdtEnable(10);
-        request->send(200, TEXTPLAIN, TEXTTRUE);
-      } else request->send(200, TEXTPLAIN, TEXTFALSE);
   });
 
   server.on("/setDC",[](AsyncWebServerRequest *request) { 

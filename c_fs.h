@@ -26,6 +26,7 @@
 #define PIT_FILE      "/pit.json"
 #define SYSTEM_FILE   "/system.json"
 #define LOG_FILE      "/log.txt"
+#define PUSH_FILE     "/push.json"
 
 /*
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -212,12 +213,6 @@ bool loadconfig(byte count, bool old) {
       else return false;
       if (json.containsKey("PMQint"))   iot.P_MQTT_int = json["PMQint"];
       else return false;
-      if (json.containsKey("TGon"))     iot.TG_on = json["TGon"];
-      else return false;
-      if (json.containsKey("TGtoken"))  iot.TG_token = json["TGtoken"].asString();
-      else return false;
-      if (json.containsKey("TGid"))     iot.TG_id = json["TGid"].asString(); 
-      else return false;
       if (json.containsKey("CLon"))     iot.CL_on = json["CLon"];
       else return false;
       if (json.containsKey("CLtoken"))  iot.CL_token = json["CLtoken"].asString();
@@ -346,8 +341,29 @@ bool loadconfig(byte count, bool old) {
       
     }
     break;
+
+    case 5:     // PUSH
+    { 
+      std::unique_ptr<char[]> buf(new char[EEPUSH]);
+      readEE(buf.get(),EEPUSH, EEPUSHBEGIN);
+      
+      JsonObject& json = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(json,PUSH_FILE)) return false;
+      
+      if (json.containsKey("onP"))      pushd.on = json["onP"];
+      else return false;
+      if (json.containsKey("tokP"))     pushd.token = json["tokP"].asString();
+      else return false;
+      if (json.containsKey("idP"))      pushd.id = json["idP"].asString(); 
+      else return false;
+      if (json.containsKey("rptP"))     pushd.repeat = json["rptP"];
+      else return false;
+      if (json.containsKey("svcP"))     pushd.service = json["svcP"];
+      else return false;
+    }
+    break;
     
-    //case 5:     // PRESETS
+    //case 6:     // PRESETS
     //break;
   
     default:
@@ -428,9 +444,6 @@ bool setconfig(byte count, const char* data[2]) {
       json["PMQqos"]   = iot.P_MQTT_QoS;
       json["PMQon"]   = iot.P_MQTT_on;
       json["PMQint"]   = iot.P_MQTT_int;
-      json["TGon"]    = iot.TG_on;
-      json["TGtoken"] = iot.TG_token;
-      json["TGid"]    = iot.TG_id;
       json["CLon"]    = iot.CL_on;
       json["CLtoken"] = iot.CL_token;
       json["CLint"]   = iot.CL_int;
@@ -531,7 +544,30 @@ bool setconfig(byte count, const char* data[2]) {
     }
     break;
 
-    case 5:         //PRESETS
+    case 5:         //PUSH
+    {
+      JsonObject& json = jsonBuffer.createObject();
+      
+      json["onP"]    = pushd.on;
+      json["tokP"]   = pushd.token;
+      json["idP"]    = pushd.id;
+      json["rptP"]   = pushd.repeat;
+      json["svcP"]   = pushd.service;
+      
+      size_t size = json.measureLength() + 1;
+      if (size > EEPUSH) {
+        IPRINTPLN("f:full");
+        return false;
+      } else {
+        clearEE(EEPUSH,EEPUSHBEGIN);  // Bereich reinigen
+        static char buffer[EEPUSH];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, EEPUSHBEGIN);
+      }
+    }
+    break;
+
+    case 6:         //PRESETS
     {
       
     }
@@ -608,6 +644,10 @@ bool modifyconfig(byte count, bool neu) {
     break;
 
     case 4:           // SYSTEM
+    // nicht notwendig, kann über setconfig beschrieben werden
+    break;
+
+    case 5:           // PUSH
     // nicht notwendig, kann über setconfig beschrieben werden
     break;
 
@@ -707,6 +747,13 @@ void start_fs() {
       setconfig(ePIT,{});  // Reset pitmaster config
     }
   } else serialNote(PIT_FILE,1);
+
+  // PUSH
+  if (!loadconfig(ePUSH,0)) {
+    serialNote(PUSH_FILE,0);
+    set_push();
+    setconfig(ePUSH,{});  // Speicherplatz vorbereiten
+  } else serialNote(PUSH_FILE,1);
 
   IPRINTP("M24C02: ");
   if (m24.exist()) {

@@ -49,6 +49,7 @@
 #define SET_PID       "/setpid"
 #define SET_DC        "/setDC"
 #define SET_IOT       "/setIoT"
+#define SET_PUSH      "/setPush"
 #define UPDATE_CHECK  "/checkupdate"
 #define UPDATE_STATUS "/updatestatus"
 #define DC_STATUS     "/dcstatus"
@@ -293,6 +294,7 @@ public:
     setconfig(ePIT,{});
     loadconfig(ePIT,0);
     set_iot(1);
+    set_push();
     setconfig(eTHING,{});
     loadconfig(eTHING,0);
   }
@@ -656,9 +658,6 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_chart.containsKey("PMQon"))    iot.P_MQTT_on   = _chart["PMQon"]; 
     if (_chart.containsKey("PMQint"))   iot.P_MQTT_int  = _chart["PMQint"];
     
-    if (_chart.containsKey("TGon"))     iot.TG_on       = _chart["TGon"];
-    if (_chart.containsKey("TGtoken"))  iot.TG_token    = _chart["TGtoken"].asString();
-    if (_chart.containsKey("TGid"))     iot.TG_id       = _chart["TGid"].asString(); 
     if (_chart.containsKey("CLon"))     iot.CL_on       = _chart["CLon"];
     if (_chart.containsKey("CLtoken"))  iot.CL_token    = _chart["CLtoken"].asString();
     if (_chart.containsKey("CLint"))    iot.CL_int      = _chart["CLint"];
@@ -666,6 +665,28 @@ class BodyWebHandler: public AsyncWebHandler {
     if (!refresh && iot.CL_on) lastUpdateCloud = 0; // Daten senden forcieren
   
     if (!setconfig(eTHING,{})) return 0;    
+    return 1;
+  }
+
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  bool setPush(AsyncWebServerRequest *request, uint8_t *datas) {
+
+    printRequest(datas);
+  
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& _push = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+    if (!_push.success()) return 0;
+
+    if (_push.containsKey("on"))      pushd.on       = (byte)_push["on"];
+    if (_push.containsKey("token"))   pushd.token    = _push["token"].asString();
+    if (_push.containsKey("id"))      pushd.id       = _push["id"].asString(); 
+    if (_push.containsKey("repeat"))  pushd.repeat   = _push["repeat"];
+    if (_push.containsKey("service")) pushd.service  = _push["service"];
+
+    if (pushd.on == 2) notification.type = 1;    // Verbindungstest
+    else {
+      if (!setconfig(ePUSH,{})) return 0;     // nicht bei Verbindungstest speichern
+    } 
     return 1;
   }
 
@@ -840,10 +861,16 @@ public:
     return setPID(request, datas);
   }
 
-  // {"TSwrite":"","TShttp":"","TSuser":"","TSchID":"","TSshow8":false,"TSint":30,"TSon":false,"PMQhost":"192.168.2.1","PMQport":1883,"PMQuser":"","PMQpass":"","PMQqos":0,"PMQon":false,"PMQint":30,"TGon":0,"TGtoken":"","TGid":"","CLon":true,"CLtoken":"82e0b30c6486bede","CLint":30}
+  // {"TSwrite":"","TShttp":"","TSuser":"","TSchID":"","TSshow8":false,"TSint":30,"TSon":false,"PMQhost":"192.168.2.1","PMQport":1883,"PMQuser":"","PMQpass":"","PMQqos":0,"PMQon":false,"PMQint":30,"CLon":true,"CLtoken":"82e0b30c6486bede","CLint":30}
   bool setIoT(uint8_t *datas) {
     AsyncWebServerRequest *request;
     return setIoT(request, datas);
+  }
+
+  // {"on":true,"token":"","id":"","repeat":1,"service":1}
+  bool setPush(uint8_t *datas) {
+    AsyncWebServerRequest *request;
+    return setPush(request, datas);
   }
 
   void handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
@@ -881,7 +908,13 @@ public:
         return request->requestAuthentication();    
       if(!setIoT(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
-    }  
+
+    } else if (request->url() == SET_PUSH) { 
+      if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
+        return request->requestAuthentication();    
+      if(!setPush(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+    }
   }
 
   bool canHandle(AsyncWebServerRequest *request){
@@ -889,6 +922,7 @@ public:
     if (request->url() == SET_NETWORK || request->url() == SET_CHANNELS
       || request->url() == SET_SYSTEM || request->url() == SET_PITMASTER
       || request->url() == SET_PID || request->url() == SET_IOT
+      || request->url() == SET_PUSH
       ) return true;
     return false;
   }

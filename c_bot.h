@@ -49,14 +49,20 @@ void set_iot(bool init) {
    iot.P_MQTT_HOST = "192.168.2.1";
    iot.P_MQTT_PORT = 1883;
    iot.P_MQTT_int = INTERVALCOMMUNICATION/1000;
-   iot.TG_on = 0;
-   iot.TG_token = "";
-   iot.TG_id = "";
+   
 
    iot.CL_on = false;
    iot.CL_token = newToken();
    iot.CL_int = INTERVALCOMMUNICATION/1000;
       
+}
+
+void set_push() {
+  pushd.on = 0;
+  pushd.token = "";
+  pushd.id = "";
+  pushd.repeat = 1;
+  pushd.service = 0;
 }
 
 

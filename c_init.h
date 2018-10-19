@@ -110,7 +110,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
-#define EEPROM_SIZE 2304            // EEPROM SIZE
+#define EEPROM_SIZE 2816            // EEPROM SIZE
 #define EEWIFIBEGIN         0
 #define EEWIFI              300
 #define EESYSTEMBEGIN       EEWIFIBEGIN+EEWIFI
@@ -121,6 +121,8 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define EETHING             420
 #define EEPITMASTERBEGIN    EETHINGBEGIN+EETHING
 #define EEPITMASTER         700
+#define EEPUSHBEGIN         EEPITMASTERBEGIN+EEPITMASTER
+#define EEPUSH              512         
 
 // PITMASTER
 #define PITMASTER1 15               // PITMASTER PIN
@@ -299,8 +301,6 @@ struct Notification {
   byte ch;                          // CHANNEL BIN
   byte limit;                       // LIMIT: 0 = LOW TEMPERATURE, 1 = HIGH TEMPERATURE
   byte type;                        // TYPE: 0 = NORMAL MODE, 1 = TEST MESSAGE
-  String temp1;                     // TEMPORARY TOKEN 1 FOR TEST MESSAGE
-  String temp2;                     // TEMPORARY TOKEN 2 FOR TEST MESSAGE
 };
 
 Notification notification;
@@ -371,15 +371,23 @@ struct IoT {
    byte P_MQTT_QoS;             // PRIVATE MQTT BROKER QoS
    bool P_MQTT_on;              // PRIVATE MQTT BROKER ON/OFF
    int P_MQTT_int;              // PRIVATE MQTT BROKER IN SEC 
-   int TG_on;                   // TELEGRAM NOTIFICATION SERVICE
-   String TG_token;             // TELEGRAM API TOKEN
-   String TG_id;                // TELEGRAM CHAT ID 
    bool CL_on;                  // NANO CLOUD ON / OFF
    String CL_token;             // NANO CLOUD TOKEN
    int CL_int;                  // NANO CLOUD INTERVALL
 };
 
 IoT iot;
+
+struct PushD {
+   byte on;                  // NOTIFICATION SERVICE OFF(0)/ON(1)/TEST(2)/CLEAR(3)
+   String token;             // API TOKEN
+   String id;                // CHAT ID 
+   int repeat;               // REPEAT PUSH NOTIFICATION
+   byte service;             // SERVICE
+  
+};
+
+PushD pushd; 
 
 // CLOUD CHART/LOG
 struct Chart {
@@ -403,7 +411,7 @@ struct MyQuestion {
 MyQuestion question;
 
 // FILESYSTEM
-enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePRESET};
+enum {eCHANNEL, eWIFI, eTHING, ePIT, eSYSTEM, ePUSH, ePRESET};
 
 
 struct OpenLid {
@@ -585,6 +593,7 @@ void open_lid_init();
 
 // BOT
 void set_iot(bool init);
+void set_push();
 String collectData();
 String createNote(bool ts);
 bool sendNote(int check);
@@ -975,7 +984,7 @@ String newToken() {
 #define THINGHTTPLINK "/apps/thinghttp/send_request"
 #define CHECKUPDATELINK "/checkUpdate.php"
 
-enum {SERIALNUMBER, APITOKEN, TSWRITEKEY, NOTETOKEN, NOTEID, NOTESERVICE,
+enum {SERIALNUMBER, APITOKEN, TSWRITEKEY, NOTETOKEN, NOTEID, NOTEREPEAT, NOTESERVICE,
       THINGHTTPKEY, DEVICE, HARDWAREVS, SOFTWAREVS, ITEM};  // Parameters
 enum {NOPARA, SENDTS, SENDNOTE, THINGHTTP, CHECKUPDATE};                       // Config
 enum {GETMETH, POSTMETH};                                                   // Method
@@ -1002,40 +1011,27 @@ String createParameter(int para) {
 
     case NOTETOKEN:
       command += F("&token=");
-      if (notification.temp1 != "") {
-        command += notification.temp1;
-        // notification.temp1 = "";         // erst bei NOTESERVICE
-      } else command += iot.TG_token;
+      command += pushd.token;
       break;
 
     case NOTEID:
       command += F("&chatID=");
-      if (notification.temp2 != "") {
-        command += notification.temp2;
-        notification.temp2 = "";
-      } else command += iot.TG_id;
+      command += pushd.id;
+      break;
+
+    case NOTEREPEAT:
+      command += F("&repeat=");
+      command += pushd.repeat;
       break;
 
     case NOTESERVICE:
       command += F("&service=");
-      if (notification.temp1 != "") {
-        if (notification.temp1.length() == 30) {
-          command += F("pushover");
-          notification.temp1 = "";
-          break;
-        } else if (notification.temp1.length() == 40) {
-          command += F("prowl");
-          notification.temp1 = "";
-          break;
-        }
-      } else if (iot.TG_token.length() == 30) {
-        command += F("pushover");
-        break;
-      } else if (iot.TG_token.length() == 40) {
-        command += F("prowl");
-        break;
+      switch (pushd.service) {
+        case 0: command += F("telegram"); break;
+        case 1: command += F("pushover"); break;
+        case 2: command += F("prowl"); break;
       }
-      command += F("telegram");  
+      if (pushd.on == 2) pushd.on = 3;                    // alte Werte wieder herstellen  
       break;
 
     case THINGHTTPKEY:
@@ -1084,6 +1080,7 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
       command += createParameter(SERIALNUMBER);
       command += createParameter(NOTETOKEN);
       command += createParameter(NOTEID);
+      command += createParameter(NOTEREPEAT);
       command += F("&lang=de");
       command += createParameter(NOTESERVICE);
       command += createNote(0);
@@ -1132,10 +1129,8 @@ void sendNotification() {
 
     if (notification.type > 0) {                      // GENERAL NOTIFICATION       
         
-      if (iot.TG_on > 0 || notification.temp1 != "") {
+      if (pushd.on > 0) {
         if (sendNote(0)) sendNote(2);           // Notification per Nano-Server
-      //} else if (iot.TS_httpKey != "" && iot.TS_on)  {
-      //  if (sendNote(0)) sendNote(1);           // Notification per Thingspeak
       }
         
     } else if (notification.index > 0) {              // CHANNEL NOTIFICATION
@@ -1149,7 +1144,7 @@ void sendNotification() {
               notification.ch = i;
               sendNote(1);           // Notification per Thingspeak
             } else sendN = false;
-          } else if (iot.TG_on > 0) {
+          } else if (pushd.on > 0) {
             if (sendNote(0)) {
               notification.ch = i;
               sendNote(2);           // Notification per Nano-Server
@@ -1163,6 +1158,8 @@ void sendNotification() {
       }    
     }
   }
+
+  if (pushd.on == 3) loadconfig(ePUSH,0);     // nach Testnachricht alte Werte wieder herstellen
 }
 
 
