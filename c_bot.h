@@ -43,17 +43,17 @@ void set_iot(bool init) {
    }
    
    iot.TS_show8 = false;        
-   iot.TS_int = INTERVALCOMMUNICATION/1000;
+   iot.TS_int = INTERVALCOMMUNICATION/4;
    iot.TS_on = false;
    iot.P_MQTT_on = false;
    iot.P_MQTT_HOST = "192.168.2.1";
    iot.P_MQTT_PORT = 1883;
-   iot.P_MQTT_int = INTERVALCOMMUNICATION/1000;
+   iot.P_MQTT_int = INTERVALCOMMUNICATION/4;
    
 
    iot.CL_on = false;
    iot.CL_token = newToken();
-   iot.CL_int = INTERVALCOMMUNICATION/1000;
+   iot.CL_int = INTERVALCOMMUNICATION/4;
       
 }
 

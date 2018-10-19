@@ -81,12 +81,13 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define OLED_ADRESS 0x3C              // OLED I2C ADRESS
 #define MAXBATTERYBAR 13
 
-// TIMER
+// TIMER (bezogen auf 250 ms Timer) (x mal 250)
+
+#define INTERVALSENSOR 4              // 1 s
+#define INTERVALCOMMUNICATION 120     // 30 s
+#define INTERVALBATTERYSIM 120        // 30 s
 #define INTERVALBATTERYMODE 1000
-#define INTERVALSENSOR 1000
-#define INTERVALCOMMUNICATION 30000
-#define INTERVALBATTERYSIM 30000
-#define FLASHINWORK 500
+#define FLASHINWORK 2                 // 500 ms
 
 // BUS
 #define SDA 0
@@ -272,24 +273,6 @@ struct DutyCycle {
 
 DutyCycle dutyCycle[PITMASTERSIZE];
 
-/*
-// DATALOGGER
-struct datalogger {
- uint16_t tem[8];     //8
- long timestamp;
- uint8_t pitmaster;
- uint16_t soll;
- uint8_t battery;
- bool modification;
-};
-
-#define MAXLOGCOUNT 10 //155             // SPI_FLASH_SEC_SIZE/ sizeof(datalogger)
-datalogger mylog[MAXLOGCOUNT];
-datalogger archivlog[MAXLOGCOUNT];
-unsigned long log_count = 0;
-int log_checksum = 0;
-
-*/
 
 uint32_t log_sector;                // erster Sector von APP2
 uint32_t freeSpaceStart;            // First Sector of OTA
@@ -377,6 +360,9 @@ struct IoT {
 };
 
 IoT iot;
+
+bool lastUpdateCloud;
+
 
 struct PushD {
    byte on;                  // NOTIFICATION SERVICE OFF(0)/ON(1)/TEST(2)/CLEAR(3)
@@ -478,17 +464,7 @@ AsyncWebServer server(80);        // https://github.com/me-no-dev/ESPAsyncWebSer
 
 // TIMER
 unsigned long lastUpdateBatteryMode;
-unsigned long lastUpdateSensor;
-unsigned long lastUpdatePiepser;
-unsigned long lastUpdateDatalog;
-unsigned long lastFlashInWork;
-unsigned long lastUpdateRSSI;
-unsigned long lastUpdateThingspeak;
-unsigned long lastUpdateCloud;
-unsigned long lastUpdateLog;
-unsigned long lastUpdateMQTT;
 
-unsigned long lastUpdateBattery;
 
 rst_info *myResetInfo;
 
@@ -608,6 +584,8 @@ String cloudData(bool cloud, bool get_sys = true, uint8_t get_ch = CHANNELS, uin
 //String cloudSettings();
 String cloudSettings(bool get_sys = true, bool get_sen = true, uint8_t get_pid = pidsize, bool get_akt = true, bool get_iot = true, bool get_not = true);
 
+String connectionStatus ( int which );
+
 //void setWebSocket();
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -672,154 +650,78 @@ void set_system() {
   battery.setreference = 0;
   sys.pitsupply = false;           // nur mit Mod
   sys.damper = false;
-
   sys.restartnow = false;
 }
 
-String connectionStatus ( int which );
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Temperature and Battery Measurement Timer
-void timer_sensor() {
-  
-  if (millis() - lastUpdateSensor > INTERVALSENSOR) {
-    get_Temperature();
-    get_Vbat();
-    if (millis() < BATTERYSTARTUP) cal_soc();
-    lastUpdateSensor = millis();
-    //Serial.println(connectionStatus(WiFi.status()));
-  }
+// Main Timer
 
-  if (millis() - lastUpdateRSSI > INTERVALBATTERYSIM) {
-    get_rssi(); 
-    cal_soc();
-    lastUpdateRSSI = millis();
-    
-  }
+os_timer_t Timer1;         
+bool osticker = false;
+uint16_t oscounter = 0;
+
+void timerCallback(void *pArg) { 
+  osticker = true;
+  *((int *) pArg) += 1;
+} 
+
+void set_ostimer() {
+ os_timer_setfn(&Timer1, timerCallback, &oscounter);
+ os_timer_arm(&Timer1, 250, true);
 }
 
+void maintimer() {
+  if (osticker) { 
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Temperature Alarm Timer
-void timer_alarm() {
-  
-  if (millis() - lastUpdatePiepser > INTERVALSENSOR/4) {
-    controlAlarm(pulsalarm);
-    pulsalarm = !pulsalarm;
-    lastUpdatePiepser = millis();
-  }
-}
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// IoT Timer
-void timer_iot() {
-
-  // THINGSPEAK
-  if (millis() - lastUpdateThingspeak > (iot.TS_int * 1000)) {
-
-    if (wifi.mode == 1 && sys.update == 0 && iot.TS_on) {
-      if (iot.TS_writeKey != "" && iot.TS_chID != "") sendDataTS();
-    }
-    lastUpdateThingspeak = millis();
-  }
-
-  // PRIVATE MQTT
-  if (millis() - lastUpdateMQTT > (iot.P_MQTT_int * 1000)) {
-
-    if (wifi.mode == 1 && sys.update == 0 && iot.P_MQTT_on) sendpmqtt();
-    lastUpdateMQTT = millis();
-  }
-
-  // NANO CLOUD
-  if (millis() - lastUpdateCloud > (iot.CL_int * 1000)) {
-
-    if (wifi.mode == 1 && sys.update == 0 && iot.CL_on) {// && now() > 100000) {  // nicht senden, falls utc noch nicht eingetroffen
-        sendDataCloud();
-    }
-    lastUpdateCloud = millis();
-  }
-
-  // NANO LOGS
-  if (millis() - lastUpdateLog > INTERVALCOMMUNICATION) {
-
-    if (wifi.mode == 1 && sys.update == 0 && chart.on) {
-        //sendServerLog();
-    }
-    lastUpdateLog = millis();
-  }
-  
-}
-
-/*
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// DataLog Timer
-void timer_datalog() {  
-  
-  if (millis() - lastUpdateDatalog > 60000) {
-
-    int logc;
-    int checksum = 0;
-    
-    if (log_count < MAXLOGCOUNT) logc = log_count;
-    else {
-      logc = MAXLOGCOUNT-1;  // Array verschieben
-      memcpy(&mylog[0], &mylog[1], (MAXLOGCOUNT-1)*sizeof(*mylog));
+    // Temperature and Battery Measurement Timer
+    if (!(oscounter % INTERVALSENSOR)) {     // 1 s
+      get_Temperature();                            // Temperature Measurement
+      get_Vbat();                                   // Battery Measurement
+      if (millis() < BATTERYSTARTUP) cal_soc();     // schnelles aktualisieren beim Systemstart
     }
 
-    for (int i=0; i < CHANNELS; i++)  {
-      if (ch[i].temp != INACTIVEVALUE) {
-        mylog[logc].tem[i] = (uint16_t) (ch[i].temp * 10);    // 8 * 16 bit  // 8 * 2 byte
-        checksum += mylog[logc].tem[i];
-      } else
-        mylog[logc].tem[i] = NULL;
+    // RSSI and kumulative Battery Measurement
+    if (!(oscounter % INTERVALBATTERYSIM)) {     // 30 s
+      get_rssi();                                   // RSSI Measurement 
+      cal_soc();                                    // Kumulative Battery Value
     }
-    mylog[logc].pitmaster = (uint8_t) pitMaster[0].value;            // 8  bit // 1 byte
-    if (pitMaster[0].active) {
-      mylog[logc].soll = (uint16_t) (pitMaster[0].set * 10);           // 16 bit // 2 byte
-      checksum += mylog[logc].soll;
-    } else  mylog[logc].soll = NULL;
-    mylog[logc].timestamp = now();                                // 64 bit // 8 byte
-    mylog[logc].battery = (uint8_t) battery.percentage;           // 8  bit // 1 byte
 
-    checksum += mylog[logc].pitmaster;
-    checksum += mylog[logc].battery;
-
-    if (checksum == log_checksum) mylog[logc].modification = false;
-    else mylog[logc].modification = true;
-    log_checksum = checksum;
-    
-    log_count++;
-    // 2*8 + 1 + 2 + 8 + 1 = 28
-
-    // /
-    if (log_count%MAXLOGCOUNT == 0 && log_count != 0) {
-        
-      if (log_sector > freeSpaceEnd/SPI_FLASH_SEC_SIZE) 
-        log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
-        
-      write_flash(log_sector);
-      log_sector++;
-      setconfig(eSYSTEM,{});  
+    // Alarm Puls Timer
+    if (!(oscounter % 1)) {       // 250 ms
+      controlAlarm(pulsalarm);
+      pulsalarm = !pulsalarm;
     }
-   //  /
-    
-    lastUpdateDatalog = millis();
-  }
-}
 
-*/
+    // THINGSPEAK
+    if (!(oscounter % iot.TS_int*4)) {       // variable
+      if (wifi.mode == 1 && sys.update == 0 && iot.TS_on) {
+        if (iot.TS_writeKey != "" && iot.TS_chID != "") sendDataTS();
+      }
+    }
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Flash
-void flash_control() { 
-  if (inWork) {
-    if (millis() - lastFlashInWork > FLASHINWORK) {
+    // PRIVATE MQTT
+    if (!(oscounter % iot.P_MQTT_int*4)) {   // variable
+      if (wifi.mode == 1 && sys.update == 0 && iot.P_MQTT_on) sendpmqtt();
+    }
+
+    // NANO CLOUD
+    if (!(oscounter % (iot.CL_int*4)) || lastUpdateCloud) {   // variable
+      if (wifi.mode == 1 && sys.update == 0 && iot.CL_on) sendDataCloud();
+      lastUpdateCloud = false;
+    }
+
+    // OLED FLASH TIMER
+    if (inWork) {
+      if (!(oscounter % FLASHINWORK)) {     // 500 ms
       flashinwork = !flashinwork;
-      lastFlashInWork = millis();
-    }
+      }
+    } 
+    
+    osticker = false;
+
+    if (oscounter == 1200) oscounter = 0;   // 5 min 
   }
 }
-
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //format bytes

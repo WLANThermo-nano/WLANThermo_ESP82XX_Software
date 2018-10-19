@@ -662,7 +662,7 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_chart.containsKey("CLtoken"))  iot.CL_token    = _chart["CLtoken"].asString();
     if (_chart.containsKey("CLint"))    iot.CL_int      = _chart["CLint"];
 
-    if (!refresh && iot.CL_on) lastUpdateCloud = 0; // Daten senden forcieren
+    if (!refresh && iot.CL_on) lastUpdateCloud = 1; // Daten senden forcieren
   
     if (!setconfig(eTHING,{})) return 0;    
     return 1;

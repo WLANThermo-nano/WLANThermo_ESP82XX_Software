@@ -114,7 +114,7 @@ void open_lid() {
         opl.detected = true;
         //opl.temp = opl.ref[0];  // war bsiher pit_now, das ist aber schon zu niedrig     
         opl.temp = opl.ref[0];         
-        opl.count = OPL_PAUSE / (INTERVALSENSOR/1000.0);
+        opl.count = OPL_PAUSE / (INTERVALSENSOR/4.0);    // bezogen auf 250 ms Timer
 
         Serial.println("OPL");
       } 

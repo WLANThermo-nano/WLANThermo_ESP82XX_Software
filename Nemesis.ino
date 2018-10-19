@@ -85,6 +85,7 @@ void setup() {
 
   // Initialize Serial 
   set_serial(); Serial.setDebugOutput(true);
+  set_ostimer();
   
   // Initialize OLED
   set_OLED();
@@ -159,7 +160,7 @@ void loop() {
   if (standby_control()) return;
 
   // Close Start Screen
-  if (millis() > 3000 && question.typ == SYSTEMSTART) {
+  if (question.typ == SYSTEMSTART && millis() > 3000) {
     displayblocked = false;   // Close Start Screen (if not already done)
     question.typ = NO;
   }
@@ -197,16 +198,13 @@ void loop() {
   if (remainingTimeBudget > 0) {
     // Don't do stuff if you are below your time budget.
 
-    timer_sensor();           // Temperture
-    timer_alarm();            // Alarm
+    maintimer();
     pitmaster_control(0);      // Pitmaster 1
     pitmaster_control(1);      // Pitmaster 2
-    timer_iot();              // Charts
-    //timer_datalog();          // Datalog
-    //savelog();
-    flash_control();          // OLED Flash
-    //ampere_control();
     sendNotification();       // Notification
+    
+    //savelog();
+    //ampere_control();
     
     checkMqtt();
 

@@ -480,7 +480,7 @@ void server_setup() {
     ESP.wdtDisable(); 
     iot.CL_token = newToken();
     setconfig(eTHING,{});
-    lastUpdateCloud = 0; // Daten senden forcieren
+    lastUpdateCloud = 1; // Daten senden forcieren
     ESP.wdtEnable(10);
     request->send(200, TEXTPLAIN, iot.CL_token);
   });
