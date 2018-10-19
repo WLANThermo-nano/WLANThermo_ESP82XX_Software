@@ -303,42 +303,78 @@ public:
   // ---------------------
   void handleRequest(AsyncWebServerRequest *request){
 
-    if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == DATA_PATH){
-      handleData(request);
+    if (request->method() == HTTP_POST || request->method() == HTTP_GET) {
 
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == SETTING_PATH){
-      handleSettings(request);
+      if (request->url() == DATA_PATH){
+        handleData(request);
+        return;
 
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == NETWORK_SCAN){ 
-      handleWifiScan(request, true);
+      } else if (request->url() == SETTING_PATH){
+        handleSettings(request);
+        return;
 
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == NETWORK_LIST){ 
-      handleWifiResult(request, true);
+      } else if (request->url() == NETWORK_SCAN){ 
+        handleWifiScan(request, true);
+        return;
 
-    /*
-    } else if (request->method() == HTTP_POST &&  request->url() == FLIST_PATH){
-      if(!request->authenticate(www_username, www_password))
-        return request->requestAuthentication();
-      handleFileList(request);
-      
-    } else if (request->method() == HTTP_DELETE &&  request->url() == DELETE_PATH){
+      } else if (request->url() == NETWORK_LIST){ 
+        handleWifiResult(request, true);
+        return;
+
+       // REQUEST: /stop wifi
+      } else if (request->url() == NETWORK_STOP) { 
+        wifi.mode = 4; // Turn Wifi off with timer
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
+
+      // REQUEST: /checkupdate
+      } else if (request->url() == UPDATE_CHECK) { 
+        sys.update = -1;
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
+      }
+    }
+
+    /*    
+    if (request->method() == HTTP_DELETE &&  request->url() == DELETE_PATH){
       if(!request->authenticate(www_username, www_password))
         return request->requestAuthentication();
       handleFileDelete(request);
+      return;
+    }
+    */
+
+    if (request->method() == HTTP_POST) {
+
+      // REQUEST: /updatestatus
+      if (request->url() == UPDATE_STATUS) { 
+        DPRINTLN("... in process");
+        if(sys.update > 0) request->send(200, TEXTPLAIN, TEXTTRUE);
+        request->send(200, TEXTPLAIN, TEXTFALSE);
+        return;
+
+      // REQUEST: /dcstatus
+      } else if (request->url() == DC_STATUS) { 
+        if (pitMaster[0].active == DUTYCYCLE || pitMaster[1].active == DUTYCYCLE) request->send(200, TEXTPLAIN, TEXTTRUE);
+        else request->send(200, TEXTPLAIN, TEXTFALSE);
+        return;
       
-    } else if (request->method() == HTTP_POST &&  request->url() == FPUTS_PATH){
-      if(!request->authenticate(www_username, www_password))
-        return request->requestAuthentication();
-      handleFilePuts(request);
-*/
-    
-    // REQUEST: /stop wifi
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == NETWORK_STOP) { 
-      wifi.mode = 4; // Turn Wifi off with timer
-      request->send(200, TEXTPLAIN, TEXTTRUE);
-    
+   /*   } else if (request->url() == FLIST_PATH){
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();
+        handleFileList(request);
+        return;
+      
+      } else if (request->url() == FPUTS_PATH){
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();
+        handleFilePuts(request);
+        return
+   */ }
+    }
+   
     // REQUEST: /clear wifi
-    } else if (request->url() == NETWORK_CLEAR) {
+    if (request->url() == NETWORK_CLEAR) {
       if (request->method() == HTTP_GET) {
         request->send(200, "text/html", "<form method='POST' action='/clearwifi'>Wifi-Speicher wirklich leeren?<br><br><input type='submit' value='Ja'></form>");
       } else if (request->method() == HTTP_POST) {
@@ -347,6 +383,7 @@ public:
         wifi.mode = 5;
         request->send(200, TEXTPLAIN, TEXTTRUE);
       } else request->send(500, TEXTPLAIN, BAD_PATH);
+      return;
 
     // REQUEST: /configreset
     } else if (request->url() == CONFIG_RESET) {
@@ -356,6 +393,7 @@ public:
         configreset();
         request->send(200, TEXTPLAIN, TEXTTRUE);
       } else request->send(500, TEXTPLAIN, BAD_PATH);
+      return;
 
     // REQUEST: /update
     } else if (request->url() == UPDATE_PATH) {
@@ -375,22 +413,7 @@ public:
         ESP.wdtEnable(10);
         request->send(200, TEXTPLAIN, "Do Update...");
       } else request->send(500, TEXTPLAIN, BAD_PATH);
-
-    // REQUEST: /checkupdate
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == UPDATE_CHECK) { 
-      sys.update = -1;
-      request->send(200, TEXTPLAIN, TEXTTRUE);
-    
-    // REQUEST: /updatestatus
-    } else if ((request->method() == HTTP_POST) &&  request->url() == UPDATE_STATUS) { 
-        DPRINTLN("... in process");
-        if(sys.update > 0) request->send(200, TEXTPLAIN, TEXTTRUE);
-        request->send(200, TEXTPLAIN, TEXTFALSE);
-
-    // REQUEST: /dcstatus
-    } else if ((request->method() == HTTP_POST) &&  request->url() == DC_STATUS) { 
-        if (pitMaster[0].active == DUTYCYCLE || pitMaster[1].active == DUTYCYCLE) request->send(200, TEXTPLAIN, TEXTTRUE);
-        else request->send(200, TEXTPLAIN, TEXTFALSE);
+      return;
 
     // REQUEST: File from SPIFFS
     } else if (request->method() == HTTP_GET){
@@ -878,42 +901,49 @@ public:
     if (request->url() == SET_NETWORK) {
       if (!setNetwork(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
     
     } else if (request->url() == SET_CHANNELS) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setChannels(request,data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
     
     } else if (request->url() == SET_SYSTEM) {
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setSystem(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
  
     } else if (request->url() == SET_PITMASTER) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setPitmaster(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
     
     } else if (request->url() == SET_PID) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setPID(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
       
     } else if (request->url() == SET_IOT) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setIoT(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
 
     } else if (request->url() == SET_PUSH) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setPush(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
     }
   }
 

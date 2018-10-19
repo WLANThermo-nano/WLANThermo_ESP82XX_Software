@@ -82,11 +82,9 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define MAXBATTERYBAR 13
 
 // TIMER (bezogen auf 250 ms Timer) (x mal 250)
-
 #define INTERVALSENSOR 4              // 1 s
 #define INTERVALCOMMUNICATION 120     // 30 s
 #define INTERVALBATTERYSIM 120        // 30 s
-#define INTERVALBATTERYMODE 1000
 #define FLASHINWORK 2                 // 500 ms
 
 // BUS
@@ -384,7 +382,7 @@ Chart chart;
 
 // OLED
 int current_ch = 0;               // CURRENTLY DISPLAYED CHANNEL     
-bool LADENSHOW = false;           // LOADING INFORMATION?
+bool ladenshow = false;           // LOADING INFORMATION?
 bool displayblocked = false;                     // No OLED Update
 enum {NO, CONFIGRESET, CHANGEUNIT, OTAUPDATE, HARDWAREALARM, IPADRESSE, TUNE, SYSTEMSTART, RESETWIFI, RESETFW};
 
@@ -670,57 +668,84 @@ void set_ostimer() {
  os_timer_arm(&Timer1, 250, true);
 }
 
-void maintimer() {
+void maintimer(bool stby = false) {
   if (osticker) { 
 
-    // Temperature and Battery Measurement Timer
-    if (!(oscounter % INTERVALSENSOR)) {     // 1 s
-      get_Temperature();                            // Temperature Measurement
-      get_Vbat();                                   // Battery Measurement
-      if (millis() < BATTERYSTARTUP) cal_soc();     // schnelles aktualisieren beim Systemstart
-    }
-
-    // RSSI and kumulative Battery Measurement
-    if (!(oscounter % INTERVALBATTERYSIM)) {     // 30 s
-      get_rssi();                                   // RSSI Measurement 
-      cal_soc();                                    // Kumulative Battery Value
-    }
-
-    // Alarm Puls Timer
-    if (!(oscounter % 1)) {       // 250 ms
-      controlAlarm(pulsalarm);
-      pulsalarm = !pulsalarm;
-    }
-
-    // THINGSPEAK
-    if (!(oscounter % iot.TS_int*4)) {       // variable
-      if (wifi.mode == 1 && sys.update == 0 && iot.TS_on) {
-        if (iot.TS_writeKey != "" && iot.TS_chID != "") sendDataTS();
+    if (stby) {
+      if (!(oscounter % 4)) {     // 1 s
+        get_Vbat(); 
+        if (!sys.stby) ESP.restart();
       }
-    }
+    } else {
 
-    // PRIVATE MQTT
-    if (!(oscounter % iot.P_MQTT_int*4)) {   // variable
-      if (wifi.mode == 1 && sys.update == 0 && iot.P_MQTT_on) sendpmqtt();
-    }
-
-    // NANO CLOUD
-    if (!(oscounter % (iot.CL_int*4)) || lastUpdateCloud) {   // variable
-      if (wifi.mode == 1 && sys.update == 0 && iot.CL_on) sendDataCloud();
-      lastUpdateCloud = false;
-    }
-
-    // OLED FLASH TIMER
-    if (inWork) {
-      if (!(oscounter % FLASHINWORK)) {     // 500 ms
-      flashinwork = !flashinwork;
+      // Temperature and Battery Measurement Timer
+      if (!(oscounter % INTERVALSENSOR)) {     // 1 s
+        get_Temperature();                            // Temperature Measurement
+        get_Vbat();                                   // Battery Measurement
+        if (millis() < BATTERYSTARTUP) cal_soc();     // schnelles aktualisieren beim Systemstart
       }
-    } 
-    
+
+      // RSSI and kumulative Battery Measurement
+      if (!(oscounter % INTERVALBATTERYSIM)) {     // 30 s
+        get_rssi();                                   // RSSI Measurement 
+        cal_soc();                                    // Kumulative Battery Value
+      }
+
+      // Alarm Puls Timer
+      if (!(oscounter % 1)) {       // 250 ms
+        controlAlarm(pulsalarm);
+        pulsalarm = !pulsalarm;
+      }
+
+      // THINGSPEAK
+      if (!(oscounter % iot.TS_int*4)) {       // variable
+        if (wifi.mode == 1 && sys.update == 0 && iot.TS_on) {
+          if (iot.TS_writeKey != "" && iot.TS_chID != "") sendDataTS();
+        }
+      }
+
+      // PRIVATE MQTT
+      if (!(oscounter % iot.P_MQTT_int*4)) {   // variable
+        if (wifi.mode == 1 && sys.update == 0 && iot.P_MQTT_on) sendpmqtt();
+      } 
+
+      // NANO CLOUD
+      if (!(oscounter % (iot.CL_int*4)) || lastUpdateCloud) {   // variable
+        if (wifi.mode == 1 && sys.update == 0 && iot.CL_on) sendDataCloud();
+        lastUpdateCloud = false;
+      }
+
+      // OLED FLASH TIMER
+      if (inWork) {
+        if (!(oscounter % FLASHINWORK)) {     // 500 ms
+        flashinwork = !flashinwork;
+        }
+      }  
+    }
     osticker = false;
-
     if (oscounter == 1200) oscounter = 0;   // 5 min 
   }
+}
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Standby oder Mess-Betrieb
+bool standby_control() {
+  if (sys.stby) {
+
+    drawLoading();                    // Refresh Battery State
+    if (!ladenshow) {  
+      ladenshow = true;
+      IPRINTPLN("Standby");
+      //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
+      disableAllHeater();             // Stop Pitmaster
+      server.reset();                 // Stop Webserver
+      piepserOFF();                   // Stop Pieper
+    }
+
+    maintimer(1);                     // Check if Standby
+    return 1;
+  }
+  return 0;
 }
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -794,37 +819,6 @@ tmElements_t * string_to_tm(tmElements_t *tme, char *str) {
 
   return tme;
 }
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Standby oder Mess-Betrieb
-bool standby_control() {
-  if (sys.stby) {
-
-    drawLoading();
-    if (!LADENSHOW) {
-      //drawLoading();
-      LADENSHOW = true;
-      IPRINTPLN("Standby");
-      //stop_wifi();  // führt warum auch immer bei manchen Nanos zu ständigem Restart
-      disableAllHeater();
-      server.reset();   // Webserver leeren
-      piepserOFF();
-      // set_pitmaster();
-    }
-    
-    if (millis() - lastUpdateBatteryMode > INTERVALBATTERYMODE) {
-      get_Vbat();
-      lastUpdateBatteryMode = millis(); 
-       
-      if (!sys.stby) ESP.restart();
-    }
-    
-    return 1;
-  }
-  return 0;
-}
-
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Nachkommastellen limitieren
