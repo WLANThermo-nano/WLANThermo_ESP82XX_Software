@@ -174,9 +174,11 @@ void loop() {
     ESP.restart();
   }
 
-  // WiFi Monitoring
+  // WiFi - Monitoring
   wifimonitoring();
-  
+
+  // MQTT - Abschaltung und Initialisierung
+  checkMqtt(); 
   
   // Detect OTA
   #ifdef OTA
@@ -186,7 +188,6 @@ void loop() {
   // HTTP Update
   check_api();
   if (update.state > 0) do_http_update();
-  //else if (update.state == -1) check_http_update();
   
   // Detect Button Event
   if (button_input()) button_event();
@@ -201,16 +202,14 @@ void loop() {
     // Don't do stuff if you are below your time budget.
 
     maintimer();
-    pitmaster_control(0);      // Pitmaster 1
-    pitmaster_control(1);      // Pitmaster 2
-    sendNotification();       // Notification
-    
+
     //savelog();
     //ampere_control();
     
-    checkMqtt();
-
+    pitmaster_control(0);      // Pitmaster 1
+    pitmaster_control(1);      // Pitmaster 2
     updateServo();
+    
     if (servointerrupt) {   // nur innerhalb eines Servo-Takts
       delay(10);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
     }

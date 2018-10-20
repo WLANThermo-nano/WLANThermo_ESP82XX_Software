@@ -85,9 +85,8 @@ void onWifiConnect(const WiFiEventStationModeGotIP& event) {
   wifi.takeAP = 0;
   wifi.savecount = 0;           // Liste beim nächsten Verlust von vorne rotieren (liste wurde umsortiert)
   
-  update.state = -1;            // Server abfragen // überschreibt Updateprozess?
+  if (update.state == 0) update.state = -1;   // Server abfragen //nicht bei Restart zwischen Update
   //check_api();
-  //check_http_update();
 
   // falls Startscreen noch aktiv
   if (question.typ == SYSTEMSTART) {
@@ -339,7 +338,7 @@ void wifimonitoring() {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
-String connectionStatus ( int which )
+String connectionStatus (int which)
 {
     switch ( which )
     {

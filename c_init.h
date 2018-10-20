@@ -42,15 +42,19 @@ extern "C" {
 extern "C" uint32_t _SPIFFS_start;      // START ADRESS FS
 extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++
-// Nano V2: MISO > Supply Switch; CLK > PIT2
+// number of items in an array
+#define NUMITEMS(arg) ((unsigned int) (sizeof (arg) / sizeof (arg [0])))
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETTINGS
+// Nano V2: MISO > Supply Switch; CLK > PIT2
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
 // HARDWARE
-#define FIRMWAREVERSION "v0.9.14"
-#define APIVERSION      "2"
+#define FIRMWAREVERSION  "v0.9.11"
+#define GUIAPIVERSION    "2"
 #define SERVERAPIVERSION "1"
 
 // CHANNELS
@@ -104,9 +108,9 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define MAXCOUNTER CHANNELS-1
 
 // WIFI
-#define APNAME "NANO-AP"
-#define APPASSWORD "12345678"
-#define HOSTNAME "NANO-"
+#define APNAME      "NANO-AP"
+#define APPASSWORD  "12345678"
+#define HOSTNAME    "NANO-"
 
 // FILESYSTEM
 #define CHANNELJSONVERSION 4        // FS VERSION
@@ -139,37 +143,17 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 #define PRODUCTNUMBERLENGTH 11
 
-#define FWRITE  "w"
-#define FADD    "a"
-
 // API
 #define APISERVER "api.wlanthermo.de"
 #define CHECKAPI "/"
 
 // FIRMWARE
 #define FIRMWARESERVER "update.wlanthermo.de" // "nano.norma.uberspace.de"
-#define GETFIRMWARELINK "/checkUpdate.php"  // "/update/checkUpdate.php"
+#define GETFIRMWARELINK "/checkUpdate.php"    // "/update/checkUpdate.php"
 
 // SPIFFS
 #define SPIFFSSERVER "update.wlanthermo.de" // "nano.norma.uberspace.de"
-#define GETSPIFFSLINK "/checkUpdate.php" // "/update/checkUpdate.php"
-
-/*
-// FIRMWARE
-#define FIRMWARESERVER "update.wlanthermo.de/getFirmware.php" 
-// "nano.norma.uberspace.de/update/checkUpdate.php"
-// SPIFFS
-#define SPIFFSSERVER "update.wlanthermo.de/getSpiffs.php"   
-// "nano.norma.uberspace.de/update/checkUpdate.php"
-*/
-
-// CLOUD
-#define CLOUDSERVER "api.wlanthermo.de"   // "nano.norma.uberspace.de"
-#define SAVEDATALINK "/"        // "/cloud/saveData.php"
-
-// NOTIFICATION
-#define MESSAGESERVER "message.wlanthermo.de" 
-#define SENDNOTELINK "/message.php"
+#define GETSPIFFSLINK "/checkUpdate.php"    // "/update/checkUpdate.php"
 
 // THINGSPEAK
 #define THINGSPEAKSERVER "api.thingspeak.com"
@@ -177,21 +161,10 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define SENDTHINGSPEAK "Thingspeak"
 #define THINGHTTPLINK "/apps/thinghttp/send_request"
 
-// LOG
-#define SAVELOGSLINK "/saveLogs.php"
-
-
-
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-// number of items in an array
-#define NUMITEMS(arg) ((unsigned int) (sizeof (arg) / sizeof (arg [0])))
-
-
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 // GLOBAL VARIABLES
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 // CHANNELS
 struct ChannelData {
@@ -366,9 +339,9 @@ struct myUpdate {
   String firmwareUrl;             // UPDATE FIRMWARE LINK
   String spiffsUrl;               // UPDATE SPIFFS LINK
   byte count;                     // 
-  int state;                     // UPDATE STATE: -1 = check, 0 = no, 1 = spiffs, 2 = check after restart, 3 = firmware, 4 = finish
+  int state;                     // UPDATE STATE: -1 = check, 0 = no, 1 = start spiffs, 2 = check after restart, 3 = firmware, 4 = finish
   String get;                     // UPDATE MY NEW VERSION
-  String version;                 // UPDATE SERVER NEW VERSION
+  //String version;                 // UPDATE SERVER NEW VERSION
   bool autoupdate;
   bool prerelease;
 };
@@ -523,6 +496,16 @@ AsyncWebServer server(80);        // https://github.com/me-no-dev/ESPAsyncWebSer
 // TIMER
 unsigned long lastUpdateBatteryMode;
 
+// URL
+struct ServerData {
+   String host;           // nur die Adresse ohne Anhang
+   String page;           // alles was nach de, com etc. kommt  
+   String typ; 
+};
+
+ServerData serverurl[3];     // 0:api, 1: note, 2:cloud
+enum {APILINK, NOTELINK, CLOUDLINK};
+
 
 rst_info *myResetInfo;
 
@@ -602,6 +585,7 @@ WiFiEventHandler wifiDHCPTimeout, wifiDisconnectHandler, softAPDisconnectHandler
 void connectToMqtt();
 void EraseWiFiFlash();
 void connectWiFi();
+String connectionStatus (int which);
 
 //MQTT
 AsyncMqttClient pmqttClient;
@@ -629,27 +613,22 @@ void open_lid_init();
 // BOT
 void set_iot(bool init);
 void set_push();
+void sendNotification();
+String newToken();
 
-String createNote();
-bool sendNote(int check);
-
-void sendServerLog();
-String serverLog();
-void sendDataCloud();
-
-
-String connectionStatus ( int which );
-
+// API
+int apiindex;
+int urlindex;
 void urlObj(JsonObject  &jObj);
-void dataObj(JsonObject &jObj, bool cloud, int red);
-
+void dataObj(JsonObject &jObj, bool cloud);
+bool sendAPI(int check);
 String apiData(int typ);
 enum {APIUPDATE, APICLOUD, APIDATA, APISETTINGS, APINOTE, APIALEXA};
 
 //void setWebSocket();
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+// BASIC FUNCTIONS
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
@@ -703,8 +682,10 @@ void set_system() {
   sys.hwversion = 1;
   if (update.state == 0) update.get = "false";   // Änderungen am EE während Update
   update.autoupdate = 1;
-  update.firmwareUrl = FIRMWARESERVER;
-  update.spiffsUrl = SPIFFSSERVER;
+  //update.firmwareUrl = FIRMWARESERVER;
+  //update.spiffsUrl = SPIFFSSERVER;
+  update.firmwareUrl = "";          // wird nur von der API befüllt wenn Update da ist
+  update.spiffsUrl = "";
   sys.god = false;
   sys.typk = false;
   battery.max = BATTMAX;
@@ -766,9 +747,20 @@ void maintimer(bool stby = false) {
         if (wifi.mode == 1 && update.state == 0 && iot.P_MQTT_on) sendpmqtt();
       } 
 
-      // NANO CLOUD
+      // NOTIFICATION (kein Timer notwenig)
+      if (!(oscounter % 1)) { 
+        if (wifi.mode == 1 && update.state == 0 && pushd.on) sendNotification();
+      }
+
+      // NANO CLOUD (nach Notification)
       if (!(oscounter % (iot.CL_int*4)) || lastUpdateCloud) {   // variable
-        if (wifi.mode == 1 && update.state == 0 && iot.CL_on) sendDataCloud();
+        if (wifi.mode == 1 && update.state == 0 && iot.CL_on) {
+          if (sendAPI(0)) {
+            apiindex = APICLOUD;
+            urlindex = CLOUDLINK;
+            sendAPI(2);
+          }
+        }
         lastUpdateCloud = false;
       }
 
@@ -780,7 +772,8 @@ void maintimer(bool stby = false) {
       }  
     }
     osticker = false;
-    if (oscounter == 1200) oscounter = 0;   // 5 min 
+    //Serial.println(oscounter);
+    if (oscounter == 2400) oscounter = 0;   // 10 min (muss durch 5, 2, 1, 0,5, 0,25 ganzzahlig teilbar sein)
   }
 }
 
@@ -906,79 +899,29 @@ String getMacAddress()  {
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Cloud Token Generator
-String newToken() {
-  String stamp = String(now(), HEX);
-  int x = 10 - stamp.length();          //pow(16,(10 - timestamp.length()));
-  long y = 1;    // long geht bis 16^7
-  if (x > 7) {
-    stamp += String(random(268435456), HEX);
-    x -= 7;
-  }
-  for (int i=0;i<x;i++) y *= 16;
-  stamp += String(random(y), HEX);
-  return (String) String(ESP.getChipId(), HEX) + stamp;
-}
-
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// GET/POST-Request
-
-
-
-
-
-//#define SAVEDATALINK "/saveData.php"
-//#define SAVELOGSLINK "/saveLogs.php"
-//#define SENDTSLINK "/update.json"
-//#define SENDTHINGSPEAK "Thingspeak"
-//#define THINGSPEAKSERVER "api.thingspeak.com"
-#define NANOSERVER "nano.wlanthermo.de"
-#define UPDATESERVER "update.wlanthermo.de"   // früher nano.wlanthermo.de
-//#define CLOUDSERVER "cloud.wlanthermo.de"
-//#define MESSAGESERVER "message.wlanthermo.de" 
-//#define SENDNOTELINK "/message.php"
-//#define THINGHTTPLINK "/apps/thinghttp/send_request"
-#define CHECKUPDATELINK "/checkUpdate.php"
-
-
-struct ServerData {
-   String host;           // nur die Adresse ohne Anhang
-   String page;           // alles was nach de, com etc. kommt   
-};
-
-
-ServerData serverurl[5];     // 0:api, 1:fw, 2:spiffs, 3:cloud, 4:notification
-String servertyp[5] = {"api","firmware","spiffs","cloud","notification"};
-enum {APILINK, FIRMWARELINK, SPIFFSLINK, CLOUDLINK, MESSAGELINK};
+// Server URLs
 
 void setserverurl() {
 
   serverurl[0].host = APISERVER;
   serverurl[0].page = CHECKAPI;
+  serverurl[0].typ  = "api";
 
-  serverurl[1].host = FIRMWARESERVER;
-  serverurl[1].page = GETFIRMWARELINK;
+  serverurl[1].host = APISERVER;
+  serverurl[1].page = CHECKAPI;
+  serverurl[1].typ  = "note";
 
-  serverurl[2].host = SPIFFSSERVER;
-  serverurl[2].page = GETSPIFFSLINK;
-
-  serverurl[3].host = CLOUDSERVER;
-  serverurl[3].page = SAVEDATALINK;
-
-  serverurl[4].host = MESSAGESERVER;
-  serverurl[4].page = SENDNOTELINK;
-
-  //serverurl[5].host = THINGSPEAKSERVER;
-  //serverurl[5].page = SENDTSLINK;
+  serverurl[2].host = APISERVER;
+  serverurl[2].page = CHECKAPI;
+  serverurl[2].typ  = "cloud";
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// GET/POST-Request
 
-enum {SERIALNUMBER, APITOKEN, TSWRITEKEY, NOTETOKEN, NOTEID, NOTEREPEAT, NOTESERVICE,
-      THINGHTTPKEY, DEVICE, HARDWAREVS, SOFTWAREVS, ITEM, UPDATEVERSION};  // Parameters
-enum {NOPARA, SENDNOTE, CHECKUPDATE};                       // Config
-enum {GETMETH, POSTMETH};                                                   // Method
+enum {SERIALNUMBER, DEVICE, HARDWAREVS, SOFTWAREVS, UPDATEVERSION};  // Parameters
 
+// GET/POST Parameter Generator
 String createParameter(int para) {
 
   String command;
@@ -987,46 +930,6 @@ String createParameter(int para) {
     case SERIALNUMBER:
       command += F("serial=");
       command += String(ESP.getChipId(), HEX);
-      break;
-
-    case APITOKEN:
-      command += F("&api_token=");
-      command += iot.CL_token;
-      break;
-
-    case TSWRITEKEY:
-      command += F("api_key=");
-      command += iot.TS_writeKey;
-      break;
-
-    case NOTETOKEN:
-      command += F("&token=");
-      command += pushd.token;
-      break;
-
-    case NOTEID:
-      command += F("&chatID=");
-      command += pushd.id;
-      break;
-
-    case NOTEREPEAT:
-      command += F("&repeat=");
-      command += pushd.repeat;
-      break;
-
-    case NOTESERVICE:
-      command += F("&service=");
-      switch (pushd.service) {
-        case 0: command += F("telegram"); break;
-        case 1: command += F("pushover"); break;
-        case 2: command += F("prowl"); break;
-      }
-      if (pushd.on == 2) pushd.on = 3;                    // alte Werte wieder herstellen  
-      break;
-
-    case THINGHTTPKEY:
-      command += F("api_key=");
-      command += iot.TS_httpKey;
       break;
 
     case DEVICE:
@@ -1047,16 +950,16 @@ String createParameter(int para) {
       command += F("&version=");
       command += update.get;
       break;
-
-    case ITEM:
-      command += F("&product=");
-      command += sys.item;
-      break;
   }
 
   return command;
 }
 
+
+enum {NOPARA, TESTPARA};                       // Config
+enum {GETMETH, POSTMETH};                                                   // Method
+
+// GET/POST Generator
 String createCommand(bool meth, int para, const char * link, const char * host, int content) {
 
   String command;
@@ -1066,25 +969,8 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
 
   switch (para) {
 
-
-    case SENDNOTE:
-      command += createParameter(SERIALNUMBER);
-      command += createParameter(NOTETOKEN);
-      command += createParameter(NOTEID);
-      command += createParameter(NOTEREPEAT);
-      command += F("&lang=de");
-      command += createParameter(NOTESERVICE);
-      command += createNote();
-      break;
-
-    case CHECKUPDATE:
-      command += createParameter(SERIALNUMBER);
-      command += createParameter(DEVICE);
-      command += createParameter(HARDWAREVS);
-      command += createParameter(SOFTWAREVS);
-      if (sys.item != "") 
-        command += createParameter(ITEM);            
-      break;
+    case TESTPARA:
+    break;
 
     default:
     break;
@@ -1109,81 +995,9 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
   return  command;
 }
 
-void sendNotification() {
-  
-  if (wifi.mode == 1) {                   // Wifi available
 
-    if (notification.type > 0) {                      // GENERAL NOTIFICATION       
-        
-      if (pushd.on > 0) {
-        if (sendNote(0)) sendNote(2);           // Notification per Nano-Server
-      }
-        
-    } else if (notification.index > 0) {              // CHANNEL NOTIFICATION
-
-      for (int i=0; i < CHANNELS; i++) {
-        if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
-            
-          bool sendN = true;
-          if (pushd.on > 0) {
-            if (sendNote(0)) {
-              notification.ch = i;
-              sendNote(2);           // Notification per Nano-Server
-            } else sendN = false;
-          }
-          if (sendN) {
-            notification.index &= ~(1<<i);           // Kanal entfernen, sonst erneuter Aufruf
-            return;                                  // nur ein Senden pro Durchlauf
-          }
-        }
-      }    
-    }
-  }
-
-  if (pushd.on == 3) loadconfig(ePUSH,0);     // nach Testnachricht alte Werte wieder herstellen
-}
-
-
-void serverAnswer(String payload, size_t len) {
- 
-  if (payload.indexOf("200 OK") > -1) {
-    DPRINTP("[HTTP]\tServer Answer: "); 
-    int index = payload.indexOf("\r\n\r\n");       // Trennung von Header und Body
-    payload = payload.substring(index+7,len);      // Beginn des Body
-    index = payload.indexOf("\r");                 // Ende Versionsnummer
-    payload = payload.substring(0,index);
-    DPRINTLN(payload);
-  }
-}
-
-void printRequest(uint8_t* datas) {
-  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
-}
-
-enum {CONNECTFAIL, SENDTO, DISCONNECT, CLIENTERRROR, CLIENTCONNECT};
-
-void printClient(const char* link, int arg) {
-
-  switch (arg) {
-
-    case CONNECTFAIL:   IPRINTP("f: ");    // Client Connect Fail
-      break;
-
-    case SENDTO:        IPRINTP("s:");      // Client Send to
-      break;
-
-    case DISCONNECT:    IPRINTP("d:");     //Disconnect Client
-      break;
-
-    case CLIENTERRROR:  IPRINTP("f:");     // Client Connect Error:
-      break; 
-
-    case CLIENTCONNECT: IPRINTP("c: ");    // Client Connect
-      break; 
-  }
-  DPRINTLN(link);
-}
-
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Calculate Duty Cycle Milliseconds
 
 uint16_t getDC(uint16_t impuls) {
   // impuls = value * 10  // 1.Nachkommastelle

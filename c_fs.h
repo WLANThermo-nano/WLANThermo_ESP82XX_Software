@@ -366,7 +366,7 @@ bool loadconfig(byte count, bool old) {
       if (!checkjson(json,SERVER_FILE)) return false;
 
       for (int i = 0; i < NUMITEMS(serverurl); i++) {
-        JsonObject& _link = json[servertyp[i]];
+        JsonObject& _link = json[serverurl[i].typ];
 
         if (_link.containsKey("host")) serverurl[i].host = _link["host"].asString();
         else return false;
@@ -586,7 +586,7 @@ bool setconfig(byte count, const char* data[2]) {
 
       for (int i = 0; i < NUMITEMS(serverurl); i++) {
   
-        JsonObject& _obj = json.createNestedObject(servertyp[i]);
+        JsonObject& _obj = json.createNestedObject(serverurl[i].typ);
         _obj["host"] =  serverurl[i].host;
         _obj["page"] =  serverurl[i].page;
       }

@@ -35,7 +35,9 @@ void deviceObj(JsonObject  &jObj) {
   jObj["api_version"] = SERVERAPIVERSION;
   //jObj["api_token"] = iot.CL_token;     // im CloudObj direkt
   jObj["language"] = sys.language;
-  //system["item"] = sys.item;
+  
+  if (sys.item != "") jObj["item"] = sys.item;            
+      
        
 }
 
@@ -56,7 +58,7 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
     jObj["language"] =   sys.language;
     jObj["fastmode"] =   sys.fastmode;
     jObj["version"] =    FIRMWAREVERSION;
-    jObj["getupdate"] =  update.version;
+    jObj["getupdate"] =  update.get;
     jObj["autoupd"] =    update.autoupdate;
     if (sys.hwversion == 2) jObj["hwversion"] =  String("V1+");
     else  jObj["hwversion"] =  String("V")+String(sys.hwversion);
@@ -85,7 +87,7 @@ void channelAry(JsonArray  &jAry, int cc) {
   }
  
 }
-
+/*
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Pitmaster JSON Object
 void pitObj(JsonObject  &jObj) {
@@ -103,7 +105,7 @@ void pitObj(JsonObject  &jObj) {
   }
   
 }
-
+*/
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Pitmaster JSON Array
 void pitAry(JsonArray  &jAry, int cc) {
@@ -219,8 +221,9 @@ void extObj(JsonObject  &jObj) {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Update JSON Object
 void updateObj(JsonObject  &jObj) {
-  
-  jObj["available"] = true;
+
+  // nur leeres Objekt, wird vom Server befüllt
+  //jObj["available"] = true;
   
 }
 
@@ -237,12 +240,14 @@ void alexaObj(JsonObject  &jObj) {
 // URL JSON Object
 void urlObj(JsonObject  &jObj) {
 
+/*
   for (int i = 0; i < NUMITEMS(serverurl); i++) {
   
-    JsonObject& _obj = jObj.createNestedObject(servertyp[i]);
+    JsonObject& _obj = jObj.createNestedObject(serverurl[i].typ);
     _obj["host"] =  serverurl[i].host;
     _obj["page"] =  serverurl[i].page;
   }
+*/
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -258,13 +263,13 @@ void dataObj(JsonObject  &jObj, bool cloud) {
   channelAry(_channel, CHANNELS);
 
   // PITMASTER
-  if (cloud) {
-    JsonObject& _master = jObj.createNestedObject("pitmaster");
-    pitObj(_master);
-  } else {    
+  //if (cloud) {
+    //JsonObject& _master = jObj.createNestedObject("pitmaster");
+    //pitObj(_master);
+  //} else {    
     JsonArray& _master = jObj.createNestedArray("pitmaster");
     pitAry(_master, PITMASTERSIZE);
-  }
+  //}
   
 }
 
@@ -281,7 +286,7 @@ void settingsObj(JsonObject  &jObj) {
   if (sys.hwversion > 1) _hw.add(String("V1+"));
 
   JsonObject& api = jObj.createNestedObject("api");
-  api["version"] = APIVERSION;
+  api["version"] = GUIAPIVERSION;
 
   // SENSORS
   JsonArray& _typ = jObj.createNestedArray("sensors");
@@ -391,7 +396,39 @@ void noteObj(JsonObject  &jObj) {
     _obj3["service"] =  "mail";
     _obj3["adress"] =  "xxx";
  */ 
-  
+
+/*
+    pushd.token;
+    pushd.id;
+    pushd.repeat;
+    
+    switch (pushd.service) {
+      case 0: command += F("telegram"); break;
+      case 1: command += F("pushover"); break;
+      case 2: command += F("prowl"); break;
+      }
+    if (pushd.on == 2) pushd.on = 3;                    // alte Werte wieder herstellen  (Testnachricht)
+     
+ */ 
+
+ /*
+   String postStr;
+
+  if (notification.type > 0) {    // Test Message
+    postStr += F("&msg=");
+    postStr += F("up");
+    postStr += F("&ch=1");
+    notification.type = 0;
+    
+  } else {
+    bool limit = notification.limit & (1<<notification.ch);
+    postStr += F("&msg=");
+    postStr += (limit)?F("up"):F("down");
+    postStr += F("&ch=");
+    postStr += String(notification.ch+1);    
+  } 
+  return postStr;
+  */
 }
 
 
@@ -456,73 +493,12 @@ String apiData(int typ) {
 }
 
 
-// Bekommen wir das zusammengefasst in einen Client für Updatecheck, Cloud und Notes?
-
-static AsyncClient * DataClient = NULL;
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// 
-void sendDataCloud() {
-
-  if(DataClient) {
-    AsyncClient * client = DataClient;
-    DataClient = NULL;
-    delete client;
-    return;                 //client already exists
-  }
-
-  DataClient = new AsyncClient();
-  if(!DataClient)  return;               //could not allocate client
-
-  DataClient->onError([](void * arg, AsyncClient * client, int error){
-    printClient(serverurl[CLOUDLINK].page.c_str(),CLIENTERRROR);
-    //printClient(SAVEDATALINK,CLIENTERRROR);
-    DataClient = NULL;
-    delete client;
-  }, NULL);
-
-  DataClient->onConnect([](void * arg, AsyncClient * client){
-
-   DataClient->onError(NULL, NULL);
-
-   client->onDisconnect([](void * arg, AsyncClient * c){
-    printClient(serverurl[CLOUDLINK].page.c_str() ,DISCONNECT);
-    //printClient(SAVEDATALINK ,DISCONNECT);
-    DataClient = NULL;
-    delete c;
-   }, NULL);
-
-   //send the request
-   //printClient(SAVEDATALINK,SENDTO);
-   //String message = cloudData(true);   
-   //String adress = createCommand(POSTMETH,NOPARA,SAVEDATALINK,CLOUDSERVER,message.length());
-   printClient(serverurl[CLOUDLINK].page.c_str(),SENDTO);
-   String message = apiData(APICLOUD);  //cloudData(true);   //
-   String adress = createCommand(POSTMETH,NOPARA,serverurl[CLOUDLINK].page.c_str(),serverurl[CLOUDLINK].host.c_str(),message.length());
-   adress += message;
-
-   client->write(adress.c_str());
-   //Serial.println(adress);
-      
-  }, NULL);
-
-  if(!DataClient->connect(serverurl[CLOUDLINK].host.c_str(), 80)){
-   //printClient(SAVEDATALINK ,CONNECTFAIL);
-   printClient(serverurl[CLOUDLINK].page.c_str() ,CONNECTFAIL);
-   AsyncClient * client = DataClient;
-   DataClient = NULL;
-   delete client;
-  }    
-}
-
-
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Read time stamp from HTTP Header
 void readUTCfromHeader(String payload) {
 
   int index = payload.indexOf("Date: ");
-  if (index > -1) {
+  if (index > -1 && now() < 31536000) {  // Jahr 1971
             
     char date_string[27];
     for (int i = 0; i < 26; i++) {
@@ -552,7 +528,7 @@ void readContentLengthfromHeader(String payload, int len) {
     payload = payload.substring(index+16,len);            // "Content-Length:" entfernen     
     payload = payload.substring(0,payload.indexOf("\n")); // Ende der Zeile
     log_length = payload.toInt();
-    Serial.println(log_length);
+    Serial.print("Content:");Serial.println(log_length);
   }
 }
 
@@ -582,6 +558,22 @@ void readLocation(String payload, int len) {
   }
 }
 
+
+enum {CONNECTFAIL, SENDTO, DISCONNECT, CLIENTERRROR, CLIENTCONNECT};
+
+void printClient(const char* link, int arg) {
+
+  switch (arg) {
+    case CONNECTFAIL:   IPRINTP("f:"); break;    // Client Connect Fail
+    case SENDTO:        IPRINTP("s:"); break;     // Client Send to
+    case DISCONNECT:    IPRINTP("d:"); break;    //Disconnect Client
+    case CLIENTERRROR:  IPRINTP("f:"); break;     // Client Connect Error:
+    case CLIENTCONNECT: IPRINTP("c:"); break;   // Client Connect
+  }
+  DPRINTLN(link);
+}
+
+
 bool apicontent;
 static AsyncClient * apiClient = NULL;
 
@@ -596,7 +588,7 @@ bool sendAPI(int check){
     if(!apiClient)  return false;               //could not allocate client
 
     apiClient->onError([](void * arg, AsyncClient * client, int error){
-    //printClient(THINGHTTPLINK,CLIENTERRROR);
+    printClient(serverurl[urlindex].page.c_str(),CLIENTERRROR);
       apiClient = NULL;
       delete client;
     }, NULL);
@@ -605,13 +597,13 @@ bool sendAPI(int check){
     
     apiClient->onConnect([](void * arg, AsyncClient * client){
     
-      printClient(serverurl[APILINK].page.c_str() ,CLIENTCONNECT);
+      printClient(serverurl[urlindex].page.c_str(),CLIENTCONNECT);
       apicontent = false;
       
       apiClient->onError(NULL, NULL);
       
       client->onDisconnect([](void * arg, AsyncClient * c){
-        printClient(serverurl[APILINK].page.c_str() ,DISCONNECT);
+        printClient(serverurl[urlindex].page.c_str() ,DISCONNECT);
         apiClient = NULL;
         delete c;
       }, NULL);
@@ -629,7 +621,7 @@ bool sendAPI(int check){
           
           if ((payload.indexOf("200 OK") > -1)) {             // 200 Header
             readContentLengthfromHeader(payload, len);
-            apicontent = true;
+            if (log_length >0) apicontent = true;
             return;
           
           } else if (payload.indexOf("302 Found") > -1) {     // 302 Header: new API-Links 
@@ -637,21 +629,14 @@ bool sendAPI(int check){
           
           } else if (apicontent) {                            // Body: 1 part
             apicontent = false;
-            bodyWebHandler.setServerURL((uint8_t*)data);      // ist das der komplette inhalt?
-
-            //configFile = SPIFFS.open("/log.txt", "w");
-            //configFile.print((char*)data);
-            //configFile.close();
+            bodyWebHandler.setServerAPI((uint8_t*)data);      // ist das der komplette inhalt?
             
             log_length -= len;
             //Serial.println(log_length);
             
           } else if (log_length > 0) {                        // Body: current part
 
-            //configFile = SPIFFS.open("/log.txt", "a");
-            //configFile.print((char*)data);
-            //configFile.close();
-            
+            // leeren?            
             log_length -= len;
             //Serial.println(log_length);
             
@@ -660,17 +645,19 @@ bool sendAPI(int check){
       }, NULL);
 
       //send the request
-      printClient(serverurl[APILINK].page.c_str() ,SENDTO);
-      String message = apiData(APIUPDATE);
-      String adress = createCommand(POSTMETH,NOPARA,serverurl[APILINK].page.c_str(),serverurl[APILINK].host.c_str(),message.length());
+      printClient(serverurl[urlindex].page.c_str() ,SENDTO);
+      String message = apiData(apiindex);
+      String adress = createCommand(POSTMETH,NOPARA,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
       adress += message;
       client->write(adress.c_str());
       Serial.println(adress);
+      apiindex = NULL;
+      urlindex = NULL;
 
     }, NULL);
 
-    if(!apiClient->connect(serverurl[APILINK].host.c_str(), 80)){
-        printClient(serverurl[APILINK].page.c_str() ,CONNECTFAIL);
+    if(!apiClient->connect(serverurl[urlindex].host.c_str(), 80)){
+        printClient(serverurl[urlindex].page.c_str() ,CONNECTFAIL);
         AsyncClient * client = apiClient;
         apiClient = NULL;
         delete client;
@@ -680,8 +667,6 @@ bool sendAPI(int check){
 }
 
 
-
-
 // update.autoupdate einarbeiten
 
 void check_api() {
@@ -689,12 +674,15 @@ void check_api() {
   if (update.state == -1 || update.state == 2) {  // -1 = check, 2 = check after restart during Update
     if((wifi.mode == 1)) {
   
-      if (sendAPI(0)) sendAPI(2);
+      if (sendAPI(0)) {
+        apiindex = APIUPDATE;
+        urlindex = APILINK;
+        sendAPI(2);
+      }
 
-    } else update.get = "false";
+    } else update.get = "false";      // wird überschrieben wenn API abgefragt
     
     if (update.state == -1) update.state = 0;         // von check (-1) auf ruhend (0) wechseln
-    else if (update.state == 2) update.state = 3;     // Update fortführen nach Restart
     // kein Speichern im EE, Zustand -1 ist nur temporär
   } 
 }

@@ -50,7 +50,7 @@
 #define SET_DC        "/setDC"
 #define SET_IOT       "/setIoT"
 #define SET_PUSH      "/setPush"
-#define SET_SERVER    "/setserverlink"
+#define SET_API       "/setapi"
 #define SET_GOD       "/god"
 #define UPDATE_CHECK  "/checkupdate"
 #define UPDATE_STATUS "/updatestatus"
@@ -67,6 +67,10 @@
 const char *public_list[]={
 "/nano.ttf"
 };
+
+void printRequest(uint8_t* datas) {
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+}
 
 // ---------------------------------------------------------------
 // WEBHANDLER
@@ -844,7 +848,7 @@ class BodyWebHandler: public AsyncWebHandler {
   }
 
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-  bool setServerURL(AsyncWebServerRequest *request, uint8_t *datas) {
+  bool setServerAPI(AsyncWebServerRequest *request, uint8_t *datas) {
 
     printRequest(datas);
   
@@ -852,28 +856,49 @@ class BodyWebHandler: public AsyncWebHandler {
     JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
     if (!json.success()) return 0;
 
-    JsonObject& _url = json["url"];
+    // URL
+    if (json.containsKey("url")) {
+      JsonObject& _url = json["url"];
 
-    for (int i = 0; i < NUMITEMS(serverurl); i++) {
-      JsonObject& _link = _url[servertyp[i]];
-      if (_link.containsKey("host")) serverurl[i].host = _link["host"].asString();
-      if (_link.containsKey("page")) serverurl[i].page = _link["page"].asString();
+      for (int i = 0; i < NUMITEMS(serverurl); i++) {     // nur bekannte auslesen
+        JsonObject& _link = _url[serverurl[i].typ];
+        if (_link.containsKey("host")) serverurl[i].host = _link["host"].asString();
+        if (_link.containsKey("page")) serverurl[i].page = _link["page"].asString();
+      }
+
+      if (!setconfig(eSERVER,{})) return 0;   // für Serverlinks
     }
 
-    if (!setconfig(eSERVER,{})) return 0;   // für Serverlinks
-
+    // UPDATE
     bool available = false;
-    JsonObject& _update = json["update"];
-    if (_update.containsKey("available")) available = _update["available"];
+    if (json.containsKey("update")) { 
+      JsonObject& _update = json["update"];
+      if (_update.containsKey("available")) available = _update["available"];
     
-    if (available) { // && update.autoupdate
-      if (_update.containsKey("version")) update.version = _update["version"].asString();
-      if (_update.containsKey("prerelease")) update.prerelease = _update["prerelease"];
-      if (_update.containsKey("firmwareUrl")) update.firmwareUrl = _update["firmwareUrl"].asString();
-      if (_update.containsKey("spiffsUrl")) update.spiffsUrl = _update["spiffsUrl"].asString();
-    } else update.get = "false";
+      if (available && update.autoupdate) { 
+        if (_update.containsKey("version"))     update.get = _update["version"].asString();
+        if (_update.containsKey("prerelease"))  update.prerelease = _update["prerelease"];
+        if (_update.containsKey("firmwareUrl")) update.firmwareUrl = _update["firmwareUrl"].asString();
+        if (_update.containsKey("spiffsUrl"))   update.spiffsUrl = _update["spiffsUrl"].asString();
+      } else update.get = "false";
+
+      if (update.state == 2) {
+        update.state = 3;     // Update fortführen nach Restart, nicht speichern falls Absturz wiederholen
+      } else {
+        if (!setconfig(eSYSTEM,{})) return 0;   // für Update
+      }
+    }
+
+    // CLOUD
+    if (json.containsKey("cloud")) {
+      JsonObject& _cloud = json["cloud"];
+      
+      if (_cloud.containsKey("task")) {
+        Serial.print("[CLOUD]: "); Serial.println(_cloud["task"].asString()); 
+      }
+      
+    }
     
-    if (!setconfig(eSYSTEM,{})) return 0;   // für Update
     return 1;
   }
 
@@ -977,9 +1002,9 @@ public:
     return setPush(request, datas);
   }
 
-  bool setServerURL(uint8_t *datas) {
+  bool setServerAPI(uint8_t *datas) {
     AsyncWebServerRequest *request;
-    return setServerURL(request, datas);
+    return setServerAPI(request, datas);
   }
 
   void handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
@@ -1031,10 +1056,10 @@ public:
         request->send(200, TEXTPLAIN, TEXTTRUE);
         return;
     
-    } else if (request->url() == SET_SERVER) { 
+    } else if (request->url() == SET_API) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
-      if(!setServerURL(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
+      if(!setServerAPI(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
     
     } else if (request->url() == SET_DC) {     
@@ -1052,7 +1077,7 @@ public:
     if (request->url() == SET_NETWORK || request->url() == SET_CHANNELS
       || request->url() == SET_SYSTEM || request->url() == SET_PITMASTER
       || request->url() == SET_PID || request->url() == SET_IOT
-      || request->url() == SET_SERVER || request->url() == SET_DC
+      || request->url() == SET_API || request->url() == SET_DC
       || request->url() == SET_PUSH //|| request->url() == SET_GOD
       ) return true;
     return false;

@@ -63,79 +63,59 @@ void set_push() {
   pushd.service = 0;
 }
 
+// im Umbau
+void sendNotification() {
+  
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Create Notification Message
-String createNote() {
-
-  String postStr;
-
-  if (notification.type > 0) {    // Test Message
-    postStr += F("&msg=");
-    postStr += F("up");
-    postStr += F("&ch=1");
-    notification.type = 0;
-    
-  } else {
-    bool limit = notification.limit & (1<<notification.ch);
-    postStr += F("&msg=");
-    postStr += (limit)?F("up"):F("down");
-    postStr += F("&ch=");
-    postStr += String(notification.ch+1);    
-  } 
-  return postStr;
-}
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send Notification
-bool sendNote(int check){
-
-  if (check == 0) {
-    if(tsalarmclient) return false;                 //client already exists
-
-    tsalarmclient = new AsyncClient();
-    if(!tsalarmclient)  return false;               //could not allocate client
-
-    tsalarmclient->onError([](void * arg, AsyncClient * client, int error){
-      printClient(THINGHTTPLINK,CLIENTERRROR);
-      tsalarmclient = NULL;
-      delete client;
-    }, NULL);
-    
-  } else if (check == 2) {          // Senden ueber Server
-    
-    tsalarmclient->onConnect([](void * arg, AsyncClient * client){
-    
-      tsalarmclient->onError(NULL, NULL);
-
-      client->onDisconnect([](void * arg, AsyncClient * c){
-        printClient(SENDNOTELINK ,DISCONNECT);
+    if (notification.type > 0) {                      // GENERAL NOTIFICATION       
         
-        //printClient(serverurl[MESSAGELINK].page.c_str() ,DISCONNECT);
+      if (pushd.on > 0) {
+        if (sendAPI(0)) {
+          apiindex = APINOTE;
+          urlindex = NOTELINK;
+          sendAPI(2);           // Notification per Nano-Server
+        }
+      }
         
-        tsalarmclient = NULL;
-        delete c;
-      }, NULL);
+    } else if (notification.index > 0) {              // CHANNEL NOTIFICATION
 
-      //send the request
-      printClient(SENDNOTELINK,SENDTO);
-      String adress = createCommand(GETMETH,SENDNOTE,SENDNOTELINK,MESSAGESERVER,0);
-      
-      //printClient(serverurl[MESSAGELINK].page.c_str(),SENDTO);
-      //String message = apiData(APINOTE);
-      //String adress = createCommand(POSTMETH,NOPARA,serverurl[MESSAGELINK].page.c_str(),serverurl[MESSAGELINK].host.c_str(),message.length());
-
-      client->write(adress.c_str());
-      Serial.println(adress);
-    }, NULL);
-
-    if(!tsalarmclient->connect(MESSAGESERVER, 80)){
-      printClient(SENDNOTELINK ,CONNECTFAIL);
-      AsyncClient * client = tsalarmclient;
-      tsalarmclient = NULL;
-      delete client;
+      for (int i=0; i < CHANNELS; i++) {
+        if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
+            
+          bool sendN = true;
+          if (pushd.on > 0) {
+            if (sendAPI(0)) {
+              notification.ch = i;
+              apiindex = APINOTE;
+              urlindex = NOTELINK;
+              sendAPI(2);           // Notification per Nano-Server
+            } else sendN = false;
+          }
+          if (sendN) {
+            notification.index &= ~(1<<i);           // Kanal entfernen, sonst erneuter Aufruf
+            return;                                  // nur ein Senden pro Durchlauf
+          }
+        }
+      }    
     }
-  }
-  return true;    // Nachricht kann gesendet werden
+  
+
+  if (pushd.on == 3) loadconfig(ePUSH,0);     // nach Testnachricht alte Werte wieder herstellen
 }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Cloud Token Generator
+String newToken() {
+  String stamp = String(now(), HEX);
+  int x = 10 - stamp.length();          //pow(16,(10 - timestamp.length()));
+  long y = 1;    // long geht bis 16^7
+  if (x > 7) {
+    stamp += String(random(268435456), HEX);
+    x -= 7;
+  }
+  for (int i=0;i<x;i++) y *= 16;
+  stamp += String(random(y), HEX);
+  return (String) String(ESP.getChipId(), HEX) + stamp;
+}
+
 

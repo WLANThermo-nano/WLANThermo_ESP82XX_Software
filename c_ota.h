@@ -120,10 +120,11 @@ void do_http_update() {
     if (update.get != "false") {
 
       // UPDATE Adresse
-      String adress = "?";
-      adress += createParameter(SERIALNUMBER);
-      adress += createParameter(DEVICE);
-      adress += createParameter(UPDATEVERSION);
+      String adress;
+      //adress = += "?";
+      //adress += createParameter(SERIALNUMBER);
+      //adress += createParameter(DEVICE);
+      //adress += createParameter(UPDATEVERSION);
 
       // UPDATE 2x Wiederholen falls schief gelaufen
       if (update.count < 3) update.count++;   // Wiederholung
@@ -142,28 +143,22 @@ void do_http_update() {
       displayblocked = true;
       t_httpUpdate_return ret;
     
-      if (update.state == 1) {
+      if (update.state == 1 && update.spiffsUrl != "") {  // erst wenn API abgefragt
         update.state = 2;  // Nächster Updatestatus
         drawUpdate("Webinterface");
         setconfig(eSYSTEM,{});                                      // SPEICHERN
         IPRINTPLN("u:SPIFFS ...");
-        update.spiffsUrl = F("http://");
-        update.spiffsUrl += serverurl[SPIFFSLINK].host;
-        update.spiffsUrl += serverurl[SPIFFSLINK].page;
-        adress = update.spiffsUrl + adress;   //
+        adress = update.spiffsUrl + adress;   // https://.... + adress
         Serial.println(adress);
         ret = ESPhttpUpdate.updateSpiffs(adress);
 
     
-      } else if (update.state == 3) {
+      } else if (update.state == 3 && update.firmwareUrl != "") {   // erst wenn API abgefragt
         update.state = 4;
         drawUpdate("Firmware");
         setconfig(eSYSTEM,{});                                      // SPEICHERN
         IPRINTPLN("u:FW ...");
-        update.firmwareUrl = F("http://"); 
-        update.firmwareUrl += serverurl[FIRMWARELINK].host;
-        update.firmwareUrl += serverurl[FIRMWARELINK].page;
-        adress = update.firmwareUrl + adress;  //
+        adress = update.firmwareUrl + adress;  // https://.... + adress
         Serial.println(adress);
         ret = ESPhttpUpdate.update(adress);
     
@@ -191,8 +186,10 @@ void do_http_update() {
           break;
       }
     } else {
-      IPRINTPLN("u:no");
-      update.state = 0;   // Vorgang beenden
+      if (update.state != 2) {    // nicht während Neustarts im Updateprozess
+        IPRINTPLN("u:no");
+        update.state = 0;   // Vorgang beenden
+      }
     }
   }
 }
@@ -200,8 +197,22 @@ void do_http_update() {
 
 
 
+/*
+// FIRMWARE
+#define FIRMWARESERVER "update.wlanthermo.de/getFirmware.php" 
+// "nano.norma.uberspace.de/update/checkUpdate.php"
+// SPIFFS
+#define SPIFFSSERVER "update.wlanthermo.de/getSpiffs.php"   
+// "nano.norma.uberspace.de/update/checkUpdate.php"
+*/
+
 
 /*
+ 
+#define NANOSERVER "nano.wlanthermo.de"
+#define UPDATESERVER "update.wlanthermo.de"   // früher nano.wlanthermo.de
+#define CHECKUPDATELINK "/checkUpdate.php"
+
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
