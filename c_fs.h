@@ -27,8 +27,10 @@
 #define SYSTEM_FILE   "/system.json"
 #define LOG_FILE      "/log.txt"
 #define PUSH_FILE     "/push.json"
+#define SERVER_FILE   "/url.json"
+#define CLOUD_FILE    "/cloud.json"
 
-/*
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Load xxx.json
 bool loadfile(const char* filename, File& configFile) {
@@ -67,9 +69,11 @@ bool savefile(const char* filename, File& configFile) {
     
     return false;
   }  
+  DPRINTP("[INFO]\tSaved: ");
+  DPRINTLN(filename);
   return true;
 }
-*/
+
 
 /*
 // Save Log
@@ -107,6 +111,9 @@ bool savelog() {
 
 */
 
+
+// MEMORYCLOUD im develop branch
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Check JSON
 bool checkjson(JsonVariant json, const char* filename) {
@@ -129,7 +136,7 @@ bool loadconfig(byte count, bool old) {
 
   const size_t bufferSize = 6*JSON_ARRAY_SIZE(CHANNELS) + JSON_OBJECT_SIZE(9) + 320;
   DynamicJsonBuffer jsonBuffer(bufferSize);
-  //File configFile;
+  File configFile;
 
   switch (count) {
     
@@ -247,21 +254,7 @@ bool loadconfig(byte count, bool old) {
 
         pitsize++;
       }
-/*
-      JsonObject& _master = json["pm"];
 
-      Pitmaster pitmaster = pitmaster1;
-
-      if (_master.containsKey("ch"))  pitmaster.channel   = _master["ch"]; 
-      else return false;
-      pitmaster.pid       = _master["pid"];
-      pitmaster.set       = _master["set"];
-      pitmaster.active    = _master["act"];
-      pitmaster.resume    = _master["res"];
-
-      if (pitmaster.active == MANUAL && pitmaster.resume) 
-        if (_master.containsKey("val")) pitmaster.value = _master["val"];
-  */
       JsonArray& _pid = json["pid"];
 
       pidsize = 0;
@@ -320,11 +313,11 @@ bool loadconfig(byte count, bool old) {
       else return false;
       if (json.containsKey("hwversion")) sys.hwversion = json["hwversion"];
       else return false;
-      if (json.containsKey("update"))   sys.update = json["update"];
+      if (json.containsKey("update"))   update.state = json["update"];
       else return false;
-      if (json.containsKey("autoupd"))  sys.autoupdate = json["autoupd"];
+      if (json.containsKey("autoupd"))  update.autoupdate = json["autoupd"];
       else return false;
-      if (json.containsKey("getupd"))   sys.getupdate = json["getupd"].asString();
+      if (json.containsKey("getupd"))   update.get = json["getupd"].asString();
       else return false;
       if (json.containsKey("god"))      sys.god = json["god"];
       else return false;
@@ -362,8 +355,28 @@ bool loadconfig(byte count, bool old) {
       else return false;
     }
     break;
+
+    case 6:     // SERVERURL
+    {
+      if (!loadfile(SERVER_FILE,configFile)) return false;
+      std::unique_ptr<char[]> buf(new char[configFile.size()]);
+      configFile.readBytes(buf.get(), configFile.size());
+      configFile.close();
+      JsonObject& json = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(json,SERVER_FILE)) return false;
+
+      for (int i = 0; i < NUMITEMS(serverurl); i++) {
+        JsonObject& _link = json[servertyp[i]];
+
+        if (_link.containsKey("host")) serverurl[i].host = _link["host"].asString();
+        else return false;
+        if (_link.containsKey("page")) serverurl[i].page = _link["page"].asString();
+        //else return false;
+      }
+    }
+   break;
     
-    //case 6:     // PRESETS
+    //case 7:     // PRESETS
     //break;
   
     default:
@@ -380,7 +393,7 @@ bool loadconfig(byte count, bool old) {
 bool setconfig(byte count, const char* data[2]) {
   
   DynamicJsonBuffer jsonBuffer;
-  //File configFile;
+  File configFile;
 
   switch (count) {
     case 0:         // CHANNEL
@@ -521,9 +534,9 @@ bool setconfig(byte count, const char* data[2]) {
       json["lang"] =        sys.language;
       json["fast"] =        sys.fastmode;
       json["hwversion"] =   sys.hwversion;
-      json["update"] =      sys.update;
-      json["getupd"] =      sys.getupdate;
-      json["autoupd"] =     sys.autoupdate;
+      json["update"] =      update.state;
+      json["getupd"] =      update.get;
+      json["autoupd"] =     update.autoupdate;
       json["batmax"] =      battery.max;
       json["batmin"] =      battery.min;
       json["logsec"] =      log_sector;
@@ -567,7 +580,23 @@ bool setconfig(byte count, const char* data[2]) {
     }
     break;
 
-    case 6:         //PRESETS
+    case 6:         //SERVERLINK
+    {
+      JsonObject& json = jsonBuffer.createObject();
+
+      for (int i = 0; i < NUMITEMS(serverurl); i++) {
+  
+        JsonObject& _obj = json.createNestedObject(servertyp[i]);
+        _obj["host"] =  serverurl[i].host;
+        _obj["page"] =  serverurl[i].page;
+      }
+      if (!savefile(SERVER_FILE, configFile)) return false;
+      json.printTo(configFile);
+      configFile.close();
+    }
+    break;
+
+    case 7:         //PRESETS
     {
       
     }
@@ -754,6 +783,14 @@ void start_fs() {
     set_push();
     setconfig(ePUSH,{});  // Speicherplatz vorbereiten
   } else serialNote(PUSH_FILE,1);
+
+  // SERVER
+  if (!loadconfig(eSERVER,0)) {
+    serialNote(SERVER_FILE,0);
+    setserverurl();
+    setconfig(eSERVER,{});  // Speicherplatz vorbereiten
+  } else serialNote(SERVER_FILE,1);
+  
 
   IPRINTP("M24C02: ");
   if (m24.exist()) {

@@ -23,8 +23,6 @@
 
 
 // see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
-static AsyncClient * tssettingclient = NULL;
-static AsyncClient * tsdataclient = NULL;           // Telegram Channel Data
 static AsyncClient * tsalarmclient = NULL;
 
 
@@ -112,6 +110,9 @@ bool sendNote(int check){
 
       client->onDisconnect([](void * arg, AsyncClient * c){
         printClient(SENDNOTELINK ,DISCONNECT);
+        
+        //printClient(serverurl[MESSAGELINK].page.c_str() ,DISCONNECT);
+        
         tsalarmclient = NULL;
         delete c;
       }, NULL);
@@ -119,6 +120,11 @@ bool sendNote(int check){
       //send the request
       printClient(SENDNOTELINK,SENDTO);
       String adress = createCommand(GETMETH,SENDNOTE,SENDNOTELINK,MESSAGESERVER,0);
+      
+      //printClient(serverurl[MESSAGELINK].page.c_str(),SENDTO);
+      //String message = apiData(APINOTE);
+      //String adress = createCommand(POSTMETH,NOPARA,serverurl[MESSAGELINK].page.c_str(),serverurl[MESSAGELINK].host.c_str(),message.length());
+
       client->write(adress.c_str());
       Serial.println(adress);
     }, NULL);

@@ -148,6 +148,7 @@ void setEE() {
   // CHANNEL SETTINGS:      680  - 1180
   // THINGSPEAK SETTINGS:   1180 - 1600
   // PITMASTER SETTINGS:    1600 - 2300
+  // PUSH xxx
 
   m24.begin();
   

@@ -491,7 +491,7 @@ double get_thermocouple(bool internal) {
   digitalWrite(THERMOCOUPLE_CS, LOW);                    // START
   for (uint8_t i=32; i; i--){
     dd = dd <<1;
-    if (twi_read_bit())  dd |= 0x01;
+    if (twi_read_bit())  dd |= 0x01;                     // needs #include "core_esp8266_si2c.c"
   }
   digitalWrite(THERMOCOUPLE_CS, HIGH);                   // END
 

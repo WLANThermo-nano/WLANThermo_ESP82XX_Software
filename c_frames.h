@@ -107,7 +107,7 @@ void drawQuestion(int counter) {
         break;
 
       case OTAUPDATE:
-        if (sys.getupdate == FIRMWAREVERSION) display.drawString(3,3,"Update: Erfolgreich!");
+        if (update.get == FIRMWAREVERSION) display.drawString(3,3,"Update: Erfolgreich!");
         else display.drawString(3,3,"Update: Fehlgeschlagen!");
         b1 = false;
         b0 = 2;
@@ -393,7 +393,11 @@ void drawpit(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
       break;
 
     case 9:         // PITMASTER TYP         
-      if ((inWork && tempor) || (!inWork && pitMaster[0].active > 0)) display->drawString(116+x, 36+y, "AUTO");
+      if ((inWork && tempor) || (!inWork && pitMaster[0].active > 0)) {
+        if (pitMaster[0].active == AUTO) display->drawString(116+x, 36+y, "AUTO");
+        else if (pitMaster[0].active == AUTOTUNE) display->drawString(116+x, 36+y, "AUTOTUNE");
+        else if (pitMaster[0].active == MANUAL) display->drawString(116+x, 36+y, "MANUAL");
+      }
       else display->drawString(116+x, 36+y, "OFF");  
       break;
   

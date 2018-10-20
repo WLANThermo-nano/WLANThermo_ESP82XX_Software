@@ -75,6 +75,7 @@
 #include "c_pmqtt.h"
 #include "c_ota.h"
 #include "c_server.h"
+#include "c_api.h"
 //#include "c_ws.h"
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -183,8 +184,9 @@ void loop() {
   #endif
 
   // HTTP Update
-  if (sys.update > 0) do_http_update();
-  else if (sys.update == -1) check_http_update();
+  check_api();
+  if (update.state > 0) do_http_update();
+  //else if (update.state == -1) check_http_update();
   
   // Detect Button Event
   if (button_input()) button_event();

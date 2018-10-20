@@ -50,6 +50,8 @@
 #define SET_DC        "/setDC"
 #define SET_IOT       "/setIoT"
 #define SET_PUSH      "/setPush"
+#define SET_SERVER    "/setserverlink"
+#define SET_GOD       "/god"
 #define UPDATE_CHECK  "/checkupdate"
 #define UPDATE_STATUS "/updatestatus"
 #define DC_STATUS     "/dcstatus"
@@ -74,7 +76,7 @@ class NanoWebHandler: public AsyncWebHandler {
   void handleSettings(AsyncWebServerRequest *request) {
     
     String jsonStr;
-    jsonStr = cloudSettings();
+    jsonStr = apiData(APISETTINGS);
     
     request->send(200, APPLICATIONJSON, jsonStr);
   }
@@ -84,7 +86,7 @@ class NanoWebHandler: public AsyncWebHandler {
   void handleData(AsyncWebServerRequest *request) {
 
     String jsonStr;
-    jsonStr = cloudData(false);
+    jsonStr = apiData(APIDATA);
     
     request->send(200, APPLICATIONJSON, jsonStr);
   }
@@ -329,7 +331,7 @@ public:
 
       // REQUEST: /checkupdate
       } else if (request->url() == UPDATE_CHECK) { 
-        sys.update = -1;
+        update.state = -1;
         request->send(200, TEXTPLAIN, TEXTTRUE);
         return;
       }
@@ -349,7 +351,7 @@ public:
       // REQUEST: /updatestatus
       if (request->url() == UPDATE_STATUS) { 
         DPRINTLN("... in process");
-        if(sys.update > 0) request->send(200, TEXTPLAIN, TEXTTRUE);
+        if(update.state > 0) request->send(200, TEXTPLAIN, TEXTTRUE);
         request->send(200, TEXTPLAIN, TEXTFALSE);
         return;
 
@@ -406,10 +408,10 @@ public:
           ESP.wdtDisable(); 
           // use getParam(xxx, true) for form-data parameters in POST request header
           String version = request->getParam("version", true)->value();
-          if (version.indexOf("v") == 0) sys.getupdate = version;
+          if (version.indexOf("v") == 0) update.get = version;
           else request->send(200, TEXTPLAIN, "Version unknown!");
         }
-        sys.update = 1;
+        update.state = 1;
         ESP.wdtEnable(10);
         request->send(200, TEXTPLAIN, "Do Update...");
       } else request->send(500, TEXTPLAIN, BAD_PATH);
@@ -556,7 +558,7 @@ class BodyWebHandler: public AsyncWebHandler {
   
     if (_system.containsKey("language"))  sys.language   = _system["language"].asString();
     if (_system.containsKey("unit"))      unit = _system["unit"].asString();
-    if (_system.containsKey("autoupd"))   sys.autoupdate = _system["autoupd"];
+    if (_system.containsKey("autoupd"))   update.autoupdate = _system["autoupd"];
     if (_system.containsKey("fastmode"))  sys.fastmode   = _system["fastmode"];
 
     if (_system.containsKey("host")) {
@@ -841,6 +843,85 @@ class BodyWebHandler: public AsyncWebHandler {
     return 1;
   }
 
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  bool setServerURL(AsyncWebServerRequest *request, uint8_t *datas) {
+
+    printRequest(datas);
+  
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+    if (!json.success()) return 0;
+
+    JsonObject& _url = json["url"];
+
+    for (int i = 0; i < NUMITEMS(serverurl); i++) {
+      JsonObject& _link = _url[servertyp[i]];
+      if (_link.containsKey("host")) serverurl[i].host = _link["host"].asString();
+      if (_link.containsKey("page")) serverurl[i].page = _link["page"].asString();
+    }
+
+    if (!setconfig(eSERVER,{})) return 0;   // für Serverlinks
+
+    bool available = false;
+    JsonObject& _update = json["update"];
+    if (_update.containsKey("available")) available = _update["available"];
+    
+    if (available) { // && update.autoupdate
+      if (_update.containsKey("version")) update.version = _update["version"].asString();
+      if (_update.containsKey("prerelease")) update.prerelease = _update["prerelease"];
+      if (_update.containsKey("firmwareUrl")) update.firmwareUrl = _update["firmwareUrl"].asString();
+      if (_update.containsKey("spiffsUrl")) update.spiffsUrl = _update["spiffsUrl"].asString();
+    } else update.get = "false";
+    
+    if (!setconfig(eSYSTEM,{})) return 0;   // für Update
+    return 1;
+  }
+
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  bool setDCTest(AsyncWebServerRequest *request, uint8_t *datas) {
+
+    printRequest(datas);
+  
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+    if (!json.success()) return 0;
+
+    byte aktor = json["aktor"];
+    bool dc = json["dc"];
+    int val = json["val"];
+    byte id = 0;  // Pitmaster1
+    if (aktor == SERVO && sys.hwversion > 1) servoV2(true);
+    if (val >= SERVOPULSMIN*10 && val <= SERVOPULSMAX*10 && aktor == SERVO) val = getDC(val);
+    else val = constrain(val,0,1000);
+    DC_start(dc, aktor, val, id);
+    return 1;        
+  }
+
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  bool setGod(AsyncWebServerRequest *request, uint8_t *datas) {
+
+    printRequest(datas);
+  
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+    if (!json.success()) return 0;
+    
+    sys.god = json["god"];
+    
+    // System für Damper aktivieren
+    if (sys.god & (1<<3)) {
+      sys.hwversion = 2;  // Damper nur mit v2 Konfiguration
+      set_pid(1);         // es wird ein Servo gebraucht
+      setconfig(ePIT,{});
+    }
+
+    //supply ist raus
+    //if (sys.god & (1<<4) && sys.hwversion == 1) sys.god ^= (1<<4); // Supply nicht bei v1
+    //setconfig(eSYSTEM,{});
+
+    return 1;
+  }
+
 
 public:
   
@@ -896,6 +977,11 @@ public:
     return setPush(request, datas);
   }
 
+  bool setServerURL(uint8_t *datas) {
+    AsyncWebServerRequest *request;
+    return setServerURL(request, datas);
+  }
+
   void handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
     
     if (request->url() == SET_NETWORK) {
@@ -944,7 +1030,21 @@ public:
       if(!setPush(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
         return;
-    }
+    
+    } else if (request->url() == SET_SERVER) { 
+      if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
+        return request->requestAuthentication();    
+      if(!setServerURL(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+    
+    } else if (request->url() == SET_DC) {     
+      if(!setDCTest(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+
+    } else if (request->url() == SET_GOD) {     
+      if(!setGod(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+    }  
   }
 
   bool canHandle(AsyncWebServerRequest *request){
@@ -952,7 +1052,8 @@ public:
     if (request->url() == SET_NETWORK || request->url() == SET_CHANNELS
       || request->url() == SET_SYSTEM || request->url() == SET_PITMASTER
       || request->url() == SET_PID || request->url() == SET_IOT
-      || request->url() == SET_PUSH
+      || request->url() == SET_SERVER || request->url() == SET_DC
+      || request->url() == SET_PUSH //|| request->url() == SET_GOD
       ) return true;
     return false;
   }

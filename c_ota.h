@@ -91,8 +91,118 @@
 
 #endif
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// HTTP UPDATE
+
+
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Do http update
+void do_http_update() {
+
+  // UPDATE beendet
+  if (update.state == 4){
+    question.typ = OTAUPDATE;
+    drawQuestion(0);
+    update.get = "false";
+    update.state = 0;
+    setconfig(eSYSTEM,{});  // Speichern
+    update.state = -1;        // Neue Suche anstoßen
+    IPRINTPLN("u:finish");  // Update finished
+    return;
+  }
+  
+  if((wifi.mode == 1)) {                 // nur bei STA
+    if (update.get != "false") {
+
+      // UPDATE Adresse
+      String adress = "?";
+      adress += createParameter(SERIALNUMBER);
+      adress += createParameter(DEVICE);
+      adress += createParameter(UPDATEVERSION);
+
+      // UPDATE 2x Wiederholen falls schief gelaufen
+      if (update.count < 3) update.count++;   // Wiederholung
+      else  {
+        update.state = 0;
+        setconfig(eSYSTEM,{});
+        question.typ = OTAUPDATE;
+        drawQuestion(0);
+        IPRINTPLN("u:cancel");      // Update canceled
+        displayblocked = false;
+        update.count = 0;
+        return;
+      }
+
+      // UPDATE spiffs oder firmware
+      displayblocked = true;
+      t_httpUpdate_return ret;
+    
+      if (update.state == 1) {
+        update.state = 2;  // Nächster Updatestatus
+        drawUpdate("Webinterface");
+        setconfig(eSYSTEM,{});                                      // SPEICHERN
+        IPRINTPLN("u:SPIFFS ...");
+        update.spiffsUrl = F("http://");
+        update.spiffsUrl += serverurl[SPIFFSLINK].host;
+        update.spiffsUrl += serverurl[SPIFFSLINK].page;
+        adress = update.spiffsUrl + adress;   //
+        Serial.println(adress);
+        ret = ESPhttpUpdate.updateSpiffs(adress);
+
+    
+      } else if (update.state == 3) {
+        update.state = 4;
+        drawUpdate("Firmware");
+        setconfig(eSYSTEM,{});                                      // SPEICHERN
+        IPRINTPLN("u:FW ...");
+        update.firmwareUrl = F("http://"); 
+        update.firmwareUrl += serverurl[FIRMWARELINK].host;
+        update.firmwareUrl += serverurl[FIRMWARELINK].page;
+        adress = update.firmwareUrl + adress;  //
+        Serial.println(adress);
+        ret = ESPhttpUpdate.update(adress);
+    
+      } 
+
+      // UPDATE Ereigniskontrolle
+      switch(ret) {
+        case HTTP_UPDATE_FAILED:
+          DPRINTF("[HTTP]\tUPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+          DPRINTPLN("");
+          if (update.state == 2) update.state = 1;  // Spiffs wiederholen
+          else  update.state = 3;                 // Firmware wiederholen
+          //setconfig(eSYSTEM,{});
+          drawUpdate("error");
+          break;
+
+        case HTTP_UPDATE_NO_UPDATES:
+          DPRINTPLN("[HTTP]\tNO_UPDATES");
+          displayblocked = false;
+          break;
+
+        case HTTP_UPDATE_OK:
+          DPRINTPLN("[HTTP]\tUPDATE_OK");
+          if (update.state == 2) ESP.restart();   // falls nach spiffs kein automatischer Restart durchgeführt wird
+          break;
+      }
+    } else {
+      IPRINTPLN("u:no");
+      update.state = 0;   // Vorgang beenden
+    }
+  }
+}
+
+
+
+
+
+/*
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Do http update
@@ -304,5 +414,5 @@ void check_http_update() {
   } 
 }
 
-
+*/
 

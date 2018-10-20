@@ -150,7 +150,7 @@ bool sendpmqtt() {
   if (pmqttClient.connected()) {
 
     unsigned long vorher = millis();
-    String payload_data = cloudData(0);
+    String payload_data = apiData(APIDATA);
     pmqttClient.publish(prefixgen(1).c_str(), iot.P_MQTT_QoS, false, payload_data.c_str());
     MQPRINTF("[MQTT]\tdata: %ums\r\n", millis() - vorher);
     return true;
@@ -164,7 +164,7 @@ bool sendSettings() {
   
     if (pmqttClient.connected()) {
       unsigned long settings_vorher = millis();
-      String payload_settings = cloudSettings();
+      String payload_settings = apiData(APISETTINGS);
       pmqttClient.publish(prefixgen(2).c_str(), iot.P_MQTT_QoS, false, payload_settings.c_str());
       MQPRINTF("[MQTT]\tsettings: %ums\r\n", millis() - settings_vorher);
       return true;

@@ -85,7 +85,9 @@ void onWifiConnect(const WiFiEventStationModeGotIP& event) {
   wifi.takeAP = 0;
   wifi.savecount = 0;           // Liste beim nächsten Verlust von vorne rotieren (liste wurde umsortiert)
   
-  check_http_update();
+  update.state = -1;            // Server abfragen // überschreibt Updateprozess?
+  //check_api();
+  //check_http_update();
 
   // falls Startscreen noch aktiv
   if (question.typ == SYSTEMSTART) {
