@@ -53,7 +53,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 
 // HARDWARE
-#define FIRMWAREVERSION  "v0.9.11"
+#define FIRMWAREVERSION  "v0.9.8"
 #define GUIAPIVERSION    "2"
 #define SERVERAPIVERSION "1"
 
@@ -147,18 +147,9 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define APISERVER "api.wlanthermo.de"
 #define CHECKAPI "/"
 
-// FIRMWARE
-#define FIRMWARESERVER "update.wlanthermo.de" // "nano.norma.uberspace.de"
-#define GETFIRMWARELINK "/checkUpdate.php"    // "/update/checkUpdate.php"
-
-// SPIFFS
-#define SPIFFSSERVER "update.wlanthermo.de" // "nano.norma.uberspace.de"
-#define GETSPIFFSLINK "/checkUpdate.php"    // "/update/checkUpdate.php"
-
 // THINGSPEAK
 #define THINGSPEAKSERVER "api.thingspeak.com"
 #define SENDTSLINK "/update.json"
-#define SENDTHINGSPEAK "Thingspeak"
 #define THINGHTTPLINK "/apps/thinghttp/send_request"
 
 
@@ -338,12 +329,12 @@ System sys;
 struct myUpdate {
   String firmwareUrl;             // UPDATE FIRMWARE LINK
   String spiffsUrl;               // UPDATE SPIFFS LINK
-  byte count;                     // 
-  int state;                     // UPDATE STATE: -1 = check, 0 = no, 1 = start spiffs, 2 = check after restart, 3 = firmware, 4 = finish
-  String get;                     // UPDATE MY NEW VERSION
-  //String version;                 // UPDATE SERVER NEW VERSION
-  bool autoupdate;
-  bool prerelease;
+  byte count;                     // UPDATE SPIFFS REPEAT
+  int state;                      // UPDATE STATE: -1 = check, 0 = no, 1 = start spiffs, 2 = check after restart, 3 = firmware, 4 = finish
+  String get;                     // UPDATE MY NEW VERSION (über Eingabe)
+  String version;                 // UPDATE SERVER NEW VERSION
+  bool autoupdate;                // CHECK UPDATE INFORMATION
+  bool prerelease;                // ?
 };
 
 myUpdate update;
@@ -503,8 +494,10 @@ struct ServerData {
    String typ; 
 };
 
-ServerData serverurl[3];     // 0:api, 1: note, 2:cloud
-enum {APILINK, NOTELINK, CLOUDLINK};
+ServerData serverurl[5];     // 0:api, 1: note, 2:cloud
+enum {APILINK, NOTELINK, CLOUDLINK, TSLINK, HTTPLINK};
+
+enum {NOPARA, TESTPARA, SENDTS, THINGHTTP};                       // Config GET/POST Request
 
 
 rst_info *myResetInfo;
@@ -616,14 +609,20 @@ void set_push();
 void sendNotification();
 String newToken();
 
+#ifdef THINGSPEAK
+String collectData();
+String createNote();
+#endif
+
 // API
 int apiindex;
 int urlindex;
+int parindex;
 void urlObj(JsonObject  &jObj);
 void dataObj(JsonObject &jObj, bool cloud);
 bool sendAPI(int check);
 String apiData(int typ);
-enum {APIUPDATE, APICLOUD, APIDATA, APISETTINGS, APINOTE, APIALEXA};
+enum {NOAPI, APIUPDATE, APICLOUD, APIDATA, APISETTINGS, APINOTE, APIALEXA};
 
 //void setWebSocket();
 
@@ -680,10 +679,11 @@ void set_system() {
   sys.language = "de";
   sys.fastmode = false;
   sys.hwversion = 1;
-  if (update.state == 0) update.get = "false";   // Änderungen am EE während Update
+  if (update.state == 0) {
+    update.get = "false";   // Änderungen am EE während Update
+    update.version = "false";
+  }
   update.autoupdate = 1;
-  //update.firmwareUrl = FIRMWARESERVER;
-  //update.spiffsUrl = SPIFFSSERVER;
   update.firmwareUrl = "";          // wird nur von der API befüllt wenn Update da ist
   update.spiffsUrl = "";
   sys.god = false;
@@ -694,6 +694,8 @@ void set_system() {
   sys.pitsupply = false;           // nur mit Mod
   sys.damper = false;
   sys.restartnow = false;
+
+  update.state = -1;  // Kontakt zur API herstellen
 }
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -758,11 +760,30 @@ void maintimer(bool stby = false) {
           if (sendAPI(0)) {
             apiindex = APICLOUD;
             urlindex = CLOUDLINK;
+            parindex = NOPARA;
             sendAPI(2);
           }
         }
         lastUpdateCloud = false;
       }
+
+      #ifdef THINGSPEAK
+
+      // THINGSPEAK
+      if (!(oscounter % iot.TS_int*4)) {   // variable
+        if (wifi.mode == 1 && update.state == 0 && iot.TS_on) {
+          if (iot.TS_writeKey != "" && iot.TS_chID != "") {
+            if (sendAPI(0)) {
+              apiindex = NOAPI;
+              urlindex = TSLINK;
+              parindex = SENDTS;
+              sendAPI(2);
+            }
+          }
+        }
+      } 
+
+      #endif
 
       // OLED FLASH TIMER
       if (inWork) {
@@ -914,12 +935,20 @@ void setserverurl() {
   serverurl[2].host = APISERVER;
   serverurl[2].page = CHECKAPI;
   serverurl[2].typ  = "cloud";
+
+  serverurl[3].host = THINGSPEAKSERVER;
+  serverurl[3].page = SENDTSLINK;
+  serverurl[3].typ  = "thingspeak";
+
+  serverurl[4].host = THINGSPEAKSERVER;
+  serverurl[4].page = THINGHTTPLINK;
+  serverurl[4].typ  = "thinghttp";
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // GET/POST-Request
 
-enum {SERIALNUMBER, DEVICE, HARDWAREVS, SOFTWAREVS, UPDATEVERSION};  // Parameters
+enum {SERIALNUMBER, DEVICE, HARDWAREVS, SOFTWAREVS, UPDATEVERSION, TSWRITEKEY, THINGHTTPKEY};  // Parameters
 
 // GET/POST Parameter Generator
 String createParameter(int para) {
@@ -950,13 +979,27 @@ String createParameter(int para) {
       command += F("&version=");
       command += update.get;
       break;
+      
+    #ifdef THINGSPEAK
+    
+    case THINGHTTPKEY:
+      command += F("api_key=");
+      command += iot.TS_httpKey;
+      break;
+
+    case TSWRITEKEY:
+      command += F("api_key=");
+      command += iot.TS_writeKey;
+      break;
+
+    #endif
   }
 
   return command;
 }
 
 
-enum {NOPARA, TESTPARA};                       // Config
+//enum {NOPARA, TESTPARA, SENDTS, THINGHTTP};                       // Config
 enum {GETMETH, POSTMETH};                                                   // Method
 
 // GET/POST Generator
@@ -971,6 +1014,20 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
 
     case TESTPARA:
     break;
+
+    #ifdef THINGSPEAK
+
+    case SENDTS:
+      command += createParameter(TSWRITEKEY);
+      command += collectData();
+      break;
+
+    case THINGHTTP:
+      command += createParameter(THINGHTTPKEY);
+      command += createNote();
+      break;
+
+    #endif
 
     default:
     break;

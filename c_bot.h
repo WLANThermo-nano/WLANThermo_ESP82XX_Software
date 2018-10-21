@@ -63,18 +63,59 @@ void set_push() {
   pushd.service = 0;
 }
 
+#ifdef THINGSPEAK
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Collect Data for Sending to Thingspeak
+String collectData() {
+  
+  String postStr;
+  for (int i = 0; i < 7; i++)  {
+    if (ch[i].temp != INACTIVEVALUE) {
+      postStr += "&";
+      postStr += String(i+1);
+      postStr += "=";
+      postStr += String(ch[i].temp,1);
+    }
+  }
+  if (iot.TS_show8) {
+    postStr +="&8=";  
+    postStr += String(battery.percentage);  // Kanal 8 ist Batterie-Status
+  } else if (ch[7].temp != INACTIVEVALUE) {
+    postStr +="&8="; 
+    postStr += String(ch[7].temp,1);
+  }
+  return postStr;
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Create Notification Message
+String createNote() {
+
+  String postStr;
+  bool limit = notification.limit & (1<<notification.ch);
+  postStr += F("&message=");
+  postStr += (limit)?F("hoch"):F("niedrig"); 
+  postStr += F("&ch=");
+  postStr += String(notification.ch+1);    
+
+  notification.index &= ~(1<<notification.ch);           // Kanal entfernen, sonst erneuter Aufruf
+   
+  return postStr;
+}
+
+#endif
+
+
 // im Umbau
 void sendNotification() {
   
 
-    if (notification.type > 0) {                      // GENERAL NOTIFICATION       
-        
-      if (pushd.on > 0) {
-        if (sendAPI(0)) {
-          apiindex = APINOTE;
-          urlindex = NOTELINK;
-          sendAPI(2);           // Notification per Nano-Server
-        }
+    if (notification.type == 1 && pushd.on == 2) {           // Testnachricht
+      if (sendAPI(0)) {
+        apiindex = APINOTE;
+        urlindex = NOTELINK;
+        parindex = NOPARA;
+        sendAPI(2);
       }
         
     } else if (notification.index > 0) {              // CHANNEL NOTIFICATION
@@ -82,18 +123,22 @@ void sendNotification() {
       for (int i=0; i < CHANNELS; i++) {
         if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
             
-          bool sendN = true;
-          if (pushd.on > 0) {
+          if (iot.TS_httpKey != "" && iot.TS_on) {
+            if (sendAPI(0)) {
+              notification.ch = i;
+              apiindex = NOAPI;
+              urlindex = HTTPLINK;
+              parindex = THINGHTTP;
+              sendAPI(2);           // Notification per Thingspeak
+            } 
+          } else if (pushd.on > 0) {
             if (sendAPI(0)) {
               notification.ch = i;
               apiindex = APINOTE;
               urlindex = NOTELINK;
+              parindex = NOPARA;
               sendAPI(2);           // Notification per Nano-Server
-            } else sendN = false;
-          }
-          if (sendN) {
-            notification.index &= ~(1<<i);           // Kanal entfernen, sonst erneuter Aufruf
-            return;                                  // nur ein Senden pro Durchlauf
+            } 
           }
         }
       }    

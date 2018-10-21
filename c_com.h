@@ -74,7 +74,8 @@ void read_serial(char *buffer) {
       String payload((char*)buffer);
       if (payload.indexOf("v") == 0) {
         update.get = payload;  // kein Speichern, da während des Updates eh gespeichert wird
-        update.state = 1;  
+        if (update.get == update.version) update.state = 1;   // Version schon bekannt, direkt los
+        else update.state = -1;                               // Version erst vom Server anfragen
       } else  {IPRINTPLN("Update unbekannt!");}
       return;    
     }
@@ -164,6 +165,7 @@ void read_serial(char *buffer) {
 
     // HTTP UPDATE
     else if (str == "update") {
+      if (update.version != "false");
       update.state = 1;
       return;
     }

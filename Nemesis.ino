@@ -27,7 +27,7 @@
 //#define ASYNC_TCP_SSL_ENABLED 1
 //#define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
-//#define MPR
+#define THINGSPEAK
  
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)

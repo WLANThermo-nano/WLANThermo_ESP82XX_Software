@@ -18,6 +18,21 @@
 
     LITERATUR:
     - https://de.wikipedia.org/wiki/Liste_der_HTTP-Headerfelder
+
+
+    UPDATEPROZESS:
+    - update.version wird von der API befüllt
+    - update.get wird vom User oder GUI befüllt
+    - wenn update.get == update.version, dann kann das Update direkt gestartet werden update.state = 1
+    - wenn update.get unbekannt ist, dann zuerst über API anfragen mit update.state = -1
+    - dabei muss das "udapte" JSON mit update.get befüllt werden
+    - update.get wird im EE gespeichert und nach dem Neustart wieder aufgerufen
+    - Dann wird speziell nach den Links von der Version in update.get gefragt
+
+
+
+
+    
     
  ****************************************************/
 
@@ -28,8 +43,8 @@ void deviceObj(JsonObject  &jObj) {
   jObj["device"] = "nano";
   jObj["serial"] = String(ESP.getChipId(), HEX);
   
-  if (sys.hwversion == 2) jObj["hw_version"] =  String("V1+");
-  else  jObj["hw_version"] = String("V")+String(sys.hwversion);
+  if (sys.hwversion == 2) jObj["hw_version"] =  String("v1+");
+  else  jObj["hw_version"] = String("v")+String(sys.hwversion);
 
   jObj["sw_version"] = FIRMWAREVERSION;
   jObj["api_version"] = SERVERAPIVERSION;
@@ -58,7 +73,7 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
     jObj["language"] =   sys.language;
     jObj["fastmode"] =   sys.fastmode;
     jObj["version"] =    FIRMWAREVERSION;
-    jObj["getupdate"] =  update.get;
+    jObj["getupdate"] =  update.version;
     jObj["autoupd"] =    update.autoupdate;
     if (sys.hwversion == 2) jObj["hwversion"] =  String("V1+");
     else  jObj["hwversion"] =  String("V")+String(sys.hwversion);
@@ -224,6 +239,9 @@ void updateObj(JsonObject  &jObj) {
 
   // nur leeres Objekt, wird vom Server befüllt
   //jObj["available"] = true;
+
+  // nach einer bestimmten Version fragen
+  if (update.get != "false") jObj["version"] = update.get;
   
 }
 
@@ -353,82 +371,63 @@ void cloudObj(JsonObject  &jObj) {
 // Notification JSON Object
 void noteObj(JsonObject  &jObj) {
 
-  jObj["task"] = "Alert";
+  
+  jObj["lang"] = sys.language;
 
+    // an welche Dienste soll geschickt werden?
+  JsonArray& services = jObj.createNestedArray("services");
+
+    JsonObject& _obj1 = services.createNestedObject();
+    switch (pushd.service) {
+      case 0: _obj1["service"] = F("telegram"); break;
+      case 1: _obj1["service"] = F("pushover"); break;
+      case 2: _obj1["service"] = F("prowl"); break;
+    }
+    _obj1["key1"] =  pushd.token;
+    _obj1["key2"] =  pushd.id;
+
+    // pushd.repeat;
+
+
+  if (notification.type == 1) {
+    //jObj["task"] = "test";
+    
+    jObj["task"] = "alert";
+    jObj["message"] = F("down");
+    jObj["channel"] = 1;
+    
+    if (pushd.on == 2) pushd.on = 3;    // alte Werte wieder herstellen  (Testnachricht)
+    return;
+  } else {
+    jObj["task"] = "alert";  
+  }
+
+  /*
   // Kanäle & Message
   JsonArray& _ch = jObj.createNestedArray("channels");
   JsonArray& _message = jObj.createNestedArray("messages");
 
+  
+  
   for (int i = 0; i < CHANNELS; i++) {
+    Serial.println(ch[i].alarm);
     if (ch[i].alarm == 1 || ch[i].alarm == 3){      // push or all
+      
       if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
+        notification.index &= ~(1<<i);           // Kanal entfernen, sonst erneuter Aufruf
         _ch.add(i+1);                               // Füge Kanal hinzu
-        _message.add(notification.limit & (1<<i));  // Füge Art hinzu
+        bool limit = notification.limit & (1<<i);
+        _message.add((limit)?F("up"):F("down"));
       }
     }
   }
-
-  // an welche Dienste soll geschickt werden?
-  JsonArray& services = jObj.createNestedArray("services");
-/*
-  if (notification.temp1.length() == 30 || notification.token.length() == 30) {
-    JsonObject& _obj2 = services.createNestedObject();
-    _obj2["service"] =  "pushover";
-    if (notification.temp1.length() == 30) {
-      _obj1["key1"] =  notification.temp1;
-      _obj2["key2"] =  notification.temp2;
-    } else {
-      _obj1["key1"] =  notification.token;
-      _obj2["key2"] =  notification.id;
-    }
-  
-  } else if (notification.temp1.length() == 40 || notification.token.length() == 40) {
-    JsonObject& _obj3 = services.createNestedObject();
-    _obj3["service"] =  "prowl";
-  } else  
-  
-    JsonObject& _obj1 = services.createNestedObject();
-    _obj1["service"] =  "telegram";
-    _obj1["key1"] =  "xxx";
-    _obj1["key2"] =  "xxx";
-    
-    JsonObject& _obj3 = services.createNestedObject();
-    _obj3["service"] =  "mail";
-    _obj3["adress"] =  "xxx";
- */ 
-
-/*
-    pushd.token;
-    pushd.id;
-    pushd.repeat;
-    
-    switch (pushd.service) {
-      case 0: command += F("telegram"); break;
-      case 1: command += F("pushover"); break;
-      case 2: command += F("prowl"); break;
-      }
-    if (pushd.on == 2) pushd.on = 3;                    // alte Werte wieder herstellen  (Testnachricht)
-     
- */ 
-
- /*
-   String postStr;
-
-  if (notification.type > 0) {    // Test Message
-    postStr += F("&msg=");
-    postStr += F("up");
-    postStr += F("&ch=1");
-    notification.type = 0;
-    
-  } else {
-    bool limit = notification.limit & (1<<notification.ch);
-    postStr += F("&msg=");
-    postStr += (limit)?F("up"):F("down");
-    postStr += F("&ch=");
-    postStr += String(notification.ch+1);    
-  } 
-  return postStr;
   */
+
+  bool limit = notification.limit & (1<<notification.ch);
+  jObj["message"] = (limit)?F("up"):F("down");
+  jObj["channel"] = notification.ch+1;
+  notification.index &= ~(1<<notification.ch);           // Kanal entfernen, sonst erneuter Aufruf
+
 }
 
 
@@ -447,6 +446,10 @@ String apiData(int typ) {
   }
 
   switch (typ) {
+
+    case NOAPI: {
+      return "";
+    }
 
     case APIUPDATE: {
       JsonObject& update = root.createNestedObject("update");
@@ -476,6 +479,7 @@ String apiData(int typ) {
     case APINOTE: {
       JsonObject& note = root.createNestedObject("notification");
       noteObj(note);
+      notification.type = 0;    // Zurücksetzen
       break;
     }
 
@@ -559,16 +563,15 @@ void readLocation(String payload, int len) {
 }
 
 
-enum {CONNECTFAIL, SENDTO, DISCONNECT, CLIENTERRROR, CLIENTCONNECT};
+enum {CONNECTFAIL, SENDTO, DISCONNECT, CLIENTCONNECT};
 
 void printClient(const char* link, int arg) {
 
   switch (arg) {
     case CONNECTFAIL:   IPRINTP("f:"); break;    // Client Connect Fail
-    case SENDTO:        IPRINTP("s:"); break;     // Client Send to
-    case DISCONNECT:    IPRINTP("d:"); break;    //Disconnect Client
-    case CLIENTERRROR:  IPRINTP("f:"); break;     // Client Connect Error:
-    case CLIENTCONNECT: IPRINTP("c:"); break;   // Client Connect
+    case SENDTO:        IPRINTP("s:"); break;    // Client Send to
+    case DISCONNECT:    IPRINTP("d:"); break;    // Disconnect Client
+    case CLIENTCONNECT: IPRINTP("c:"); break;    // Client Connect
   }
   DPRINTLN(link);
 }
@@ -588,7 +591,7 @@ bool sendAPI(int check){
     if(!apiClient)  return false;               //could not allocate client
 
     apiClient->onError([](void * arg, AsyncClient * client, int error){
-    printClient(serverurl[urlindex].page.c_str(),CLIENTERRROR);
+    IPRINTP("e:Client");
       apiClient = NULL;
       delete client;
     }, NULL);
@@ -647,12 +650,13 @@ bool sendAPI(int check){
       //send the request
       printClient(serverurl[urlindex].page.c_str() ,SENDTO);
       String message = apiData(apiindex);
-      String adress = createCommand(POSTMETH,NOPARA,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
+      String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
       adress += message;
       client->write(adress.c_str());
       Serial.println(adress);
       apiindex = NULL;
       urlindex = NULL;
+      parindex = NULL;
 
     }, NULL);
 
@@ -667,20 +671,23 @@ bool sendAPI(int check){
 }
 
 
-// update.autoupdate einarbeiten
 
 void check_api() {
 
   if (update.state == -1 || update.state == 2) {  // -1 = check, 2 = check after restart during Update
     if((wifi.mode == 1)) {
-  
-      if (sendAPI(0)) {
+      //Serial.println("Verbindungsversuch API");
+      if (sendAPI(0)) {             // blockt sich selber, so dass nur ein Client gleichzeitig offen
         apiindex = APIUPDATE;
         urlindex = APILINK;
+        parindex = NOPARA;
         sendAPI(2);
       }
 
-    } else update.get = "false";      // wird überschrieben wenn API abgefragt
+    } else {                      // kein Internet, also Update stoppen
+      //update.get = "false";     // warten, bis Internet da ist, oder Updateversuch stoppen?
+      if (update.state == -1)  update.get = "false";    // nicht während Update, da wird die Version gebraucht
+    }
     
     if (update.state == -1) update.state = 0;         // von check (-1) auf ruhend (0) wechseln
     // kein Speichern im EE, Zustand -1 ist nur temporär

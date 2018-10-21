@@ -252,7 +252,8 @@ static inline void button_event() {
 
         case RESETFW:
           update.get = FIRMWAREVERSION;
-          update.state = 1;
+          if (update.get == update.version) update.state = 1;   // Version schon bekannt, direkt los
+          else update.state = -1;
           break;
 
         case HARDWAREALARM:

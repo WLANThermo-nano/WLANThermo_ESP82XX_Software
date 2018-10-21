@@ -412,10 +412,14 @@ public:
           ESP.wdtDisable(); 
           // use getParam(xxx, true) for form-data parameters in POST request header
           String version = request->getParam("version", true)->value();
-          if (version.indexOf("v") == 0) update.get = version;
+          Serial.println(version);
+          if (version.indexOf("v") == 0) {
+            update.get = version;                                 // Versionswunsch speichern
+            if (update.get == update.version) update.state = 1;   // Version schon bekannt, direkt los
+            else update.state = -1;                               // Version erst vom Server anfragen
+          }
           else request->send(200, TEXTPLAIN, "Version unknown!");
         }
-        update.state = 1;
         ESP.wdtEnable(10);
         request->send(200, TEXTPLAIN, "Do Update...");
       } else request->send(500, TEXTPLAIN, BAD_PATH);
@@ -875,16 +879,39 @@ class BodyWebHandler: public AsyncWebHandler {
       JsonObject& _update = json["update"];
       if (_update.containsKey("available")) available = _update["available"];
     
-      if (available && update.autoupdate) { 
-        if (_update.containsKey("version"))     update.get = _update["version"].asString();
-        if (_update.containsKey("prerelease"))  update.prerelease = _update["prerelease"];
-        if (_update.containsKey("firmwareUrl")) update.firmwareUrl = _update["firmwareUrl"].asString();
-        if (_update.containsKey("spiffsUrl"))   update.spiffsUrl = _update["spiffsUrl"].asString();
-      } else update.get = "false";
-
-      if (update.state == 2) {
-        update.state = 3;     // Update fortführen nach Restart, nicht speichern falls Absturz wiederholen
+      if (available && (update.autoupdate || update.get != "false")) { 
+        // bei update.get wurde eine bestimmte Version angefragt
+        String version;
+        if (_update.containsKey("version"))      {
+          version = _update["version"].asString();
+          if (update.get == version) {
+            if (update.state < 1) update.state = 1;           // Anfrage erfolgreich, Update starten
+            else if (update.state == 2) update.state = 3;     // Anfrage während des Updateprozesses
+          } else {                                            // keine konrekte Anfrage
+            update.version = version;
+            update.get = "false";                             // nicht die richtige Version übermittelt
+          }
+        }
+        if (_update.containsKey("firmware")) {              // Firmware-Link
+          JsonObject& _fw = _update["firmware"];
+          if (_fw.containsKey("url"))  update.firmwareUrl = _fw["url"].asString();
+          Serial.println(update.firmwareUrl);
+        }
+        if (_update.containsKey("spiffs"))  {               // SPIFFS-Link
+          JsonObject& _sf = _update["spiffs"];
+          if (_sf.containsKey("url"))  update.spiffsUrl = _sf["url"].asString();
+          Serial.println(update.spiffsUrl);
+        }
+        //if (_update.containsKey("prerelease"))  update.prerelease = _update["prerelease"];
+        if (_update.containsKey("force"))       update.state = 1;   // Update erzwingen
+        
       } else {
+        update.version = "false";                           // kein Server-Update
+        if (update.get != "false") update.get = "false";    // bestimmte Version nicht bekannt
+      }
+
+      if (update.state == 3) {} // nicht speichern falls Absturz -> wiederholen
+      else {
         if (!setconfig(eSYSTEM,{})) return 0;   // für Update
       }
     }
