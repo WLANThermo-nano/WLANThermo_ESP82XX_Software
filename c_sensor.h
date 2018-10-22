@@ -420,7 +420,7 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
           drawQuestion(i);
         }
       
-      } else if (!ch[i].isalarm && ch[i].temp != INACTIVEVALUE) {
+      } else if ((!ch[i].isalarm || ch[i].repeatalarm) && ch[i].temp != INACTIVEVALUE) {
         // first rising limits
 
         ch[i].isalarm = true;                      // alarm
@@ -436,6 +436,8 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
             notification.limit &= ~(1<<i);           // add lower limit              
           }
         } 
+
+        ch[i].repeatalarm = false;
         
         if (ch[i].alarm > 1) {                       // only if summer
           ch[i].showalarm = 2;                    // show OLED note first time

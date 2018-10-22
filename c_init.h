@@ -53,8 +53,8 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 
 // HARDWARE
-#define FIRMWAREVERSION  "v0.9.8"
-#define GUIAPIVERSION    "2"
+#define FIRMWAREVERSION  "v0.9.13"
+#define GUIAPIVERSION    "1"
 #define SERVERAPIVERSION "1"
 
 // CHANNELS
@@ -169,6 +169,8 @@ struct ChannelData {
    bool  isalarm;           // Limits überschritten   
    byte  showalarm;         // Alarm anzeigen   (0:off, 1:show, 2:first show)
    String color;            // COLOR
+   bool repeatalarm;
+   int repeat;
 };
 
 ChannelData ch[CHANNELS];
@@ -745,13 +747,20 @@ void maintimer(bool stby = false) {
       }
 
       // PRIVATE MQTT
-      if (!(oscounter % iot.P_MQTT_int*4)) {   // variable
+      if (!(oscounter % (iot.P_MQTT_int*4))) {   // variable
         if (wifi.mode == 1 && update.state == 0 && iot.P_MQTT_on) sendpmqtt();
       } 
 
-      // NOTIFICATION (kein Timer notwenig)
+      // NOTIFICATION (kein Timer notwenig)   (kann noch verbessert werden, siehe sendNotification())
       if (!(oscounter % 1)) { 
+        
+        /*#ifdef THINGSPEAK
+        if (wifi.mode == 1 && update.state == 0 && iot.TS_on) sendNotification();
+        #else
         if (wifi.mode == 1 && update.state == 0 && pushd.on) sendNotification();
+        #endif*/
+
+        if (wifi.mode == 1 && update.state == 0) sendNotification();
       }
 
       // NANO CLOUD (nach Notification)
@@ -770,7 +779,7 @@ void maintimer(bool stby = false) {
       #ifdef THINGSPEAK
 
       // THINGSPEAK
-      if (!(oscounter % iot.TS_int*4)) {   // variable
+      if (!(oscounter % (iot.TS_int*4))) {   // variable
         if (wifi.mode == 1 && update.state == 0 && iot.TS_on) {
           if (iot.TS_writeKey != "" && iot.TS_chID != "") {
             if (sendAPI(0)) {
@@ -784,6 +793,18 @@ void maintimer(bool stby = false) {
       } 
 
       #endif
+
+      // ALARM REPEAT
+      if (!(oscounter % 60)) {     // 15 s
+       for (int i=0; i < CHANNELS; i++) {
+        if (ch[i].isalarm)  {
+          if (ch[i].repeat > 1) {
+            ch[i].repeat -= 1;
+            ch[i].repeatalarm = true;
+          }
+        } else ch[i].repeat = pushd.repeat;
+       }
+      }
 
       // OLED FLASH TIMER
       if (inWork) {

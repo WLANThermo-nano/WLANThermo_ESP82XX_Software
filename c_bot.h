@@ -90,7 +90,7 @@ String collectData() {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Create Notification Message
 String createNote() {
-
+  Serial.println(notification.limit);
   String postStr;
   bool limit = notification.limit & (1<<notification.ch);
   postStr += F("&message=");
@@ -122,7 +122,7 @@ void sendNotification() {
 
       for (int i=0; i < CHANNELS; i++) {
         if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
-            
+            Serial.println("Alarm");
           if (iot.TS_httpKey != "" && iot.TS_on) {
             if (sendAPI(0)) {
               notification.ch = i;
