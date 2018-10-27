@@ -43,8 +43,9 @@ void deviceObj(JsonObject  &jObj) {
   jObj["device"] = "nano";
   jObj["serial"] = String(ESP.getChipId(), HEX);
   
-  if (sys.hwversion == 2) jObj["hw_version"] =  String("v1+");
-  else  jObj["hw_version"] = String("v")+String(sys.hwversion);
+  //if (sys.hwversion == 2) jObj["hw_version"] =  String("v1+");
+  //else  
+  jObj["hw_version"] = String("v")+String(sys.hwversion);
 
   jObj["sw_version"] = FIRMWAREVERSION;
   jObj["api_version"] = SERVERAPIVERSION;
@@ -346,23 +347,25 @@ void cloudObj(JsonObject  &jObj) {
 
   JsonArray& data = jObj.createNestedArray("data");
 
- #ifdef MEMORYCLOUD
+  // History
+  #ifdef MEMORYCLOUD
   if (cloudcount > 0) {
     long cur = now();
+    cur -= (cloudcount)*(iot.CL_int/3);
 
     for (int i = 0; i < cloudcount; i++) {
       JsonObject& _obj = data.createNestedObject();
-      parseLog(_obj, i, (cur-((cloudcount-i)*3)));  
+      parseLog(_obj, i, cur);
+      cur += (iot.CL_int/3);  
     }
 
     cloudcount = 0;
   }
   #endif
   
-  //for (int i = 0; i < 3; i++) {  
+  // aktuelle Werte  
   JsonObject& _obj = data.createNestedObject();
   dataObj(_obj, true); 
-  //}
 
 }
 

@@ -28,6 +28,7 @@
 //#define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
 #define THINGSPEAK
+#define MEMORYCLOUD
  
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)

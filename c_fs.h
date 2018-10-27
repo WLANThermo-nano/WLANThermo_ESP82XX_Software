@@ -91,14 +91,13 @@ bool savelog() {
       }
       f.print("|");
     }
-    //mylog[logc].timestamp = now();                                // 64 bit // 8 byte
 
     f.print((uint8_t) battery.percentage);           // 8  bit // 1 byte
     f.print("|");
     if (pitmaster1.active) {
       f.print((uint8_t) pitmaster1.value);            // 8  bit // 1 byte
       f.print("|");
-      f.println((uint16_t) (pitmaster1.set * 10));           // 16 bit // 2 byte
+      f.println((uint16_t) (pitmaster1.set * 10));    // 16 bit // 2 byte
     } else {
       f.println("");
     }
@@ -108,11 +107,59 @@ bool savelog() {
     lastUpdateDatalog = millis();
   }
 }
-
 */
 
 
 // MEMORYCLOUD im develop branch
+
+#ifdef MEMORYCLOUD
+void saveLog() {
+  
+  // CHANNEL
+  for (int i = 0; i < CHANNELS; i++) {
+    cloudlog[cloudcount].tem[i] = limit_float(ch[i].temp, i)*10;
+    //cloudlog[cloudcount].color[i] = ch[i].color;
+  }
+
+  // PITMASTER
+  cloudlog[cloudcount].value = (int)pitMaster[0].value;
+  cloudlog[cloudcount].set = pitMaster[0].set*10;
+  cloudlog[cloudcount].status = pitMaster[0].active;
+
+  // SYSTEM
+  cloudlog[cloudcount].soc = battery.percentage;
+  cloudcount++;  
+}
+
+void parseLog(JsonObject  &jObj, byte c, long tim) {
+
+  JsonObject& system = jObj.createNestedObject("system");
+
+  system["time"] = String(tim);
+  system["soc"] = cloudlog[c].soc;
+  
+  JsonArray& channel = jObj.createNestedArray("channel");
+
+  for (int i = 0; i < CHANNELS; i++) {
+    JsonObject& data = channel.createNestedObject();
+    data["number"]= i+1;
+    data["temp"]  = cloudlog[c].tem[i]/10.0;
+    //data["color"] = cloudlog[c].color[i];
+  }
+
+  JsonObject& master = jObj.createNestedObject("pitmaster");
+
+  master["value"] = cloudlog[c].value;
+  master["set"] = cloudlog[c].set/10.0;
+  switch (cloudlog[c].status) {
+    case PITOFF:   master["typ"] = "off";    break;
+    case DUTYCYCLE: // show manual
+    case MANUAL:   master["typ"] = "manual"; break;
+    case AUTO:     master["typ"] = "auto";   break;
+    case AUTOTUNE: master["typ"] = "autotune"; break;
+  }
+}
+#endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Check JSON
@@ -418,6 +465,10 @@ bool setconfig(byte count, const char* data[2]) {
         _color.add(ch[i].color);
       }
 
+      #ifdef MEMORYCLOUD
+      cloudcount = 0;
+      #endif
+
       //if (!savefile(CHANNEL_FILE, configFile)) return false;
       //json.printTo(configFile);
       //configFile.close();
@@ -460,6 +511,10 @@ bool setconfig(byte count, const char* data[2]) {
       json["CLon"]    = iot.CL_on;
       json["CLtoken"] = iot.CL_token;
       json["CLint"]   = iot.CL_int;
+
+      #ifdef MEMORYCLOUD
+      cloudcount = 0;
+      #endif
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {
@@ -511,6 +566,10 @@ bool setconfig(byte count, const char* data[2]) {
         //_pid["SVmax"]    = pid[i].SVmax;
         _pid["ol"]    = pid[i].opl;   
       }
+
+      #ifdef MEMORYCLOUD
+      cloudcount = 0;
+      #endif
        
       size_t size = json.measureLength() + 1;
       if (size > EEPITMASTER) {

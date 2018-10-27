@@ -53,7 +53,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 
 // HARDWARE
-#define FIRMWAREVERSION  "v0.9.13"
+#define FIRMWAREVERSION  "v1.0.0-beta"
 #define GUIAPIVERSION    "1"
 #define SERVERAPIVERSION "1"
 
@@ -504,6 +504,28 @@ enum {NOPARA, TESTPARA, SENDTS, THINGHTTP};                       // Config GET/
 
 rst_info *myResetInfo;
 
+#ifdef MEMORYCLOUD
+
+  #define CLOUDLOGMAX 2   // Cloud 1/3
+
+  // DATALOGGER
+  struct Datalogger {
+    uint16_t tem[CHANNELS];
+    //String color[CHANNELS];
+    //long timestamp;
+    uint8_t value;
+    uint16_t set;
+    byte status;
+    uint8_t soc;
+  };
+
+  Datalogger cloudlog[CLOUDLOGMAX];
+  int cloudcount;
+
+  void saveLog();
+  
+#endif
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -753,13 +775,6 @@ void maintimer(bool stby = false) {
 
       // NOTIFICATION (kein Timer notwenig)   (kann noch verbessert werden, siehe sendNotification())
       if (!(oscounter % 1)) { 
-        
-        /*#ifdef THINGSPEAK
-        if (wifi.mode == 1 && update.state == 0 && iot.TS_on) sendNotification();
-        #else
-        if (wifi.mode == 1 && update.state == 0 && pushd.on) sendNotification();
-        #endif*/
-
         if (wifi.mode == 1 && update.state == 0) sendNotification();
       }
 
@@ -771,10 +786,20 @@ void maintimer(bool stby = false) {
             urlindex = CLOUDLINK;
             parindex = NOPARA;
             sendAPI(2);
+          } else {
+            #ifdef MEMORYCLOUD  
+              cloudcount = 0;           // ansonsten von API zurückgesetzt
+            #endif 
           }
         }
         lastUpdateCloud = false;
       }
+
+      #ifdef MEMORYCLOUD        // Zurücksetzen einbauen (CL_int, Temp_einheit ...)
+      if (!(oscounter % ((iot.CL_int/3)*4))) {    // 
+        if (iot.CL_on && cloudcount < CLOUDLOGMAX) saveLog();
+      }
+      #endif
 
       #ifdef THINGSPEAK
 
