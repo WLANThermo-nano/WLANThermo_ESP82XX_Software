@@ -261,7 +261,7 @@ static inline void button_event() {
           break;
 
         case TUNE:
-          autotune.keepup = true;
+          //autotune.keepup = true;
           break;
 
       }

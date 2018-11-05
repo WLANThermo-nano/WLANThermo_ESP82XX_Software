@@ -116,8 +116,8 @@ void pitObj(JsonObject  &jObj) {
     case PITOFF:   jObj["typ"] = "off";    break;
     case DUTYCYCLE: // show manual
     case MANUAL:   jObj["typ"] = "manual"; break;
-    case AUTO:     jObj["typ"] = "auto";   break;
-    case AUTOTUNE: jObj["typ"] = "autotune"; break;
+    case AUTOTUNE: // show auto
+    case AUTO:     jObj["typ"] = "auto";   break; 
   }
   
 }
@@ -142,9 +142,10 @@ void pitAry(JsonArray  &jAry, int cc) {
     switch (pitMaster[i].active) {
       case PITOFF:   ma["typ"] = "off";    break;
       case DUTYCYCLE: // show manual
+      case VOLTAGE:
       case MANUAL:   ma["typ"] = "manual"; break;
+      case AUTOTUNE: // show auto
       case AUTO:     ma["typ"] = "auto";   break;
-      case AUTOTUNE: ma["typ"] = "autotune"; break;
     } 
     ma["set_color"] = sc[i];
     ma["value_color"] = vc[i];
@@ -172,7 +173,8 @@ void pidAry(JsonArray  &jAry, int cc) {
     _pid["Kd_a"] =    limit_float(pid[i].Kd_a, -1);
     _pid["DCmmin"] =  pid[i].DCmin;
     _pid["DCmmax"] =  pid[i].DCmax;
-    _pid["opl"] =  pid[i].opl;
+    _pid["opl"] =     pid[i].opl;
+    _pid["tune"] =    pid[i].autotune;    // noch nicht im EE gespeichert
   }
  
 }
@@ -535,7 +537,7 @@ void readContentLengthfromHeader(String payload, int len) {
     payload = payload.substring(index+16,len);            // "Content-Length:" entfernen     
     payload = payload.substring(0,payload.indexOf("\n")); // Ende der Zeile
     log_length = payload.toInt();
-    Serial.print("Content:");Serial.println(log_length);
+    //Serial.print("Content:");Serial.println(log_length);
   }
 }
 
@@ -656,7 +658,7 @@ bool sendAPI(int check){
       String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
       adress += message;
       client->write(adress.c_str());
-      Serial.println(adress);
+      //Serial.println(adress);
       apiindex = NULL;
       urlindex = NULL;
       parindex = NULL;

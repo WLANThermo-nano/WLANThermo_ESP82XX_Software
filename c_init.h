@@ -141,6 +141,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define SERVOPULSMIN 550  // 25 Grad    // 785
 #define SERVOPULSMAX 2250
 
+
 #define PRODUCTNUMBERLENGTH 11
 
 // API
@@ -234,42 +235,26 @@ struct PID {
   float DCmin;                  // PID DUTY CYCLE MIN
   float DCmax;                  // PID DUTY CYCLE MAX
   byte opl;
+  byte autotune;
 };
 PID pid[PIDSIZE];
 
 // AUTOTUNE
 struct AutoTune {
-   bool storeValues;
-   float temp;             // BETRIEBS-TEMPERATUR
-   int  maxCycles;        // WIEDERHOLUNGEN
-   int cycles;            // CURRENT WIEDERHOLUNG
-   int heating;            // HEATING FLAG
-   uint32_t t0;
-   uint32_t t1;            // ZEITKONSTANTE 1
-   uint32_t t2;           // ZEITKONSTANTE 2
-   int32_t t_high;        // FLAG HIGH
-   int32_t t_low;         // FLAG LOW
-   int32_t bias;
-   int32_t d;
+   uint32_t set;                   // BETRIEBS-TEMPERATUR
+   uint32_t time[3];            // TIME VECTOR
+   float temp[3];               // TEMPERATURE VECTOR
+   float value;                 // CURRENT AUTOTUNE VALUE
+   byte run;                    // WAIT FOR AUTOTUNE START: 0:off, 1:init, 2:run
+   byte stop;                   // STOP AUTOTUNE: 1: normal, 2: overtemp, 3: timeout
+   int overtemp = 30;            // OVERTEMPERATURE LIMIT
+   uint32_t timelimit = 120L*60000L;               // TIMELIMIT
    float Kp;
    float Ki;
    float Kd;
    float Kp_a;
-   float Ki_a;
-   float Kd_a;
-   float maxTemp;
-   float minTemp;
-   bool initialized;
-   float value;
-   float pTemp;
-   float maxTP;             // MAXIMALE STEIGUNG = WENDEPUNKT
-   uint32_t tWP;            // ZEITPUNKT WENDEPUNKT  
-   float TWP;               // TEMPERATUR WENDEPUNKT
-   bool start;
-   byte stop;
-   int overtemp;
-   long timelimit;
-   bool keepup;             // PITMASTER FORTSETZEN NACH ENDE
+   //bool keepup;             // PITMASTER FORTSETZEN NACH ENDE
+   float vmax;
 };
 
 AutoTune autotune;
@@ -616,7 +601,7 @@ void readEE(char *buffer, int len, int startP);
 void clearEE(int startP, int endP);
 
 // PITMASTER
-void startautotunePID(int maxCyc, bool store, int over, long tlimit, byte id);
+void startautotunePID(byte id);
 void pitmaster_control(byte id);
 void disableAllHeater();
 void disableHeater(byte id, bool hold = false);

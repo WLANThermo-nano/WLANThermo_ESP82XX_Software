@@ -769,25 +769,24 @@ class BodyWebHandler: public AsyncWebHandler {
       else return 0;
   
       bool _manual = false;
-      bool _autotune = false;
+      bool _auto = false;
     
-      if (typ == "autotune") _autotune = true;
+      if (typ == "auto") _auto = true;
       else if (typ == "manual") _manual = true;
-      else if (typ == "auto") pitMaster[id].active = AUTO;
       else  pitMaster[id].active = PITOFF;
     
       if (_pitmaster.containsKey("value") && _manual) {
         int _val = _pitmaster["value"];
         pitMaster[id].value = constrain(_val,0,100);
         pitMaster[id].active = MANUAL;
-        //return 1; // nicht speichern
       }
 
-      if (_autotune && id == 0) {
-        startautotunePID(5, true, 40, 120L*60L*1000L, id);  // 1h Timelimit
-        return 1; // nicht speichern
-      } else if (autotune.initialized) {    // Autotune was still in action
-        autotune.stop = 2;
+      // kann gespeichert werden und was ist mit stoppen des autotune
+      if (_auto && id == 0) {
+        pitMaster[id].active = AUTO;
+        if (pid[pitMaster[id].pid].autotune) {
+          autotune.run = 1;    // start Autotune, falls schon gelaufen, dann neustart
+        }
       }
       
       ii++;
@@ -843,7 +842,8 @@ class BodyWebHandler: public AsyncWebHandler {
           pid[id].DCmax = getDC(val*10)/10.0;    
         } else pid[id].DCmax = constrain(val*10,0,1000)/10.0;    // 1. Nachkommastelle
       }    
-      if (_pid.containsKey("opl"))   pid[id].opl     = _pid["opl"];
+      if (_pid.containsKey("opl"))    pid[id].opl       = _pid["opl"];
+      if (_pid.containsKey("tune"))   pid[id].autotune  = _pid["tune"];
       ii++;
     }
   
@@ -854,7 +854,7 @@ class BodyWebHandler: public AsyncWebHandler {
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
   bool setServerAPI(AsyncWebServerRequest *request, uint8_t *datas) {
 
-    printRequest(datas);
+    //printRequest(datas);
   
     DynamicJsonBuffer jsonBuffer;
     JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
@@ -887,6 +887,7 @@ class BodyWebHandler: public AsyncWebHandler {
           if (update.get == version) {
             if (update.state < 1) update.state = 1;           // Anfrage erfolgreich, Update starten
             else if (update.state == 2) update.state = 3;     // Anfrage während des Updateprozesses
+            else if (update.state == 3) update.state = 4;     // Ende eines Updates über alte API (v0.x.x)
           } else {                                            // keine konrekte Anfrage
             update.version = version;
             update.get = "false";                             // nicht die richtige Version übermittelt

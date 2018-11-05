@@ -118,6 +118,7 @@ void server_setup() {
   server.on("/stop",[](AsyncWebServerRequest *request){
     //disableAllHeater();
     pitMaster[0].active = PITOFF;
+    pitMaster[1].active = PITOFF;
     setconfig(ePIT,{});
     request->send(200, TEXTPLAIN, "Stop pitmaster");
   });

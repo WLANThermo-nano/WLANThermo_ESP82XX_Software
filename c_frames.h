@@ -226,7 +226,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
       else display->drawString(33,0, "P  " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); 
       break;
     
-    case AUTOTUNE: display->drawString(33,0, "A"+ String(autotune.cycles) +" / " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); break;
+    case AUTOTUNE: display->drawString(33,0, "A " + String(autotune.set) + " / " + String(pitMaster[0].value,0) + "%"); break;
   }  
   
   display->setTextAlignment(TEXT_ALIGN_RIGHT);

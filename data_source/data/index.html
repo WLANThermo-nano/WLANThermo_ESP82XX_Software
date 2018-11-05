@@ -2125,7 +2125,6 @@
 									<option value="off">off</option>
 									<option value="auto">auto</option>
 									<option value="manual">manual</option>
-									<option value="autotune">autotune</option>
 								</select>
 								<label class="control-label" for="select">Pitmaster</label><i class="bar"></i>
 							</div>
@@ -2266,6 +2265,7 @@
 						<div class="1-box channel_conf">
 							<form>
 								<div class="checkbox"><label><input id="pid_opl" type="checkbox" /><i class="helper"></i>Deckelüberwachung</label></div>
+								<div class="checkbox"><label><input id="pid_auto" type="checkbox" /><i class="helper"></i>Autotune beim Start</label></div>
 							</form>	
 						</div>
 					</div>
@@ -3185,6 +3185,7 @@
 			byId('pid_DCmin').value = jr.pid[profile].DCmmin;
 			byId('pid_DCmax').value = jr.pid[profile].DCmmax;
 			byId('pid_opl').checked = jr.pid[profile].opl;
+			byId('pid_auto').checked = jr.pid[profile].tune;
 			showLoader('false');
 		})			
 	}
@@ -3219,6 +3220,7 @@
 			jr.pid[profile].DCmmin = byId('pid_DCmin').value;
 			jr.pid[profile].DCmmax = byId('pid_DCmax').value;
 			jr.pid[profile].opl = byId('pid_opl').checked;
+			jr.pid[profile].tune = byId('pid_auto').checked;
 			var data = JSON.stringify(jr.pid);
 			loadJSON('setpid', data, '60000', function (response) {
 				togglePitmasterView();
