@@ -252,9 +252,9 @@ struct AutoTune {
    float Kp;
    float Ki;
    float Kd;
-   float Kp_a;
    //bool keepup;             // PITMASTER FORTSETZEN NACH ENDE
    float vmax;
+   uint8_t max;               // MAXIMAL AUTOTUNE PITMASTER VALUE
 };
 
 AutoTune autotune;

@@ -186,7 +186,7 @@ float PID_Regler(byte id){
   ki = pid[ii].Ki;
   kd = pid[ii].Kd;
   
-  uint32_t diff;
+  int32_t diff;
   float e;
 
   // Abweichung bestimmen
@@ -345,7 +345,7 @@ void startautotune(byte id) {
       disableAllHeater();                    // SWITCH OF HEATER
       pitMaster[id].active = AUTOTUNE;                  
       autotune.run = 2;                     // AUTOTUNE INITALIZED
-      autotune.max = PITMAX/2;
+      autotune.max = PITMAX;
       PMPRINTPLN("[AT]\t Start!");
     } else {
       pitMaster[id].active = AUTO;          // sollte eh schon
@@ -376,6 +376,10 @@ void stopautotune(byte id) {
     drawQuestion(autotune.stop);
     autotune.stop = 0;
   }
+}
+
+float maxvalue(float a,float b) {
+    return a>b?a:b;
 }
 
 
@@ -432,7 +436,7 @@ float autotunePID(byte id) {
       } else if (autotune.temp[1] > 0 && currentTemp*1.01 < autotune.temp[2]) {
         autotune.time[2] = time;
         //Serial.print("2: "); Serial.print(autotune.time[2]); Serial.print(" | "); Serial.println(autotune.temp[2]);
-        autotune.value = autotune.max;                    // Aktor auf MAX einschalten
+        autotune.value = autotune.max/4;                    // Teillast müsste reichen um eine wirkung zu sehen
         autotune.run = 4;
       }
       
@@ -451,37 +455,24 @@ float autotunePID(byte id) {
         // Proportionalbereich Xp aus Anstiegsgeschwindigkeit und Verzugszeit
         float Xp = 0.83 * Tt * autotune.vmax * (PITMAX/autotune.max);
         float K = 100.0 / Xp;                         
-        autotune.Kp = constrain((uint32_t) (K*10.0), 0, (uint32_t) (1000.0/dT))/10.0;     // Kp < 100/dT
+        //autotune.Kp = constrain((uint32_t) (K*10.0), 0, (uint32_t) (1000.0/dT))/10.0;     // Kp < 100/dT
+        K = maxvalue(K, 100.0/dT);
+        autotune.Kp = constrain((uint32_t) (K*10.0), 0, 1000)/10.0;   // Kp > 100 unsinnig
     
-        K = 100.0 / (0.1*pitMaster[id].set);
-        autotune.Kp_a = constrain((uint32_t) (K*10.0), 0, autotune.Kp*10.0)/10.0;  // nicht größer als Kp
-
         // Integralzeit: Zeit zum Erreichen vom P-Anteil
-        float Tn_min = (dT * 4.0)/autotune.vmax;
-        uint32_t Tn = Tt * 2;
-        Tn = constrain(Tn, (uint32_t) Tn_min, 1000);
+        //uint32_t Tn_min = (dT * 4.0)/autotune.vmax;
+        //uint32_t Tn = Tt * 4;       // mehr Verzögerung durch langsames Anwachsen
+        //Tn = constrain(Tn, (uint32_t) Tn_min, 1000);
+        float Tn = maxvalue(((dT * 4.0)/autotune.vmax), (Tt * 4));
         Serial.println(Tn);
         K = autotune.Kp / Tn;           // Ki = Kp / (Tn)
         autotune.Ki = constrain((uint32_t) (K*100.0), 0, 100)/100.0;            // Ki > 1 ist Unsinn
 
-        // D-Anteil über Zeitkonstante
-        Kp = 10;
-        dT = 20;
-        Kp * 10°C = 100
-
-        K = 5.0 * dT;
-        K = constrain((uint32_t) (K*10.0), 0, 900)/10.0;      // max 90% bei max. Geschwindigkeit
-        autotune.Kd = K / autotune.vmax;
+        // D-Anteil über Verhältnis Überschwinger und Anstiegsgeschwindigkeit (Brems-Funktion)
+        K = 7.0 * dT;           // Faktor gibt Agressivität der Bremsfunktion vor
+        K = constrain((uint16_t) (K), 0, 100);      // max 100% bei max. Geschwindigkeit, sonst stocken (i beachten)
+        autotune.Kd = (uint16_t) (K / autotune.vmax);
         
-        //K = autotune.Kp * Tn / 4.0;
-        //autotune.Kd = constrain((uint32_t) (K*10.0), 0, 6000)/10.0;      // Kd > 600 ist Unsinn
-
-        //autotune.Kd = 0;
-        //autotune.Ki_a = 0;
-        //autotune.Kd_a = 0;
-
-        PMPRINTP("[AT]\tKp_a: ");
-        PMPRINT(autotune.Kp_a);
         PMPRINTP("[AT]\tKp: ");
         PMPRINT(autotune.Kp);
         PMPRINTP(" Ki: ");
@@ -493,7 +484,7 @@ float autotunePID(byte id) {
         pid[ii].Kp = autotune.Kp;  
         pid[ii].Ki = autotune.Ki;   
         pid[ii].Kd = autotune.Kd;                    
-        pid[ii].Kp_a = autotune.Kp_a;                
+        pid[ii].Kp_a = 0;                
         pid[ii].Ki_a = 0;                   
         pid[ii].Kd_a = 0;
 
