@@ -231,12 +231,12 @@ struct PID {
   float Kp;                     // P-FAKTOR ABOVE PSWITCH
   float Ki;                     // I-FAKTOR ABOVE PSWITCH
   float Kd;                     // D-FAKTOR ABOVE PSWITCH
-  float Kp_a;                   // P-FAKTOR BELOW PSWITCH
-  float Ki_a;                   // I-FAKTOR ABOVE PSWITCH
-  float Kd_a;                   // D-FAKTOR ABOVE PSWITCH
-  int Ki_min;                   // MINIMUM VALUE I-PART   // raus ?
-  int Ki_max;                   // MAXIMUM VALUE I-PART   // raus ?
-  float pswitch;                // SWITCHING LIMIT        // raus ?
+  //float Kp_a;                   // P-FAKTOR BELOW PSWITCH
+  //float Ki_a;                   // I-FAKTOR ABOVE PSWITCH
+  //float Kd_a;                   // D-FAKTOR ABOVE PSWITCH
+  //int Ki_min;                   // MINIMUM VALUE I-PART   // raus ?
+  //int Ki_max;                   // MAXIMUM VALUE I-PART   // raus ?
+  //float pswitch;                // SWITCHING LIMIT        // raus ?
   float DCmin;                  // PID DUTY CYCLE MIN
   float DCmax;                  // PID DUTY CYCLE MAX
   byte opl;
@@ -252,9 +252,7 @@ struct AutoTune {
    float temp[3];               // TEMPERATURE VECTOR
    float value;                 // CURRENT AUTOTUNE VALUE
    byte run;                    // WAIT FOR AUTOTUNE START: 0:off, 1:init, 2:run
-   byte stop;                   // STOP AUTOTUNE: 1: normal, 2: overtemp, 3: timeout
-   int overtemp = 30;            // OVERTEMPERATURE LIMIT
-   uint32_t timelimit = 120L*60000L;               // TIMELIMIT
+   byte stop;                   // STOP AUTOTUNE: 1: normal, 2: overtemp, 3: timeout               
    float Kp;
    float Ki;
    float Kd;

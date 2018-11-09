@@ -167,9 +167,9 @@ void pidAry(JsonArray  &jAry, int cc) {
     _pid["Kp"] =      limit_float(pid[i].Kp, -1);
     _pid["Ki"] =      limit_float(pid[i].Ki, -1);
     _pid["Kd"] =      limit_float(pid[i].Kd, -1);
-    _pid["Kp_a"] =    limit_float(pid[i].Kp_a, -1);
-    _pid["Ki_a"] =    limit_float(pid[i].Ki_a, -1);
-    _pid["Kd_a"] =    limit_float(pid[i].Kd_a, -1);
+    //_pid["Kp_a"] =    limit_float(pid[i].Kp_a, -1);
+    //_pid["Ki_a"] =    limit_float(pid[i].Ki_a, -1);
+    //_pid["Kd_a"] =    limit_float(pid[i].Kd_a, -1);
     _pid["DCmmin"] =  pid[i].DCmin;
     _pid["DCmmax"] =  pid[i].DCmax;
     _pid["opl"] =     pid[i].opl;

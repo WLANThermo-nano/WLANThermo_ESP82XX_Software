@@ -22,8 +22,6 @@
     
  ****************************************************/
 
-int pidMax = 100;      // Maximum (PWM) value, the heater should be set
-
 //#define PM_DEBUG              // ENABLE SERIAL AUTOTUNE DEBUG MESSAGES
 
 #ifdef PM_DEBUG
@@ -41,10 +39,15 @@ int pidMax = 100;      // Maximum (PWM) value, the heater should be set
   #define PMPRINTF(...)    //blank line
 #endif
 
-#define OPL_FALL  97
-#define OPL_RISE  100
-#define OPL_PAUSE 300
+#define OPL_FALL  97              // OPEN LID LIMIT FALLING
+#define OPL_RISE  100             // OPEN LID LIMIT RISING
+#define OPL_PAUSE 300             // OPEN LID PAUSE
 
+#define PIDKIMAX  95              // ANTI WINDUP LIMIT MAX
+#define PIDKIMIN  0               // ANTI WINDUP LIMIT MIN
+
+#define ATOVERTEMP 30             // AUTOTUNE OVERTEMPERATURE LIMIT
+#define ATTIMELIMIT 120L*60000L   // AUTOTUNE TIMELIMIT
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Open Lid
@@ -153,15 +156,15 @@ void set_pitmaster(bool init) {
 // Set Default PID-Settings
 void set_pid(byte index) {
 
-  // Name, Nr, Aktor, Kp, Ki, Kd, Kp_a, Ki_a, Kp_a, Ki_min, Ki_max, Switch, DCmin, DCmax, ...
+  // raus: Kp_a, Ki_a, Kp_a, Ki_min, Ki_max, Switch,
   
   pidsize = 3; //3;
-  pid[0] = {"SSR SousVide", 0, 0, 104, 0.2, 0, 20, 0,  0, 0, 95,  0.9, 0,  100};
-  pid[1] = {"TITAN 50x50",  1, 1, 3.8, 0.01,   128, 6.2, 0.001, 5, 0, 95,  0.9, 25, 100};
-  pid[2] = {"Kamado 50x50", 2, 1, 7.0, 0.019,  630, 6.2, 0.001, 5, 0, 95,  0.9, 25, 100};
+  //        Name,      Nr, Aktor,  Kp,    Ki,  Kd, DCmin, DCmax, ...
+  pid[0] = {"SSR SousVide", 0, 0, 104,   0.2,   0,  0, 100};
+  pid[1] = {"TITAN 50x50",  1, 1, 3.8,  0.01, 128, 25, 100};
+  pid[2] = {"Kamado 50x50", 2, 1, 7.0, 0.019, 630, 25, 100};
 
-  if (index)
-    pid[2] = {"Servo", 2, 2, 12.0, 0.09, 0, 15, 0, 0, 0, 95, 0.9, 20, 80};
+  if (index)  pid[2] = {"Servo", 2, 2, 12.0, 0.09, 0, 20, 80};
 
 }
 
@@ -227,8 +230,8 @@ float PID_Regler(byte id){
     }
     
     // Anti-Windup I-Anteil (Limits)
-    if (pitMaster[id].esum * ki > pid[ii].Ki_max) pitMaster[id].esum = pid[ii].Ki_max/ki;
-    else if (pitMaster[id].esum * ki < pid[ii].Ki_min) pitMaster[id].esum = pid[ii].Ki_min/ki;
+    if (pitMaster[id].esum * ki > PIDKIMAX) pitMaster[id].esum = PIDKIMAX/ki;
+    else if (pitMaster[id].esum * ki < PIDKIMIN) pitMaster[id].esum = PIDKIMIN/ki;
     
     i_out = ki * pitMaster[id].esum;
     
@@ -372,12 +375,12 @@ void stopautotune(byte id) {
     autotune.value = 0;
     autotune.run = 0;
   
-    if ((autotune.stop == 1)) { // sauber beendet
-      pitMaster[id].active = AUTO;     // Pitmaster in AUTO fortsetzen
+    if ((autotune.stop == 1)) {         // sauber beendet
+      pitMaster[id].active = AUTO;      // Pitmaster in AUTO fortsetzen
       PMPRINTPLN("Autotune beendet");
     } else pitMaster[id].active = PITOFF;
 
-    setconfig(ePIT,{});
+    setconfig(ePIT,{});     // save
   
     question.typ = TUNE;
     drawQuestion(autotune.stop);
@@ -398,14 +401,13 @@ float autotunePID(byte id) {
     // Startbedingungen herstellen  
     if (autotune.run == 2) {
       
-      // Phase A1
-      autotune.value = autotune.max;                    // Aktor auf MAX einschalten
+      // Phase A1 - Aktor auf MAX einschalten
+      autotune.value = autotune.max;
       autotune.run = 3;
     
     } else if (autotune.run == 3) {
 
-      // Phase A2
-      // Start Steigung
+      // Phase A2 - Start Steigungstest
       if (autotune.temp[0] == 0) {
         autotune.temp[0] = currentTemp;
         autotune.time[0] = time;
@@ -417,13 +419,12 @@ float autotunePID(byte id) {
         vmax = 1000.0*(currentTemp - autotune.temp[0])/(time - autotune.time[0]);
         if (vmax > autotune.vmax) {
           autotune.vmax = vmax;
-          PMPRINTP("vmax: ");
-          PMPRINTLN(vmax);
+          PMPRINTP("vmax: "); PMPRINTLN(vmax);
         }
         autotune.temp[0] = currentTemp;
         autotune.time[0] = time;
 
-      // Ende Steigung, Anfang Überschwinger
+      // Phase A3 - Ende Steigung, Anfang Überschwinger
       } else if (autotune.temp[1] == 0 && currentTemp > autotune.set) {
         autotune.value = 0; // Pitmaster ruhen
         autotune.temp[1] = currentTemp;
@@ -435,7 +436,7 @@ float autotunePID(byte id) {
       } else if (autotune.temp[1] > 0 && currentTemp > autotune.temp[2]) {
         autotune.temp[2] = currentTemp;   // Temperatur nachziehen
 
-      // Ende Überschwinger (Schwankungen ausgleichen, eventuell abhängig vom Aktor machen) 
+      // Phase A4 - Ende Überschwinger (Schwankungen ausgleichen, eventuell abhängig vom Aktor machen) 
       } else if (autotune.temp[1] > 0 && currentTemp*1.01 < autotune.temp[2]) {
         autotune.time[2] = time;
         //Serial.print("2: "); Serial.print(autotune.time[2]); Serial.print(" | "); Serial.println(autotune.temp[2]);
@@ -458,14 +459,12 @@ float autotunePID(byte id) {
         // Proportionalbereich Xp aus Anstiegsgeschwindigkeit und Verzugszeit
         float Xp = 0.83 * Tt * autotune.vmax * (PITMAX/autotune.max);
         float K = 100.0 / Xp;                         
-        //autotune.Kp = constrain((uint32_t) (K*10.0), 0, (uint32_t) (1000.0/dT))/10.0;     // Kp < 100/dT
         K = maxvalue(K, 100.0/dT);
         autotune.Kp = constrain((uint32_t) (K*10.0), 0, 1000)/10.0;   // Kp > 100 unsinnig
     
         // Integralzeit: Zeit zum Erreichen vom P-Anteil
-        //uint32_t Tn_min = (dT * 4.0)/autotune.vmax;
-        //uint32_t Tn = Tt * 4;       // mehr Verzögerung durch langsames Anwachsen
-        //Tn = constrain(Tn, (uint32_t) Tn_min, 1000);
+        // Tn1 = (dT * 4.0)/autotune.vmax;
+        // Tn2 = Tt * 4;                    // mehr Verzögerung durch langsames Anwachsen
         float Tn = maxvalue(((dT * 4.0)/autotune.vmax), (Tt * 4));
         PMPRINTLN(Tn);
         K = autotune.Kp / Tn;           // Ki = Kp / (Tn)
@@ -487,9 +486,9 @@ float autotunePID(byte id) {
         pid[ii].Kp = autotune.Kp;  
         pid[ii].Ki = autotune.Ki;   
         pid[ii].Kd = autotune.Kd;                    
-        pid[ii].Kp_a = 0;                
-        pid[ii].Ki_a = 0;                   
-        pid[ii].Kd_a = 0;
+        //pid[ii].Kp_a = 0;                
+        //pid[ii].Ki_a = 0;                   
+        //pid[ii].Kd_a = 0;
 
         PMPRINTPLN("[AT]\tFinished!");
         //disableHeater();
@@ -497,14 +496,14 @@ float autotunePID(byte id) {
       }
     }
   
-    if (currentTemp > (autotune.set + autotune.overtemp))  {   // FEHLER
+    if (currentTemp > (autotune.set + ATOVERTEMP))  {   // FEHLER
       PMPRINTPLN("f:AT OVERTEMP");
       disableHeater(id);
       autotune.stop = 2;
       return 0;
     }
     
-    if ((time - autotune.time[0]) > autotune.timelimit) {   // 20 Minutes
+    if ((time - autotune.time[0]) > ATTIMELIMIT) {   // 20 Minutes
       PMPRINTPLN("f:AT TIMEOUT");
       disableHeater(id);
       autotune.stop = 3;

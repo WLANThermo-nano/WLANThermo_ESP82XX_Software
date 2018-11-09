@@ -2231,7 +2231,7 @@
 									  </td>
 									</tr>
 								</table>
-								<table class="table33" cellpadding="0" cellspacing="0" width="100%" border="0">
+								<!-- <table class="table33" cellpadding="0" cellspacing="0" width="100%" border="0">
 									<tr>
 									  <td>
 										<div class="form-group">
@@ -2252,7 +2252,7 @@
 										</div>
 									  </td>
 									</tr>
-								</table>
+								</table> -->
 							</form>	
 						</div>
 					</div>
@@ -3176,9 +3176,9 @@
 			byId('pid_Kp').value = jr.pid[profile].Kp;	
 			byId('pid_Ki').value = jr.pid[profile].Ki;
 			byId('pid_Kd').value = jr.pid[profile].Kd;
-			byId('pid_Kp_a').value = jr.pid[profile].Kp_a;
-			byId('pid_Ki_a').value = jr.pid[profile].Ki_a;
-			byId('pid_Kd_a').value = jr.pid[profile].Kd_a;
+			//byId('pid_Kp_a').value = jr.pid[profile].Kp_a;
+			//byId('pid_Ki_a').value = jr.pid[profile].Ki_a;
+			//byId('pid_Kd_a').value = jr.pid[profile].Kd_a;
 			byId('pid_DCmin').value = jr.pid[profile].DCmmin;
 			byId('pid_DCmax').value = jr.pid[profile].DCmmax;
 			byId('pid_opl').checked = jr.pid[profile].opl;
@@ -3211,9 +3211,9 @@
 			jr.pid[profile].Kp = byId('pid_Kp').value;
 			jr.pid[profile].Ki = byId('pid_Ki').value;
 			jr.pid[profile].Kd = byId('pid_Kd').value;
-			jr.pid[profile].Kp_a = byId('pid_Kp_a').value;
-			jr.pid[profile].Ki_a = byId('pid_Ki_a').value;
-			jr.pid[profile].Kd_a = byId('pid_Kd_a').value;
+			//jr.pid[profile].Kp_a = byId('pid_Kp_a').value;
+			//jr.pid[profile].Ki_a = byId('pid_Ki_a').value;
+			//jr.pid[profile].Kd_a = byId('pid_Kd_a').value;
 			jr.pid[profile].DCmmin = byId('pid_DCmin').value;
 			jr.pid[profile].DCmmax = byId('pid_DCmax').value;
 			jr.pid[profile].opl = byId('pid_opl').checked;

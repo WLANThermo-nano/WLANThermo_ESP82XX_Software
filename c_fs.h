@@ -314,13 +314,12 @@ bool loadconfig(byte count, bool old) {
         pid[pidsize].Kp = _pid[pidsize]["Kp"];  
         pid[pidsize].Ki = _pid[pidsize]["Ki"];    
         pid[pidsize].Kd = _pid[pidsize]["Kd"];                     
-        pid[pidsize].Kp_a = _pid[pidsize]["Kp_a"];                   
-        pid[pidsize].Ki_a = _pid[pidsize]["Ki_a"];                   
-        pid[pidsize].Kd_a = _pid[pidsize]["Kd_a"];                   
-        pid[pidsize].Ki_min = _pid[pidsize]["Ki_min"];                   
-        pid[pidsize].Ki_max = _pid[pidsize]["Ki_max"];                  
-        pid[pidsize].pswitch = _pid[pidsize]["switch"];               
-        //pid[pidsize].reversal = _pid[pidsize]["rev"];                
+        //pid[pidsize].Kp_a = _pid[pidsize]["Kp_a"];                   
+        //pid[pidsize].Ki_a = _pid[pidsize]["Ki_a"];                   
+        //pid[pidsize].Kd_a = _pid[pidsize]["Kd_a"];                   
+        //pid[pidsize].Ki_min = _pid[pidsize]["Ki_min"];                   
+        //pid[pidsize].Ki_max = _pid[pidsize]["Ki_max"];                  
+        //pid[pidsize].pswitch = _pid[pidsize]["switch"];                              
         pid[pidsize].DCmin    = _pid[pidsize]["DCmin"];              
         pid[pidsize].DCmax    = _pid[pidsize]["DCmax"];              
         //pid[pidsize].SVmin    = _pid[pidsize]["SVmin"];             
@@ -442,6 +441,10 @@ bool setconfig(byte count, const char* data[2]) {
   DynamicJsonBuffer jsonBuffer;
   File configFile;
 
+  #ifdef MEMORYCLOUD
+  cloudcount = 0;     // Zurücksetzen
+  #endif
+
   switch (count) {
     case 0:         // CHANNEL
     {
@@ -464,10 +467,6 @@ bool setconfig(byte count, const char* data[2]) {
         _alarm.add(ch[i].alarm); 
         _color.add(ch[i].color);
       }
-
-      #ifdef MEMORYCLOUD
-      cloudcount = 0;
-      #endif
 
       //if (!savefile(CHANNEL_FILE, configFile)) return false;
       //json.printTo(configFile);
@@ -511,10 +510,6 @@ bool setconfig(byte count, const char* data[2]) {
       json["CLon"]    = iot.CL_on;
       json["CLtoken"] = iot.CL_token;
       json["CLint"]   = iot.CL_int;
-
-      #ifdef MEMORYCLOUD
-      cloudcount = 0;
-      #endif
       
       size_t size = json.measureLength() + 1;
       if (size > EETHING) {
@@ -554,22 +549,18 @@ bool setconfig(byte count, const char* data[2]) {
         _pid["Kp"]       = double_with_n_digits(pid[i].Kp,1);  
         _pid["Ki"]       = double_with_n_digits(pid[i].Ki,3);    
         _pid["Kd"]       = double_with_n_digits(pid[i].Kd,1);                   
-        _pid["Kp_a"]     = double_with_n_digits(pid[i].Kp_a,1);               
-        _pid["Ki_a"]     = double_with_n_digits(pid[i].Ki_a,3);                  
-        _pid["Kd_a"]     = double_with_n_digits(pid[i].Kd_a,1);             
-        _pid["Ki_min"]   = pid[i].Ki_min;             
-        _pid["Ki_max"]   = pid[i].Ki_max;             
-        _pid["switch"]   = pid[i].pswitch;                           
+        //_pid["Kp_a"]     = double_with_n_digits(pid[i].Kp_a,1);               
+        //_pid["Ki_a"]     = double_with_n_digits(pid[i].Ki_a,3);                  
+        //_pid["Kd_a"]     = double_with_n_digits(pid[i].Kd_a,1);             
+        //_pid["Ki_min"]   = pid[i].Ki_min;             
+        //_pid["Ki_max"]   = pid[i].Ki_max;             
+        //_pid["switch"]   = pid[i].pswitch;                           
         _pid["DCmin"]    = double_with_n_digits(pid[i].DCmin,1);             
         _pid["DCmax"]    = double_with_n_digits(pid[i].DCmax,1);             
         //_pid["SVmin"]    = pid[i].SVmin;             
         //_pid["SVmax"]    = pid[i].SVmax;
         _pid["ol"]    = pid[i].opl;   
       }
-
-      #ifdef MEMORYCLOUD
-      cloudcount = 0;
-      #endif
        
       size_t size = json.measureLength() + 1;
       if (size > EEPITMASTER) {

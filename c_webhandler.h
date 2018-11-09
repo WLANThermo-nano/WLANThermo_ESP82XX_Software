@@ -776,9 +776,9 @@ class BodyWebHandler: public AsyncWebHandler {
       if (_pid.containsKey("Kp"))     pid[id].Kp       = _pid["Kp"];
       if (_pid.containsKey("Ki"))     pid[id].Ki       = _pid["Ki"];
       if (_pid.containsKey("Kd"))     pid[id].Kd       = _pid["Kd"];
-      if (_pid.containsKey("Kp_a"))   pid[id].Kp_a     = _pid["Kp_a"];
-      if (_pid.containsKey("Ki_a"))   pid[id].Ki_a     = _pid["Ki_a"];
-      if (_pid.containsKey("Kd_a"))   pid[id].Kd_a     = _pid["Kd_a"];
+      //if (_pid.containsKey("Kp_a"))   pid[id].Kp_a     = _pid["Kp_a"];
+      //if (_pid.containsKey("Ki_a"))   pid[id].Ki_a     = _pid["Ki_a"];
+      //if (_pid.containsKey("Kd_a"))   pid[id].Kd_a     = _pid["Kd_a"];
       if (_pid.containsKey("DCmmin")) {
         val = _pid["DCmmin"];
         if (val >= SERVOPULSMIN && val <= SERVOPULSMAX && pid[id].aktor == SERVO) {
