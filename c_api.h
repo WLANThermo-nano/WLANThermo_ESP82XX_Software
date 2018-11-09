@@ -87,10 +87,10 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
 // Channel JSON Array
 void channelAry(JsonArray  &jAry, int cc) {
 
-  int j = 0;
-  if (cc < CHANNELS) j = cc-1;    // nur ein Channel
+  int i = 0;
+  if (cc < CHANNELS) i = cc-1;    // nur ein Channel
 
-  for (int i = j; i < cc; i++) {
+  for (i; i < cc; i++) {
   JsonObject& data = jAry.createNestedObject();
     data["number"]= i+1;
     data["name"]  = ch[i].name;
@@ -129,10 +129,10 @@ void pitAry(JsonArray  &jAry, int cc) {
   String sc[2] = {"#ff0000", "#FE2EF7"};
   String vc[2] = {"#000000", "#848484"};
 
-  int j = 0;
-  if (cc < PITMASTERSIZE) j = cc-1;    // nur ein bestimmter Pitmaster
+  int i = 0;
+  if (cc < PITMASTERSIZE) i = cc-1;    // nur ein bestimmter Pitmaster
       
-  for (int i = j; i < cc; i++) {  // PITMASTERSIZE
+  for (i; i < cc; i++) {  // PITMASTERSIZE
     JsonObject& ma = jAry.createNestedObject();
     ma["id"] = i;
     ma["channel"] = pitMaster[i].channel+1;
@@ -142,7 +142,6 @@ void pitAry(JsonArray  &jAry, int cc) {
     switch (pitMaster[i].active) {
       case PITOFF:   ma["typ"] = "off";    break;
       case DUTYCYCLE: // show manual
-      case VOLTAGE:
       case MANUAL:   ma["typ"] = "manual"; break;
       case AUTOTUNE: // show auto
       case AUTO:     ma["typ"] = "auto";   break;
@@ -207,10 +206,10 @@ void iotObj(JsonObject  &jObj) {
 // FCM JSON Array
 void fcmAry(JsonArray  &jAry, int cc = 3) {
 
-  int j = 0;
-  if (cc < 3) j = cc-1;    // nur ein bestimmtes Profil
+  int i = 0;
+  if (cc < 3) i = cc-1;    // nur ein bestimmtes Profil
       
-  for (int i = j; i < cc; i++) {
+  for (i; i < cc; i++) {
     JsonObject& _fcm = jAry.createNestedObject();
     _fcm["id"] =    i;
     _fcm["on"] = (byte) true;

@@ -2855,10 +2855,7 @@
 	}
 
 	function sendPushNotification(){
-		//data = '?token=' + byId('TGtoken').value + '&id=' + byId('TGid').value;
-		//loadJSON('message' + data, '', '60000', function (response) {
-			//alert(data);	
-		//})
+		//eventuell zusammenfassen mit setPushNotification()
 		loadJSON('settings', '', '3000', function (response){
 			jr = JSON.parse(response);
 			jr.notes.ext.on = 2;		// sende Testnachricht
@@ -3237,8 +3234,8 @@
 		}
 		txt = 'Soll der Pitmasterausgang für 10 Sekunden mit dem angegebenen Wert angesteuert werden?';
 		if (confirm(txt) == true) {
-			data = '?aktor=' + byId('pitmaster_profile_aktor').value + '&dc=' + dc + '&val=' + var_val*10;
-			loadJSON('setDC' + data, '', '60000', function (response) {
+			data = '{"aktor":' + byId('pitmaster_profile_aktor').value + ',"dc":' + dc + ',"val":' + var_val*10 + '}';
+			loadJSON('setDC', data, '60000', function (response) {
 				showLoader('true');
 				dcActivated = 'true';
 			})	

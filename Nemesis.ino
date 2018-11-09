@@ -208,7 +208,6 @@ void loop() {
     //ampere_control();
     
     pitmaster_control(0);      // Pitmaster 1
-    pitmaster_control(1);      // Pitmaster 2
     updateServo();
     
     if (servointerrupt) {   // nur innerhalb eines Servo-Takts

@@ -129,12 +129,12 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define EEPUSH              512         
 
 // PITMASTER
-#define PITMASTER1 15               // PITMASTER PIN
-#define PITMASTER2 14               // CLK // ab Platine V7.2
+#define PITMASTER0IO1 15               // PITMASTER PIN
+#define PITMASTER0IO2 14               // CLK // ab Platine V7.2
 #define PITSUPPLY  12               // MISO // ab Platine V9.3
 #define PITMIN 0                    // LOWER LIMIT SET
 #define PITMAX 100                  // UPPER LIMIT SET
-#define PITMASTERSIZE 2             // PITMASTER SETTINGS LIMIT
+#define PITMASTERSIZE 1             // PITMASTER SETTINGS LIMIT
 #define PIDSIZE 3
 #define PITMASTERSETMIN 50
 #define PITMASTERSETMAX 200
@@ -188,37 +188,42 @@ String  ttypname[SENSORTYPEN] = {"Maverick","Fantast-Neu","Fantast","iGrill2","E
 String colors[8] = {"#0C4C88","#22B14C","#EF562D","#FFC100","#A349A4","#804000","#5587A2","#5C7148"};
 
 // PITMASTER
-enum {PITOFF, MANUAL, AUTO, AUTOTUNE, DUTYCYCLE, VOLTAGE};
-enum {SSR, FAN, SERVO, DAMPER, SUPPLY};
+enum {PITOFF, MANUAL, AUTO, AUTOTUNE, DUTYCYCLE, MYAUTO};
+enum {SSR, FAN, SERVO, DAMPER, FAN2, SERVO2, NOAR};
 
 struct Pitmaster {
-   byte pid;              // PITMASTER PID-Setting
-   float set;             // SET-TEMPERATUR
-   byte active;           // IS PITMASTER ACTIVE
-   byte  channel;         // PITMASTER CHANNEL
-   float value;           // PITMASTER VALUE IN %
-   uint16_t dcmin;        // PITMASTER DUTY CYCLE LIMIT MIN
-   uint16_t dcmax;        // PITMASTER DUTY CYCLE LIMIT MIN
-   byte io;               // PITMASTER HARDWARE IO
-   bool event;            // SSR HIGH EVENT
-   uint16_t msec;         // PITMASTER VALUE IN MILLISEC (SSR) / MICROSEC (SERVO)
-   uint16_t nmsec;
-   unsigned long stakt;   //
-   unsigned long last;    // PITMASTER VALUE TIMER
-   uint16_t pause;        // PITMASTER PAUSE
-   bool resume;           // Continue after restart 
-   long timer0;           // PITMASTER TIMER VARIABLE (FAN) / (SERVO)
-   float esum;            // PITMASTER I-PART DIFFERENZ SUM
-   float elast;           // PITMASTER D-PART DIFFERENZ LAST
-   float Ki_alt;
-   bool disabled;         // PITMASTER DISABLE HEATER
-   bool pwm;              // PITMASTER USES PWM (FAN)    
+   byte  pid;               // PITMASTER LINKED PID
+   float set;               // SET-TEMPERATUR
+   byte  active;            // PITMASTER ACTIVITY
+   byte  channel;           // PITMASTER LINKED CHANNEL
+   float value;             // PITMASTER VALUE IN %
+   
+   byte io[2];              // PITMASTER LOCAL HARDWARE IO
+   byte aktor[2];           // PITMASTER IO ATTACHED AKTOR
+   uint16_t dcmin;          // PITMASTER DUTY CYCLE LIMIT MIN
+   uint16_t dcmax;          // PITMASTER DUTY CYCLE LIMIT MAX
+   
+   uint16_t pause;          // PITMASTER PAUSE
+   unsigned long last;      // PITMASTER VALUE TIMER
+   
+   bool event;              // SSR EVENT
+   unsigned long stakt;     // SERVO EVENT
+   uint16_t msec;           // PITMASTER VALUE IN MILLISEC (SSR) / MICROSEC (SERVO)
+   uint16_t nmsec;          // PITMASTER NEW VALUE CACHE 
+   unsigned long timer0;    // PITMASTER TIMER VARIABLE (FAN) / (SERVO)
+    
+   float esum;              // PITMASTER I-PART DIFFERENZ SUM
+   float elast;             // PITMASTER D-PART DIFFERENZ LAST
+   float Ki_alt;            // PITMASTER I-PART CACHE
+   bool disabled;           // PITMASTER DISABLE HEATER
+   bool resume;             // PITMASTER Continue after restart 
 };
 
 Pitmaster pitMaster[PITMASTERSIZE];
-int pidsize;
 
 // PID PROFIL
+int pidsize;
+
 struct PID {
   String name;
   byte id;
@@ -237,12 +242,13 @@ struct PID {
   byte opl;
   byte autotune;
 };
+
 PID pid[PIDSIZE];
 
 // AUTOTUNE
 struct AutoTune {
-   uint32_t set;                   // BETRIEBS-TEMPERATUR
-   uint32_t time[3];            // TIME VECTOR
+   uint32_t set;                // BETRIEBS-TEMPERATUR
+   unsigned long time[3];       // TIME VECTOR
    float temp[3];               // TEMPERATURE VECTOR
    float value;                 // CURRENT AUTOTUNE VALUE
    byte run;                    // WAIT FOR AUTOTUNE START: 0:off, 1:init, 2:run
@@ -252,7 +258,6 @@ struct AutoTune {
    float Kp;
    float Ki;
    float Kd;
-   //bool keepup;             // PITMASTER FORTSETZEN NACH ENDE
    float vmax;
    uint8_t max;               // MAXIMAL AUTOTUNE PITMASTER VALUE
 };
@@ -261,11 +266,11 @@ AutoTune autotune;
 
 // DUTYCYCLE TEST
 struct DutyCycle {
-  long timer;
-  int value;        // Value * 10
-  bool dc;          // min or max
-  byte aktor;
-  int saved;
+  unsigned long timer;          // SHUTDOWN TIMER
+  uint16_t value;               // TEST VALUE * 10
+  bool dc;                      // WHICH DC: min or max
+  byte aktor;                   // WHICH ACTOR
+  int8_t saved;                 // PITMASTER ACTIVITY CACHE (-1 .. 100)
 };
 
 DutyCycle dutyCycle[PITMASTERSIZE];

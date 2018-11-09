@@ -21,7 +21,6 @@
 
 // Beispiele:
 // https://github.com/spacehuhn/wifi_ducky/blob/master/esp8266_wifi_duck/esp8266_wifi_duck.ino
-
 // WebSocketClient: https://github.com/Links2004/arduinoWebSockets/issues/119
 
 
@@ -93,22 +92,15 @@ void server_setup() {
   });
 */
 
-/*
   server.on("/damper",[](AsyncWebServerRequest *request){
-    if (request->method() == HTTP_GET) {
-      request->send(200, "text/html", "<form method='POST' action='/damper'>Beim Hinzufuegen es Dampers werden die PID-Profile zurueckgesetzt: <br><br><input type='submit' value='Hinzufuegen'></form>");
-    } else if (request->method() == HTTP_POST) {
-      if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
-        return request->requestAuthentication();
-      sys.damper = true;
-      sys.hwversion = 2;  // Damper nur mit v2 Konfiguration
-      set_pid(1);         // es wird ein Servo gebraucht
-      setconfig(ePIT,{});
-      setconfig(eSYSTEM,{});
-      request->send(200, TEXTPLAIN, TEXTADD);
-    } else request->send(500, TEXTPLAIN, BAD_PATH);
+    sys.damper = true;
+    sys.hwversion = 2;  // Damper nur mit v2 Konfiguration
+    set_pid(1);         // es wird ein Servo gebraucht
+    setconfig(ePIT,{});
+    setconfig(eSYSTEM,{});
+    request->send(200, TEXTPLAIN, TEXTADD);
   });
-*/
+
   server.on("/servo",[](AsyncWebServerRequest *request){
     set_pid(1);
     setconfig(ePIT,{});
@@ -123,6 +115,11 @@ void server_setup() {
     request->send(200, TEXTPLAIN, "Stop pitmaster");
   });
 
+    server.on("/restart",[](AsyncWebServerRequest *request){
+    sys.restartnow = true;
+    request->redirect("/");
+  }).setFilter(ON_STA_FILTER);
+
   server.on("/typk",[](AsyncWebServerRequest *request){
     if (sys.hwversion == 1 && !sys.typk) {
       sys.typk = true;
@@ -135,11 +132,6 @@ void server_setup() {
     setconfig(eSYSTEM,{});  // Speichern
   });
    
-  server.on("/restart",[](AsyncWebServerRequest *request){
-    sys.restartnow = true;
-    request->redirect("/");
-  }).setFilter(ON_STA_FILTER);
-
 /*
   server.on("/ampere",[](AsyncWebServerRequest *request){
     ch[5].typ = 11;
@@ -163,25 +155,6 @@ void server_setup() {
     request->send(200, TEXTPLAIN, iot.CL_token);
   });
 
-/*
-  server.on("/setDC",[](AsyncWebServerRequest *request) { 
-      if(request->hasParam("aktor")&&request->hasParam("dc")&&request->hasParam("val")){
-        ESP.wdtDisable(); 
-        bool dc = request->getParam("dc")->value().toInt();
-        byte aktor = request->getParam("aktor")->value().toInt();
-        int val = request->getParam("val")->value().toInt();        // Value * 10
-        byte id = 0;  // Pitmaster1
-        if (aktor == SERVO && sys.hwversion > 1) bodyWebHandler.setservoV2(true);
-        if (val >= SERVOPULSMIN*10 && val <= SERVOPULSMAX*10 && aktor == SERVO) val = getDC(val);
-        else val = constrain(val,0,1000);
-        DC_start(dc, aktor, val, id);  
-        IPRINTP("DC-Test: ");
-        DPRINTLN(val/10.0);
-        ESP.wdtEnable(10);
-        request->send(200, TEXTPLAIN, TEXTTRUE);
-      } else request->send(200, TEXTPLAIN, TEXTFALSE);
-  });
-*/
   server.on("/setadmin",[](AsyncWebServerRequest *request) { 
       if (request->method() == HTTP_GET) {
         request->send(200, "text/html", "<form method='POST' action='/setadmin'>Neues Password eingeben (max. 10 Zeichen): <input type='text' name='wwwpassword'><br><br><input type='submit' value='Change'></form>");
@@ -198,7 +171,6 @@ void server_setup() {
           else request->send(200, TEXTPLAIN, TEXTFALSE);
         }
       } else request->send(500, TEXTPLAIN, BAD_PATH);
-
   });
 
 /*
