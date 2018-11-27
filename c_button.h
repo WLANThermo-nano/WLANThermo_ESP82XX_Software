@@ -291,17 +291,12 @@ static inline void button_event() {
           break;
 
         case TEMPSUB:                     // Temperaturen durchwandern
-          if (!sys.fastmode) {
+          do {
             current_ch++;
+            i++;
             if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-          }
-          else {
-            do {
-              current_ch++;
-              i++;
-              if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-            } while ((ch[current_ch].temp==INACTIVEVALUE) && (i<CHANNELS)); 
-          }
+          } while ((ch[current_ch].temp==INACTIVEVALUE) && (i<(CHANNELS+1))); 
+          
           ui.setFrameAnimation(SLIDE_LEFT);
           ui.transitionToFrame(0);      // Refresh
           break;
@@ -362,6 +357,7 @@ static inline void button_event() {
     
       b_counter = ui.getCurrentFrameCount();
       int j = CHANNELS;
+      int j_ch = current_ch;
     
       switch (inMenu) {
 
@@ -371,17 +367,18 @@ static inline void button_event() {
           drawMenu();
           break;
         
-        case TEMPSUB: 
-          if (!sys.fastmode) {
+        case TEMPSUB:
+          
+       /*   do {
             current_ch--;
+            j--;
             if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
-          } else {
-            do {
-              current_ch--;
-              j--;
-              if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
-            } while ((ch[current_ch].temp==INACTIVEVALUE) && (j > 0)); 
-          }
+          } while ((ch[current_ch].temp == INACTIVEVALUE) && (j > -1)); */
+
+          // Rückwärts immer alle Kanäle
+          current_ch--;
+          if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
+          
           ui.setFrameAnimation(SLIDE_RIGHT);
           ui.transitionToFrame(0);      // Refresh
           break;

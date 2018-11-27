@@ -31,19 +31,24 @@ static AsyncClient * tsalarmclient = NULL;
 void set_iot(bool init) {
   
    if (init) {                // clear all
+
+    #ifdef THINGSPEAK
     iot.TS_writeKey = "";     
     iot.TS_httpKey = "";       
     iot.TS_userKey = "";     
     iot.TS_chID = ""; 
+    #endif
     
     iot.P_MQTT_USER = "";
     iot.P_MQTT_PASS = ""; 
     iot.P_MQTT_QoS = 0;
    }
-   
+
+   #ifdef THINGSPEAK
    iot.TS_show8 = false;        
    iot.TS_int = INTERVALCOMMUNICATION/4;
    iot.TS_on = false;
+   #endif
    
    iot.P_MQTT_on = false;
    iot.P_MQTT_HOST = "192.168.2.1";
@@ -123,7 +128,18 @@ void sendNotification() {
       for (int i=0; i < CHANNELS; i++) {
         if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
             Serial.println("Alarm");
-          if (iot.TS_httpKey != "" && iot.TS_on) {
+
+          if (pushd.on > 0) {
+            if (sendAPI(0)) {
+              notification.ch = i;
+              apiindex = APINOTE;
+              urlindex = NOTELINK;
+              parindex = NOPARA;
+              sendAPI(2);           // Notification per Nano-Server
+            }
+          }
+          #ifdef THINGSPEAK
+           else if (iot.TS_httpKey != "" && iot.TS_on) {
             if (sendAPI(0)) {
               notification.ch = i;
               apiindex = NOAPI;
@@ -131,15 +147,8 @@ void sendNotification() {
               parindex = THINGHTTP;
               sendAPI(2);           // Notification per Thingspeak
             } 
-          } else if (pushd.on > 0) {
-            if (sendAPI(0)) {
-              notification.ch = i;
-              apiindex = APINOTE;
-              urlindex = NOTELINK;
-              parindex = NOPARA;
-              sendAPI(2);           // Notification per Nano-Server
-            } 
           }
+          #endif
         }
       }    
     }

@@ -104,7 +104,7 @@ void get_Temperature() {
     value = calcT(get_adc_average(i),ch[i].typ);
 
     // Temperatursprung außerhalb der Grenzen macht keinen Sinn
-    if (ch[i].temp == INACTIVEVALUE && (value < -10.0 || value > 300.0)) value = INACTIVEVALUE;
+    if (ch[i].temp == INACTIVEVALUE && (value < -15.0 || value > 300.0)) value = INACTIVEVALUE;
  
     // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
     // KTYPE wandert dann auf Kanal 5

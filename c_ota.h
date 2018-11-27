@@ -121,24 +121,20 @@ void do_http_update() {
 
       // UPDATE Adresse
       String adress;
-      //adress = += "?";
-      //adress += createParameter(SERIALNUMBER);
-      //adress += createParameter(DEVICE);
-      //adress += createParameter(UPDATEVERSION);
 
-      if (update.state != 2) {              // nicht im Neuaufbau während Update
-      // UPDATE 2x Wiederholen falls schief gelaufen
-      if (update.count < 3) update.count++;   // Wiederholung
-      else  {
-        update.state = 0;
-        setconfig(eSYSTEM,{});
-        question.typ = OTAUPDATE;
-        drawQuestion(0);
-        IPRINTPLN("u:cancel");      // Update canceled
-        displayblocked = false;
-        update.count = 0;
-        return;
-      }
+      if (update.state == 1 || update.state == 3) {              // nicht im Neuaufbau während Update
+        // UPDATE 2x Wiederholen falls schief gelaufen
+        if (update.count < 3) update.count++;   // Wiederholung
+        else  {
+          update.state = 0;
+          setconfig(eSYSTEM,{});
+          question.typ = OTAUPDATE;
+          drawQuestion(0);
+          IPRINTPLN("u:cancel");      // Update canceled
+          displayblocked = false;
+          update.count = 0;
+          return;
+        }
       }
 
       // UPDATE spiffs oder firmware

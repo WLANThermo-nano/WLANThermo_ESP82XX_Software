@@ -2231,6 +2231,21 @@
 									  </td>
 									</tr>
 								</table>
+								<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
+									<tr>
+									  <td>
+										<div class="form-group">
+										  <input type="text" id="pid_jump" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
+										  <label class="control-label" for="input">Jump Power [10-100%]</label><i class="bar"></i>
+										</div>
+									  </td>
+									  <td>	
+										<div class="form-group">
+										  <div class="checkbox"><label><input id="pid_auto" type="checkbox" /><i class="helper"></i>Autotune</label></div>
+										</div>							  
+									  </td>
+									</tr>
+								</table>
 								<!-- <table class="table33" cellpadding="0" cellspacing="0" width="100%" border="0">
 									<tr>
 									  <td>
@@ -2265,7 +2280,7 @@
 						<div class="1-box channel_conf">
 							<form>
 								<div class="checkbox"><label><input id="pid_opl" type="checkbox" /><i class="helper"></i>Deckelüberwachung</label></div>
-								<div class="checkbox"><label><input id="pid_auto" type="checkbox" /><i class="helper"></i>Autotune beim Start</label></div>
+								<!-- <div class="checkbox"><label><input id="pid_auto" type="checkbox" /><i class="helper"></i>Autotune beim Start</label></div> -->
 							</form>	
 						</div>
 					</div>
@@ -2367,8 +2382,8 @@
 							<div class="form-group">
 							  <select id="hwversion"></select><label class="control-label" for="select">Hardwareversion</label><i class="bar"></i>
 							</div>
-							<div class="checkbox"><label><input id="fastmode" type="checkbox"/><i class="helper"></i>Schnelllauf</label></div>
-							<div class="checkbox"><label><input id="searchUpdate" type="checkbox"/><i class="helper"></i>Nach Updates suchen</label></div>								
+							<!-- <div class="checkbox"><label><input id="fastmode" type="checkbox"/><i class="helper"></i>Schnelllauf</label></div> -->
+							<div class="checkbox"><label><input id="searchUpdate" type="checkbox"/><i class="helper"></i>Automatisch nach Updates suchen</label></div>								
 						</form>
 					</div>
 				</div>
@@ -2434,7 +2449,7 @@
 					</div>
 				</div>
 			</div>		
-			<div id="thingsheader">
+			<div id="thingsheader" style="display:none">
 				<div class="float-left text-align-left"><h3 class="headtitle">Thingspeak</h3></div>
 				<div class="float-right text-align-right"><span onclick="setHelpBox('Thingspeak',help_thingspeak)" class="icon-question_sign"></span></div>
 				<div style="clear:both;"></div>
@@ -2661,14 +2676,14 @@
 	var getIcon = function( icon ) { return '<span class="icon-'  + icon + '"></span>'; };
 	byId('index').style.display = "inline";
 	// -----------------------------------------------------------------------------------
-	var help_thingspeak = '<p><span>Kopple deine WLANThermo Nano mit dem ThingSpeak-Dienst und erstelle dir individuelle Anwendungen zur Sensor-Datenanalyse. Ben&ouml;tigt Internetzugang.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/ThingSpeak"><span style="color:#3366ff">Wiki - ThingSpeak</span></a></p>';
-	var help_wifi = '<p><span>Verbinde dein WLANThermo mit deinem Heimnetzwerk und erweitere somit die Funktionsvielfalt deines WLANThermo.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/WLAN"><span style="color:#3366ff">Wiki - WLAN</span></a></p>';
-	var help_settings = '<p><span>Konfiguriere dein WLANThermo Nano mit Hilfe der Systemeinstellungen und mach es zu DEINEM WLANThermo.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/System-Einstellungen"><span style="color:#3366ff">Wiki - System</span></a></p>';
-	var help_pitmaster = '<p><span>Willst du deine Grilltemperaturen nicht nur beobachten, sondern auch regeln? Dann besorge dir die passende Pitmaster-Hardware und leg los. Ben&ouml;tigt Pitmaster-Hardware.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Pitmaster"><span style="color:#3366ff">Wiki - Pitmaster</span></a></p>';
-	var help_notification = '<p><span>Lass dich bei einem Kanalalarm mit einer Push-Nachricht über den Nachrichtendienst Telegram oder Pushover benachrichtigen. Ben&ouml;tigt Internetzugang.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Push-Notification"><span style="color:#3366ff">Wiki - Notification</span></a></p>';
-	var help_mqtt = '<p><span>Kopple dein WLANThermo Nano mit deiner Homeautomatic und nutze dafür die MQTT-Schnittstelle deines WLANThermo. Ben&ouml;tigt einen MQTT-Broker.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Private-MQTT"><span style="color:#3366ff">Wiki - Private-MQTT</span></a></p>';
-	var help_cloud = '<p><span>Der Nano Cloud Service erm&ouml;glicht dir den gesch&uuml;tzten Zugriff auf deine Temperaturdaten auch au&szlig;erhalb deines Heim-Netzwerks. Ben&ouml;tigt Internetzugang. </span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Nano-Cloud-Service"><span style="color:#3366ff">Wiki - Nano Cloud</span></a></p>';
-	var help_channel = '<p><span>Mit Hilfe der Kanal-Einstellungen passt du den Messkanal an den angeschlossenen F&uuml;hler an. Zus&auml;tzlich kannst du Grenzwerte für die Alarmfunktion vorgeben.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Kanal-Einstellungen"><span style="color:#3366ff">Wiki - Kanal</span></a></p>';
+	var help_thingspeak = '<p><span>Kopple deine WLANThermo Nano mit dem ThingSpeak-Dienst und erstelle dir individuelle Anwendungen zur Sensor-Datenanalyse. Ben&ouml;tigt Internetzugang.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/ThingSpeak" target="_blank"><span style="color:#3366ff">Wiki - ThingSpeak</span></a></p>';
+	var help_wifi = '<p><span>Verbinde dein WLANThermo mit deinem Heimnetzwerk und erweitere somit die Funktionsvielfalt deines WLANThermo.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/WLAN" target="_blank"><span style="color:#3366ff">Wiki - WLAN</span></a></p>';
+	var help_settings = '<p><span>Konfiguriere dein WLANThermo Nano mit Hilfe der Systemeinstellungen und mach es zu DEINEM WLANThermo.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/System-Einstellungen" target="_blank"><span style="color:#3366ff">Wiki - System</span></a></p>';
+	var help_pitmaster = '<p><span>Willst du deine Grilltemperaturen nicht nur beobachten, sondern auch regeln? Dann besorge dir die passende Pitmaster-Hardware und leg los. Ben&ouml;tigt Pitmaster-Hardware.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Pitmaster" target="_blank"><span style="color:#3366ff">Wiki - Pitmaster</span></a></p>';
+	var help_notification = '<p><span>Lass dich bei einem Kanalalarm mit einer Push-Nachricht über den Nachrichtendienst Telegram oder Pushover benachrichtigen. Ben&ouml;tigt Internetzugang.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Push-Notification" target="_blank"><span style="color:#3366ff">Wiki - Notification</span></a></p>';
+	var help_mqtt = '<p><span>Kopple dein WLANThermo Nano mit deiner Homeautomatic und nutze dafür die MQTT-Schnittstelle deines WLANThermo. Ben&ouml;tigt einen MQTT-Broker.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Private-MQTT" target="_blank"><span style="color:#3366ff">Wiki - Private-MQTT</span></a></p>';
+	var help_cloud = '<p><span>Der Nano Cloud Service erm&ouml;glicht dir den gesch&uuml;tzten Zugriff auf deine Temperaturdaten auch au&szlig;erhalb deines Heim-Netzwerks. Ben&ouml;tigt Internetzugang. </span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Nano-Cloud-Service" target="_blank"><span style="color:#3366ff">Wiki - Nano Cloud</span></a></p>';
+	var help_channel = '<p><span>Mit Hilfe der Kanal-Einstellungen passt du den Messkanal an den angeschlossenen F&uuml;hler an. Zus&auml;tzlich kannst du Grenzwerte für die Alarmfunktion vorgeben.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Kanal-Einstellungen" target="_blank"><span style="color:#3366ff">Wiki - Kanal</span></a></p>';
 	// -----------------------------------------------------------------------------------
 	(function (window, document) {
 		var layout = byId('layout'),menu = byId('menu'),menuLink = byId('menuLink'),menuHome = byId('menuHome'),menuPitmaster = byId('menuPitmaster'),menuNotification = byId('menuNotification'),menuWlan = byId('menuWlan'),menuSystem = byId('menuSystem'),menuThingspeak = byId('menuThingspeak'),menuAbout = byId('menuAbout'),content  = byId('main');
@@ -2751,12 +2766,12 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jr = JSON.parse(response);
-			byId('TSon').checked = jr.iot.TSon;
-			byId('TSwrite').value = jr.iot.TSwrite;
-			byId('TShttp').value = jr.iot.TShttp;
-			byId('TSchID').value = jr.iot.TSchID;
-			byId('TSinterval').value = jr.iot.TSint;
-			byId('TSshow8').checked = jr.iot.TSshow8;
+			//byId('TSon').checked = jr.iot.TSon;
+			//byId('TSwrite').value = jr.iot.TSwrite;
+			//byId('TShttp').value = jr.iot.TShttp;
+			//byId('TSchID').value = jr.iot.TSchID;
+			//byId('TSinterval').value = jr.iot.TSint;
+			//byId('TSshow8').checked = jr.iot.TSshow8;
 			byId('PMQon').checked = jr.iot.PMQon;
 			byId('PMQhost').value = jr.iot.PMQhost;
 			byId('PMQport').value = jr.iot.PMQport;
@@ -2769,7 +2784,7 @@
 			byId('CLtoken').innerHTML = "https://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken;			
 			byId("CLtoken").setAttribute("href", "https://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken);
 			byId('thingspeak').style.display = "inline";
-			byId('thingsheader').style.display = "inline";
+			byId('thingsheader').style.display = "none";
 			byId('mqttheader').style.display = "inline";
 			showLoader('false');
 		})	
@@ -2788,12 +2803,12 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response){
 			jr = JSON.parse(response);
-			jr.iot.TSon = byId('TSon').checked;
-			jr.iot.TSwrite = byId('TSwrite').value;
-			jr.iot.TShttp = byId('TShttp').value;
-			jr.iot.TSchID = byId('TSchID').value;
-			jr.iot.TSint = byId('TSinterval').value;
-			jr.iot.TSshow8 = byId('TSshow8').checked;
+			//jr.iot.TSon = byId('TSon').checked;
+			//jr.iot.TSwrite = byId('TSwrite').value;
+			//jr.iot.TShttp = byId('TShttp').value;
+			//jr.iot.TSchID = byId('TSchID').value;
+			//jr.iot.TSint = byId('TSinterval').value;
+			//jr.iot.TSshow8 = byId('TSshow8').checked;
 			jr.iot.PMQon = byId('PMQon').checked;
 			jr.iot.PMQhost = byId('PMQhost').value;
 			jr.iot.PMQport = byId('PMQport').value;
@@ -3023,8 +3038,9 @@
 	function update(){
 		loadJSON('settings', '', '3000', function (response) {
 			jr = JSON.parse(response);
-			txt = 'Wollen Sie das aktuelle Update Installieren?\n\nAktuelle Version:' + jr.system.version + '\nNeue Version:' + jr.system.getupdate;
+			txt = 'Wollen Sie das aktuelle Update installieren?\n\nAktuelle Version:' + jr.system.version + '\nNeue Version:' + jr.system.getupdate;
 			if (confirm(txt) == true) {
+				//data = 'version=' + jr.system.getupdate;
 				loadJSON('update', '', '60000', function (response) {
 					showLoader('true');
 					updateActivated = 'true';
@@ -3043,7 +3059,7 @@
 			byId('apname').value = jr.system.ap;
 			byId('thermoname').innerHTML = jr.system.host;
 			byId('unit').value = jr.system.unit;
-			byId('fastmode').checked = jr.system.fastmode;
+			//byId('fastmode').checked = jr.system.fastmode;
 			byId('searchUpdate').checked = jr.system.autoupd;
 			clearOption('hwversion');
 			for (var i = 0; i < jr.hardware.length; i++) {
@@ -3064,7 +3080,7 @@
 			jr.system.hwversion = byId('hwversion').value;
 			jr.system.language = byId('language').value;
 			jr.system.unit = byId('unit').value;
-			jr.system.fastmode = byId('fastmode').checked;		
+			//jr.system.fastmode = byId('fastmode').checked;		
 			jr.system.autoupd = byId('searchUpdate').checked;			
 			var data = JSON.stringify(jr.system);
 			showLoader('true');
@@ -3183,6 +3199,7 @@
 			byId('pid_DCmax').value = jr.pid[profile].DCmmax;
 			byId('pid_opl').checked = jr.pid[profile].opl;
 			byId('pid_auto').checked = jr.pid[profile].tune;
+			byId('pid_jump').value = jr.pid[profile].jp;
 			showLoader('false');
 		})			
 	}
@@ -3218,6 +3235,7 @@
 			jr.pid[profile].DCmmax = byId('pid_DCmax').value;
 			jr.pid[profile].opl = byId('pid_opl').checked;
 			jr.pid[profile].tune = byId('pid_auto').checked;
+			jr.pid[profile].jp = byId('pid_jump').value;
 			var data = JSON.stringify(jr.pid);
 			loadJSON('setpid', data, '60000', function (response) {
 				togglePitmasterView();

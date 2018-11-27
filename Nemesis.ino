@@ -27,7 +27,7 @@
 //#define ASYNC_TCP_SSL_ENABLED 1
 //#define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
-#define THINGSPEAK
+//#define THINGSPEAK
 #define MEMORYCLOUD
  
 #ifdef DEBUG
@@ -206,7 +206,8 @@ void loop() {
 
     //savelog();
     //ampere_control();
-    
+
+    // Pitmaster eventuell raus aus der Bedingung
     pitmaster_control(0);      // Pitmaster 1
     updateServo();
     

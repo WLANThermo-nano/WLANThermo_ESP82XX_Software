@@ -238,7 +238,8 @@ bool loadconfig(byte count, bool old) {
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,THING_FILE)) return false;
-      
+
+      #ifdef THINGSPEAK
       if (json.containsKey("TSwrite"))  iot.TS_writeKey = json["TSwrite"].asString();
       else return false;
       if (json.containsKey("TShttp"))   iot.TS_httpKey = json["TShttp"].asString();
@@ -253,6 +254,8 @@ bool loadconfig(byte count, bool old) {
       else return false;
       if (json.containsKey("TSon"))     iot.TS_on = json["TSon"];
       else return false;
+      #endif
+      
       if (json.containsKey("PMQhost"))  iot.P_MQTT_HOST = json["PMQhost"].asString();
       else return false;
       if (json.containsKey("PMQport"))  iot.P_MQTT_PORT = json["PMQport"];
@@ -267,6 +270,7 @@ bool loadconfig(byte count, bool old) {
       else return false;
       if (json.containsKey("PMQint"))   iot.P_MQTT_int = json["PMQint"];
       else return false;
+      
       if (json.containsKey("CLon"))     iot.CL_on = json["CLon"];
       else return false;
       if (json.containsKey("CLtoken"))  iot.CL_token = json["CLtoken"].asString();
@@ -324,7 +328,11 @@ bool loadconfig(byte count, bool old) {
         pid[pidsize].DCmax    = _pid[pidsize]["DCmax"];              
         //pid[pidsize].SVmin    = _pid[pidsize]["SVmin"];             
         //pid[pidsize].SVmax    = _pid[pidsize]["SVmax"];  
-        pid[pidsize].opl  =  _pid[pidsize]["ol"];      
+        pid[pidsize].jumppw  =  _pid[pidsize]["jp"];  
+        pid[pidsize].opl  =  _pid[pidsize]["ol"];     
+
+        if (pid[pidsize].jumppw == 0) pid[pidsize].jumppw = 100;      // Übergang von alten Versionen
+        
         pidsize++;
       }
     }
@@ -355,8 +363,8 @@ bool loadconfig(byte count, bool old) {
         // oberes limit wird spaeter abgefragt
       }
       else return false;
-      if (json.containsKey("fast"))     sys.fastmode = json["fast"];
-      else return false;
+      //if (json.containsKey("fast"))     sys.fastmode = json["fast"];
+      //else return false;
       if (json.containsKey("hwversion")) sys.hwversion = json["hwversion"];
       else return false;
       if (json.containsKey("update"))   update.state = json["update"];
@@ -375,8 +383,10 @@ bool loadconfig(byte count, bool old) {
       if (json.containsKey("pass"))      sys.www_password = json["pass"].asString();
 
       if (json.containsKey("damper"))      sys.damper = json["damper"];
-      //if (json.containsKey("adp"))      sys.advanced = json["adp"];
-      //if (json.containsKey("nobat"))    sys.nobattery = json["nobat"];
+
+
+      if (update.state == 3) update.state = 4;     // Ende eines Updates über alte API (v0.x.x)
+  
       
     }
     break;
@@ -492,7 +502,8 @@ bool setconfig(byte count, const char* data[2]) {
     case 2:         //IOT
     {
       JsonObject& json = jsonBuffer.createObject();
-      
+
+      #ifdef THINGSPEAK
       json["TSwrite"] = iot.TS_writeKey;
       json["TShttp"]  = iot.TS_httpKey;
       json["TSuser"]  = iot.TS_userKey;
@@ -500,6 +511,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["TS8"]     = iot.TS_show8;
       json["TSint"]   = iot.TS_int;
       json["TSon"]    = iot.TS_on;
+      #endif
       json["PMQhost"]  = iot.P_MQTT_HOST;
       json["PMQport"]  = iot.P_MQTT_PORT;
       json["PMQuser"]  = iot.P_MQTT_USER;
@@ -557,6 +569,7 @@ bool setconfig(byte count, const char* data[2]) {
         //_pid["switch"]   = pid[i].pswitch;                           
         _pid["DCmin"]    = double_with_n_digits(pid[i].DCmin,1);             
         _pid["DCmax"]    = double_with_n_digits(pid[i].DCmax,1);             
+        _pid["jp"]    = pid[i].jumppw;  
         //_pid["SVmin"]    = pid[i].SVmin;             
         //_pid["SVmax"]    = pid[i].SVmax;
         _pid["ol"]    = pid[i].opl;   
@@ -582,7 +595,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["host"] =        sys.host;
       json["ap"] =          sys.apname;
       json["lang"] =        sys.language;
-      json["fast"] =        sys.fastmode;
+      //json["fast"] =        sys.fastmode;
       json["hwversion"] =   sys.hwversion;
       json["update"] =      update.state;
       json["getupd"] =      update.get;
@@ -846,6 +859,14 @@ void start_fs() {
   if (m24.exist()) {
     DPRINTP("0x");
     DPRINTLN(m24.getadress(), HEX);
+    
+    char item[PRODUCTNUMBERLENGTH];    // item ist 10 Zeichen + Schlusszeichen
+    m24.get(0,item);
+    if (item[0] == 'n') {   // Kennung
+      String str(item);
+      sys.item = str;
+    }
+
     if (m24.getadress() == 0x52) {
       if (sys.hwversion != 2) {
         sys.hwversion = 2;
@@ -853,12 +874,13 @@ void start_fs() {
         setconfig(eSYSTEM,{});
         IPRINTPLN("Umstellung auf V1+");
       }
-    }
-    char item[PRODUCTNUMBERLENGTH];    // item ist 10 Zeichen + Schlusszeichen
-    m24.get(0,item);
-    if (item[0] == 'n') {   // Kennung
-      String str(item);
-      sys.item = str;
+    } else if(m24.getadress() == 0x52) {
+      if (item[10] == 'k' && !sys.typk) {
+        sys.typk = true;
+        set_sensor();
+        setconfig(eSYSTEM,{});  // Speichern
+        IPRINTPLN("Umstellung auf Typ K");
+      }
     }
   } else DPRINTPLN("No");
 

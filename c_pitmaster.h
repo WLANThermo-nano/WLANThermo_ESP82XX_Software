@@ -22,7 +22,7 @@
     
  ****************************************************/
 
-//#define PM_DEBUG              // ENABLE SERIAL AUTOTUNE DEBUG MESSAGES
+#define PM_DEBUG              // ENABLE SERIAL AUTOTUNE DEBUG MESSAGES
 
 #ifdef PM_DEBUG
   #define PMPRINT(...)    Serial.print(__VA_ARGS__)
@@ -122,7 +122,7 @@ void init_pitmaster(bool init, byte id) {
 
   if (pitMaster[id].active != MANUAL) pitMaster[id].value = 0;  // vll auch noch in disableHeater
   disableHeater(id, true);
-  
+
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -159,12 +159,12 @@ void set_pid(byte index) {
   // raus: Kp_a, Ki_a, Kp_a, Ki_min, Ki_max, Switch,
   
   pidsize = 3; //3;
-  //        Name,      Nr, Aktor,  Kp,    Ki,  Kd, DCmin, DCmax, ...
-  pid[0] = {"SSR SousVide", 0, 0, 104,   0.2,   0,  0, 100};
-  pid[1] = {"TITAN 50x50",  1, 1, 3.8,  0.01, 128, 25, 100};
-  pid[2] = {"Kamado 50x50", 2, 1, 7.0, 0.019, 630, 25, 100};
+  //        Name,      Nr, Aktor,  Kp,    Ki,  Kd, DCmin, DCmax, JP...
+  pid[0] = {"SSR SousVide", 0, 0, 104,   0.2,   0,  0, 100, 100};
+  pid[1] = {"TITAN 50x50",  1, 1, 3.8,  0.01, 128, 25, 100, 70};
+  pid[2] = {"Kamado 50x50", 2, 1, 7.0, 0.019, 630, 25, 100, 70};
 
-  if (index)  pid[2] = {"Servo", 2, 2, 12.0, 0.09, 0, 20, 80};
+  if (index)  pid[2] = {"Servo", 2, 2, 12.0, 0.09, 0, 20, 80, 100};
 
 }
 
@@ -200,6 +200,13 @@ float PID_Regler(byte id){
       diff = (w -x)*10;
       e = diff/10.0;              // nur Temperaturunterschiede von >0.1°C beachten
   }
+
+  // JUMP DROSSEL
+  pid[ii].jumpth = (w * 0.05);
+  if (pid[ii].jumpth > (100.0/kp)) pid[ii].jumpth = 100.0/kp;
+  Serial.println(pid[ii].jumpth);
+  if (diff > pid[ii].jumpth) pitMaster[id].jump = true;  // Memory bis Soll erreicht
+  else if (diff <= 0) pitMaster[id].jump = false;
     
   //float e = w - x;                          
   
@@ -303,6 +310,8 @@ void disableHeater(byte id, bool hold) {
     pitMaster[id].msec = 0;             // reset time variable
     pitMaster[id].stakt = 0;            // disable servo event
 
+    pitMaster[id].jump = false;
+
     clear_PID_Regler(id);               // rest pid
 
     pitMaster[id].disabled = true;
@@ -355,7 +364,7 @@ void startautotune(byte id) {
       disableAllHeater();                    // SWITCH OF HEATER
       pitMaster[id].active = AUTOTUNE;                  
       autotune.run = 2;                     // AUTOTUNE INITALIZED
-      autotune.max = PITMAX;
+      autotune.max = pid[pitMaster[id].pid].jumppw;
       PMPRINTPLN("[AT]\t Start!");
     } else {
       pitMaster[id].active = AUTO;          // sollte eh schon
@@ -440,7 +449,7 @@ float autotunePID(byte id) {
       } else if (autotune.temp[1] > 0 && currentTemp*1.01 < autotune.temp[2]) {
         autotune.time[2] = time;
         //Serial.print("2: "); Serial.print(autotune.time[2]); Serial.print(" | "); Serial.println(autotune.temp[2]);
-        autotune.value = autotune.max/4;                    // Teillast müsste reichen um eine wirkung zu sehen
+        autotune.value = 25;                    // Teillast müsste reichen um eine wirkung zu sehen
         autotune.run = 4;
       }
       
@@ -732,7 +741,11 @@ void pitmaster_control(byte id) {
         // Initalize and caching actor limits
         aktor_limits(id, pp);
         aktor = pitMaster[id].aktor[pp];
+        
         value = pitMaster[id].value;
+        // JUMP DROSSEL
+        if (pitMaster[id].jump && (value > pid[pitMaster[id].pid].jumppw))
+          value = pid[pitMaster[id].pid].jumppw;
 
         // PITMASTER AKTOR
         switch (aktor) {

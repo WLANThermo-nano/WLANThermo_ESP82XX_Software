@@ -79,6 +79,26 @@ void read_serial(char *buffer) {
       } else  {IPRINTPLN("Update unbekannt!");}
       return;    
     }
+
+    // Battery MIN
+    else if (command == "setbattmin") {
+      String payload((char*)buffer);
+      if (payload.length() == 4) {
+        battery.min = payload.toInt();
+        setconfig(eSYSTEM,{});
+      }
+      return;    
+    }
+
+    // Battery MAX
+    else if (command == "setbattmax") {
+      String payload((char*)buffer);
+      if (payload.length() == 4) {
+        battery.max = payload.toInt();
+        setconfig(eSYSTEM,{});
+      }
+      return;    
+    }
   
   } else {
   

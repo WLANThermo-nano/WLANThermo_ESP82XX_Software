@@ -246,7 +246,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
 
   //display->drawString(80,0,String(map(pit_y,0,pit_pause,0,100)) + "%");
 
-  if (sys.fastmode) display->drawString(100,0,"F");
+  //if (sys.fastmode) display->drawString(100,0,"F");
 
   
   if (flash && battery.percentage < 10) {} // nothing for flash effect

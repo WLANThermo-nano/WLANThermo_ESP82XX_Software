@@ -409,7 +409,7 @@ public:
         if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
           return request->requestAuthentication();
         if (request->hasParam("version", true)) { 
-          ESP.wdtDisable(); 
+          //ESP.wdtDisable(); 
           // use getParam(xxx, true) for form-data parameters in POST request header
           String version = request->getParam("version", true)->value();
           Serial.println(version);
@@ -417,10 +417,13 @@ public:
             update.get = version;                                 // Versionswunsch speichern
             if (update.get == update.version) update.state = 1;   // Version schon bekannt, direkt los
             else update.state = -1;                               // Version erst vom Server anfragen
+          //ESP.wdtEnable(10);
           }
           else request->send(200, TEXTPLAIN, "Version unknown!");
+        } else {
+          update.get = update.version;
+          update.state = 1;                                       // Version bekannt, also direkt los
         }
-        ESP.wdtEnable(10);
         request->send(200, TEXTPLAIN, "Do Update...");
       } else request->send(500, TEXTPLAIN, BAD_PATH);
       return;
@@ -525,7 +528,7 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_system.containsKey("language"))  sys.language   = _system["language"].asString();
     if (_system.containsKey("unit"))      unit = _system["unit"].asString();
     if (_system.containsKey("autoupd"))   update.autoupdate = _system["autoupd"];
-    if (_system.containsKey("fastmode"))  sys.fastmode   = _system["fastmode"];
+    //if (_system.containsKey("fastmode"))  sys.fastmode   = _system["fastmode"];
 
     if (_system.containsKey("host")) {
       _name = _system["host"].asString();
@@ -633,6 +636,7 @@ class BodyWebHandler: public AsyncWebHandler {
 
     bool refresh = iot.CL_on;
 
+#ifdef THINGSPEAK
     if (_chart.containsKey("TSwrite"))  iot.TS_writeKey = _chart["TSwrite"].asString(); 
     if (_chart.containsKey("TShttp"))   iot.TS_httpKey  = _chart["TShttp"].asString(); 
     if (_chart.containsKey("TSuser"))   iot.TS_userKey  = _chart["TSuser"].asString(); 
@@ -640,6 +644,8 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_chart.containsKey("TSshow8"))  iot.TS_show8    = _chart["TSshow8"];
     if (_chart.containsKey("TSint"))    iot.TS_int      = _chart["TSint"];
     if (_chart.containsKey("TSon"))     iot.TS_on       = _chart["TSon"];
+
+#endif
     
     if (_chart.containsKey("PMQhost"))  iot.P_MQTT_HOST = _chart["PMQhost"].asString(); 
     if (_chart.containsKey("PMQport"))  iot.P_MQTT_PORT = _chart["PMQport"];
@@ -793,6 +799,8 @@ class BodyWebHandler: public AsyncWebHandler {
       }    
       if (_pid.containsKey("opl"))    pid[id].opl       = _pid["opl"];
       if (_pid.containsKey("tune"))   pid[id].autotune  = _pid["tune"];
+      if (_pid.containsKey("jp"))     pid[id].jumppw    = constrain(_pid["jp"],10,100);
+      
       ii++;
     }
   
@@ -836,7 +844,6 @@ class BodyWebHandler: public AsyncWebHandler {
           if (update.get == version) {
             if (update.state < 1) update.state = 1;           // Anfrage erfolgreich, Update starten
             else if (update.state == 2) update.state = 3;     // Anfrage während des Updateprozesses
-            else if (update.state == 3) update.state = 4;     // Ende eines Updates über alte API (v0.x.x)
           } else {                                            // keine konrekte Anfrage
             update.version = version;
             update.get = "false";                             // nicht die richtige Version übermittelt

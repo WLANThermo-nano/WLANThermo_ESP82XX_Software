@@ -30,10 +30,6 @@
     - Dann wird speziell nach den Links von der Version in update.get gefragt
 
 
-
-
-    
-    
  ****************************************************/
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -72,7 +68,7 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
     jObj["ap"] =         sys.apname;
     jObj["host"] =       sys.host;
     jObj["language"] =   sys.language;
-    jObj["fastmode"] =   sys.fastmode;
+    //jObj["fastmode"] =   sys.fastmode;
     jObj["version"] =    FIRMWAREVERSION;
     jObj["getupdate"] =  update.version;
     jObj["autoupd"] =    update.autoupdate;
@@ -174,6 +170,7 @@ void pidAry(JsonArray  &jAry, int cc) {
     _pid["DCmmax"] =  pid[i].DCmax;
     _pid["opl"] =     pid[i].opl;
     _pid["tune"] =    pid[i].autotune;    // noch nicht im EE gespeichert
+    _pid["jp"] =      pid[i].jumppw;
   }
  
 }
@@ -181,7 +178,8 @@ void pidAry(JsonArray  &jAry, int cc) {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // IoT JSON Object
 void iotObj(JsonObject  &jObj) {
-  
+
+  #ifdef THINGSPEAK
   jObj["TSwrite"] =   iot.TS_writeKey; 
   jObj["TShttp"] =    iot.TS_httpKey;
   jObj["TSuser"] =    iot.TS_userKey;
@@ -189,6 +187,7 @@ void iotObj(JsonObject  &jObj) {
   jObj["TSshow8"] =   iot.TS_show8;
   jObj["TSint"] =     iot.TS_int;
   jObj["TSon"] =      iot.TS_on;
+  #endif
   jObj["PMQhost"] =   iot.P_MQTT_HOST;
   jObj["PMQport"] =   iot.P_MQTT_PORT;
   jObj["PMQuser"] =   iot.P_MQTT_USER;
@@ -657,7 +656,7 @@ bool sendAPI(int check){
       String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
       adress += message;
       client->write(adress.c_str());
-      //Serial.println(adress);
+      Serial.println(adress);
       apiindex = NULL;
       urlindex = NULL;
       parindex = NULL;

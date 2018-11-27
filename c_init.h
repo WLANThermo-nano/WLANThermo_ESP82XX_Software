@@ -53,7 +53,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 
 // HARDWARE
-#define FIRMWAREVERSION  "v1.0.0-beta"
+#define FIRMWAREVERSION  "v1.0.1"
 #define GUIAPIVERSION    "1"
 #define SERVERAPIVERSION "1"
 
@@ -75,7 +75,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 // BATTERY
 #define BATTMIN 3550                  // MINIMUM BATTERY VOLTAGE in mV
-#define BATTMAX 4170                  // MAXIMUM BATTERY VOLTAGE in mV 
+#define BATTMAX 4180                  // MAXIMUM BATTERY VOLTAGE in mV 
 #define ANALOGREADBATTPIN 0           // INTERNAL ADC PIN
 #define BATTDIV 5.9F
 #define CHARGEDETECTION 16              // LOAD DETECTION PIN
@@ -217,6 +217,8 @@ struct Pitmaster {
    float Ki_alt;            // PITMASTER I-PART CACHE
    bool disabled;           // PITMASTER DISABLE HEATER
    bool resume;             // PITMASTER Continue after restart 
+
+   bool jump;
 };
 
 Pitmaster pitMaster[PITMASTERSIZE];
@@ -239,8 +241,11 @@ struct PID {
   //float pswitch;                // SWITCHING LIMIT        // raus ?
   float DCmin;                  // PID DUTY CYCLE MIN
   float DCmax;                  // PID DUTY CYCLE MAX
+  byte jumppw;            // JUMP POWER  (muss initalisiert werden)
   byte opl;
   byte autotune;
+  float jumpth;                  // JUMP THRESHOLD (minimum aus Xp und z.B. 5%)
+  
 };
 
 PID pid[PIDSIZE];
@@ -292,7 +297,7 @@ Notification notification;
 struct System {
    String unit = "C";         // TEMPERATURE UNIT
    byte hwversion;           // HARDWARE VERSION
-   bool fastmode;              // FAST DISPLAY MODE
+   bool fastmode = true;              // FAST DISPLAY MODE
    String apname;             // AP NAME
    String host;                     // HOST NAME
    String language;           // SYSTEM LANGUAGE
@@ -352,6 +357,8 @@ int vol_count = 0;
 
 // IOT
 struct IoT {
+
+  #ifdef THINGSPEAK
    String TS_writeKey;          // THINGSPEAK WRITE API KEY
    String TS_httpKey;           // THINGSPEAK HTTP API KEY 
    String TS_userKey;           // THINGSPEAK USER KEY 
@@ -359,6 +366,8 @@ struct IoT {
    bool TS_show8;               // THINGSPEAK SHOW SOC
    int TS_int;                  // THINGSPEAK INTERVAL IN SEC
    bool TS_on;                  // THINGSPEAK ON / OFF
+  #endif
+  
    String P_MQTT_HOST;          // PRIVATE MQTT BROKER HOST
    uint16_t P_MQTT_PORT;        // PRIVATE MQTT BROKER PORT
    String P_MQTT_USER;          // PRIVATE MQTT BROKER USER
@@ -535,8 +544,6 @@ void set_sensor();                                // Initialize Sensors
 int  get_adc_average (byte ch);                   // Reading ADC-Channel Average
 void get_Vbat();                                   // Reading Battery Voltage
 void cal_soc();
-void battery_set_full(bool full);
-void battery_reset_reference();
 
 // TEMPERATURE (TEMP)
 float calcT(int r, byte typ);                     // Calculate Temperature from ADC-Bytes
@@ -689,7 +696,7 @@ void set_system() {
   sys.host = host;
   sys.apname = APNAME;
   sys.language = "de";
-  sys.fastmode = false;
+  //sys.fastmode = false;
   sys.hwversion = 1;
   if (update.state == 0) {
     update.get = "false";   // Änderungen am EE während Update
