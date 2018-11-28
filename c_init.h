@@ -53,7 +53,7 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 
 
 // HARDWARE
-#define FIRMWAREVERSION  "v1.0.1"
+#define FIRMWAREVERSION  "v1.0.2"
 #define GUIAPIVERSION    "1"
 #define SERVERAPIVERSION "1"
 
@@ -294,7 +294,7 @@ Notification notification;
 struct System {
    String unit = "C";         // TEMPERATURE UNIT
    byte hwversion;           // HARDWARE VERSION
-   bool fastmode = true;              // FAST DISPLAY MODE
+   bool pitmaster = true;              // PITMASTER ENABLE
    String apname;             // AP NAME
    String host;                     // HOST NAME
    String language;           // SYSTEM LANGUAGE
@@ -309,10 +309,8 @@ struct System {
    bool sendSettingsflag;          // SENDSETTINGS FLAG
    const char* www_username = "admin";
    String www_password = "admin";
-   bool advanced;
    String item;
-   //char item[8];
-   //bool nobattery;
+
 };
 
 System sys;

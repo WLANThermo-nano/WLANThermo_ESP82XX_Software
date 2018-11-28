@@ -832,6 +832,10 @@ void start_fs() {
         setconfig(eSYSTEM,{});  // Speichern
         IPRINTPLN("Umstellung auf Typ K");
       }
+      if (item[9] == '0') {
+        sys.pitmaster = false;
+        IPRINTPLN("Kein Pitmaster");
+      }
     }
   } else DPRINTPLN("No");
 

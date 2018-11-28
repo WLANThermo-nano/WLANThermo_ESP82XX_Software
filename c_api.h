@@ -97,6 +97,19 @@ void channelAry(JsonArray  &jAry, int cc) {
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Pitmaster Types JSON Array
+void pitTyp(JsonObject  &jObj) {
+
+  JsonArray& _typ = jObj.createNestedArray("type");
+  _typ.add("off");
+  if(sys.pitmaster) {
+    _typ.add("manual");
+    _typ.add("auto");
+  }
+  
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Pitmaster JSON Object
 void pitObj(JsonObject  &jObj) {
   
@@ -277,13 +290,16 @@ void dataObj(JsonObject  &jObj, bool cloud) {
   JsonArray& _channel = jObj.createNestedArray("channel");
   channelAry(_channel, CHANNELS);
 
+  JsonObject& _master = jObj.createNestedObject("pitmaster");
+
   // PITMASTER  (Cloud kann noch kein Array verarbeiten)
   if (cloud) {
-    JsonObject& _master = jObj.createNestedObject("pitmaster");
+    //JsonObject& _master = jObj.createNestedObject("pitmaster");
     pitObj(_master);
   } else {    
-    JsonArray& _master = jObj.createNestedArray("pitmaster");
-    pitAry(_master, PITMASTERSIZE);
+    pitTyp(_master);
+    JsonArray& _pit = _master.createNestedArray("pm");
+    pitAry(_pit, PITMASTERSIZE);
   }
   
 }
