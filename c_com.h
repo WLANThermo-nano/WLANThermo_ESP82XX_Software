@@ -102,16 +102,7 @@ void read_serial(char *buffer) {
   
   } else {
   
-  
-    // GET HELP
-    if (str == "help") {
-      Serial.println();
-      Serial.println(F("Syntax: \"command\":{\"Attribut\":\"Value\"]}"));
-      Serial.println();
-      return;
-    }
-
-    else if (str == "getEE") {
+    if (str == "getEE") {
       if (m24.exist()) {
         Serial.print("pn: ");
         Serial.println(sys.item);     
@@ -145,11 +136,6 @@ void read_serial(char *buffer) {
       sys.restartnow = true;
       return;
     }
-
-    else if (str == "stopwifi") {
-      wifi.mode = 3;  // Turn Wifi off
-      return;
-    }
   
     else if (str == "configreset") {
       nanoWebHandler.configreset();
@@ -162,23 +148,18 @@ void read_serial(char *buffer) {
       return;
     }
 
+/*
     // LET ESP SLEEP
     else if (str == "sleep") {
       display.displayOff();
       ESP.deepSleep(0);
       delay(100); // notwendig um Prozesse zu beenden
     }
-
-    // Reset PITMASTER PID
-    else if (str == "setPID") {
-      set_pid(0);  // Default PID-Settings
-      if (setconfig(ePIT,{})) {IPRINTPLN("r:pm");}
-      return;
-    }
+*/
 
     // STOP PITMASTER
     else if (str == "stop") {
-      disableAllHeater();
+      pitMaster[0].active = PITOFF;
       setconfig(ePIT,{});
       return;
     }

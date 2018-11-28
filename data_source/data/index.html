@@ -2404,7 +2404,11 @@
 					<div class="1-box channel_conf">
 						<form>							
 							<p class="pure-button pure-button-primary" onclick="restart();">Restart Nano</p>
-							<p class="pure-button pure-button-primary" onclick="sethwversion();">Set V2</p>
+							<p class="pure-button pure-button-primary" onclick="setgodmode(0);">Start-Ton</p>
+							<p class="pure-button pure-button-primary" onclick="setgodmode(1);">Nobattery</p>
+							<p class="pure-button pure-button-primary" onclick="setgodmode(2);">V2</p>
+							<p class="pure-button pure-button-primary" onclick="setgodmode(3);">Damper</p>
+							<p class="pure-button pure-button-primary" onclick="setgodmode(4);">Typ K</p>
 						</form>
 					</div>
 				</div>
@@ -2634,7 +2638,7 @@
 				  <td></td>
 				</tr>
 			</table>
-			<h3 class="headtitle">WlanThermo Team</h3>
+			<h3 class="headtitle">WLANThermo Team</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1  pure-u-md-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
@@ -2646,6 +2650,16 @@
 							<tr><td onclick="touchStart();">&#10032;&nbsp;Florian Riedl</td></tr>
 							<tr><td>&#10032;&nbsp;Maik Kaste</td></tr>
 						</table>
+					</div>
+				</div>
+			</div>
+			<h3 class="headtitle">WLANThermo Forum</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1  pure-u-md-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>
+							<a href="https://forum.wlanthermo.de">Wir freuen uns über deinen Besuch im Forum!</a>
+						</form>
 					</div>
 				</div>
 			</div>
@@ -3289,6 +3303,14 @@
 		}
 	}
 	
+	function setgodmode(gnum){
+		txt = 'Änderungen durchführen?';
+		if (confirm(txt) == true) {
+			data = '{"god":' + gnum + '}';
+			loadJSON('god', data, '60000', function (response) {})
+        }
+	}
+	
     function loadJSON(url, data, timeout, callback) {
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
@@ -3589,13 +3611,6 @@
 		txt = 'Nano neu starten?';
 		if (confirm(txt) == true) {
 			loadJSON('restart', '', '60000', function (response) {});
-        }
-	}
-
-	function sethwversion(){
-		txt = 'Wollen Sie die HW-Version auf v2 setzen?';
-		if (confirm(txt) == true) {
-			loadJSON('v2', '', '60000', function (response) {});
         }
 	}
 	

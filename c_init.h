@@ -279,9 +279,6 @@ struct DutyCycle {
 DutyCycle dutyCycle[PITMASTERSIZE];
 
 
-uint32_t log_sector;                // erster Sector von APP2
-uint32_t freeSpaceStart;            // First Sector of OTA
-uint32_t freeSpaceEnd;              // Last Sector+1 of OTA
 
 // NOTIFICATION
 struct Notification {
@@ -303,7 +300,7 @@ struct System {
    String language;           // SYSTEM LANGUAGE
    
    bool autoupdate;
-   byte god;
+   byte god;                  // B0: Startpiepser, B1: nobattery  (eventuell noch typ k integrieren)
    bool pitsupply;        
    bool stby;                   // STANDBY
    bool restartnow; 
@@ -574,7 +571,7 @@ bool modifyconfig(byte count, bool neu);
 void start_fs();                                  // Initialize FileSystem
 void read_serial(char *buffer);                   // React to Serial Input 
 int readline(int readch, char *buffer, int len);  // Put together Serial Input
-void write_flash(uint32_t _sector);
+
 
 // MEDIAN
 void median_add(int value);                       // add Value to Buffer
@@ -643,7 +640,7 @@ bool sendAPI(int check);
 String apiData(int typ);
 enum {NOAPI, APIUPDATE, APICLOUD, APIDATA, APISETTINGS, APINOTE, APIALEXA};
 
-//void setWebSocket();
+void setWebSocket();
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 // BASIC FUNCTIONS

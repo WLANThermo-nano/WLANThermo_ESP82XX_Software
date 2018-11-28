@@ -38,6 +38,7 @@ void deviceObj(JsonObject  &jObj) {
   
   jObj["device"] = "nano";
   jObj["serial"] = String(ESP.getChipId(), HEX);
+  if (sys.item != "") jObj["item"] = sys.item;
   
   //if (sys.hwversion == 2) jObj["hw_version"] =  String("v1+");
   //else  
@@ -45,12 +46,8 @@ void deviceObj(JsonObject  &jObj) {
 
   jObj["sw_version"] = FIRMWAREVERSION;
   jObj["api_version"] = SERVERAPIVERSION;
-  //jObj["api_token"] = iot.CL_token;     // im CloudObj direkt
   jObj["language"] = sys.language;
-  
-  if (sys.item != "") jObj["item"] = sys.item;            
-      
-       
+        
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -68,13 +65,12 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
     jObj["ap"] =         sys.apname;
     jObj["host"] =       sys.host;
     jObj["language"] =   sys.language;
-    //jObj["fastmode"] =   sys.fastmode;
     jObj["version"] =    FIRMWAREVERSION;
     jObj["getupdate"] =  update.version;
     jObj["autoupd"] =    update.autoupdate;
     if (sys.hwversion == 2) jObj["hwversion"] =  String("V1+");
     else  jObj["hwversion"] =  String("V")+String(sys.hwversion);
-    //jObj["advanced"] =  sys.advanced;
+    jObj["god"] =        sys.god;
   }
 
 }
@@ -656,7 +652,7 @@ bool sendAPI(int check){
       String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
       adress += message;
       client->write(adress.c_str());
-      Serial.println(adress);
+      //Serial.println(adress);
       apiindex = NULL;
       urlindex = NULL;
       parindex = NULL;

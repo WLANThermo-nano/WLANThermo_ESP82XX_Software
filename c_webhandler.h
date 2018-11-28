@@ -41,6 +41,7 @@
 #define NETWORK_STOP  "/stopwifi"
 #define NETWORK_CLEAR "/clearwifi"
 #define CONFIG_RESET  "/configreset"
+#define ADMIN         "/admin"
 
 #define SET_NETWORK   "/setnetwork"
 #define SET_SYSTEM    "/setsystem"
@@ -401,6 +402,25 @@ public:
       } else request->send(500, TEXTPLAIN, BAD_PATH);
       return;
 
+    // REQUEST: /admin
+    } else if (request->url() == ADMIN) {
+      if (request->method() == HTTP_GET) {
+        request->send(200, "text/html", "<form method='POST' action='/setadmin'>Neues Password eingeben (max. 10 Zeichen): <input type='text' name='wwwpw'><br><br><input type='submit' value='Change'></form>");
+      } else if (request->method() == HTTP_POST) {
+        if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
+          return request->requestAuthentication();
+        if (request->hasParam("wwwpw", true)) {
+          String password = request->getParam("wwwpw", true)->value();
+          if (password.length() < 11) {
+            sys.www_password = password;
+            setconfig(eSYSTEM,{});
+            request->send(200, TEXTPLAIN, TEXTTRUE);
+          }
+          request->send(200, TEXTPLAIN, TEXTFALSE);
+        }
+      } else request->send(500, TEXTPLAIN, BAD_PATH);
+      return;
+
     // REQUEST: /update
     } else if (request->url() == UPDATE_PATH) {
       if (request->method() == HTTP_GET) {
@@ -459,7 +479,7 @@ public:
         || request->url() == NETWORK_LIST || request->url() == NETWORK_SCAN 
         || request->url() == NETWORK_STOP || request->url() == NETWORK_CLEAR 
         || request->url() == CONFIG_RESET || request->url() == UPDATE_PATH 
-        || request->url() == UPDATE_CHECK
+        || request->url() == UPDATE_CHECK || request->url() == ADMIN
       //|| request->url() == LOGGING_PATH
       ){
         return true;
@@ -481,7 +501,8 @@ public:
         || request->url() == NETWORK_STOP || request->url() == NETWORK_CLEAR
         || request->url() == CONFIG_RESET || request->url() == UPDATE_PATH
         || request->url() == UPDATE_CHECK || request->url() == UPDATE_STATUS
-        || request->url() == DC_STATUS  //|| request->url() == LOGGING_PATH
+        || request->url() == DC_STATUS  || request->url() == ADMIN
+        //|| request->url() == LOGGING_PATH
         )
         return true;    
     }
@@ -914,18 +935,42 @@ class BodyWebHandler: public AsyncWebHandler {
     JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
     if (!json.success()) return 0;
     
-    sys.god = json["god"];
-    
-    // System für Damper aktivieren
-    if (sys.god & (1<<3)) {
-      sys.hwversion = 2;  // Damper nur mit v2 Konfiguration
-      set_pid(1);         // es wird ein Servo gebraucht
-      setconfig(ePIT,{});
-    }
+    byte ind;
 
-    //supply ist raus
-    //if (sys.god & (1<<4) && sys.hwversion == 1) sys.god ^= (1<<4); // Supply nicht bei v1
-    //setconfig(eSYSTEM,{});
+    if (json.containsKey("god")) {
+      ind = json["god"];
+    
+      if (ind < 2) {
+        sys.god ^= (1<<ind);  // XOR
+        // BIT0: Start-Buzzer
+        // BIT1: Nobattery
+
+      // System auf V2 umstellen
+      } else if (ind == 2) {
+        sys.hwversion = 2;
+        sys.pitsupply = true;
+
+      // System für Damper aktivieren
+      } else if (ind == 3) {  
+        sys.hwversion = 2;  // Damper nur mit v2 Konfiguration
+        sys.pitsupply = true;
+        sys.damper = true;
+        set_pid(1);         // es wird ein Servo gebraucht
+        setconfig(ePIT,{}); 
+
+      // Typ K umschalten
+      } else if (ind == 4) {
+        if (sys.hwversion == 1 && !sys.typk) {
+          sys.typk = true;
+          set_sensor();
+        } else {
+          sys.typk = false;
+        }
+      }
+
+      setconfig(eSYSTEM,{});
+
+    } else return 0;
 
     return 1;
   }
@@ -1052,7 +1097,7 @@ public:
       || request->url() == SET_SYSTEM || request->url() == SET_PITMASTER
       || request->url() == SET_PID || request->url() == SET_IOT
       || request->url() == SET_API || request->url() == SET_DC
-      || request->url() == SET_PUSH //|| request->url() == SET_GOD
+      || request->url() == SET_PUSH || request->url() == SET_GOD
       ) return true;
     return false;
   }

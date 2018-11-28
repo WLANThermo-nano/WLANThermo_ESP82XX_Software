@@ -32,13 +32,11 @@ void server_setup() {
     
   server.addHandler(&nanoWebHandler);
   server.addHandler(&bodyWebHandler);
-  //server.addHandler(&logHandler);
     
   server.on("/help",HTTP_GET, [](AsyncWebServerRequest *request) {
     request->redirect("https://github.com/WLANThermo-nano/WLANThermo_nano_Software/blob/master/README.md");
   }).setFilter(ON_STA_FILTER);
     
-      
   server.on("/info",[](AsyncWebServerRequest *request){
     FSInfo fs_info;
     SPIFFS.info(fs_info);
@@ -65,74 +63,7 @@ void server_setup() {
       );
   });
 
-  server.on("/nobattery",[](AsyncWebServerRequest *request){
-    sys.god ^= (1<<1);    // XOR
-    setconfig(eSYSTEM,{});
-    if (sys.god & (1<<1)) request->send(200, TEXTPLAIN, TEXTON);
-    else request->send(200, TEXTPLAIN, TEXTOFF);
-  });
-
-  server.on("/god",[](AsyncWebServerRequest *request){
-    sys.god ^= (1<<0);    // XOR
-    setconfig(eSYSTEM,{});
-    if (sys.god & (1<<0)) request->send(200, TEXTPLAIN, TEXTON);
-    else request->send(200, TEXTPLAIN, TEXTOFF);
-  });
-
-  server.on("/v2",[](AsyncWebServerRequest *request){
-    sys.hwversion = 2;
-    sys.pitsupply = true;
-    setconfig(eSYSTEM,{});
-    request->send(200, TEXTPLAIN, "v2");
-  });
-
-/*
-  server.on("/temperatur",[](AsyncWebServerRequest *request){
-    request->send(200, APPLICATIONJSON, cloudData(0,0,5,0));
-  });
-*/
-
-  server.on("/damper",[](AsyncWebServerRequest *request){
-    sys.damper = true;
-    sys.hwversion = 2;  // Damper nur mit v2 Konfiguration
-    set_pid(1);         // es wird ein Servo gebraucht
-    setconfig(ePIT,{});
-    setconfig(eSYSTEM,{});
-    request->send(200, TEXTPLAIN, TEXTADD);
-  });
-
-  server.on("/servo",[](AsyncWebServerRequest *request){
-    set_pid(1);
-    setconfig(ePIT,{});
-    request->send(200, TEXTPLAIN, TEXTADD);
-  });
-
-  server.on("/stop",[](AsyncWebServerRequest *request){
-    //disableAllHeater();
-    pitMaster[0].active = PITOFF;
-    pitMaster[1].active = PITOFF;
-    setconfig(ePIT,{});
-    request->send(200, TEXTPLAIN, "Stop pitmaster");
-  });
-
-    server.on("/restart",[](AsyncWebServerRequest *request){
-    sys.restartnow = true;
-    request->redirect("/");
-  }).setFilter(ON_STA_FILTER);
-
-  server.on("/typk",[](AsyncWebServerRequest *request){
-    if (sys.hwversion == 1 && !sys.typk) {
-      sys.typk = true;
-      set_sensor();
-      request->send(200, TEXTPLAIN, TEXTON);
-    } else {
-      sys.typk = false;
-      request->send(200, TEXTPLAIN, TEXTOFF);
-    }
-    setconfig(eSYSTEM,{});  // Speichern
-  });
-   
-/*
+  #ifdef AMPERE
   server.on("/ampere",[](AsyncWebServerRequest *request){
     ch[5].typ = 11;
     setconfig(eCHANNEL,{});
@@ -145,7 +76,32 @@ void server_setup() {
     setconfig(eCHANNEL,{});
     request->send(200, TEXTPLAIN, TEXTTRUE);
   });
-*/
+  #endif
+
+  server.on("/setbattmin",[](AsyncWebServerRequest *request){
+    battery.min -= 100;
+    setconfig(eSYSTEM,{});
+    request->send(200, TEXTPLAIN, "Done");
+  });
+
+  server.on("/servo",[](AsyncWebServerRequest *request){          // brauchen wir für alte Nanos
+    set_pid(1);
+    setconfig(ePIT,{});
+    request->send(200, TEXTPLAIN, TEXTADD);
+  });
+
+  server.on("/stop",[](AsyncWebServerRequest *request){
+    pitMaster[0].active = PITOFF;
+    setconfig(ePIT,{});
+    request->send(200, TEXTPLAIN, "Stop pitmaster");
+  });
+
+  server.on("/restart",[](AsyncWebServerRequest *request){
+    sys.restartnow = true;
+    request->redirect("/");
+  }).setFilter(ON_STA_FILTER);
+   
+
   server.on("/newtoken",[](AsyncWebServerRequest *request){
     ESP.wdtDisable(); 
     iot.CL_token = newToken();
@@ -153,24 +109,6 @@ void server_setup() {
     lastUpdateCloud = 1; // Daten senden forcieren
     ESP.wdtEnable(10);
     request->send(200, TEXTPLAIN, iot.CL_token);
-  });
-
-  server.on("/setadmin",[](AsyncWebServerRequest *request) { 
-      if (request->method() == HTTP_GET) {
-        request->send(200, "text/html", "<form method='POST' action='/setadmin'>Neues Password eingeben (max. 10 Zeichen): <input type='text' name='wwwpassword'><br><br><input type='submit' value='Change'></form>");
-      } else if (request->method() == HTTP_POST) {
-        if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
-          return request->requestAuthentication();
-        if (request->hasParam("wwwpassword", true)) { 
-          String password = request->getParam("wwwpassword", true)->value();
-          if (password.length() < 11) {
-            sys.www_password = password;
-            setconfig(eSYSTEM,{});
-            request->send(200, TEXTPLAIN, TEXTTRUE);
-          }
-          else request->send(200, TEXTPLAIN, TEXTFALSE);
-        }
-      } else request->send(500, TEXTPLAIN, BAD_PATH);
   });
 
 /*
@@ -196,7 +134,9 @@ void server_setup() {
     request->send(404);
   });
 
-  //setWebSocket();
+  #ifdef WEBSOCKET
+  setWebSocket();
+  #endif
       
   server.begin();
   IPRINTPLN("HTTP server started");

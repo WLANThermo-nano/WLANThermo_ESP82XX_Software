@@ -202,17 +202,16 @@ void clearEE(int len, int startP) {
 void check_sector() {
 
   // https://github.com/esp8266/Arduino/blob/master/cores/esp8266/Esp.cpp
-  freeSpaceStart = (ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));
-  freeSpaceEnd = (uint32_t)&_SPIFFS_start - 0x40200000 - FLASH_SECTOR_SIZE;
-  log_sector = freeSpaceStart/SPI_FLASH_SEC_SIZE;
 
+  //uint32_t freeSpaceStart = (ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));    // First Sector of OTA
+  //uint32_t freeSpaceEnd   = (uint32_t)&_SPIFFS_start - 0x40200000 - FLASH_SECTOR_SIZE;            // Last Sector+1 of OTA
+  
   IPRINTP("FV: ");
   DPRINTLN(FIRMWAREVERSION);
   IPRINTP("SKETCH: 0x01 (");
   DPRINT((ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1)/1024);
   DPRINTPLN("K)");
-  //IPRINTP("DATALG: 0x");
-  //DPRINT(log_sector,HEX);
+
   //DPRINTP(" (");
   //DPRINT((freeSpaceEnd - freeSpaceStart)/1024, DEC);  // ESP.getFreeSketchSpace()
   //DPRINTPLN("K)");

@@ -29,100 +29,6 @@
 
 // https://github.com/adafruit/Adafruit_HTU21DF_Library/blob/master/Adafruit_HTU21DF.cpp
 
-/*
-#define HTU21DF_I2CADDR       0x40
-#define HTU21DF_READTEMP      0xE3
-#define HTU21DF_READHUM       0xE5
-#define HTU21DF_WRITEREG      0xE6
-#define HTU21DF_READREG       0xE7
-#define HTU21DF_RESET         0xFE
-#define TRIG_TEMP_RLS         0xF3 //Triggers a Temperature Measurement. Releases the SCK line (unblocks i2c bus). User must manually wait for completion before grabbing data.
-#define TRIG_HUM_RLS          0xF5 //Triggers a Humidity Measurement. Releases the SCK line (unblocks i2c bus). User must manually wait for completion before grabbing data.
-
-class HTU21DF {
-
-  private:
-
-    bool _exist;
-    byte _state;
-    float _temp, _hum;
-
-    void wireRead(byte x) {
-      Wire.beginTransmission(HTU21DF_I2CADDR);
-      Wire.write(x);
-      Wire.endTransmission();
-      //delay(15);
-    }
-
-    uint16_t wireReq() {
-      Wire.requestFrom(HTU21DF_I2CADDR, 3);
-      uint16_t h = (Wire.read() << 8) | Wire.read();
-      Wire.read();
-      return h;
-    }
-  
-  public:
-
-    bool exist() {
-      return _exist;
-    }
-
-    byte getState() {
-      return _state;
-    }
-
-    float temp() {
-      return _temp;
-    }
-
-    float hum() {
-      return _hum;
-    }
-
-    boolean begin(void) {
-      wireRead(HTU21DF_RESET);
-      wireRead(HTU21DF_READREG);
-      Wire.requestFrom(HTU21DF_I2CADDR, 1);
-      _exist = (Wire.read() == 0x2); // after reset should be 0x2
-      _state = 0;
-      return _exist;
-    }
-
-    void trigTemperature() {
-      wireRead(TRIG_TEMP_RLS);
-      _state = 1;
-    }
-
-    void trigHumidity() {
-      wireRead(TRIG_HUM_RLS);
-      _state = 3;
-    }
-    
-    void readTemperature(void) {
-      //wireRead(HTU21DF_READTEMP); delay(50);
-      float temp = wireReq();
-      temp *= 175.72;
-      temp /= 65536;
-      temp -= 46.85;
-      _state = 2;
-      _temp = temp;
-    }
-    
-    float readHumidity(void) {
-      //wireRead(HTU21DF_READHUM); delay(50);
-      float hum = wireReq();
-      hum *= 125;
-      hum /= 65536;
-      hum -= 6;
-      _state = 0;
-      _hum = hum;
-    }
-};
-
-HTU21DF htu;
-
-*/
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Sensors
 void set_sensor() {
@@ -137,10 +43,6 @@ void set_sensor() {
     pinMode(THERMOCOUPLE_CS, OUTPUT);
     digitalWrite(THERMOCOUPLE_CS, HIGH);
   }
-
-  //if (htu.begin()) Serial.println("Found HTU21D");
-  //else Serial.println("No HTU21D");
-  
 
   // MAX1161x
   byte reg = 0xA0;    // A0 = 10100000
@@ -258,9 +160,9 @@ void get_Vbat() {
         }
       }
 
-      if (battery.voltage > 3900) {
+      if (battery.voltage > 3600) {
 
-        if (battery.sim > 3900) {
+        if (battery.sim > 3600) {
 
           // Reduktion nach der Aufnahme eines neuen Werts
           if (battery.simc > MEDIAN_SIZE-1) { // angepasst an den Median
@@ -270,8 +172,7 @@ void get_Vbat() {
 
           // Aufnahme eines neuen Werts vor der Reduktion
           if (battery.simc < MEDIAN_SIZE-1 && battery.sim - battery.voltage > 5) voltage = battery.sim; // 9/10
-          //else if (battery.simc > 2 && (battery.sim - battery.voltage > 5)) voltage = battery.sim; // //10
-          //else if (battery.simc > 4 && (battery.sim - battery.voltage > 1)) voltage = battery.sim; // 5/10
+
         } else if (battery.simc > 1) battery.sim = battery.voltage - 1;  // Systemstart, etwas warten
         
       } else battery.simc = 0;
@@ -356,17 +257,6 @@ void cal_soc() {
     vol_count = 0;
 
   }
-
-  /*
-  // HTU21D
-  if (htu.exist()) {
-    switch (htu.getState()) {
-      case 0: htu.trigTemperature(); break;
-      case 1: htu.readTemperature();
-      case 2: htu.trigHumidity(); break;
-      case 3: htu.readHumidity(); break;
-    } 
-  }*/
 
 }
 
@@ -460,6 +350,8 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
   }  
 }
 
+#ifdef AMPERE
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Ampere IC
 unsigned long ampere_sum = 0;
@@ -482,6 +374,7 @@ void ampere_control() {
     }
 }
 
+#endif
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Temperature KTYPE

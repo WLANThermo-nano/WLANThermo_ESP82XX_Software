@@ -68,15 +68,20 @@ float calcT(int r, byte typ){
   case 10: // Santos
     Rn = 200.82; a = 3.3561093e-03; b = 2.3552814e-04; c = 2.1375541e-06; 
     break;
+  
+  #ifdef AMPERE
   case 11:
+    
     //Rn = ((r * 2.048 )/ 4096.0)*1000.0;
     //Serial.println(ampere);
     return ampere;
+  
   case 12:
     //Rn = ((r * 2.048 )/ 4096.0)*1000.0;
     //Serial.println(r);
     return Rmess*((4096.0/(4096-r)) - 1);
-
+  #endif
+  
   // 20K: Rn = 20.0; a = 3.35438355e-03; b = 2.41848755e-04; c = 2.77972882e-06;
   // 50K: Rn = 50.0; a = 3.35419603e-03; b = 2.41943663e-04; c = 2.77057578e-06;
    

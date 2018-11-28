@@ -24,11 +24,12 @@
 // https://techtutorialsx.com/2017/01/21/esp8266-watchdog-functions/
 
 // Entwicklereinstellungen
-//#define ASYNC_TCP_SSL_ENABLED 1
-//#define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
-//#define THINGSPEAK
-#define MEMORYCLOUD
+//#define OTA                                 // ENABLE OTA UPDATE
+//#define THINGSPEAK                          // ENABLE THINGSPEAK CONNECTION
+//#define MEMORYCLOUD                         // ENABLE DATA LOGGER
+//#define WEBSOCKET                           // ENABLE WEBSOCKET
+//#define AMPERE                              // ENABLE AMPERE MEASUREMENT TEST
  
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)
@@ -77,7 +78,7 @@
 #include "c_ota.h"
 #include "c_server.h"
 #include "c_api.h"
-//#include "c_ws.h"
+#include "c_ws.h"
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETUP
@@ -204,8 +205,9 @@ void loop() {
 
     maintimer();
 
-    //savelog();
-    //ampere_control();
+    #ifdef AMPERE
+    ampere_control();
+    #endif
 
     // Pitmaster eventuell raus aus der Bedingung
     pitmaster_control(0);      // Pitmaster 1

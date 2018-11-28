@@ -74,44 +74,6 @@ bool savefile(const char* filename, File& configFile) {
   return true;
 }
 
-
-/*
-// Save Log
-bool savelog() {
-  
-  if (millis() - lastUpdateDatalog > 60000) {
-
-    File f = SPIFFS.open(LOG_FILE, "a");
-
-    for (int i=0; i < CHANNELS; i++)  {
-      if (ch[0].temp != INACTIVEVALUE) {
-        f.print(String(ch[0].temp,1));    // 8 * 16 bit  // 8 * 2 byte
-      } else {
-        f.print("");
-      }
-      f.print("|");
-    }
-
-    f.print((uint8_t) battery.percentage);           // 8  bit // 1 byte
-    f.print("|");
-    if (pitmaster1.active) {
-      f.print((uint8_t) pitmaster1.value);            // 8  bit // 1 byte
-      f.print("|");
-      f.println((uint16_t) (pitmaster1.set * 10));    // 16 bit // 2 byte
-    } else {
-      f.println("");
-    }
-    
-    f.close();
-    Serial.println("Logeintrag");
-    lastUpdateDatalog = millis();
-  }
-}
-*/
-
-
-// MEMORYCLOUD im develop branch
-
 #ifdef MEMORYCLOUD
 void saveLog() {
   
@@ -357,14 +319,7 @@ bool loadconfig(byte count, bool old) {
       else return false;
       if (json.containsKey("batmin"))   battery.min = json["batmin"];
       else return false;
-      if (json.containsKey("logsec")) {
-        int sector = json["logsec"];
-        if (sector > log_sector) log_sector = sector;
-        // oberes limit wird spaeter abgefragt
-      }
-      else return false;
-      //if (json.containsKey("fast"))     sys.fastmode = json["fast"];
-      //else return false;
+     
       if (json.containsKey("hwversion")) sys.hwversion = json["hwversion"];
       else return false;
       if (json.containsKey("update"))   update.state = json["update"];
@@ -595,22 +550,18 @@ bool setconfig(byte count, const char* data[2]) {
       json["host"] =        sys.host;
       json["ap"] =          sys.apname;
       json["lang"] =        sys.language;
-      //json["fast"] =        sys.fastmode;
       json["hwversion"] =   sys.hwversion;
       json["update"] =      update.state;
       json["getupd"] =      update.get;
       json["autoupd"] =     update.autoupdate;
       json["batmax"] =      battery.max;
       json["batmin"] =      battery.min;
-      json["logsec"] =      log_sector;
       json["god"] =         sys.god;
       json["typk"] =        sys.typk;
       json["pitsup"] =      sys.pitsupply;
       json["batfull"] =     battery.setreference;
       json["pass"] =        sys.www_password;
       json["damper"] =      sys.damper;
-      //json["adp"] =        sys.advanced;
-      //json["nobat"] =       sys.nobattery;
     
       size_t size = json.measureLength() + 1;
       clearEE(EESYSTEM,EESYSTEMBEGIN);  // Bereich reinigen
@@ -874,7 +825,7 @@ void start_fs() {
         setconfig(eSYSTEM,{});
         IPRINTPLN("Umstellung auf V1+");
       }
-    } else if(m24.getadress() == 0x52) {
+    } else if (m24.getadress() == 0x51) {
       if (item[10] == 'k' && !sys.typk) {
         sys.typk = true;
         set_sensor();
@@ -886,35 +837,6 @@ void start_fs() {
 
 }
 
-
-/*
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Test zum Speichern von Datalog
-
-//unsigned char meinsatz[64] = "Ich nutze ab jetzt den Flash Speicher für meine Daten!\n";
-//unsigned char meinflash[64];
-
-void write_flash(uint32_t _sector) {
-
-  noInterrupts();
-  if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK) {  // ESP.flashEraseSector
-    spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) mylog, sizeof(mylog));  //ESP.flashWrite
-    //DPRINTP("[LOG]\tSpeicherung im Sector: ");
-    //DPRINTLN(_sector, HEX);
-  } //else DPRINTPLN("[INFO]\tFehler beim Speichern im Flash");
-  interrupts(); 
-}
-
-
-void read_flash(uint32_t _sector) {
-
-  noInterrupts();
-  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) archivlog, sizeof(archivlog));  //ESP.flashRead
-  //spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, (uint32 *) meinflash, sizeof(meinflash));
-  interrupts();
-}
-
-*/
 
 
 
