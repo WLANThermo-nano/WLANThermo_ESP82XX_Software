@@ -301,7 +301,7 @@ void wifimonitoring() {
       }
 
       // MQTT reaktivieren, falls Verbindung verloren
-      if (wifi.mqttreconnect && millis() - wifi.mqttreconnect > 300000) connectToMqtt;
+      if (wifi.mqttreconnect && millis() - wifi.mqttreconnect > 300000) connectToMqtt();
       break;
 
     case 2:                        // AP-Mode
