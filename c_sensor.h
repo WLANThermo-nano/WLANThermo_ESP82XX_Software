@@ -121,9 +121,9 @@ void get_Vbat() {
   bool curStateNone = digitalRead(CHARGEDETECTION);
   // Ladeanzeige
   battery.charge = !curStateNone;
-  
+  //Serial.println(voltage);
   // Standby erkennen
-  if (voltage < 10) {
+  if (voltage < 11) {
     sys.stby = true;
     //return;
   }
@@ -420,4 +420,7 @@ double get_thermocouple(bool internal) {
   return vv;
 }
 
+
+// bei einem Neustart flag auf false, ebenfalls wenn voll geladen
+// dann alle 5 min speichern und beim ersten speichern flag auf true
 
