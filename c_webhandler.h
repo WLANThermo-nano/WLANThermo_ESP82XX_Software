@@ -899,9 +899,21 @@ class BodyWebHandler: public AsyncWebHandler {
       JsonObject& _cloud = json["cloud"];
       
       if (_cloud.containsKey("task")) {
-        Serial.print("[CLOUD]: "); Serial.println(_cloud["task"].asString()); 
+        if (_cloud["task"]) sys.online |= (1<<1);
+        else sys.online &= ~(1<<1); 
+        Serial.print("[CLOUD]: "); Serial.println(sys.online); 
       }
+    }
+
+    // NOTE
+    if (json.containsKey("notification")) {
+      JsonObject& _note = json["notification"];
       
+      if (_note.containsKey("task")) {
+        //if (_note["task"]) sys.online |= (1<<2);
+        //else sys.online &= ~(1<<2); 
+        Serial.print("[NOTE]: "); Serial.println(_note["task"].asString()); 
+      }
     }
     
     return 1;

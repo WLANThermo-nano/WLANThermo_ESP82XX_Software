@@ -164,12 +164,6 @@ void read_serial(char *buffer) {
       return;
     }
 
-    // HTTP UPDATE
-    else if (str == "update") {
-      if (update.version != "false");
-      update.state = 1;
-      return;
-    }
 
     // CHECK HTTP UPDATE
     else if (str == "checkupdate") {

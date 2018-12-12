@@ -61,6 +61,7 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
     jObj["soc"]     = battery.percentage;
     jObj["charge"]  = battery.charge;
     jObj["rssi"]    = wifi.rssi;
+    jObj["online"]  = sys.online;
   } else {  
     jObj["ap"] =         sys.apname;
     jObj["host"] =       sys.host;
@@ -612,23 +613,23 @@ bool sendAPI(int check){
     }, NULL);
     
   } else if (check == 2) {          // Senden ueber Server
-    
+
+    sys.online &= ~(1<<0);
     apiClient->onConnect([](void * arg, AsyncClient * client){
     
-      printClient(serverurl[urlindex].page.c_str(),CLIENTCONNECT);
+      //printClient(serverurl[urlindex].page.c_str(),CLIENTCONNECT);
       apicontent = false;
       
       apiClient->onError(NULL, NULL);
       
       client->onDisconnect([](void * arg, AsyncClient * c){
-        printClient(serverurl[urlindex].page.c_str() ,DISCONNECT);
+        //printClient(serverurl[urlindex].page.c_str() ,DISCONNECT);
         apiClient = NULL;
         delete c;
       }, NULL);
 
       client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
 
-          //File configFile;
           String payload((char*)data);
           //Serial.println(payload);
           //Serial.println(len);
@@ -638,6 +639,7 @@ bool sendAPI(int check){
           }
           
           if ((payload.indexOf("200 OK") > -1)) {             // 200 Header
+            sys.online |= (1<<0);                             // Server Communication: yes
             readContentLengthfromHeader(payload, len);
             if (log_length >0) apicontent = true;
             return;
@@ -648,14 +650,11 @@ bool sendAPI(int check){
           } else if (apicontent) {                            // Body: 1 part
             apicontent = false;
             bodyWebHandler.setServerAPI((uint8_t*)data);      // ist das der komplette inhalt?
-            
             log_length -= len;
             //Serial.println(log_length);
             
           } else if (log_length > 0) {                        // Body: current part
-
-            // leeren?            
-            log_length -= len;
+            log_length -= len;                // leeren?
             //Serial.println(log_length);
             
           }
@@ -663,7 +662,7 @@ bool sendAPI(int check){
       }, NULL);
 
       //send the request
-      printClient(serverurl[urlindex].page.c_str() ,SENDTO);
+      //printClient(serverurl[urlindex].page.c_str() ,SENDTO);
       String message = apiData(apiindex);
       String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
       adress += message;

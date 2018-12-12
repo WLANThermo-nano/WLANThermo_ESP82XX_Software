@@ -203,6 +203,7 @@ struct System {
    const char* www_username = "admin";
    String www_password = "admin";
    String item;
+   byte online;               // Server Communication: 0:no, 1:yes
 
 };
 
