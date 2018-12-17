@@ -492,6 +492,7 @@ String connectionStatus (int which);
 AsyncMqttClient pmqttClient;
 bool sendpmqtt();
 bool sendSettings();
+void set_pmqtt(bool ini = false);
 
 // EEPROM
 void setEE();

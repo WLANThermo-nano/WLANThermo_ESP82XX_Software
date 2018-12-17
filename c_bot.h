@@ -115,7 +115,7 @@ String createNote() {
 void sendNotification() {
   
 
-    if (notification.type == 1 && pushd.on == 2) {           // Testnachricht
+    if ((notification.type == 1 && pushd.on == 2) || (notification.type == 2 && pushd.on == 1)) {           // Testnachricht
       if (sendAPI(0)) {
         apiindex = APINOTE;
         urlindex = NOTELINK;

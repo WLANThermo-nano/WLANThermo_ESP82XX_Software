@@ -40,9 +40,12 @@
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Start MQTT
 void connectToMqtt() {
-  if (iot.P_MQTT_on) pmqttClient.connect();
-  wifi.mqttreconnect = 0;
-  IPRINTPLN("t:MQTT");
+  if (iot.P_MQTT_on) {
+    set_pmqtt();
+    pmqttClient.connect();
+    wifi.mqttreconnect = millis();
+    IPRINTPLN("t:MQTT");
+  }
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -55,6 +58,7 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
 
 void onMqttConnect(bool sessionPresent) {
   IPRINTPLN("c:MQTT");
+  wifi.mqttreconnect = 0;
   MQPRINTP("[MQTT]\tSession present: ");
   MQPRINTLN(sessionPresent);
   String adress = F("WLanThermo/");
@@ -106,6 +110,9 @@ void onMqttMessage(char* topic, char* datas, AsyncMqttClientMessageProperties pr
   if (topic_short.startsWith("/get/settings")) {
     sendSettings();
   }
+  if (topic_short.startsWith("/get/data")) {
+    sendpmqtt();
+  }
   // placeholder for future extensions
   // if (topic_short.startsWith("/cmd/action")) {
   // dummy_action_handler();
@@ -120,13 +127,16 @@ void onMqttPublish(uint16_t packetId) {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Configuration MQTT
-void set_pmqtt() {
-  pmqttClient.onConnect(onMqttConnect);
-  pmqttClient.onDisconnect(onMqttDisconnect);
-  pmqttClient.onSubscribe(onMqttSubscribe);
-  pmqttClient.onUnsubscribe(onMqttUnsubscribe);
-  pmqttClient.onMessage(onMqttMessage);
-  pmqttClient.onPublish(onMqttPublish);
+void set_pmqtt(bool ini) {
+
+  if (ini) {
+    pmqttClient.onConnect(onMqttConnect);
+    pmqttClient.onDisconnect(onMqttDisconnect);
+    pmqttClient.onSubscribe(onMqttSubscribe);
+    pmqttClient.onUnsubscribe(onMqttUnsubscribe);
+    pmqttClient.onMessage(onMqttMessage);
+    pmqttClient.onPublish(onMqttPublish);
+  }
   pmqttClient.setServer(iot.P_MQTT_HOST.c_str(), iot.P_MQTT_PORT);
   if (iot.P_MQTT_USER != "" && iot.P_MQTT_PASS != "")
     pmqttClient.setCredentials(iot.P_MQTT_USER.c_str(), iot.P_MQTT_PASS.c_str());
@@ -148,11 +158,8 @@ String prefixgen(uint8_t stil = 0) {
 bool sendpmqtt() {
 
   if (pmqttClient.connected()) {
-
-    unsigned long vorher = millis();
     String payload_data = apiData(APIDATA);
     pmqttClient.publish(prefixgen(1).c_str(), iot.P_MQTT_QoS, false, payload_data.c_str());
-    MQPRINTF("[MQTT]\tdata: %ums\r\n", millis() - vorher);
     return true;
 
   } else {
@@ -163,10 +170,8 @@ bool sendpmqtt() {
 bool sendSettings() {
   
     if (pmqttClient.connected()) {
-      unsigned long settings_vorher = millis();
       String payload_settings = apiData(APISETTINGS);
       pmqttClient.publish(prefixgen(2).c_str(), iot.P_MQTT_QoS, false, payload_settings.c_str());
-      MQPRINTF("[MQTT]\tsettings: %ums\r\n", millis() - settings_vorher);
       return true;
   
     } else {
@@ -174,9 +179,12 @@ bool sendSettings() {
     }
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// control mqtt 
 void checkMqtt() {
-  if (!iot.P_MQTT_on && pmqttClient.connected()) pmqttClient.disconnect();
-  else if (sys.sendSettingsflag) {
+  // Anschalten erfolgt innerhalb des Wifi-Prozesses, hier nur Abschalten und Daten initialisieren
+  if (!iot.P_MQTT_on && pmqttClient.connected()) pmqttClient.disconnect();                      // Abschalten
+  else if (sys.sendSettingsflag) {                                                              // Daten initalizieren
     if (sendpmqtt() && sendSettings()) sys.sendSettingsflag = false;
   }
 }  

@@ -28,7 +28,9 @@
 // 
 void server_setup() {
 
-  MDNS.begin(sys.host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);
+  //MDNS.begin(sys.host.c_str());  // siehe Beispiel: WiFi.hostname(host); WiFi.softAP(host);
+  // verschoben in c_wifi
+
     
   server.addHandler(&nanoWebHandler);
   server.addHandler(&bodyWebHandler);

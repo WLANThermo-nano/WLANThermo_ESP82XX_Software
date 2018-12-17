@@ -64,12 +64,15 @@ void onWifiConnect(const WiFiEventStationModeGotIP& event) {
   IPRINTP("STA: "); DPRINTLN(WiFi.SSID());
   IPRINTP("IP: "); DPRINTLN(WiFi.localIP());
 
+  if (!MDNS.begin(sys.host.c_str())) {             // Start the mDNS responder for esp8266.local
+    IPRINTP("Error MDNS!");
+  } else IPRINTP("mDNS started");
+
   // noch nicht in STA
   if (WiFi.getMode() > 1) wifi.disconnectAP = true;             // Close AP-Mode
   wifi.mode = 1;                                                // WiFi-Mode = STA
   
-  connectToMqtt();                 // Start MQTT
-  //wifi.mqttreconnect = 1;
+  //connectToMqtt();                 // Start MQTT, verschoben in wifimonitoring
 
   // Änderung an den Wifidaten: muss sortiert und gespeichert werden?
   if (holdssid.hold && WiFi.SSID() == holdssid.ssid) {
@@ -102,7 +105,7 @@ void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
   if (holdssid.hold == 2) {} // neue Wifi-Daten Verbindungsprozess
   else wifi.mode = 6;     // Verbindungsverlust im Betrieb
   
-  //pmqttClient.disconnect();
+  //pmqttClient.disconnect();   // geschieht automatisch
   wifi.mqttreconnect = 0;
 }
 
@@ -300,8 +303,13 @@ void wifimonitoring() {
         wifi.neu = 0; 
       }
 
-      // MQTT reaktivieren, falls Verbindung verloren
-      if (wifi.mqttreconnect && millis() - wifi.mqttreconnect > 300000) connectToMqtt();
+      // MQTT (re-)aktivieren
+      if (wifi.mqttreconnect && millis() - wifi.mqttreconnect > 30000) {            // Reaktivieren nach Verbindungsverlust
+        connectToMqtt();
+      }
+      else if (iot.P_MQTT_on && !pmqttClient.connected() && !wifi.mqttreconnect) {  // Aktivieren nach Config-Änderung oder Systemstart
+        connectToMqtt();
+      }
       break;
 
     case 2:                        // AP-Mode

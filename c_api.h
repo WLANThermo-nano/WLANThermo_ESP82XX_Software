@@ -387,10 +387,12 @@ void cloudObj(JsonObject  &jObj) {
 // Notification JSON Object
 void noteObj(JsonObject  &jObj) {
 
-  
   jObj["lang"] = sys.language;
 
-    // an welche Dienste soll geschickt werden?
+  if (iot.CL_on)
+    jObj["api_token"] = iot.CL_token;
+
+  // an welche Dienste soll geschickt werden?
   JsonArray& services = jObj.createNestedArray("services");
 
     JsonObject& _obj1 = services.createNestedObject();
@@ -404,46 +406,54 @@ void noteObj(JsonObject  &jObj) {
 
     // pushd.repeat;
 
+  // Nachricht
+  jObj["task"] = "alert"; 
 
   if (notification.type == 1) {
-    //jObj["task"] = "test";
-    
-    jObj["task"] = "alert";
-    jObj["message"] = F("down");
-    jObj["channel"] = 1;
-    
+    jObj["message"] = "test";    
     if (pushd.on == 2) pushd.on = 3;    // alte Werte wieder herstellen  (Testnachricht)
-    return;
+    
+  } else if (notification.type == 2) {
+    jObj["message"] = "battery";
+    
   } else {
-    jObj["task"] = "alert";  
-  }
 
-  /*
-  // Kanäle & Message
-  JsonArray& _ch = jObj.createNestedArray("channels");
-  JsonArray& _message = jObj.createNestedArray("messages");
+    jObj["unit"] = sys.unit;
+     
+    /*
+    // Kanäle & Message
+    JsonArray& _ch = jObj.createNestedArray("channels");
+    JsonArray& _message = jObj.createNestedArray("messages");
 
-  
-  
-  for (int i = 0; i < CHANNELS; i++) {
-    Serial.println(ch[i].alarm);
-    if (ch[i].alarm == 1 || ch[i].alarm == 3){      // push or all
+    for (int i = 0; i < CHANNELS; i++) {
+      Serial.println(ch[i].alarm);
+      if (ch[i].alarm == 1 || ch[i].alarm == 3){      // push or all
       
-      if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
-        notification.index &= ~(1<<i);           // Kanal entfernen, sonst erneuter Aufruf
-        _ch.add(i+1);                               // Füge Kanal hinzu
-        bool limit = notification.limit & (1<<i);
-        _message.add((limit)?F("up"):F("down"));
+        if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
+          notification.index &= ~(1<<i);           // Kanal entfernen, sonst erneuter Aufruf
+          _ch.add(i+1);                               // Füge Kanal hinzu
+          bool limit = notification.limit & (1<<i);
+          _message.add((limit)?F("up"):F("down"));
+        }
       }
     }
+    */
+
+    bool limit = notification.limit & (1<<notification.ch);
+    jObj["message"] = (limit)?F("up"):F("down");
+    jObj["channel"] = notification.ch+1;
+    notification.index &= ~(1<<notification.ch);           // Kanal entfernen, sonst erneuter Aufruf
+    
+    JsonArray& _temp = jObj.createNestedArray("temp");
+    _temp.add(ch[notification.ch].temp);
+    if (limit) 
+      _temp.add(ch[notification.ch].max);
+    else
+      _temp.add(ch[notification.ch].min);
+    
+
+
   }
-  */
-
-  bool limit = notification.limit & (1<<notification.ch);
-  jObj["message"] = (limit)?F("up"):F("down");
-  jObj["channel"] = notification.ch+1;
-  notification.index &= ~(1<<notification.ch);           // Kanal entfernen, sonst erneuter Aufruf
-
 }
 
 
@@ -667,7 +677,7 @@ bool sendAPI(int check){
       String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
       adress += message;
       client->write(adress.c_str());
-      //Serial.println(adress);
+      Serial.println(adress);
       apiindex = NULL;
       urlindex = NULL;
       parindex = NULL;

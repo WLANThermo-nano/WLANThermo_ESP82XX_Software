@@ -109,9 +109,9 @@ void setup() {
     if (sys.god & (1<<0)) {
       piepserON(); delay(500); piepserOFF();
     }
-  
-    // Initalize P_MQTT
-    set_pmqtt();
+
+    // Initialize mqtt
+    set_pmqtt(1);
     
     // Initialize Wifi
     set_wifi();

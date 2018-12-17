@@ -141,7 +141,13 @@ void read_serial(char *buffer) {
       nanoWebHandler.configreset();
       return;
     }
-
+/*
+    else if (str == "battery") {
+      notification.type = 2;
+      Serial.println("Test");
+      return;
+    }
+*/
     // RESTART SYSTEM
     else if (str == "restart") {
       sys.restartnow = true;
