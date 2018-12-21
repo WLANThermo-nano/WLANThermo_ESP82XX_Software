@@ -39,6 +39,28 @@
 .icon-uniF2C9:before {content: "\f2c9";}
 .icon-uniF2CA:before {content: "\f2ca";}
 .icon-uniF2CB:before {content: "\f2cb";}
+
+.icon-cloud:before {
+  content: "\f289";
+}
+
+.icon-cloud-green:before {
+  content: "\f289";
+  color:#00FF00;
+}
+
+.icon-cloud-red:before {
+  content: "\f289";
+  color:#FF0000;
+}
+
+.icon-bluetooth_1:before {
+  content: "\f293";
+}
+.icon-bluetooth_2:before {
+  content: "\f294";
+}
+
 .icon-uniF2CB:before,.icon-uniF2CA:before,.icon-uniF2C9:before,.icon-uniF2C8:before,.icon-uniF2C7:before{
   margin-right:4px;
   margin-left:2px;
@@ -974,7 +996,7 @@
 		.float-left {
 			float:left;
 		}
-		.wifi, .notification {
+		.wifi, .notification, .cloud {
 			text-align:center;
 			padding:14px 5px;
 			overflow: hidden;;
@@ -1859,6 +1881,7 @@
 		<div id="thermoname">N.C.</div>
 		<div class="battery" onclick="setshowBatteryWlanIcon();">N.C.</div>
 		<div class="wifi" onclick="setshowBatteryWlanIcon();">N.C.</div>
+		<div class="cloud"></div>
 		<div class="notification" style="display:none" onclick="update();"><span class="icon-notification"> </span></div>
 	</div>
 	<div class="clear"></div>
@@ -3267,6 +3290,29 @@
 		}
 	}
 	
+	function getCloudIcon(online){
+		switch(online) {
+			case 0:
+				return '<span class="icon-cloud-red"> </span>';
+			break;
+
+			case 1:
+				return '<span class="icon-cloud"> </span>';
+			break;
+			
+			case 2:
+				return '<span class="icon-cloud-red"> </span>';
+			break;
+			
+			case 3:
+				return '<span class="icon-cloud-green"> </span>';
+			break;
+			
+			default:
+				return '';
+		} 
+	}
+	
 	function getRSSIIcon(dbm){
 		data = '';
 		if (showBatteryWlanIcon == true){
@@ -3348,6 +3394,7 @@
 				
 				BatteryIcon = getBatteryIcon(jr.system.soc,jr.system.charge);
 				byClass("battery")[0].innerHTML = BatteryIcon;
+				byClass("cloud")[0].innerHTML = getCloudIcon(jr.system.online);
 				RSSIIcon = getRSSIIcon(jr.system.rssi);
 				byClass("wifi")[0].innerHTML = RSSIIcon;
 				var x = byClass("pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index");
