@@ -998,7 +998,7 @@
 		}
 		.wifi, .notification, .cloud {
 			text-align:center;
-			padding:14px 5px;
+			padding:14px 2px;
 			overflow: hidden;;
 			float:right;
 			border-left:2px solid #333;
@@ -1262,7 +1262,7 @@
 			}
 		}
 
-		.channel:hover, .notification:hover, .wifi:hover, .battery:hover{
+		.channel:hover, .notification:hover, .wifi:hover, .battery:hover, .cloud:hover{
 			cursor: pointer;
 		}
 
@@ -1881,7 +1881,7 @@
 		<div id="thermoname">N.C.</div>
 		<div class="battery" onclick="setshowBatteryWlanIcon();">N.C.</div>
 		<div class="wifi" onclick="setshowBatteryWlanIcon();">N.C.</div>
-		<div class="cloud"></div>
+		<div class="cloud" onclick="clickCloudIcon();"></div>
 		<div class="notification" style="display:none" onclick="update();"><span class="icon-notification"> </span></div>
 	</div>
 	<div class="clear"></div>
@@ -2698,12 +2698,6 @@
 		showLoader('true');
 		loadJSON('settings', '', '3000', function (response) {
 			jr = JSON.parse(response);
-			//byId('TSon').checked = jr.iot.TSon;
-			//byId('TSwrite').value = jr.iot.TSwrite;
-			//byId('TShttp').value = jr.iot.TShttp;
-			//byId('TSchID').value = jr.iot.TSchID;
-			//byId('TSinterval').value = jr.iot.TSint;
-			//byId('TSshow8').checked = jr.iot.TSshow8;
 			byId('PMQon').checked = jr.iot.PMQon;
 			byId('PMQhost').value = jr.iot.PMQhost;
 			byId('PMQport').value = jr.iot.PMQport;
@@ -2753,7 +2747,7 @@
 			})		
 		})
 	}
-	
+	// -----------------------------------------------------------------------------------	
 	function showPushNotification(){
 		hideAll();
 		showLoader('true');
@@ -2771,10 +2765,6 @@
 			byId('push_notification').style.display = "inline";
 			showLoader('false');
 		})				
-	}
-
-	function getChatID(){
-		getRequest();
 	}
 	
 	function setPushNotification(){
@@ -2794,6 +2784,10 @@
 			})		
 		})
 	}
+	
+	function getChatID(){
+		getRequest();
+	}
 
 	function sendPushNotification(){
 		//eventuell zusammenfassen mit setPushNotification()
@@ -2812,12 +2806,8 @@
 		})	
 	
 	}
-	
-	function showSetWLAN(){
-		hideAll();
-		byId('wlan_set').style.display = "inline";
-	}	
-
+	// -----------------------------------------------------------------------------------
+		
 	function showSetChannel(channel){
         console.log(channel);
 		hideAll();
@@ -2889,7 +2879,7 @@
 			})		
 		})	
 	}
-	
+	// -----------------------------------------------------------------------------------
 	function clearOption(id){
 		var selectbox = document.getElementById(id);
 		var i;
@@ -2897,17 +2887,8 @@
 			selectbox.remove(i);
 		}
 	}
-	
-	function setWLAN(ssid, passwd){
-		showLoader('true');
-		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
-		loadJSON('setnetwork', data, '60000', function (response) {
-			showWLAN();
-			showLoader('false');
-		})
-		
-	}	
-	
+	// -----------------------------------------------------------------------------------	
+
 	function setThermoName(){
 		showLoader('true');
 		loadJSON('settings', '', '5000', function (response) {
@@ -2917,6 +2898,20 @@
 				byClass("notification")[0].style.display = "none";
 			}else{
 				byClass("notification")[0].style.display = "inline";
+			}
+			showLoader('false');
+		})
+	}
+	
+	function clickCloudIcon(){
+		showLoader('true');
+		loadJSON('settings', '', '5000', function (response) {
+			jr = JSON.parse(response);
+			byId('thermoname').innerHTML = jr.system.host;	
+			if(jr.iot.CLon === true){
+				window.location = "https://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken;
+			}else{
+			
 			}
 			showLoader('false');
 		})
@@ -2934,20 +2929,6 @@
 				updateActivated = 'false';
 				byClass("notification")[0].style.display = "none";
 				location.reload(true);
-			}
-		})	
-	}
-	
-	var dcActivated = 'false';
-	
-	function checkDCActivated(){
-		loadJSON('dcstatus', '', '3000', function (response) {
-			jr = JSON.parse(response);
-			if (jr == true){
-				showLoader('true');
-			}else if (jr == false){
-				showLoader('false')
-				dcActivated = 'false';
 			}
 		})	
 	}
@@ -2976,6 +2957,7 @@
 		})	
 	}
 	
+	// -----------------------------------------------------------------------------------	
 	function showSystem(){
 		hideAll();
 		showLoader('true');
@@ -2986,7 +2968,6 @@
 			byId('apname').value = jr.system.ap;
 			byId('thermoname').innerHTML = jr.system.host;
 			byId('unit').value = jr.system.unit;
-			//byId('fastmode').checked = jr.system.fastmode;
 			byId('searchUpdate').checked = jr.system.autoupd;
 			clearOption('hwversion');
 			for (var i = 0; i < jr.hardware.length; i++) {
@@ -3006,8 +2987,7 @@
 			jr.system.ap = byId('apname').value.replace(/ /g, '_');
 			jr.system.hwversion = byId('hwversion').value;
 			jr.system.language = byId('language').value;
-			jr.system.unit = byId('unit').value;
-			//jr.system.fastmode = byId('fastmode').checked;		
+			jr.system.unit = byId('unit').value;		
 			jr.system.autoupd = byId('searchUpdate').checked;			
 			var data = JSON.stringify(jr.system);
 			showLoader('true');
@@ -3018,6 +2998,7 @@
 			})		
 		})	
 	}
+	// -----------------------------------------------------------------------------------
 	
 	function showPitmaster(){		
 		hideAll();
@@ -3123,9 +3104,6 @@
 			byId('pid_Kp').value = jr.pid[profile].Kp;	
 			byId('pid_Ki').value = jr.pid[profile].Ki;
 			byId('pid_Kd').value = jr.pid[profile].Kd;
-			//byId('pid_Kp_a').value = jr.pid[profile].Kp_a;
-			//byId('pid_Ki_a').value = jr.pid[profile].Ki_a;
-			//byId('pid_Kd_a').value = jr.pid[profile].Kd_a;
 			byId('pid_DCmin').value = jr.pid[profile].DCmmin;
 			byId('pid_DCmax').value = jr.pid[profile].DCmmax;
 			byId('pid_opl').checked = jr.pid[profile].opl;
@@ -3159,9 +3137,6 @@
 			jr.pid[profile].Kp = byId('pid_Kp').value;
 			jr.pid[profile].Ki = byId('pid_Ki').value;
 			jr.pid[profile].Kd = byId('pid_Kd').value;
-			//jr.pid[profile].Kp_a = byId('pid_Kp_a').value;
-			//jr.pid[profile].Ki_a = byId('pid_Ki_a').value;
-			//jr.pid[profile].Kd_a = byId('pid_Kd_a').value;
 			jr.pid[profile].DCmmin = byId('pid_DCmin').value;
 			jr.pid[profile].DCmmax = byId('pid_DCmax').value;
 			jr.pid[profile].opl = byId('pid_opl').checked;
@@ -3190,6 +3165,7 @@
 			})	
 		}		
 	}
+	// -----------------------------------------------------------------------------------
 	
 	function getRequest(){
 		data = "?host='http://nano.norma.uberspace.de'&url='/telegram.php?token=344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc'&method=GET";
@@ -3293,64 +3269,18 @@
 	function getCloudIcon(online){
 		switch(online) {
 			case 0:
-				return '<span class="icon-cloud-red"> </span>';
+				return '';
 			break;
 
 			case 1:
-				return '<span class="icon-cloud"> </span>';
-			break;
-			
-			case 2:
 				return '<span class="icon-cloud-red"> </span>';
 			break;
 			
-			case 3:
+			case 2:
 				return '<span class="icon-cloud-green"> </span>';
 			break;
-			
 			default:
 				return '';
-		} 
-	}
-	
-	function getRSSIIcon(dbm){
-		data = '';
-		if (showBatteryWlanIcon == true){
-			if(dbm >= '-80'){
-				data = data + getIcon('Wlan100');
-			}else if (dbm >= '-95'){
-				data = data + getIcon('Wlan66');
-			}else if (dbm >= '-105'){
-				data = data + getIcon('Wlan33');
-			}
-			return data;	
-		}else{
-			data = dbm + 'dBm';
-			return data;		
-		}
-	}
-
-	function getWifiSecureIcon(data){
-		var lock = getIcon('lock');
-		var unlock = getIcon('unlock');
-		switch(data) {
-			case 2: //ENC_TYPE_TKIP - WPA / PSK
-				return lock;
-				break;
-			case 4: //ENC_TYPE_CCMP - WPA2 / PSK
-				return lock;
-				break;
-			case 5: //ENC_TYPE_WEP - WEP
-				return lock;
-				break;
-			case 7: //ENC_TYPE_NONE - open network
-				return unlock;
-			break;
-			case 8:	//ENC_TYPE_AUTO - WPA / WPA2 / PSK
-				return lock;
-				break;	
-			default:
-				return lock;
 		} 
 	}
 	
@@ -3365,9 +3295,6 @@
 			$( ".channel_template:first" ).children().clone().appendTo(".channel_index:last");
 			$(".channel_index").children().last().addClass("temp_index");
 			$(".channel_index").children().last().attr('data-channel', i);
-			<!-- $(".channel_index").children().last().click(function () { -->
-				<!-- showSetChannel(this.getElementsByClassName('chnumber')[0].innerHTML); -->
-			<!-- }); -->
 		}
 		channel_init = true;
 		if(debug === true){console.log('channel_init:' + channel_init );}
@@ -3380,6 +3307,8 @@
 			$(".channel_index").children().last().remove();
 		}
 	}
+	
+	// read temp values
 	// -----------------------------------------------------------------------------------	
 	function readTemp(){
 		if (updateActivated == 'true'){
@@ -3457,6 +3386,23 @@
 			})
 		}
 	}
+
+	// Wifi connection
+	// -----------------------------------------------------------------------------------
+	function showSetWLAN(){
+		hideAll();
+		byId('wlan_set').style.display = "inline";
+	}
+	
+	function setWLAN(ssid, passwd){
+		showLoader('true');
+		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
+		loadJSON('setnetwork', data, '60000', function (response) {
+			showWLAN();
+			showLoader('false');
+		})
+		
+	}	
 	
 	function networkscan(){
 		loadJSON('networkscan', '', '3000', function (response) {
@@ -3498,11 +3444,6 @@
 			NetworklistRowClick();
 		})
 	}
-	function addCell(row,cellinnerHtml,cellClass,nr){
-		var cell = row.insertCell(nr);
-		cell.innerHTML = cellinnerHtml;
-		cell.className = cellClass;
-	}
 	
 	var ssidInput;
 	function NetworklistRowClick() {
@@ -3535,6 +3476,67 @@
 				}    
 			})(i);
 		}
+	}	
+	
+	function getRSSIIcon(dbm){
+		data = '';
+		if (showBatteryWlanIcon == true){
+			if(dbm >= '-80'){
+				data = data + getIcon('Wlan100');
+			}else if (dbm >= '-95'){
+				data = data + getIcon('Wlan66');
+			}else if (dbm >= '-105'){
+				data = data + getIcon('Wlan33');
+			}
+			return data;	
+		}else{
+			data = dbm + 'dBm';
+			return data;		
+		}
+	}
+
+	function getWifiSecureIcon(data){
+		var lock = getIcon('lock');
+		var unlock = getIcon('unlock');
+		switch(data) {
+			case 2: //ENC_TYPE_TKIP - WPA / PSK
+				return lock;
+				break;
+			case 4: //ENC_TYPE_CCMP - WPA2 / PSK
+				return lock;
+				break;
+			case 5: //ENC_TYPE_WEP - WEP
+				return lock;
+				break;
+			case 7: //ENC_TYPE_NONE - open network
+				return unlock;
+			break;
+			case 8:	//ENC_TYPE_AUTO - WPA / WPA2 / PSK
+				return lock;
+				break;	
+			default:
+				return lock;
+		} 
+	}
+	
+	var dcActivated = 'false';
+	function checkDCActivated(){
+		loadJSON('dcstatus', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			if (jr == true){
+				showLoader('true');
+			}else if (jr == false){
+				showLoader('false')
+				dcActivated = 'false';
+			}
+		})	
+	}
+	// -----------------------------------------------------------------------------------
+
+	function addCell(row,cellinnerHtml,cellClass,nr){
+		var cell = row.insertCell(nr);
+		cell.innerHTML = cellinnerHtml;
+		cell.className = cellClass;
 	}
 	
 	function validateNumber(number,decimal) {
@@ -3559,11 +3561,22 @@
 		if(val.split('.').length>2){val = val.replace(/\.+$/,"");}		
 		number.value = val;
 	}
-	
+		
+
+	// reboot device
+	// -----------------------------------------------------------------------------------
+	function restart(){
+		txt = 'Nano neu starten?';
+		if (confirm(txt) == true) {
+			loadJSON('restart', '', '60000', function (response) {});
+        }
+	}
+	// show hidden Menu 
+	// -----------------------------------------------------------------------------------	
 	function showExtendedSettings(){
 		hideAll();
 		byId('extended_settings').style.display = "inline";
-	}
+	}	
 	
 	var clickTimer = null;
 	function touchStart() {
@@ -3577,13 +3590,7 @@
 			showExtendedSettings();
 		}
 	}	
-
-	function restart(){
-		txt = 'Nano neu starten?';
-		if (confirm(txt) == true) {
-			loadJSON('restart', '', '60000', function (response) {});
-        }
-	}
+	// -----------------------------------------------------------------------------------	
 	
 	function setHelpBox(title,v){	
 		byId('helpBoxTitle').innerHTML = title;
