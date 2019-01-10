@@ -651,10 +651,10 @@ void set_system() {
   sys.pitsupply = false;           // nur mit Mod
   sys.damper = false;
   sys.restartnow = false;
-//int ci=1;
+
   update.state = -1;  // Kontakt zur API herstellen
 }
-
+//int ci=1;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Main Timer
 
