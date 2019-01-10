@@ -51,6 +51,8 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 // GLOBAL VARIABLES
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+uint16_t MAX1161x_ADDRESS;   // MAX1161x
+
 // CHANNELS
 struct ChannelData {
    String name;             // CHANNEL NAME
@@ -67,7 +69,7 @@ struct ChannelData {
    int repeat;
 };
 
-ChannelData ch[CHANNELS];
+ChannelData ch[MAXCHANNELS];
 
 enum {ALARM_OFF,ALARM_PUSH,ALARM_HW,ALARM_ALL};
 String alarmname[4] = {"off","push","summer","all"};
@@ -203,7 +205,10 @@ struct System {
    const char* www_username = "admin";
    String www_password = "admin";
    String item;
-   byte online;               // Server Communication: 0:no, 1:yes
+   byte server_state;         // Server Communication: 0:no, 1:yes
+   byte cloud_state;          // Cloud Communication: 0: deaktiviert, 1: Fehler, 2: aktiv
+
+   uint8_t ch;                // Amount of active channels
 
 };
 
@@ -216,7 +221,7 @@ struct myUpdate {
   byte count;                     // UPDATE SPIFFS REPEAT
   int state;                      // UPDATE STATE: -1 = check, 0 = no, 1 = start spiffs, 2 = check after restart, 3 = firmware, 4 = finish
   String get;                     // UPDATE MY NEW VERSION (über Eingabe)
-  String version;                 // UPDATE SERVER NEW VERSION
+  String version = "false";       // UPDATE SERVER NEW VERSION
   bool autoupdate;                // CHECK UPDATE INFORMATION
   bool prerelease;                // ?
 };
@@ -382,8 +387,13 @@ struct ServerData {
    String typ; 
 };
 
+#ifdef THINGSPEAK
 ServerData serverurl[5];     // 0:api, 1: note, 2:cloud
 enum {APILINK, NOTELINK, CLOUDLINK, TSLINK, HTTPLINK};
+#else
+ServerData serverurl[3];     // 0:api, 1: note, 2:cloud
+enum {APILINK, NOTELINK, CLOUDLINK};
+#endif
 
 enum {NOPARA, TESTPARA, SENDTS, THINGHTTP};                       // Config GET/POST Request
 
@@ -396,8 +406,8 @@ rst_info *myResetInfo;
 
   // DATALOGGER
   struct Datalogger {
-    uint16_t tem[CHANNELS];
-    //String color[CHANNELS];
+    uint16_t tem[sys.ch];
+    //String color[sys.ch];
     //long timestamp;
     uint8_t value;
     uint16_t set;
@@ -538,6 +548,41 @@ void setWebSocket();
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 // BASIC FUNCTIONS
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Server URLs
+
+void setserverurl(bool init = false) {
+
+  serverurl[0].typ  = "api";
+  serverurl[1].typ  = "note";
+  serverurl[2].typ  = "cloud";
+
+  #ifdef THINGSPEAK
+  serverurl[3].typ  = "thingspeak";
+  serverurl[4].typ  = "thinghttp";
+  #endif
+
+  if (init) return;
+  
+  serverurl[0].host = APISERVER;
+  serverurl[0].page = CHECKAPI;
+  
+  serverurl[1].host = APISERVER;
+  serverurl[1].page = CHECKAPI;
+  
+  serverurl[2].host = APISERVER;
+  serverurl[2].page = CHECKAPI;
+  
+
+  #ifdef THINGSPEAK
+  serverurl[3].host = THINGSPEAKSERVER;
+  serverurl[3].page = SENDTSLINK;
+ 
+  serverurl[4].host = THINGSPEAKSERVER;
+  serverurl[4].page = THINGHTTPLINK;
+  #endif
+}
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Serial
 void set_serial() {
@@ -545,6 +590,8 @@ void set_serial() {
   DPRINTLN();
   DPRINTLN();
   IPRINTLN(ESP.getResetReason());
+
+  setserverurl(true);       // Initialize Server URL container
 
   myResetInfo = ESP.getResetInfoPtr();
   //Serial.printf("myResetInfo->reason %x \n", myResetInfo->reason); // reason is uint32
@@ -582,7 +629,8 @@ void set_system() {
   
   String host = HOSTNAME;
   host += String(ESP.getChipId(), HEX);
-  
+
+  sys.ch = MAXCHANNELS;
   sys.host = host;
   sys.apname = APNAME;
   sys.language = "de";
@@ -603,7 +651,7 @@ void set_system() {
   sys.pitsupply = false;           // nur mit Mod
   sys.damper = false;
   sys.restartnow = false;
-
+//int ci=1;
   update.state = -1;  // Kontakt zur API herstellen
 }
 
@@ -637,6 +685,7 @@ void maintimer(bool stby = false) {
       // Temperature and Battery Measurement Timer
       if (!(oscounter % INTERVALSENSOR)) {     // 1 s
         get_Temperature();                            // Temperature Measurement
+        //ci++; if (ci > 3) ci = 1;
         get_Vbat();                                   // Battery Measurement
         if (millis() < BATTERYSTARTUP) cal_soc();     // schnelles aktualisieren beim Systemstart
       }
@@ -706,7 +755,7 @@ void maintimer(bool stby = false) {
 
       // ALARM REPEAT
       if (!(oscounter % 60)) {     // 15 s
-       for (int i=0; i < CHANNELS; i++) {
+       for (int i=0; i < sys.ch; i++) {
         if (ch[i].isalarm)  {
           if (ch[i].repeat > 1) {
             ch[i].repeat -= 1;
@@ -850,31 +899,7 @@ String getMacAddress()  {
 }
 
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Server URLs
 
-void setserverurl() {
-
-  serverurl[0].host = APISERVER;
-  serverurl[0].page = CHECKAPI;
-  serverurl[0].typ  = "api";
-
-  serverurl[1].host = APISERVER;
-  serverurl[1].page = CHECKAPI;
-  serverurl[1].typ  = "note";
-
-  serverurl[2].host = APISERVER;
-  serverurl[2].page = CHECKAPI;
-  serverurl[2].typ  = "cloud";
-
-  serverurl[3].host = THINGSPEAKSERVER;
-  serverurl[3].page = SENDTSLINK;
-  serverurl[3].typ  = "thingspeak";
-
-  serverurl[4].host = THINGSPEAKSERVER;
-  serverurl[4].page = THINGHTTPLINK;
-  serverurl[4].typ  = "thinghttp";
-}
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // GET/POST-Request

@@ -125,7 +125,7 @@ void sendNotification() {
         
     } else if (notification.index > 0) {              // CHANNEL NOTIFICATION
 
-      for (int i=0; i < CHANNELS; i++) {
+      for (int i=0; i < sys.ch; i++) {
         if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
             Serial.println("Alarm");
 

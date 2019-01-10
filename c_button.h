@@ -294,8 +294,8 @@ static inline void button_event() {
           do {
             current_ch++;
             i++;
-            if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-          } while ((ch[current_ch].temp==INACTIVEVALUE) && (i<(CHANNELS+1))); 
+            if (current_ch > (sys.ch-1)) current_ch = MINCOUNTER;
+          } while ((ch[current_ch].temp==INACTIVEVALUE) && (i<(sys.ch+1))); 
           
           ui.setFrameAnimation(SLIDE_LEFT);
           ui.transitionToFrame(0);      // Refresh
@@ -356,7 +356,7 @@ static inline void button_event() {
     } else {
     
       b_counter = ui.getCurrentFrameCount();
-      int j = CHANNELS;
+      int j = sys.ch;
       int j_ch = current_ch;
     
       switch (inMenu) {
@@ -372,12 +372,12 @@ static inline void button_event() {
        /*   do {
             current_ch--;
             j--;
-            if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
+            if (current_ch < MINCOUNTER) current_ch = sys.ch-1;
           } while ((ch[current_ch].temp == INACTIVEVALUE) && (j > -1)); */
 
           // Rückwärts immer alle Kanäle
           current_ch--;
-          if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
+          if (current_ch < MINCOUNTER) current_ch = sys.ch-1;
           
           ui.setFrameAnimation(SLIDE_RIGHT);
           ui.transitionToFrame(0);      // Refresh
@@ -474,8 +474,8 @@ static inline void button_event() {
         if (mupi == 10) mupi = 1;
         if (event[1]) tempor = pitMaster[0].channel;
         tempor += mupi;
-        if (tempor > CHANNELS-1) tempor = 0;
-        else if (tempor < 0) tempor = CHANNELS-1;
+        if (tempor > sys.ch-1) tempor = 0;
+        else if (tempor < 0) tempor = sys.ch-1;
         if (event[2]) pitMaster[0].channel = tempor;
         break;
         

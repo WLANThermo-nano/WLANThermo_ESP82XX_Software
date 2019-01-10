@@ -61,7 +61,7 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
     jObj["soc"]     = battery.percentage;
     jObj["charge"]  = battery.charge;
     jObj["rssi"]    = wifi.rssi;
-    jObj["online"]  = sys.online;
+    jObj["online"]  = sys.cloud_state;
   } else {  
     jObj["ap"] =         sys.apname;
     jObj["host"] =       sys.host;
@@ -81,7 +81,7 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
 void channelAry(JsonArray  &jAry, int cc) {
 
   int i = 0;
-  if (cc < CHANNELS) i = cc-1;    // nur ein Channel
+  if (cc < sys.ch) i = cc-1;    // nur ein Channel
 
   for (i; i < cc; i++) {
   JsonObject& data = jAry.createNestedObject();
@@ -208,6 +208,7 @@ void iotObj(JsonObject  &jObj) {
   jObj["CLon"] =      iot.CL_on;
   jObj["CLtoken"] =   iot.CL_token;
   jObj["CLint"] =     iot.CL_int;
+  jObj["CLurl"] =     "cloud.wlanthermo.de/index.html";
 
 }
 
@@ -289,15 +290,21 @@ void dataObj(JsonObject  &jObj, bool cloud) {
 
   // CHANNEL
   JsonArray& _channel = jObj.createNestedArray("channel");
-  channelAry(_channel, CHANNELS);
+  channelAry(_channel, sys.ch);
 
-  JsonObject& _master = jObj.createNestedObject("pitmaster");
+  //JsonObject& _master = jObj.createNestedObject("pitmaster");
 
   // PITMASTER  (Cloud kann noch kein Array verarbeiten)
   if (cloud) {
     //JsonObject& _master = jObj.createNestedObject("pitmaster");
-    pitObj(_master);
+   // pitObj(_master);
+  if (sys.pitmaster) {
+    JsonArray& _master = jObj.createNestedArray("pitmaster");
+    pitAry(_master, PITMASTERSIZE);
+  }
+    
   } else {    
+    JsonObject& _master = jObj.createNestedObject("pitmaster");
     pitTyp(_master);
     JsonArray& _pit = _master.createNestedArray("pm");
     pitAry(_pit, PITMASTERSIZE);
@@ -425,7 +432,7 @@ void noteObj(JsonObject  &jObj) {
     JsonArray& _ch = jObj.createNestedArray("channels");
     JsonArray& _message = jObj.createNestedArray("messages");
 
-    for (int i = 0; i < CHANNELS; i++) {
+    for (int i = 0; i < sys.ch; i++) {
       Serial.println(ch[i].alarm);
       if (ch[i].alarm == 1 || ch[i].alarm == 3){      // push or all
       
@@ -464,7 +471,7 @@ String apiData(int typ) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
-  if (typ == APIDATA || typ == APISETTINGS) {
+  if (typ == APIDATA) {     //  || typ == APISETTINGS
     // interne Kommunikation mit dem Webinterface
   } else {
     JsonObject& device = root.createNestedObject("device");
@@ -624,7 +631,7 @@ bool sendAPI(int check){
     
   } else if (check == 2) {          // Senden ueber Server
 
-    sys.online &= ~(1<<0);
+    sys.server_state = 0;
     apiClient->onConnect([](void * arg, AsyncClient * client){
     
       //printClient(serverurl[urlindex].page.c_str(),CLIENTCONNECT);
@@ -641,7 +648,7 @@ bool sendAPI(int check){
       client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
 
           String payload((char*)data);
-          //Serial.println(payload);
+          Serial.println(payload);
           //Serial.println(len);
 
           if (payload.indexOf("HTTP/1.1") > -1) {             // Time Stamp
@@ -649,7 +656,7 @@ bool sendAPI(int check){
           }
           
           if ((payload.indexOf("200 OK") > -1)) {             // 200 Header
-            sys.online |= (1<<0);                             // Server Communication: yes
+            sys.server_state = 1;                             // Server Communication: yes
             readContentLengthfromHeader(payload, len);
             if (log_length >0) apicontent = true;
             return;
@@ -677,7 +684,7 @@ bool sendAPI(int check){
       String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
       adress += message;
       client->write(adress.c_str());
-      Serial.println(adress);
+      //Serial.println(adress);
       apiindex = NULL;
       urlindex = NULL;
       parindex = NULL;
@@ -698,7 +705,9 @@ bool sendAPI(int check){
 
 void check_api() {
 
-  if (update.state == -1 || update.state == 2) {  // -1 = check, 2 = check after restart during Update
+  // bei wifi-connect wird update.state = -1 gesetzt
+
+  if (update.state == -1 || update.state == 2) {  // -1 = check, 2 = check after restart during update
     if((wifi.mode == 1)) {
       //Serial.println("Verbindungsversuch API");
       if (sendAPI(0)) {             // blockt sich selber, so dass nur ein Client gleichzeitig offen
@@ -708,8 +717,8 @@ void check_api() {
         sendAPI(2);
       }
 
+    // kommt nicht bei Systemstart zum Einsatz
     } else {                      // kein Internet, also Update stoppen
-      //update.get = "false";     // warten, bis Internet da ist, oder Updateversuch stoppen?
       if (update.state == -1)  update.get = "false";    // nicht während Update, da wird die Version gebraucht
     }
     

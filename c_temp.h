@@ -97,17 +97,26 @@ float calcT(int r, byte typ){
 }
 
 
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Temperature ADC
 void get_Temperature() {
   // Read NTC Channels
-  for (int i=0; i < CHANNELS; i++)  {
+  for (int i=0; i < sys.ch; i++)  {
 
     float value;
- 
+/* 
     // NTC der Reihe nach auslesen
-    value = calcT(get_adc_average(i),ch[i].typ);
-
+    if (MAX1161x_ADDRESS == MAX11613_ADDRESS && i<4 && i!=0) {
+      if (i == ci) {
+        value = calcT(get_adc_average(3-i),ch[i].typ);
+        //Serial.println(value);
+      } else value = ch[i].temp;
+      
+    }
+    else */ if (MAX1161x_ADDRESS == MAX11615_ADDRESS)    value = calcT(get_adc_average(i),ch[i].typ);
+    else value = INACTIVEVALUE;
+ 
     // Temperatursprung außerhalb der Grenzen macht keinen Sinn
     if (ch[i].temp == INACTIVEVALUE && (value < -15.0 || value > 300.0)) value = INACTIVEVALUE;
  
@@ -118,10 +127,6 @@ void get_Temperature() {
       if (i == 5) value = get_thermocouple(true);
       //if (i == 5) value = INACTIVEVALUE;
     }
-    //if (i == 0) value = battery.voltage/100.0;
-    //if (i == 1) value = 10.0*batteryMonitor.getVCell();
-    //if (i == 2) value = 10.0*batteryMonitor.getVoltage();
-    //if (i == 3) value = batteryMonitor.getSoC();
 
     // Umwandlung C/F
     if ((sys.unit == "F") && value!=INACTIVEVALUE) {  // Vorsicht mit INACTIVEVALUE
@@ -153,7 +158,7 @@ void get_Temperature() {
 void set_channels(bool init) {
 
   // Grundwerte einrichten
-  for (int i=0; i<CHANNELS; i++) {
+  for (int i=0; i<sys.ch; i++) {
         
     ch[i].temp = INACTIVEVALUE;
     ch[i].match = 0;
@@ -186,7 +191,7 @@ void transform_limits() {
   float max;
   float min;
   
-  for (int i=0; i < CHANNELS; i++)  {
+  for (int i=0; i < sys.ch; i++)  {
     max = ch[i].max;
     min = ch[i].min;
 

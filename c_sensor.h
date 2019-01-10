@@ -27,6 +27,7 @@
     
  ****************************************************/
 
+
 // https://github.com/adafruit/Adafruit_HTU21DF_Library/blob/master/Adafruit_HTU21DF.cpp
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -44,24 +45,56 @@ void set_sensor() {
     digitalWrite(THERMOCOUPLE_CS, HIGH);
   }
 
-  // MAX1161x
+  // MAX11615
   byte reg = 0xA0;    // A0 = 10100000
   // page 14
   // 1: setup mode
-  // SEL2:0 = Reference (Table 6)
+  // SEL:010 = Reference (Table 6)
   // external(1)/internal(0) clock
   // unipolar(0)/bipolar(1)
   // 0: reset the configuration register to default
   // 0: dont't care
  
-  Wire.beginTransmission(MAX1161x_ADDRESS);
+  Wire.beginTransmission(MAX11615_ADDRESS);
   Wire.write(reg);
   byte error = Wire.endTransmission();
-  IPRINTP("MAX11615: ");
+  IPRINTP("MAX1161x: ");
   if (error == 0) {
     DPRINTP("0x");
-    DPRINTLN(MAX1161x_ADDRESS, HEX);
-  } else DPRINTPLN("No");
+    DPRINTLN(MAX11615_ADDRESS, HEX);
+    MAX1161x_ADDRESS = MAX11615_ADDRESS;
+/*  } else {
+
+    // MAX11613
+    reg = 0xA0;    
+    // page 14
+    // 80 = 10000000 -> VCC (3V3) als Referenz, nur mit 0R wenn Doppelfühler, Toleranz wird größer
+    // D0 = 11010000 -> interne Referenz, passt nicht überein, Werte zu tief
+    // A0 = 10100000 -> externe Referenz, dann kein Doppelfühler
+    // IC kann nur VCC = 3V3, nicht 2V
+    // 1: setup mode
+    // SEL[0:2] = Reference (Table 6)
+    // external(1)/internal(0) clock
+    // unipolar(0)/bipolar(1)
+    // 0: reset the configuration register to default
+    // 0: dont't care
+
+    Wire.beginTransmission(MAX11613_ADDRESS);
+    Wire.write(reg);
+    error = Wire.endTransmission();
+
+    if (error == 0) {
+      DPRINTP("0x");
+      DPRINTLN(MAX11613_ADDRESS, HEX);
+      MAX1161x_ADDRESS = MAX11613_ADDRESS;
+      if (sys.ch != 3) {
+        sys.ch = 3;
+        Serial.println("Umstellung auf LITE-3");
+        setconfig(eSYSTEM,{});
+      }
+      sys.pitmaster = false;
+ */   } else DPRINTPLN("No");
+//  }
   
 }
 
@@ -72,8 +105,11 @@ int get_adc_average (byte ch) {
   // Get the average value for the ADC channel (ch) selected. 
   // MAX11613/15 samples the channel 8 times and returns the average.  
   // Setup byte required: 0xA0 
-  
-  byte config = 0x21 + (ch << 1);   //00100001 + ch  // page 15 
+
+  byte config;
+//Serial.println(ch);
+  config = 0x21 + (ch << 1);   //00100001 + ch  // page 15 0x21
+//Serial.println(config, BIN);
   // 0: config mode
   // 01: SCAN = Converts the ch eight times
   // 0000: placeholder ch
@@ -123,7 +159,7 @@ void get_Vbat() {
   battery.charge = !curStateNone;
   //Serial.println(voltage);
   // Standby erkennen
-  if (voltage < 11) {
+  if (voltage < 20) {
     sys.stby = true;
     //return;
   }
@@ -180,10 +216,10 @@ void get_Vbat() {
       break;
 
     case 3:                                                    // COMPLETE (vollständig)
-      if (battery.setreference == -1) {                        // es wurde geladen
+      if (battery.setreference == -1 && voltage > 4150) {      // es wurde geladen, setze Referenz wenn Akku wirklich geladen
         battery.setreference = 180;                            // Referenzzeit setzen
         setconfig(eSYSTEM,{});
-      } else voltage = 4200;                                   // 100% bei USB-Quelle
+      } else if (millis() > 10000) voltage = 4200;             // 100% bei USB-Quelle, sofern USB nach Laden verbleibt
       break;
 
     case 4:                                                     // NO BATTERY
@@ -218,7 +254,7 @@ void cal_soc() {
   
   if (vol_count > 0) {
 
-    if (vol_count == 1) {                           // Battery Initialiseurnv
+    if (vol_count == 1) {                           // Battery Initialisierung
       if (battery.voltage < vol_sum)
         battery.voltage = vol_sum;                  // beim Start Messung anpassen
     } else {
@@ -287,7 +323,7 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
 
   bool setalarm = false;
 
-  for (int i=0; i < CHANNELS; i++) {
+  for (int i=0; i < sys.ch; i++) {
     //if (ch[i].alarm > 0) {                              // CHANNEL ALARM ENABLED
                 
       // CHECK LIMITS

@@ -78,7 +78,7 @@ bool savefile(const char* filename, File& configFile) {
 void saveLog() {
   
   // CHANNEL
-  for (int i = 0; i < CHANNELS; i++) {
+  for (int i = 0; i < sys.ch; i++) {
     cloudlog[cloudcount].tem[i] = limit_float(ch[i].temp, i)*10;
     //cloudlog[cloudcount].color[i] = ch[i].color;
   }
@@ -102,7 +102,7 @@ void parseLog(JsonObject  &jObj, byte c, long tim) {
   
   JsonArray& channel = jObj.createNestedArray("channel");
 
-  for (int i = 0; i < CHANNELS; i++) {
+  for (int i = 0; i < sys.ch; i++) {
     JsonObject& data = channel.createNestedObject();
     data["number"]= i+1;
     data["temp"]  = cloudlog[c].tem[i]/10.0;
@@ -143,7 +143,7 @@ bool checkjson(JsonVariant json, const char* filename) {
 // Load xxx.json at system start
 bool loadconfig(byte count, bool old) {
 
-  const size_t bufferSize = 6*JSON_ARRAY_SIZE(CHANNELS) + JSON_OBJECT_SIZE(9) + 320;
+  const size_t bufferSize = 6*JSON_ARRAY_SIZE(MAXCHANNELS) + JSON_OBJECT_SIZE(9) + 320;
   DynamicJsonBuffer jsonBuffer(bufferSize);
   File configFile;
 
@@ -162,7 +162,7 @@ bool loadconfig(byte count, bool old) {
       if (json.containsKey("temp_unit"))  sys.unit = json["temp_unit"].asString();
       else return false;
       
-      for (int i=0; i < CHANNELS; i++){
+      for (int i=0; i < sys.ch; i++){
           ch[i].name = json["tname"][i].asString();
           ch[i].typ = json["ttyp"][i];            
           ch[i].min = json["tmin"][i];            
@@ -309,6 +309,8 @@ bool loadconfig(byte count, bool old) {
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,SYSTEM_FILE)) return false;
   
+      if (json.containsKey("ch"))       sys.ch = json["ch"];
+      else sys.ch = MAXCHANNELS;
       if (json.containsKey("host"))     sys.host = json["host"].asString();
       else return false;
       if (json.containsKey("ap"))       sys.apname = json["ap"].asString();
@@ -377,10 +379,12 @@ bool loadconfig(byte count, bool old) {
       if (!checkjson(json,SERVER_FILE)) return false;
 
       for (int i = 0; i < NUMITEMS(serverurl); i++) {
+        
         JsonObject& _link = json[serverurl[i].typ];
 
         if (_link.containsKey("host")) serverurl[i].host = _link["host"].asString();
         else return false;
+        
         if (_link.containsKey("page")) serverurl[i].page = _link["page"].asString();
         //else return false;
       }
@@ -424,7 +428,7 @@ bool setconfig(byte count, const char* data[2]) {
       JsonArray& _alarm = json.createNestedArray("talarm");
       JsonArray& _color = json.createNestedArray("tcolor");
     
-      for (int i=0; i < CHANNELS; i++){
+      for (int i=0; i < sys.ch; i++){
         _name.add(ch[i].name);
         _typ.add(ch[i].typ); 
         _min.add(ch[i].min,1);
@@ -546,7 +550,8 @@ bool setconfig(byte count, const char* data[2]) {
     case 4:         // SYSTEM
     {
       JsonObject& json = jsonBuffer.createObject();
-      
+
+      json["ch"] =          sys.ch;
       json["host"] =        sys.host;
       json["ap"] =          sys.apname;
       json["lang"] =        sys.language;

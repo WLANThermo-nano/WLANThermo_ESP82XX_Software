@@ -681,6 +681,8 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_chart.containsKey("CLint"))    iot.CL_int      = _chart["CLint"];
 
     if (!refresh && iot.CL_on) lastUpdateCloud = 1; // Daten senden forcieren
+
+    if (!iot.CL_on) sys.cloud_state = 0;
   
     if (!setconfig(eTHING,{})) return 0;    
     return 1;
@@ -899,9 +901,9 @@ class BodyWebHandler: public AsyncWebHandler {
       JsonObject& _cloud = json["cloud"];
       
       if (_cloud.containsKey("task")) {
-        if (_cloud["task"]) sys.online |= (1<<1);
-        else sys.online &= ~(1<<1); 
-        Serial.print("[CLOUD]: "); Serial.println(sys.online); 
+        if (_cloud["task"]) sys.cloud_state = 2;
+        else sys.cloud_state = 1; 
+        Serial.print("[CLOUD]: "); Serial.println(sys.cloud_state); 
       }
     }
 

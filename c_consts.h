@@ -25,17 +25,16 @@
 #define C_CONSTS_H_
 
 // HARDWARE
-#define FIRMWAREVERSION  "v1.0.2"
+#define FIRMWAREVERSION  "v1.0.3"
 #define GUIAPIVERSION    "1"
 #define SERVERAPIVERSION "1"
 
 // CHANNELS
-#define CHANNELS 8                     // UPDATE AUF HARDWARE 4.05
+#define MAXCHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
 #define SENSORTYPEN    11               // NUMBER OF SENSORS
 #define LIMITUNTERGRENZE -31           // MINIMUM LIMIT
 #define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
-#define MAX1161x_ADDRESS 0x33          // MAX11615
 #define ULIMITMIN 10.0
 #define ULIMITMAX 150.0
 #define OLIMITMIN 35.0
@@ -44,6 +43,8 @@
 #define ULIMITMAXF 302.0
 #define OLIMITMINF 95.0
 #define OLIMITMAXF 392.0
+#define MAX11615_ADDRESS 0x33
+#define MAX11613_ADDRESS 0x34
 
 // BATTERY
 #define BATTMIN 3550                  // MINIMUM BATTERY VOLTAGE in mV
@@ -76,8 +77,7 @@
 #define PRELLZEIT 5                 // Prellzeit in Millisekunden   
 #define DOUBLECLICKTIME 400         // Längste Zeit für den zweiten Klick beim DOUBLECLICK
 #define LONGCLICKTIME 600           // Mindestzeit für einen LONGCLICK
-#define MINCOUNTER 0
-#define MAXCOUNTER CHANNELS-1
+#define MINCOUNTER 0                // OLED FRAMES COUNTER LIMIT
 
 // WIFI
 #define APNAME      "NANO-AP"
@@ -121,9 +121,10 @@
 #define CHECKAPI "/"
 
 // THINGSPEAK
+#ifdef THINGSPEAK
 #define THINGSPEAKSERVER "api.thingspeak.com"
 #define SENDTSLINK "/update.json"
 #define THINGHTTPLINK "/apps/thinghttp/send_request"
-
+#endif
 
 #endif /* C_CONSTS_H_ */
