@@ -49,7 +49,7 @@ void median_clear()
     for (uint8_t i = 0; i< MEDIAN_SIZE; i++) _p[i] = i;
 }
 
-
+/*
  //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // sort Buffer
 void median_sort() {
@@ -92,6 +92,7 @@ double median_getHighest()
     }
     return NAN;
 }
+*/
 
 double median_average()
 {
@@ -103,5 +104,30 @@ double median_average()
     }
     return NAN;
 }
+
+
+ //++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Temp Buffer
+void mem_add(float value, int i) {
+    ch[i].ar[ch[i].idx++] = value;
+    if (ch[i].idx >= MEM_SIZE) ch[i].idx = 0; // wrap around
+    if (ch[i].cnt < MEM_SIZE) ch[i].cnt++;
+}
+
+void mem_clear(int i) {
+    ch[i].cnt = 0;
+    ch[i].idx = 0;
+}
+
+float mem_a(int i)  {
+    if (ch[i].cnt > 0) {
+        float sum = 0;
+        for (uint8_t j = 0; j < ch[i].cnt; j++) sum += ch[i].ar[j];
+        return (sum / (float) ch[i].cnt);
+    }
+    return INACTIVEVALUE;
+}
+
+
 
 

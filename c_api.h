@@ -648,7 +648,7 @@ bool sendAPI(int check){
       client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
 
           String payload((char*)data);
-          Serial.println(payload);
+          //Serial.println(payload);
           //Serial.println(len);
 
           if (payload.indexOf("HTTP/1.1") > -1) {             // Time Stamp

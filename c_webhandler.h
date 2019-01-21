@@ -572,9 +572,10 @@ class BodyWebHandler: public AsyncWebHandler {
   
     if (sys.unit != unit)  {
       sys.unit = unit;
-      transform_limits();                             // Transform Limits
-      setconfig(eCHANNEL,{});                         // Save Config
-      get_Temperature();                              // Update Temperature
+      transform_limits();                                       // Transform Limits
+      setconfig(eCHANNEL,{});                                   // Save Config
+      for (uint8_t j = 0; j < sys.ch; j++) mem_clear(j);        // Clear Temperature Memory
+      get_Temperature();                                        // Update Temperature
     }
   
     return 1;

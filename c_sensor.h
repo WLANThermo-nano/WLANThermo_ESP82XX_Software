@@ -310,16 +310,24 @@ void set_piepser() {
 
 void piepserON() {
   analogWrite(MOSI,512);
+  sys.piepoff_t = 2;
 }
 
 void piepserOFF() {
-  analogWrite(MOSI,0);
+  if (sys.piepoff_t == 0) analogWrite(MOSI,0);
+  else if (sys.piepoff_t > -2) sys.piepoff_t--;
+}
+
+void pbguard() {
+  //analogWriteFreq(5);
+  analogWrite(MOSI,1023);
+  sys.piepoff_t = 2;        // für 2 Zyklen
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //Control Hardware Alarm
-void controlAlarm(bool action){                // action dient zur Pulsung des Signals
+void controlAlarm(){                // action dient zur Pulsung des Signals
 
   bool setalarm = false;
 
@@ -378,12 +386,7 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
   }
 
   // Hardware-Alarm-Variable: sys.hwalarm
-  if (setalarm && action) {
-    piepserON();
-  }
-  else {
-    piepserOFF();
-  }  
+  if (setalarm) piepserON(); 
 }
 
 #ifdef AMPERE

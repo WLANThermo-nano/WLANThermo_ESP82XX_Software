@@ -118,7 +118,7 @@ void get_Temperature() {
     else value = INACTIVEVALUE;
  
     // Temperatursprung außerhalb der Grenzen macht keinen Sinn
-    if (ch[i].temp == INACTIVEVALUE && (value < -15.0 || value > 300.0)) value = INACTIVEVALUE;
+    if (ch[i].temp == INACTIVEVALUE && (value < -15.0 || value > 300.0)) value = INACTIVEVALUE;  // wrong typ
  
     // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
     // KTYPE wandert dann auf Kanal 5
@@ -134,8 +134,19 @@ void get_Temperature() {
       value /= 5.0;
       value += 32;
     }
+
+    // Temperature Average Buffer by Pitmaster
+    if (sys.transform) {
+      if (value != INACTIVEVALUE) {
+        mem_add(value, i);
+      } else {
+        mem_clear(i);
+      }
+      value = mem_a(i);
+    }
     
     ch[i].temp = value;
+    
     float max = ch[i].max;
     float min = ch[i].min;
     

@@ -61,8 +61,9 @@ void read_serial(char *buffer) {
             String str(item);
             sys.item = str;
             piepserON();
-            delay(1500);
-            piepserOFF();
+            sys.piepoff_t = 6;
+            //delay(1500);
+            //piepserOFF();
           }
         }
       }
@@ -130,6 +131,7 @@ void read_serial(char *buffer) {
       return;
     }
 */
+    
     else if (str == "clearwifi") {
       setconfig(eWIFI,{}); // clear Wifi settings
       wifi.mode = 5;  // interner Speicher leeren
@@ -169,7 +171,20 @@ void read_serial(char *buffer) {
       setconfig(ePIT,{});
       return;
     }
-
+/*
+    else if (str == "pittest") {
+      pitMaster[0].active = AUTO;
+      pitMaster[0].set = 110;
+      pitMaster[0].channel = 1;
+      pitMaster[0].pid = 0;
+      pitMaster[1].active = AUTO;
+      pitMaster[1].set = 30;
+      pitMaster[1].channel = 2;
+      pitMaster[1].pid = 1;
+      
+      return;
+    }
+*/
 
     // CHECK HTTP UPDATE
     else if (str == "checkupdate") {

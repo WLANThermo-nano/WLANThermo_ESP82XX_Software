@@ -98,6 +98,12 @@ void server_setup() {
     request->send(200, TEXTPLAIN, "Stop pitmaster");
   });
 
+  server.on("/pbq",[](AsyncWebServerRequest *request){
+    sys.god ^= (1<<5);
+    setconfig(eSYSTEM,{});
+    request->send(200, TEXTPLAIN, String((sys.god & (1<<5))?1:0));
+  });
+
   server.on("/restart",[](AsyncWebServerRequest *request){
     sys.restartnow = true;
     request->redirect("/");

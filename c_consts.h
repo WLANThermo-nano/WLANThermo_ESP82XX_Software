@@ -45,6 +45,7 @@
 #define OLIMITMAXF 392.0
 #define MAX11615_ADDRESS 0x33
 #define MAX11613_ADDRESS 0x34
+#define MEM_SIZE 10                  // Temperature Memory Buffer
 
 // BATTERY
 #define BATTMIN 3550                  // MINIMUM BATTERY VOLTAGE in mV

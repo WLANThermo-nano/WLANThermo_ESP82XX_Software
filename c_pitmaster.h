@@ -266,6 +266,7 @@ void pitsupply(bool out, byte id) {
   if (id == 0 && sys.hwversion > 1) {
     //if () out = HIGH;  // SSR || FAN
     digitalWrite(PITSUPPLY, out);
+    sys.transform = out;
   }
 }
 

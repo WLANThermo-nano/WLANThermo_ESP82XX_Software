@@ -67,6 +67,10 @@ struct ChannelData {
    String color;            // COLOR
    bool repeatalarm;
    int repeat;
+   
+   uint8_t cnt;
+   uint8_t idx;
+   float ar[MEM_SIZE];
 };
 
 ChannelData ch[MAXCHANNELS];
@@ -209,6 +213,9 @@ struct System {
    byte cloud_state;          // Cloud Communication: 0: deaktiviert, 1: Fehler, 2: aktiv
 
    uint8_t ch;                // Amount of active channels
+   int8_t piepoff_t;
+
+   bool transform;            // 12V transformation flag
 
 };
 
@@ -433,10 +440,11 @@ void set_serial();                                // Initialize Serial
 void set_button();                                // Initialize Buttons
 static inline boolean button_input();             // Dectect Button Input
 static inline void button_event();                // Response Button Status
-void controlAlarm(bool action);                              // Control Hardware Alarm
+void controlAlarm();                              // Control Hardware Alarm
 void set_piepser();
 void piepserOFF();
 void piepserON();      
+void pbguard();
 
 // SENSORS
 void set_sensor();                                // Initialize Sensors
@@ -477,8 +485,7 @@ int readline(int readch, char *buffer, int len);  // Put together Serial Input
 
 // MEDIAN
 void median_add(int value);                       // add Value to Buffer
-void median_sort();                               // sort Buffer
-double median_get();                              // get Median from Buffer
+void mem_clear(int i);
 
 // OTA
 void set_ota();                                   // Configuration OTA
@@ -682,13 +689,22 @@ void maintimer(bool stby = false) {
       }
     } else {
 
+      if (!(oscounter % 1)) {       // 250 ms
+        piepserOFF();
+        pulsalarm = !pulsalarm;         // OLED
+      }
+
       // Temperature and Battery Measurement Timer
       if (!(oscounter % INTERVALSENSOR)) {     // 1 s
         get_Temperature();                            // Temperature Measurement
         //ci++; if (ci > 3) ci = 1;
         get_Vbat();                                   // Battery Measurement
         if (millis() < BATTERYSTARTUP) cal_soc();     // schnelles aktualisieren beim Systemstart
+
+        controlAlarm();
       }
+
+      if (battery.state == 3 && (sys.god & (1<<5)) && !(oscounter % 40)) pbguard();     // alle 10s
 
       // RSSI and kumulative Battery Measurement
       if (!(oscounter % INTERVALBATTERYSIM)) {     // 30 s
@@ -696,11 +712,7 @@ void maintimer(bool stby = false) {
         cal_soc();                                    // Kumulative Battery Value
       }
 
-      // Alarm Puls Timer
-      if (!(oscounter % 1)) {       // 250 ms
-        controlAlarm(pulsalarm);
-        pulsalarm = !pulsalarm;
-      }
+      
 
       // PRIVATE MQTT
       if (!(oscounter % (iot.P_MQTT_int*4))) {   // variable
