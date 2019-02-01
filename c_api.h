@@ -553,6 +553,7 @@ void readUTCfromHeader(String payload) {
 }
 
 int log_length; 
+int log_typ;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Read content length from HTTP Header
@@ -561,13 +562,30 @@ void readContentLengthfromHeader(String payload, int len) {
   log_length = 0;
   int index = payload.indexOf("Content-Length: ");
   if (index > -1) {
-           
+     
     payload = payload.substring(index+16,len);            // "Content-Length:" entfernen     
     payload = payload.substring(0,payload.indexOf("\n")); // Ende der Zeile
     log_length = payload.toInt();
-    //Serial.print("Content:");Serial.println(log_length);
+    
   }
 }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Check content typ from HTTP Header
+void checkContentTypfromHeader(String payload, int len) {
+
+  int index = payload.indexOf("Content-Type: ");
+  if (index > -1) {
+           
+    payload = payload.substring(index+14,len);            // "Content-Length:" entfernen     
+    payload = payload.substring(0,payload.indexOf("\n")); // Ende der Zeile
+
+    if (payload.indexOf("json") > -1) log_typ = 1;        // JSON
+    else if (payload.indexOf("text") > -1) log_typ = 2;   // TEXT
+    else log_typ = 0;
+  }
+}
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Read new location from 302 HTTP Header
@@ -610,7 +628,7 @@ void printClient(const char* link, int arg) {
 }
 
 
-bool apicontent;
+int apicontent;
 static AsyncClient * apiClient = NULL;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -648,6 +666,7 @@ bool sendAPI(int check){
       client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
 
           String payload((char*)data);
+          //Serial.println(millis());
           //Serial.println(payload);
           //Serial.println(len);
 
@@ -658,16 +677,31 @@ bool sendAPI(int check){
           if ((payload.indexOf("200 OK") > -1)) {             // 200 Header
             sys.server_state = 1;                             // Server Communication: yes
             readContentLengthfromHeader(payload, len);
-            if (log_length >0) apicontent = true;
-            return;
+            checkContentTypfromHeader(payload, len);
+
+            if (log_length > 0) {                             // Content available
+              apicontent = 1;
+              if (log_typ == 1 && payload.indexOf("{") > -1) {     // JSON: Body belongs to header
+                apicontent = payload.indexOf("{")+1;          
+                if ((len-(apicontent-1)) != log_length) 
+                  Serial.println("[WARNING]: Content-Length unequal");
+                Serial.println("Body belongs to header");
+              } else  return;                                 // Header alone
+            }
           
           } else if (payload.indexOf("302 Found") > -1) {     // 302 Header: new API-Links 
             readLocation(payload, len);
+          }
+
+          //} else if (payload.indexOf("500 Internal Server Error") > -1) {  // 500 Header: new API-Links 
+          //  Serial.println("Fehler im Verbindungsaufbau");
           
-          } else if (apicontent) {                            // Body: 1 part
-            apicontent = false;
-            bodyWebHandler.setServerAPI((uint8_t*)data);      // ist das der komplette inhalt?
-            log_length -= len;
+          if (apicontent) {  // Body: 1 part
+            if (log_typ == 1){    // JSON
+              bodyWebHandler.setServerAPI((uint8_t*)data+(apicontent-1)); 
+            }
+            apicontent = 0;
+            log_length -= len;                // Option das nicht alles auf einmal kommt bleibt offen
             //Serial.println(log_length);
             
           } else if (log_length > 0) {                        // Body: current part

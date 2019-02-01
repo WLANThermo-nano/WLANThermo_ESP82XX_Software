@@ -141,7 +141,7 @@ void get_Vbat() {
   
   // Digitalwert transformiert in Batteriespannung in mV
   int voltage = analogRead(ANALOGREADBATTPIN);
-
+//Serial.println(voltage);
   // CHARGE DETECTION
   //                LOAD        COMPLETE        SHUTDOWN
   // MCP:           LOW           HIGH           HIGH-Z 

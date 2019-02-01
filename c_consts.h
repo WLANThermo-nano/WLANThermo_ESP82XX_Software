@@ -25,7 +25,7 @@
 #define C_CONSTS_H_
 
 // HARDWARE
-#define FIRMWAREVERSION  "v1.0.3"
+#define FIRMWAREVERSION  "v1.0.4"
 #define GUIAPIVERSION    "1"
 #define SERVERAPIVERSION "1"
 
@@ -120,6 +120,10 @@
 // API
 #define APISERVER "api.wlanthermo.de"
 #define CHECKAPI "/"
+
+//#define APISERVER "nano.norma.uberspace.de"
+//#define CHECKAPI "/api/index.php"
+
 
 // THINGSPEAK
 #ifdef THINGSPEAK

@@ -147,15 +147,16 @@ void get_Temperature() {
     
     ch[i].temp = value;
     
-    float max = ch[i].max;
-    float min = ch[i].min;
-    
+    int max = ch[i].max;  // nur für Anzeige
+    int min = ch[i].min;  // nur für Anzeige
+   
     // Show limits in OLED  
     if ((max > min) && value!=INACTIVEVALUE) {
-      int match = map(value,min,max,3,18);
+      int match = map((int)value,min,max,3,18);
       ch[i].match = constrain(match, 0, 20);
     }
     else ch[i].match = 0;
+    
   }
 
   // Open Lid Detection

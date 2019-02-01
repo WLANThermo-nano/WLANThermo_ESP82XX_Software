@@ -843,6 +843,7 @@ class BodyWebHandler: public AsyncWebHandler {
 
     // URL
     if (json.containsKey("url")) {
+      Serial.println("Server-URL");
       JsonObject& _url = json["url"];
 
       for (int i = 0; i < NUMITEMS(serverurl); i++) {     // nur bekannte auslesen
