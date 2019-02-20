@@ -25,14 +25,14 @@
 #define C_CONSTS_H_
 
 // HARDWARE
-#define FIRMWAREVERSION  "v1.0.4"
+#define FIRMWAREVERSION  "v1.0.5"
 #define GUIAPIVERSION    "1"
 #define SERVERAPIVERSION "1"
 
 // CHANNELS
 #define MAXCHANNELS 8                     // UPDATE AUF HARDWARE 4.05
 #define INACTIVEVALUE  999             // NO NTC CONNECTED
-#define SENSORTYPEN    11               // NUMBER OF SENSORS
+#define SENSORTYPEN    12               // NUMBER OF SENSORS
 #define LIMITUNTERGRENZE -31           // MINIMUM LIMIT
 #define LIMITOBERGRENZE 999            // MAXIMUM LIMIT
 #define ULIMITMIN 10.0

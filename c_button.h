@@ -285,8 +285,12 @@ static inline void button_event() {
       switch (inMenu) {
       
         case MAINMENU:                     // Menu durchwandern
-          if (menu_count < 2) menu_count++;
+          if (menu_count < 2) {
+            menu_count++;
+            if (!sys.pitmaster && menu_count == 1) menu_count++;
+          }
           else menu_count = 0;
+          
           drawMenu();
           break;
 
@@ -362,7 +366,10 @@ static inline void button_event() {
       switch (inMenu) {
 
         case MAINMENU:                     
-          if (menu_count > 0) menu_count--;
+          if (menu_count > 0) {
+            menu_count--;
+            if (!sys.pitmaster && menu_count == 1) menu_count--;
+          }
           else menu_count = 2;
           drawMenu();
           break;

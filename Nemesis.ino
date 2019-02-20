@@ -79,7 +79,7 @@
 #include "c_server.h"
 #include "c_api.h"
 #include "c_ws.h"
-
+ 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETUP
 void setup() {  
@@ -89,7 +89,7 @@ void setup() {
   // Initialize Serial 
   set_serial(); Serial.setDebugOutput(true);
   set_ostimer();
-  
+  printf("SDK version:%s\n", system_get_sdk_version()); //getSdkVersion
   // Initialize OLED
   set_OLED();
 

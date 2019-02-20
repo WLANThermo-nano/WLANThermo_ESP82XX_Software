@@ -67,14 +67,14 @@ void server_setup() {
 
   #ifdef AMPERE
   server.on("/ampere",[](AsyncWebServerRequest *request){
-    ch[5].typ = 11;
+    ch[5].typ = 12;
     setconfig(eCHANNEL,{});
     request->send(200, TEXTPLAIN, TEXTTRUE);
   });
 
 
   server.on("/ohm",[](AsyncWebServerRequest *request){
-    ch[0].typ = 12;
+    ch[0].typ = 13;
     setconfig(eCHANNEL,{});
     request->send(200, TEXTPLAIN, TEXTTRUE);
   });
@@ -148,6 +148,6 @@ void server_setup() {
       
   server.begin();
   IPRINTPLN("HTTP server started");
-  MDNS.addService("http", "tcp", 80);
+  //MDNS.addService("http", "tcp", 80);  //verschoben in c_wifi.h
 }
 

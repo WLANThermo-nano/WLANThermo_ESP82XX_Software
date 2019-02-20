@@ -885,7 +885,10 @@ class BodyWebHandler: public AsyncWebHandler {
           Serial.println(update.spiffsUrl);
         }
         //if (_update.containsKey("prerelease"))  update.prerelease = _update["prerelease"];
-        if (_update.containsKey("force"))       update.state = 1;   // Update erzwingen
+        if (_update.containsKey("force"))       {
+          update.get = update.version;
+          update.state = 1;   // Update erzwingen
+        }
         
       } else {
         update.version = "false";                           // kein Server-Update

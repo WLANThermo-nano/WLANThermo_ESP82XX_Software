@@ -20,12 +20,13 @@
 
 #include <Wire.h>                 // I2C
 //#include <SPI.h>                  // SPI
-//#include <ESP8266WiFi.h>          // WIFI
+//#include <ESP8266WiFi.h>          // WIFI   // CaptivePortal
 //#include <WiFiClientSecure.h>     // HTTPS
 #include <TimeLib.h>              // TIME
 #include <EEPROM.h>               // EEPROM
 #include <FS.h>                   // FILESYSTEM
 #include <ArduinoJson.h>          // JSON
+//#include <DNSServer.h>    // CaptivePortal
 #include <ESP8266mDNS.h>          // mDNS
 #include <ESPAsyncTCP.h>          // ASYNCTCP
 #include <ESPAsyncWebServer.h>    // https://github.com/me-no-dev/ESPAsyncWebServer/issues/60
@@ -46,6 +47,10 @@ extern "C" uint32_t _SPIFFS_end;        // FIRST ADRESS AFTER FS
 #define NUMITEMS(arg) ((unsigned int) (sizeof (arg) / sizeof (arg [0])))
 
 #include "c_consts.h"
+
+// CaptivePortal
+//const byte DNS_PORT = 53;
+//DNSServer dnsServer;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 // GLOBAL VARIABLES
@@ -79,9 +84,9 @@ enum {ALARM_OFF,ALARM_PUSH,ALARM_HW,ALARM_ALL};
 String alarmname[4] = {"off","push","summer","all"};
 
 // SENSORTYP
-String  ttypname[SENSORTYPEN] = {"Maverick","Fantast-Neu","Fantast","iGrill2","ET-73",
+String  ttypname[SENSORTYPEN] = {"1000K/Maverick","Fantast-Neu","Fantast","100K/iGrill2","ET-73",
                                  "Perfektion","50K","Inkbird","100K6A1B","Weber_6743",
-                                 "Santos"}; // 
+                                 "Santos","5K3A1B"}; // 
 
 // CHANNEL COLORS
 String colors[8] = {"#0C4C88","#22B14C","#EF562D","#FFC100","#A349A4","#804000","#5587A2","#5C7148"};

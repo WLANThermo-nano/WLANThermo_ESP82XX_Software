@@ -142,6 +142,7 @@ void get_Vbat() {
   // Digitalwert transformiert in Batteriespannung in mV
   int voltage = analogRead(ANALOGREADBATTPIN);
 //Serial.println(voltage);
+//ch[0].temp = voltage;
   // CHARGE DETECTION
   //                LOAD        COMPLETE        SHUTDOWN
   // MCP:           LOW           HIGH           HIGH-Z 
@@ -184,8 +185,8 @@ void get_Vbat() {
 
     case 1:                                                    // SHUTDOWN
       if (battery.setreference > 0 && battery.voltage > 0 && !sys.stby) {
-        voltage = 4200;
-        battery.sim = 4200;
+        voltage = battery.max +20;    // auf max setzen, mit Startpuffer
+        battery.sim = voltage;
 
         // Runterzählen
         if ((millis() - battery.correction) > CORRECTIONTIME) { 
@@ -216,14 +217,20 @@ void get_Vbat() {
       break;
 
     case 3:                                                    // COMPLETE (vollständig)
-      if (battery.setreference == -1 && voltage > 4150) {      // es wurde geladen, setze Referenz wenn Akku wirklich geladen
-        battery.setreference = 180;                            // Referenzzeit setzen
+      if (battery.setreference == -1) {      // es wurde geladen, setze Referenz wenn Akku wirklich geladen
+        // Achtung, bei Ladung in Stby ist voltage nicht verfügbar
+        battery.setreference = 180; // Referenzzeit setzen
+        if (voltage > 4100) {
+          // battery.max setzen mit der aktuellen Spannung?
+          battery.max = constrain(voltage, 4100, 4180);
+        } //else battery.max = 4150; 
+        
         setconfig(eSYSTEM,{});
-      } else if (millis() > 10000) voltage = 4200;             // 100% bei USB-Quelle, sofern USB nach Laden verbleibt
+      } else if (millis() > 10000) voltage = battery.max;             // 100% bei USB-Quelle, sofern USB nach Laden verbleibt
       break;
 
     case 4:                                                     // NO BATTERY
-      voltage = 4200;
+      voltage = battery.max;
       battery.charge = false;
       break;
   }

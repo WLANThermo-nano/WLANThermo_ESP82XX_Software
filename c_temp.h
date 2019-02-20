@@ -52,7 +52,6 @@ float calcT(int r, byte typ){
     break; 
   case 6:  // 50K 
     Rn = 50.0; a = 3.35419603e-03; b = 2.41943663e-04; c = 2.77057578e-06;
-    //Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243; // NTC 5K3A1B (orange Kopf)
     break; 
   case 7: // INKBIRD
     Rn = 48.59; a = 3.3552456e-03; b = 2.5608666e-04; c = 1.9317204e-06;
@@ -68,15 +67,17 @@ float calcT(int r, byte typ){
   case 10: // Santos
     Rn = 200.82; a = 3.3561093e-03; b = 2.3552814e-04; c = 2.1375541e-06; 
     break;
+  case 11: // NTC 5K3A1B (orange Kopf)
+    Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243; 
   
   #ifdef AMPERE
-  case 11:
+  case 12:
     
     //Rn = ((r * 2.048 )/ 4096.0)*1000.0;
     //Serial.println(ampere);
     return ampere;
   
-  case 12:
+  case 13:
     //Rn = ((r * 2.048 )/ 4096.0)*1000.0;
     //Serial.println(r);
     return Rmess*((4096.0/(4096-r)) - 1);

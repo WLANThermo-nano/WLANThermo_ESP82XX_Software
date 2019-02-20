@@ -830,16 +830,16 @@ void start_fs() {
         setconfig(eSYSTEM,{});
         IPRINTPLN("Umstellung auf V1+");
       }
+      if (item[9] == '0') {
+        sys.pitmaster = false;
+        IPRINTPLN("Kein Pitmaster");
+      }
     } else if (m24.getadress() == 0x51) {
       if (item[10] == 'k' && !sys.typk) {
         sys.typk = true;
         set_sensor();
         setconfig(eSYSTEM,{});  // Speichern
         IPRINTPLN("Umstellung auf Typ K");
-      }
-      if (item[9] == '0') {
-        sys.pitmaster = false;
-        IPRINTPLN("Kein Pitmaster");
       }
     }
   } else DPRINTPLN("No");

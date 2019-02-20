@@ -48,6 +48,11 @@ void set_AP() {
 
   IPRINTP("AP: "); DPRINTLN(sys.apname);
   IPRINTP("AP IP: "); DPRINTLN(WiFi.softAPIP());
+
+  // CaptivePortal
+  /* Setup the DNS server redirecting all the domains to the apIP */
+  //dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  //dnsServer.start(DNS_PORT, "*", local_IP);
     
   wifi.mode = 6;  //0               // Verbindungsaufbau
   wifi.disconnectAP = false;        // wait with disconnect
@@ -63,10 +68,13 @@ void onWifiConnect(const WiFiEventStationModeGotIP& event) {
   DPRINTLN();
   IPRINTP("STA: "); DPRINTLN(WiFi.SSID());
   IPRINTP("IP: "); DPRINTLN(WiFi.localIP());
-
+  
   if (!MDNS.begin(sys.host.c_str())) {             // Start the mDNS responder for esp8266.local
     IPRINTP("Error MDNS!");
-  } else IPRINTP("mDNS started");
+  } else {
+    IPRINTP("mDNS started");
+    MDNS.addService("http", "tcp", 80);   // Add service to MDNS-SD
+  }
 
   // noch nicht in STA
   if (WiFi.getMode() > 1) wifi.disconnectAP = true;             // Close AP-Mode
@@ -133,7 +141,10 @@ void set_wifi() {
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
   softAPDisconnectHandler = WiFi.onSoftAPModeStationDisconnected(onsoftAPDisconnect);
 
-  WiFi.hostname(sys.host);
+  //WiFi.hostname(sys.host);
+  String routername = sys.host;
+  char* ourname = &routername[0];
+  wifi_station_set_hostname(ourname);
   IPRINTLN("Hostname: " + sys.host);
   
   holdssid.hold = 0;
@@ -282,12 +293,18 @@ void wifimonitoring() {
       Serial.println("wifi: timeout");
     }
   }
+
+  // CaptivePortal
+  // dnsServer.processNextRequest();
   
 
   // Wifi-Mode Control
   switch (wifi.mode) {
 
     case 1:                           // STA-Mode
+
+      MDNS.update();
+      
       // STA etabliert, AP abschalten, wenn keiner mehr verbunden
       if (wifi.disconnectAP) {
         uint8_t client_count = wifi_softap_get_station_num();
