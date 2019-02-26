@@ -158,6 +158,14 @@ void loop() {
   if (readline(Serial.read(), serialbuffer, 300) > 0) {
     read_serial(serialbuffer);
   }
+
+  // Manual Restart
+  if (sys.restartnow) {
+    if (wifi.mode == 5) WiFi.disconnect();
+    delay(100);
+    yield();
+    ESP.restart();
+  }
   
   // Standby oder Mess-Betrieb
   if (standby_control()) return;
@@ -168,13 +176,6 @@ void loop() {
     question.typ = NO;
   }
 
-  // Manual Restart
-  if (sys.restartnow) {
-    if (wifi.mode == 5) WiFi.disconnect();
-    delay(100);
-    yield();
-    ESP.restart();
-  }
 
   // WiFi - Monitoring
   wifimonitoring();

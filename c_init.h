@@ -221,6 +221,7 @@ struct System {
    int8_t piepoff_t;
 
    bool transform;            // 12V transformation flag
+   bool clientlog;
 
 };
 

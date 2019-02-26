@@ -104,6 +104,12 @@ void server_setup() {
     request->send(200, TEXTPLAIN, String((sys.god & (1<<5))?1:0));
   });
 
+  server.on("/clientlog",[](AsyncWebServerRequest *request){
+    sys.clientlog = true;
+    update.state = -1;
+    request->send(200, TEXTPLAIN, "aktiviert");
+  });
+
   server.on("/restart",[](AsyncWebServerRequest *request){
     sys.restartnow = true;
     request->redirect("/");

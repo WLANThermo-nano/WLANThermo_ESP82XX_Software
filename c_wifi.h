@@ -132,6 +132,12 @@ void onDHCPTimeout() {
 // Configuration WiFi
 void set_wifi() {
 
+  //WiFi.hostname(sys.host);
+  String routername = sys.host;
+  char* ourname = &routername[0];
+  wifi_station_set_hostname(ourname);
+  IPRINTLN("Hostname: " + sys.host);
+  
   WiFi.disconnect();    // wenn das, dann kein reconnection nach neustart
   //WiFi.persistent(false); // wenn das davor, wird Flash nicht bei disconnect gelöscht
   WiFi.persistent(false);  // damit werden aber auch nie Daten in den Wifi Flash gespeichert
@@ -140,12 +146,6 @@ void set_wifi() {
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
   softAPDisconnectHandler = WiFi.onSoftAPModeStationDisconnected(onsoftAPDisconnect);
-
-  //WiFi.hostname(sys.host);
-  String routername = sys.host;
-  char* ourname = &routername[0];
-  wifi_station_set_hostname(ourname);
-  IPRINTLN("Hostname: " + sys.host);
   
   holdssid.hold = 0;
   holdssid.connect = false;

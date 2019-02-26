@@ -69,7 +69,7 @@ float calcT(int r, byte typ){
     break;
   case 11: // NTC 5K3A1B (orange Kopf)
     Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243; 
-  
+    break;
   #ifdef AMPERE
   case 12:
     

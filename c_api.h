@@ -667,7 +667,7 @@ bool sendAPI(int check){
 
           String payload((char*)data);
           //Serial.println(millis());
-          //Serial.println(payload);
+          if (sys.clientlog) Serial.println(payload);
           //Serial.println(len);
 
           if (payload.indexOf("HTTP/1.1") > -1) {             // Time Stamp
@@ -718,7 +718,7 @@ bool sendAPI(int check){
       String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
       adress += message;
       client->write(adress.c_str());
-      //Serial.println(adress);
+      if(sys.clientlog) Serial.println(adress);
       apiindex = NULL;
       urlindex = NULL;
       parindex = NULL;
