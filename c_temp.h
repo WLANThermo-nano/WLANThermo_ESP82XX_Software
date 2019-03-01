@@ -50,11 +50,13 @@ float calcT(int r, byte typ){
   case 5:  // PERFEKTION
     Rn = 200.1; a =  3.3561990e-03; b = 2.4352911e-04; c = 3.4519389e-06;  
     break; 
-  case 6:  // NTC 5K3A1B (orange Kopf)
-    Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243;  
+  case 6:  // 50K 
+    Rn = 50.0; a = 3.35419603e-03; b = 2.41943663e-04; c = 2.77057578e-06;
     break; 
-  case 7: // Acurite
-    Rn = 50.21; a = 3.3555291e-03; b = 2.5249073e-04; c = 2.5667292e-06;
+  case 7: // INKBIRD
+    Rn = 48.59; a = 3.3552456e-03; b = 2.5608666e-04; c = 1.9317204e-06;
+    //Rn = 48.6; a = 3.35442124e-03; b = 2.56134397e-04; c = 1.9536396e-06;
+    //Rn = 48.94; a = 3.35438959e-03; b = 2.55353377e-04; c = 1.86726509e-06;
     break;
   case 8: // NTC 100K6A1B (lila Kopf)
     Rn = 100; a = 0.00335639; b = 0.000241116; c = 0.00000243362; 
@@ -65,14 +67,24 @@ float calcT(int r, byte typ){
   case 10: // Santos
     Rn = 200.82; a = 3.3561093e-03; b = 2.3552814e-04; c = 2.1375541e-06; 
     break;
-  case 11:
+  case 11: // NTC 5K3A1B (orange Kopf)
+    Rn = 5; a = 0.0033555; b = 0.0002570; c = 0.00000243; 
+    break;
+  #ifdef AMPERE
+  case 12:
+    
     //Rn = ((r * 2.048 )/ 4096.0)*1000.0;
     //Serial.println(ampere);
     return ampere;
-  case 12:
+  
+  case 13:
     //Rn = ((r * 2.048 )/ 4096.0)*1000.0;
     //Serial.println(r);
     return Rmess*((4096.0/(4096-r)) - 1);
+  #endif
+  
+  // 20K: Rn = 20.0; a = 3.35438355e-03; b = 2.41848755e-04; c = 2.77972882e-06;
+  // 50K: Rn = 50.0; a = 3.35419603e-03; b = 2.41943663e-04; c = 2.77057578e-06;
    
   default:  
     return INACTIVEVALUE;
@@ -82,20 +94,32 @@ float calcT(int r, byte typ){
   float v = log(Rt/Rn);
   float erg = (1/(a + b*v + c*v*v)) - 273.15;
   
-  return (erg>-10)?erg:INACTIVEVALUE;
+  return (erg>-31)?erg:INACTIVEVALUE;
 }
+
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Temperature ADC
 void get_Temperature() {
   // Read NTC Channels
-  for (int i=0; i < CHANNELS; i++)  {
+  for (int i=0; i < sys.ch; i++)  {
 
     float value;
- 
+/* 
     // NTC der Reihe nach auslesen
-    value = calcT(get_adc_average(i),ch[i].typ);
+    if (MAX1161x_ADDRESS == MAX11613_ADDRESS && i<4 && i!=0) {
+      if (i == ci) {
+        value = calcT(get_adc_average(3-i),ch[i].typ);
+        //Serial.println(value);
+      } else value = ch[i].temp;
+      
+    }
+    else */ if (MAX1161x_ADDRESS == MAX11615_ADDRESS)    value = calcT(get_adc_average(i),ch[i].typ);
+    else value = INACTIVEVALUE;
+ 
+    // Temperatursprung außerhalb der Grenzen macht keinen Sinn
+    if (ch[i].temp == INACTIVEVALUE && (value < -15.0 || value > 300.0)) value = INACTIVEVALUE;  // wrong typ
  
     // Wenn KTYPE existiert, gibt es nur 4 anschließbare NTC. 
     // KTYPE wandert dann auf Kanal 5
@@ -104,10 +128,6 @@ void get_Temperature() {
       if (i == 5) value = get_thermocouple(true);
       //if (i == 5) value = INACTIVEVALUE;
     }
-    //if (i == 0) value = battery.voltage/100.0;
-    //if (i == 1) value = 10.0*batteryMonitor.getVCell();
-    //if (i == 2) value = 10.0*batteryMonitor.getVoltage();
-    //if (i == 3) value = batteryMonitor.getSoC();
 
     // Umwandlung C/F
     if ((sys.unit == "F") && value!=INACTIVEVALUE) {  // Vorsicht mit INACTIVEVALUE
@@ -115,18 +135,33 @@ void get_Temperature() {
       value /= 5.0;
       value += 32;
     }
+
+    // Temperature Average Buffer by Pitmaster
+    if (sys.transform) {
+      if (value != INACTIVEVALUE) {
+        mem_add(value, i);
+      } else {
+        mem_clear(i);
+      }
+      value = mem_a(i);
+    }
     
     ch[i].temp = value;
-    float max = ch[i].max;
-    float min = ch[i].min;
     
+    int max = ch[i].max;  // nur für Anzeige
+    int min = ch[i].min;  // nur für Anzeige
+   
     // Show limits in OLED  
     if ((max > min) && value!=INACTIVEVALUE) {
-      int match = map(value,min,max,3,18);
+      int match = map((int)value,min,max,3,18);
       ch[i].match = constrain(match, 0, 20);
     }
     else ch[i].match = 0;
+    
   }
+
+  // Open Lid Detection
+  open_lid();
 
 }
 
@@ -136,7 +171,7 @@ void get_Temperature() {
 void set_channels(bool init) {
 
   // Grundwerte einrichten
-  for (int i=0; i<CHANNELS; i++) {
+  for (int i=0; i<sys.ch; i++) {
         
     ch[i].temp = INACTIVEVALUE;
     ch[i].match = 0;
@@ -169,7 +204,7 @@ void transform_limits() {
   float max;
   float min;
   
-  for (int i=0; i < CHANNELS; i++)  {
+  for (int i=0; i < sys.ch; i++)  {
     max = ch[i].max;
     min = ch[i].min;
 

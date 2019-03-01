@@ -36,22 +36,28 @@ WiFiEventHandler onSoftAPModeStationDisconnected(std::function<void(const WiFiEv
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Configuration + Start AP-Mode
 void set_AP() {
-  
-    WiFi.mode(WIFI_AP_STA);     // während AP wird ständig versucht mit STA zu verbinden
-    //WiFi.mode(WIFI_AP);       // nur AP, keine Verbindungsversuche
-    delay(100);                 // sauberes Umschalten
 
-    IPAddress local_IP(192,168,66,1), gateway(192,168,66,1), subnet(255,255,255,0);
-    WiFi.softAPConfig(local_IP, gateway, subnet);
-    WiFi.softAP(sys.apname.c_str(), APPASSWORD, 5);   // Channel 5
+  // AP beim Start initialiseren
+  WiFi.mode(WIFI_AP_STA);     // während AP wird ständig versucht mit STA zu verbinden
+  //WiFi.mode(WIFI_AP);       // nur AP, keine Verbindungsversuche
+  delay(100);                 // sauberes Umschalten
 
-    IPRINTP("AP: "); DPRINTLN(sys.apname);
-    IPRINTP("AP IP: "); DPRINTLN(WiFi.softAPIP());
+  IPAddress local_IP(192,168,66,1), gateway(192,168,66,1), subnet(255,255,255,0);
+  WiFi.softAPConfig(local_IP, gateway, subnet);
+  WiFi.softAP(sys.apname.c_str(), APPASSWORD, 5);   // Channel 5
+
+  IPRINTP("AP: "); DPRINTLN(sys.apname);
+  IPRINTP("AP IP: "); DPRINTLN(WiFi.softAPIP());
+
+  // CaptivePortal
+  /* Setup the DNS server redirecting all the domains to the apIP */
+  //dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  //dnsServer.start(DNS_PORT, "*", local_IP);
     
-    wifi.mode = 2;                    // WiFi-Mode = AP
-    wifi.disconnectAP = false;        // wait with disconnect
+  wifi.mode = 6;  //0               // Verbindungsaufbau
+  wifi.disconnectAP = false;        // wait with disconnect
 
-    // Use Autoreconnection after this for Connection with WiFi
+  // Use multiwifi for connecting
 }
 
 
@@ -62,48 +68,57 @@ void onWifiConnect(const WiFiEventStationModeGotIP& event) {
   DPRINTLN();
   IPRINTP("STA: "); DPRINTLN(WiFi.SSID());
   IPRINTP("IP: "); DPRINTLN(WiFi.localIP());
+  
+  if (!MDNS.begin(sys.host.c_str())) {             // Start the mDNS responder for esp8266.local
+    IPRINTP("Error MDNS!");
+  } else {
+    IPRINTP("mDNS started");
+    MDNS.addService("http", "tcp", 80);   // Add service to MDNS-SD
+  }
 
+  // noch nicht in STA
   if (WiFi.getMode() > 1) wifi.disconnectAP = true;             // Close AP-Mode
   wifi.mode = 1;                                                // WiFi-Mode = STA
   
-  connectToMqtt();                 // Start MQTT
+  //connectToMqtt();                 // Start MQTT, verschoben in wifimonitoring
 
   // Änderung an den Wifidaten: muss sortiert und gespeichert werden?
   if (holdssid.hold && WiFi.SSID() == holdssid.ssid) {
-    sys.control = 3;               // neue Wifi-Daten erhalten und verbunden
+    wifi.neu = 2;               // neue Wifi-Daten erhalten und verbunden
   } else if (WiFi.SSID() != wifi.savedssid[0]){
-    sys.control = 2;              // nach Verbindungsverlust neues Netz aus dem Speicher benutzt: Speicher umsortieren
+    wifi.neu = 1;              // nach Verbindungsverlust neues Netz aus dem Speicher benutzt: Speicher umsortieren
   }
   
   holdssid.hold = 0;            // Handler für neues Wifi zurücksetzen
   holdssid.connect = 0;         // Handler für neues Wifi zurücksetzen
-  wifi.revive = false;
+
+  wifi.timerAP = 0;
+  wifi.takeAP = 0;
+  wifi.savecount = 0;           // Liste beim nächsten Verlust von vorne rotieren (liste wurde umsortiert)
   
-  check_http_update();
-  
+  if (update.state == 0) update.state = -1;   // Server abfragen //nicht bei Restart zwischen Update
+
+  // falls Startscreen noch aktiv
   if (question.typ == SYSTEMSTART) {
     displayblocked = false;       // Close Start Screen
     question.typ = NO;
-  }
-  
+  }  
 }
 
 void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
-  Serial.println("nicht verbunden");
   
-  if (WiFi.getMode() == 3)  wifi.mode = 2;    // AP
-  else wifi.mode = 0;                         // No Wifi
+  Serial.println("wifi: disconnect");
 
-  if (holdssid.hold == 2 && (millis() - holdssid.connect > 5000)) {
-    wifi.revive = true;      // Nach fehlgeschlagenem Versuch wiederbeleben
-    holdssid.hold == 0;
-  } else {
-    
-  }
-  //pmqttClient.disconnect();
+  // Neuaufbau
+  if (holdssid.hold == 2) {} // neue Wifi-Daten Verbindungsprozess
+  else wifi.mode = 6;     // Verbindungsverlust im Betrieb
+  
+  //pmqttClient.disconnect();   // geschieht automatisch
+  wifi.mqttreconnect = 0;
 }
 
 void onsoftAPDisconnect(const WiFiEventSoftAPModeStationDisconnected& event) {
+  
   Serial.print("NO AP: ");
   Serial.println(WiFi.getMode());
 }
@@ -117,6 +132,12 @@ void onDHCPTimeout() {
 // Configuration WiFi
 void set_wifi() {
 
+  //WiFi.hostname(sys.host);
+  String routername = sys.host;
+  char* ourname = &routername[0];
+  wifi_station_set_hostname(ourname);
+  IPRINTLN("Hostname: " + sys.host);
+  
   WiFi.disconnect();    // wenn das, dann kein reconnection nach neustart
   //WiFi.persistent(false); // wenn das davor, wird Flash nicht bei disconnect gelöscht
   WiFi.persistent(false);  // damit werden aber auch nie Daten in den Wifi Flash gespeichert
@@ -125,16 +146,11 @@ void set_wifi() {
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
   softAPDisconnectHandler = WiFi.onSoftAPModeStationDisconnected(onsoftAPDisconnect);
-
-  WiFi.hostname(sys.host);
-  IPRINTLN("Hostname: " + sys.host);
   
   holdssid.hold = 0;
   holdssid.connect = false;
   wifi.savecount = 0;
-  wifi.revive = false;
-
-  wifi.reconnecttime = 0; // Verbindungsaufbau
+  wifi.reconnecttime = 0;                   // Verbindungsaufbau beim Start
 
   if (checkResetInfo()) {
     question.typ = SYSTEMSTART;
@@ -149,7 +165,7 @@ void set_wifi() {
 // Connect WiFi with saved Data
 void connectWiFi() {
 
-    WiFi.begin(holdssid.ssid.c_str(), holdssid.pass.c_str());
+  WiFi.begin(holdssid.ssid.c_str(), holdssid.pass.c_str());
 }
 
 
@@ -164,6 +180,7 @@ void get_rssi() {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Stop AP-Mode
 void stopAP() {
+  
   //WiFi.softAPdisconnect();    // sollte eigentlich auch stoppen
   //WiFi.disconnect();          // nicht benötigt
   WiFi.mode(WIFI_STA);
@@ -172,33 +189,23 @@ void stopAP() {
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// MultiWifi
-void multiwifi() {
+// Take AP-Mode
+void takeAP() {
   
-  if (wifi.savedlen > 0) {  // mehr als 1 Datensatz
-    if (millis() - wifi.reconnecttime > 10000 || wifi.reconnecttime == 0) {    // Wifi Daten vorhanden
-      if (wifi.savecount < wifi.savedlen) {     // Daten durchlaufen
-        Serial.print("TRY: ");
-        holdssid.ssid = wifi.savedssid[wifi.savecount];
-        holdssid.pass = wifi.savedpass[wifi.savecount];
-        Serial.println(holdssid.ssid);
-        connectWiFi();
-        wifi.savecount++;
-      } else {
-        wifi.reconnecttime = millis();
-        wifi.savecount = 0;   // zurücksetzen
-      }
-    } //else Serial.println("Warte");
-  } 
+  WiFi.mode(WIFI_AP);
+  delay(100);
+  Serial.println("wifi: AP");
+  wifi.mode = 2;
 }
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // ModifyWifi
-void modifywifi(bool neu) {
+void modifywifi() {
 
-  if (neu || ((wifi.savedlen > 1) && (WiFi.SSID() != wifi.savedssid[0]))) { 
+  if (wifi.neu || ((wifi.savedlen > 1) && (WiFi.SSID() != wifi.savedssid[0]))) { 
   
-    if (!modifyconfig(eWIFI, neu)) {
+    if (!modifyconfig(eWIFI, wifi.neu)) {
       IPRINTPLN("f:wifi");        // Failed to save
     } else {
       IPRINTPLN("s:Wifi");        // Saved
@@ -206,58 +213,6 @@ void modifywifi(bool neu) {
     } 
   }
 }
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// WiFi Monitoring
-void wifimonitoring() {
-
-  // Verzögerte Speicher-Aktion:  
-  switch (sys.control) {
-
-    case 2:         // gespeicherte Daten verwendet
-      modifywifi(false);           // Umsortierung des Wifi-Speichers einleiten
-      wifi.savecount = 0;          // Wifi Liste Counter zurücksetzen   
-      break;
-
-    case 3:                        // neue Daten wurden verwendet
-      modifywifi(true);            // Daten im Wifi-Speicher ablegen, falls nicht doppelt
-      break;       
-  }
-
-  sys.control = 0;
-
-  // Systemstart
-  if (WiFi.status() == WL_IDLE_STATUS) {
-    multiwifi();
-    //Serial.println(connectionStatus(WiFi.status()));
-  }
-  
-  // Verbindung verloren, ESP versucht selbst reconnect, aber wenn mehr als ein Netz im Speicher dann rotieren
-  if ((WiFi.status() == WL_NO_SSID_AVAIL) || wifi.revive) { // Network not availible
-    if (wifi.savedlen > 1)    // mehr als ein Wifi im Speicher
-      multiwifi();
-  }
-  
-  if (holdssid.hold == 1) {                               // neue Verbindung
-    if (millis() - holdssid.connect > 1000) {             // mit Verzögerung um den Request zu beenden
-      //holdssid.connect = 0;
-      holdssid.hold = 2;
-      connectWiFi();
-    }
-    
-  } else if (wifi.mode == 3 || wifi.mode == 4) {    // stop wifi
-    stop_wifi();
-    
-  } else if (wifi.mode == 1 & wifi.disconnectAP) {                    // AP abschalten
-    uint8_t client_count = wifi_softap_get_station_num();
-    if (!client_count) {
-      wifi.disconnectAP = false;
-      stopAP();
-      IPRINTPLN("AP: Closed");
-    }
-  }
-}
-
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Stop WiFi
@@ -270,7 +225,7 @@ void stop_wifi() {
   }
   
   if (millis() - wifi.turnoffAPtimer > 1000) {
-    IPRINTPLN("Stop Wifi");
+    Serial.println("wifi: stop");
     pmqttClient.disconnect();
     wifi_station_disconnect();
     wifi_set_opmode(NULL_MODE);
@@ -286,11 +241,128 @@ void stop_wifi() {
   }
 }
 
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// MultiWifi
+void multiwifi() {
+
+ 
+    if (millis() - wifi.reconnecttime > 15000 || wifi.reconnecttime == 0) {    // Wifi Daten vorhanden
+    // wifi.reconnecttime == 0 bei Systemstart
+
+      wifi.reconnecttime = millis();
+      Serial.println("wifi: multi");
+    
+      if (wifi.savecount < wifi.savedlen) {     // Daten durchlaufen
+        
+        holdssid.ssid = wifi.savedssid[wifi.savecount];
+        holdssid.pass = wifi.savedpass[wifi.savecount];
+        Serial.print("wifi: ");
+        Serial.println(holdssid.ssid);
+        connectWiFi();
+        wifi.savecount++;
+        
+      } else {
+        // Liste einmal durchgegangen, dann AP starten
+        // Listenzähler nicht zurücksetzen, sonst Verbindungsversuch bei Aufruf von Wifiscan (Idle status)
+        wifi.takeAP = true;
+      }
+    } //"Warte"
+ 
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// WiFi Monitoring
+void wifimonitoring() {
+
+  // nach Verbindungsversuch zuerst Status "Disconnect" (3x) danach wechsel in "No SSID".
+  // Status wenn komplett in AP: "Disconnect"
+  // nach 5 min nochmal multiwifi durchführen
+
+  // Bei Eingabe neuer Wifi-Daten (setnetwork) (egal ob AP oder STA)
+  if (holdssid.hold == 1) {                               // neue Verbindung
+    if (millis() - holdssid.connect > 1000) {             // mit Verzögerung um den Request zu beenden
+      holdssid.hold = 2;                                  // anzeigen, dass neue Verbindung
+      Serial.println("wifi: new");
+      wifi.mode = 7;    // offen
+      connectWiFi();
+    }
+  } else if (holdssid.hold == 2) {            // nicht im disconnect-handle, sonst neu-Prozess unterbrochen
+    if (millis() - holdssid.connect > 15000)    {
+      holdssid.hold = 0;
+      wifi.mode = 6;
+      Serial.println("wifi: timeout");
+    }
+  }
+
+  // CaptivePortal
+  // dnsServer.processNextRequest();
+  
+
+  // Wifi-Mode Control
+  switch (wifi.mode) {
+
+    case 1:                           // STA-Mode
+
+      MDNS.update();
+      
+      // STA etabliert, AP abschalten, wenn keiner mehr verbunden
+      if (wifi.disconnectAP) {
+        uint8_t client_count = wifi_softap_get_station_num();
+        if (!client_count) {
+          wifi.disconnectAP = false;
+          stopAP();
+          IPRINTPLN("wifi: STA");
+        }
+      }
+      // Verzögerte Speicher-Aktion:  neue Daten speichern und sortieren oder nur sortieren
+      if (wifi.neu > 0) {
+        modifywifi();
+        wifi.neu = 0; 
+      }
+
+      // MQTT (re-)aktivieren
+      if (wifi.mqttreconnect && millis() - wifi.mqttreconnect > 30000) {            // Reaktivieren nach Verbindungsverlust
+        connectToMqtt();
+      }
+      else if (iot.P_MQTT_on && !pmqttClient.connected() && !wifi.mqttreconnect) {  // Aktivieren nach Config-Änderung oder Systemstart
+        connectToMqtt();
+      }
+      break;
+
+    case 2:                        // AP-Mode
+      if (wifi.timerAP > 0 && (millis() - wifi.timerAP > 300000)) {
+        wifi.mode = 6;
+        wifi.savecount = 0;         // Liste von vorne beginnen
+        wifi.takeAP = 0;
+      }
+      break;
+
+    case 3:                        // Wifi-Stop-Prozess (zweistufig)
+    case 4:
+      stop_wifi();
+      break;      
+
+    case 5:                       // Integriert im Restart-Prozess, Disconnect vor restart
+      break;
+
+    case 6:                        // Verbindungsaufbau
+      if (!wifi.takeAP) {
+        multiwifi();
+      } else {                     // aufgeben und in AP
+        takeAP();
+        // 5-Min-Timer
+        wifi.timerAP = millis();
+        
+      } 
+  }
+  
+}
+
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // 
-String connectionStatus ( int which )
+String connectionStatus (int which)
 {
     switch ( which )
     {

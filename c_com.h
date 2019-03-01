@@ -47,34 +47,77 @@ void read_serial(char *buffer) {
        return;
     }
 
+    else if (command == "setEE") {
+      if (m24.exist()) {
+        String payload((char*)buffer);
+        if (payload.length() == PRODUCTNUMBERLENGTH) {
+          char item[PRODUCTNUMBERLENGTH];
+          payload.toCharArray(item, PRODUCTNUMBERLENGTH+1);
+          m24.put(0,item);
+          m24.get(0,item);
+          IPRINTP("M24C02: ");
+          Serial.println(item);
+          if (item[0] == 'n') {   // Kennung
+            String str(item);
+            sys.item = str;
+            piepserON();
+            sys.piepoff_t = 6;
+            //delay(1500);
+            //piepserOFF();
+          }
+        }
+      }
+      return;
+    }
+
      // UPDATE auf bestimmte Version
     else if (command == "update") {
       String payload((char*)buffer);
       if (payload.indexOf("v") == 0) {
-        sys.getupdate = payload;  // kein Speichern, da während des Updates eh gespeichert wird
-        sys.update = 1;  
+        update.get = payload;  // kein Speichern, da während des Updates eh gespeichert wird
+        if (update.get == update.version) update.state = 1;   // Version schon bekannt, direkt los
+        else update.state = -1;                               // Version erst vom Server anfragen
       } else  {IPRINTPLN("Update unbekannt!");}
+      return;    
+    }
+
+    // Battery MIN
+    else if (command == "setbattmin") {
+      String payload((char*)buffer);
+      if (payload.length() == 4) {
+        battery.min = payload.toInt();
+        setconfig(eSYSTEM,{});
+      }
+      return;    
+    }
+
+    // Battery MAX
+    else if (command == "setbattmax") {
+      String payload((char*)buffer);
+      if (payload.length() == 4) {
+        battery.max = payload.toInt();
+        setconfig(eSYSTEM,{});
+      }
       return;    
     }
   
   } else {
   
-  
-    // GET HELP
-    if (str == "help") {
-      Serial.println();
-      Serial.println(F("Syntax: \"command\":{\"Attribut\":\"Value\"]}"));
-      Serial.println();
+    if (str == "getEE") {
+      if (m24.exist()) {
+        Serial.print("pn: ");
+        Serial.println(sys.item);     
+      }
       return;
     }
 
     else if (str == "data") {
-      Serial.println(cloudData(false));
+      Serial.println(apiData(APIDATA));
       return;
     }
   
     else if (str == "settings") {
-      Serial.println(cloudSettings());
+      Serial.println(apiData(APISETTINGS));
       return;
     }
   /*
@@ -88,15 +131,11 @@ void read_serial(char *buffer) {
       return;
     }
 */
+    
     else if (str == "clearwifi") {
       setconfig(eWIFI,{}); // clear Wifi settings
-      wifi.mode = 5;
+      wifi.mode = 5;  // interner Speicher leeren
       sys.restartnow = true;
-      return;
-    }
-
-    else if (str == "stopwifi") {
-      wifi.mode = 3;  // Turn Wifi off
       return;
     }
   
@@ -104,57 +143,52 @@ void read_serial(char *buffer) {
       nanoWebHandler.configreset();
       return;
     }
-
-    else if (str == "piepser") {
-      Serial.println("Piepsertest");
-      piepserON();
-      delay(2000);
-      piepserOFF();
+/*
+    else if (str == "battery") {
+      notification.type = 2;
+      Serial.println("Test");
       return;
     }
-
+*/
     // RESTART SYSTEM
     else if (str == "restart") {
       sys.restartnow = true;
       return;
     }
 
+/*
     // LET ESP SLEEP
     else if (str == "sleep") {
       display.displayOff();
       ESP.deepSleep(0);
       delay(100); // notwendig um Prozesse zu beenden
     }
-
-    // Reset PITMASTER PID
-    else if (str == "setPID") {
-      set_pid(0);  // Default PID-Settings
-      if (setconfig(ePIT,{})) {IPRINTPLN("r:pm");}
-      return;
-    }
-
-    // AUTOTUNE
-    else if (str == "autotune") {
-      startautotunePID(5, true, 40, 40L*60L*1000L, 0);
-      return;
-    }
+*/
 
     // STOP PITMASTER
     else if (str == "stop") {
-      disableAllHeater();
+      pitMaster[0].active = PITOFF;
       setconfig(ePIT,{});
       return;
     }
-
-    // HTTP UPDATE
-    else if (str == "update") {
-      sys.update = 1;
+/*
+    else if (str == "pittest") {
+      pitMaster[0].active = AUTO;
+      pitMaster[0].set = 110;
+      pitMaster[0].channel = 1;
+      pitMaster[0].pid = 0;
+      pitMaster[1].active = AUTO;
+      pitMaster[1].set = 30;
+      pitMaster[1].channel = 2;
+      pitMaster[1].pid = 1;
+      
       return;
     }
+*/
 
     // CHECK HTTP UPDATE
     else if (str == "checkupdate") {
-      sys.update = -1;
+      update.state = -1;
       return;
     }
     

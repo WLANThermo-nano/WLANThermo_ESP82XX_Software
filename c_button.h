@@ -18,224 +18,11 @@
     
  ****************************************************/
 
-#ifdef MPR
-#define MPR121_I2CADDR_DEFAULT 0x5A
-
-#define MPR121_TOUCHSTATUS_L    0x00      // Touch Status Registers (0x00~0x01)
-#define MPR121_FILTDATA_0L      0x04      // Electrode Data Register (0x04~0x1D) 
-#define MPR121_BASELINE_0       0x1E      // Baseline Value Register (0x1E~0x2A)
-
-#define MPR121_TOUCHTH_0        0x41      // Touch and Release Threshold (0x41~0x5A)
-#define MPR121_RELEASETH_0      0x42
-#define MPR121_DEBOUNCE         0x5B      // Debounce Register (0x5B)
-
-#define MPR121_CONFIG1          0x5C      // AFE Configuration Register (0x5C, 0x5D)
-#define MPR121_CONFIG2          0x5D
-#define MPR121_CHARGECURR_0     0x5F      // Individual Charge Current Register (0x5F~0x6B)
-#define MPR121_CHARGETIME_1     0x6C      // Individual Charge Time Register (0x6C~0x72)
-#define MPR121_ECR              0x5E      // Electrode Configuration Register (ECR,0x5E)
- 
-#define MPR121_AUTOCONFIG0      0x7B      // Auto Configuration Registers (0x7B~0x7F)
-#define MPR121_AUTOCONFIG1      0x7C
-#define MPR121_UPLIMIT          0x7D
-#define MPR121_LOWLIMIT         0x7E
-#define MPR121_TARGETLIMIT      0x7F
-
-#define MPR121_GPIOCTL0        0x73      // GPIO MODE Part 1
-#define MPR121_GPIOCTL1        0x74      // GPIO MODE Part 2
-#define MPR121_GPIODAT         0x75      // GPIO DATA
-#define MPR121_GPIODIR          0x76      // GPIO INPUT/OUTPUT
-#define MPR121_GPIOEN           0x77      // GPIO DISABLE/ENABLE
-#define MPR121_GPIOSET          0x78
-#define MPR121_GPIOCLR          0x79      // GPIO CLEAR
-#define MPR121_GPIOTOGGLE       0x7A
-
-class MPR121 {
-
-  private:
-
-    int8_t _i2caddr;
-    uint16_t _pushed;
-    bool _exist;
-
-    uint8_t readRegister8(uint8_t reg) {
-      Wire.beginTransmission(_i2caddr);
-      Wire.write(reg);
-      Wire.endTransmission(false);
-      while (Wire.requestFrom(_i2caddr, 1) != 1);
-      return ( Wire.read());
-    }
-
-    uint16_t readRegister16(uint8_t reg) {
-      Wire.beginTransmission(_i2caddr);
-      Wire.write(reg);
-      Wire.endTransmission(false);
-      while (Wire.requestFrom(_i2caddr, 2) != 2);
-      uint16_t v = Wire.read();
-      v |=  ((uint16_t) Wire.read()) << 8;
-      return v;
-    }
-
-    void writeRegister(uint8_t reg, uint8_t value) {
-      Wire.beginTransmission(_i2caddr);
-      Wire.write((uint8_t)reg);
-      Wire.write((uint8_t)(value));
-      Wire.endTransmission();
-    }
-
-    void controlBaseline() {
-      // Baseline Filtering Control Register
-      writeRegister(0x2B, 0x01);          // MHD Rising, default: 0x01, Maximum Half Delta
-      writeRegister(0x2C, 0x01);          // NHD Amount Rising, default: 0x01, Noise Half Delta
-      writeRegister(0x2D, 0x0E);          // NCL Rising, default: 0x00, Noise Count Limit
-      writeRegister(0x2E, 0x00);          // FDL Rising, default: 0x00, Filter Delay Count Limit
-
-      writeRegister(0x2F, 0x01);          // MHD Falling, default: 0x01
-      writeRegister(0x30, 0x05);          // NHD Amount Falling, default: 0x01
-      writeRegister(0x31, 0x01);          // NCL Falling, default: 0xFF
-      writeRegister(0x32, 0x00);          // FDL Falling, default: 0x02
-
-      writeRegister(0x33, 0x00);          // NHD Touched
-      writeRegister(0x34, 0x00);          // NCL Touched
-      writeRegister(0x35, 0x00);          // FDL Touched 
-    }
-    
-
-  public:
-
-    bool exist() {
-      return _exist;
-    }
-    
-
-    void setThresholds(uint8_t touch, uint8_t release) {
-      for (uint8_t i=0; i<12; i++) {
-        writeRegister(MPR121_TOUCHTH_0 + 2*i, touch);
-        writeRegister(MPR121_RELEASETH_0 + 2*i, release);
-      }
-    }
-
-    uint16_t  filteredData(uint8_t t) {                   // 2te filtered electrode data
-      if (t > 12) return 0;
-      return readRegister16(MPR121_FILTDATA_0L + t*2);
-    }
-
-    uint16_t  baselineData(uint8_t t) {
-      if (t > 12) return 0;
-      uint16_t bl = readRegister8(MPR121_BASELINE_0 + t);
-      return (bl << 2);
-    }
-
-    void  touched(void) {
-      uint16_t t = readRegister16(MPR121_TOUCHSTATUS_L);
-      _pushed = t & 0x0FFF;
-    }
-
-    byte pushbutton(uint8_t pin) {
-      if (pin == 1) pin = 2;
-      uint16_t cur = _pushed;
-      return (cur & _BV(pin)); 
-    }
-
-    void ledOn(uint8_t pin) {
-      allOff();
-      if (pin > 5) pin = pin-6;
-      writeRegister(MPR121_GPIOSET, _BV(pin));
-    }
-
-    void ledON(uint8_t pin) {
-      writeRegister(MPR121_GPIOSET, _BV(pin));
-    }
-
-    void ledOFF(uint8_t pin) {
-      writeRegister(MPR121_GPIOCLR, _BV(pin));
-    }
-
-    void ledToogle(uint8_t pin) {
-      writeRegister(MPR121_GPIOTOGGLE, _BV(pin));
-    }
-
-    void allOff() {
-      writeRegister(MPR121_GPIOCLR, 0x3F);
-    }
-
-    void allOn() {
-      for (int i;i<6;i++) {
-        writeRegister(MPR121_GPIODAT, _BV(i));
-        Serial.println(_BV(i), BIN);
-        delay(100);
-      }
-      allOff();
-    }
-
-    boolean begin(uint8_t i2caddr = MPR121_I2CADDR_DEFAULT) {
-      
-      //Wire.begin(SDA, SCL);
-      _i2caddr = i2caddr;
-      _exist = false;
-
-      Wire.beginTransmission(_i2caddr);             // CHECK I²C ADRESS
-      byte error = Wire.endTransmission();
-      if (error != 0) return _exist; 
-      
-      writeRegister(0x80, 0x63);                    // MPR121_SOFTRESET
-      delay(1);
-      writeRegister(MPR121_ECR, 0x0);               // STOP MODE
-
-      uint8_t c = readRegister8(MPR121_CONFIG2);    // CHECK INITIAL VALUE
-      if (c != 0x24) return _exist;
-
-      setThresholds(30, 20);                 // Touch = 12, Release = 6  // Abweichung zur Baseline
-      controlBaseline();
-
-      writeRegister(MPR121_DEBOUNCE, 0);
-      writeRegister(MPR121_CONFIG1, 0x30); // default, 48uA charge current
-      writeRegister(MPR121_CONFIG2, 0x20); // 0.5uS encoding, 1ms period
-
-      //  writeRegister(MPR121_AUTOCONFIG0, 0x8F);
-
-      //  writeRegister(MPR121_UPLIMIT, 150);
-      //  writeRegister(MPR121_TARGETLIMIT, 100); // should be ~400 (100 shifted)
-      //  writeRegister(MPR121_LOWLIMIT, 50);
-
-
-      writeRegister(MPR121_GPIOEN, 0xFF);       // SET GPIO (EL4 - EL11)
-      writeRegister(MPR121_GPIODIR, 0xFF);      // SET GPIO OUTPUT
-      writeRegister(MPR121_GPIOCTL0, 0xFF);    // SET GPIO CMOS OUTPUT
-      writeRegister(MPR121_GPIOCTL1, 0xFF);
-      
-      // enable electrode 0 and 1
-      // start with first 5 bits of baseline tracking
-      writeRegister(MPR121_ECR, 0x84);  // RUN MODE
-      
-      _exist = true;
-
-    return _exist;
-  }
-  
-};
-
-MPR121 Touch;
-
-#endif
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Buttons
 void set_button() {
   
   for (int i = 0; i < NUMBUTTONS; i++) pinMode(buttonPins[i],INPUTMODE);
-
-  #ifdef MPR
-  
-  if (!Touch.begin(0x5A)) {
-    IPRINTPLN("No MPR121!");
-  } else {
-    IPRINTPLN("MPR121 found!");
-    Touch.allOn();
-    //Touch.allOff();
-  }
-
-  #endif
 
 }
 
@@ -253,33 +40,17 @@ static inline boolean button_input() {
   if (now - lastRunTime < PRELLZEIT) return false; // Prellzeit läuft noch
 
   lastRunTime = now;
-  #ifdef MPR
-  if (Touch.exist() && !digitalRead(buttonPins[0])) Touch.touched();  // Stand am MPR abfragen
-  #endif
   
   for (int i=0;i<NUMBUTTONS;i++)
   {
     byte curState;
-    #ifdef MPR
-    if (Touch.exist()) {                    // Pushbutton per MPR121
-      curState = Touch.pushbutton(i);
-    } else {                              // real pushbutton
-      curState = digitalRead(buttonPins[i]);
-      if (INPUTMODE==INPUT_PULLUP) curState=!curState; // Vertauschte Logik bei INPUT_PULLUP
-    }
-
-    #else
-      curState = digitalRead(buttonPins[i]);
-      if (INPUTMODE==INPUT_PULLUP) curState=!curState; // Vertauschte Logik bei INPUT_PULLUP
-    #endif
+    
+    curState = digitalRead(buttonPins[i]);
+    if (INPUTMODE==INPUT_PULLUP) curState=!curState; // Vertauschte Logik bei INPUT_PULLUP
     
     if (buttonResult[i]>=SHORTCLICK) buttonResult[i]=NONE; // Letztes buttonResult löschen
     if (curState!=buttonState[i]) // Flankenwechsel am Button festgestellt
     {
-      //Serial.println(curState);
-      //if (curState) Touch.ledON(i+6);
-      //else Touch.ledOFF(i+6);
-      //Touch.ledToogle(i+6);
       if (curState)   // Taster wird gedrückt, Zeit merken
       {
         if (buttonResult[i]==FIRSTUP && now-buttonDownTime[i]<DOUBLECLICKTIME)
@@ -470,9 +241,19 @@ static inline void button_event() {
       // Frage wurde mit YES bestätigt
       switch (question.typ) {
         case CONFIGRESET:
-          set_channels(1);
-          setconfig(eCHANNEL,{});
-          loadconfig(eCHANNEL,0);
+          nanoWebHandler.configreset();
+          break;
+
+        case RESETWIFI:
+          setconfig(eWIFI,{}); // clear Wifi settings
+          wifi.mode = 5;  // interner Speicher leeren
+          sys.restartnow = true;
+          break;
+
+        case RESETFW:
+          update.get = FIRMWAREVERSION;
+          if (update.get == update.version) update.state = 1;   // Version schon bekannt, direkt los
+          else update.state = -1;
           break;
 
         case HARDWAREALARM:
@@ -480,7 +261,7 @@ static inline void button_event() {
           break;
 
         case TUNE:
-          autotune.keepup = true;
+          //autotune.keepup = true;
           break;
 
       }
@@ -504,23 +285,22 @@ static inline void button_event() {
       switch (inMenu) {
       
         case MAINMENU:                     // Menu durchwandern
-          if (menu_count < 2) menu_count++;
+          if (menu_count < 2) {
+            menu_count++;
+            if (!sys.pitmaster && menu_count == 1) menu_count++;
+          }
           else menu_count = 0;
+          
           drawMenu();
           break;
 
         case TEMPSUB:                     // Temperaturen durchwandern
-          if (!sys.fastmode) {
+          do {
             current_ch++;
-            if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-          }
-          else {
-            do {
-              current_ch++;
-              i++;
-              if (current_ch > MAXCOUNTER) current_ch = MINCOUNTER;
-            } while ((ch[current_ch].temp==INACTIVEVALUE) && (i<CHANNELS)); 
-          }
+            i++;
+            if (current_ch > (sys.ch-1)) current_ch = MINCOUNTER;
+          } while ((ch[current_ch].temp==INACTIVEVALUE) && (i<(sys.ch+1))); 
+          
           ui.setFrameAnimation(SLIDE_LEFT);
           ui.transitionToFrame(0);      // Refresh
           break;
@@ -580,27 +360,32 @@ static inline void button_event() {
     } else {
     
       b_counter = ui.getCurrentFrameCount();
-      int j = CHANNELS;
+      int j = sys.ch;
+      int j_ch = current_ch;
     
       switch (inMenu) {
 
         case MAINMENU:                     
-          if (menu_count > 0) menu_count--;
+          if (menu_count > 0) {
+            menu_count--;
+            if (!sys.pitmaster && menu_count == 1) menu_count--;
+          }
           else menu_count = 2;
           drawMenu();
           break;
         
-        case TEMPSUB: 
-          if (!sys.fastmode) {
+        case TEMPSUB:
+          
+       /*   do {
             current_ch--;
-            if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
-          } else {
-            do {
-              current_ch--;
-              j--;
-              if (current_ch < MINCOUNTER) current_ch = MAXCOUNTER;
-            } while ((ch[current_ch].temp==INACTIVEVALUE) && (j > 0)); 
-          }
+            j--;
+            if (current_ch < MINCOUNTER) current_ch = sys.ch-1;
+          } while ((ch[current_ch].temp == INACTIVEVALUE) && (j > -1)); */
+
+          // Rückwärts immer alle Kanäle
+          current_ch--;
+          if (current_ch < MINCOUNTER) current_ch = sys.ch-1;
+          
           ui.setFrameAnimation(SLIDE_RIGHT);
           ui.transitionToFrame(0);      // Refresh
           break;
@@ -634,10 +419,6 @@ static inline void button_event() {
     }
   }
 
-#ifdef MPR
-  if ((inMenu == TEMPSUB || inMenu == TEMPKONTEXT) && !displayblocked && flashinwork) Touch.ledOn(current_ch);
-  else Touch.allOff();
-#endif
 
   // EVENT ---------------------------------------------------------
   if (event[0]) {  
@@ -700,8 +481,8 @@ static inline void button_event() {
         if (mupi == 10) mupi = 1;
         if (event[1]) tempor = pitMaster[0].channel;
         tempor += mupi;
-        if (tempor > CHANNELS-1) tempor = 0;
-        else if (tempor < 0) tempor = CHANNELS-1;
+        if (tempor > sys.ch-1) tempor = 0;
+        else if (tempor < 0) tempor = sys.ch-1;
         if (event[2]) pitMaster[0].channel = tempor;
         break;
         
@@ -726,8 +507,19 @@ static inline void button_event() {
         break;
 
       case 11: // SSID -> Clear Wifi
-        //setconfig(eWIFI,{}); // clear Wifi settings
-        // Hinweis notwendig
+        if (event[1]) {
+          inWork = false;
+          question.typ = RESETWIFI;
+          drawQuestion(0);
+        }
+        break;
+
+      case 13: // Host -> Configreset
+        if (event[1]) {
+          inWork = false;
+          question.typ = CONFIGRESET;
+          drawQuestion(0);
+        }
         break;
         
       case 14:  // Unit Change
@@ -749,8 +541,11 @@ static inline void button_event() {
         break;
 
       case 15:  // UPDATE
-        sys.getupdate = FIRMWAREVERSION;
-        sys.update = 1;
+        if (event[1]) {
+          inWork = false;
+          question.typ = RESETFW;
+          drawQuestion(0);
+        }
         break;
 
       default:

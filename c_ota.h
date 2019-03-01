@@ -91,67 +91,74 @@
 
 #endif
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// HTTP UPDATE
+
+
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Do http update
 void do_http_update() {
 
   // UPDATE beendet
-  if (sys.update == 3){
+  if (update.state == 4){
     question.typ = OTAUPDATE;
     drawQuestion(0);
-    sys.getupdate = "false";
-    sys.update = 0;
-    setconfig(eSYSTEM,{});
-    sys.update = -1;   // Neue Suche anstoßen
-    IPRINTPLN("u:finish");    // Update finished
+    update.get = "false";
+    update.state = 0;
+    setconfig(eSYSTEM,{});  // Speichern
+    update.state = -1;        // Neue Suche anstoßen
+    IPRINTPLN("u:finish");  // Update finished
     return;
   }
   
   if((wifi.mode == 1)) {                 // nur bei STA
-    if (sys.getupdate != "false") {
+    if (update.get != "false") {
 
       // UPDATE Adresse
-      String adress = F("http://update.wlanthermo.de/checkUpdate.php?");
-      adress += createParameter(SERIALNUMBER);
-      adress += createParameter(DEVICE);
-      adress += createParameter(HARDWAREVS);
-      adress += createParameter(SOFTWAREVS);
+      String adress;
 
-      // UPDATE 2x Wiederholen falls schief gelaufen
-      if (sys.updatecount < 3) sys.updatecount++;   // Wiederholung
-      else  {
-        sys.update = 0;
-        setconfig(eSYSTEM,{});
-        question.typ = OTAUPDATE;
-        drawQuestion(0);
-        IPRINTPLN("u:cancel");      // Update canceled
-        displayblocked = false;
-        sys.updatecount = 0;
-        return;
+      if (update.state == 1 || update.state == 3) {              // nicht im Neuaufbau während Update
+        // UPDATE 2x Wiederholen falls schief gelaufen
+        if (update.count < 3) update.count++;   // Wiederholung
+        else  {
+          update.state = 0;
+          setconfig(eSYSTEM,{});
+          question.typ = OTAUPDATE;
+          drawQuestion(0);
+          IPRINTPLN("u:cancel");      // Update canceled
+          displayblocked = false;
+          update.count = 0;
+          return;
+        }
       }
 
       // UPDATE spiffs oder firmware
       displayblocked = true;
       t_httpUpdate_return ret;
     
-      if (sys.update == 1) {
-        sys.update = 2;  // Nächster Updatestatus
+      if (update.state == 1 && update.spiffsUrl != "") {  // erst wenn API abgefragt
+        update.state = 2;  // Nächster Updatestatus
         drawUpdate("Webinterface");
         setconfig(eSYSTEM,{});                                      // SPEICHERN
         IPRINTPLN("u:SPIFFS ...");
-        ret = ESPhttpUpdate.updateSpiffs(adress + "&getSpiffs=" + sys.getupdate);
+        adress = update.spiffsUrl + adress;   // https://.... + adress
+        Serial.println(adress);
+        ret = ESPhttpUpdate.updateSpiffs(adress);
 
     
-      } else if (sys.update == 2) {
-        sys.update = 3;
+      } else if (update.state == 3 && update.firmwareUrl != "") {   // erst wenn API abgefragt
+        update.state = 4;
         drawUpdate("Firmware");
         setconfig(eSYSTEM,{});                                      // SPEICHERN
         IPRINTPLN("u:FW ...");
-        Serial.println(adress + "&getFirmware=" + sys.getupdate);
-        ret = ESPhttpUpdate.update(adress + "&getFirmware=" + sys.getupdate);
+        adress = update.firmwareUrl + adress;  // https://.... + adress
+        Serial.println(adress);
+        ret = ESPhttpUpdate.update(adress);
     
       } 
 
@@ -160,8 +167,8 @@ void do_http_update() {
         case HTTP_UPDATE_FAILED:
           DPRINTF("[HTTP]\tUPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
           DPRINTPLN("");
-          if (sys.update == 2) sys.update = 1;  // Spiffs wiederholen
-          else  sys.update = 2;                 // Firmware wiederholen
+          if (update.state == 2) update.state = 1;  // Spiffs wiederholen
+          else  update.state = 3;                 // Firmware wiederholen
           //setconfig(eSYSTEM,{});
           drawUpdate("error");
           break;
@@ -173,134 +180,29 @@ void do_http_update() {
 
         case HTTP_UPDATE_OK:
           DPRINTPLN("[HTTP]\tUPDATE_OK");
-          if (sys.update == 2) ESP.restart();   // falls nach spiffs kein automatischer Restart durchgeführt wird
+          if (update.state == 2) ESP.restart();   // falls nach spiffs kein automatischer Restart durchgeführt wird
           break;
       }
     } else {
-      IPRINTPLN("u:no");
-      sys.update = 0;   // Vorgang beenden
+      if (update.state != 2) {    // nicht während Neustarts im Updateprozess
+        IPRINTPLN("u:no");
+        update.state = 0;   // Vorgang beenden
+      }
     }
   }
 }
 
 
-// see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
-static AsyncClient * updateClient = NULL;
-bool updateClientssl;
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Check if there is http update
-void check_http_update() {
 
-  if (sys.update < 1) {
-    if((wifi.mode == 1 && sys.autoupdate)) {
-
-      if(updateClient) return;                 //client already exists
-
-      updateClient = new AsyncClient();
-      if(!updateClient)  return;               //could not allocate client
-
-      updateClient->onError([](void * arg, AsyncClient * client, int error){
-        DPRINTF("[HTTP] GET... failed, error: %s\n", updateClient->errorToString(error));
-        updateClient = NULL;
-        delete client;
-        sys.getupdate = "false";
-      }, NULL);
-
-      updateClient->onConnect([](void * arg, AsyncClient * client){
-
-        printClient(CHECKUPDATELINK ,CLIENTCONNECT);
-        updateClientssl = false;
-        
-        updateClient->onError(NULL, NULL);
-
-        client->onDisconnect([](void * arg, AsyncClient * c){
-          printClient(CHECKUPDATELINK ,DISCONNECT);
-          updateClient = NULL;
-          delete c;
-        }, NULL);
-
-        client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
-          
-          String payload((char*)data);
-          //Serial.println(payload);
-          
-          if ((payload.indexOf("200 OK") > -1) || updateClientssl) {
-          
-            // Date
-            int index = payload.indexOf("Date: ");
-            if (index > -1) {
-            
-              char date_string[27];
-              for (int i = 0; i < 26; i++) {
-                char c = payload[index+i+6];
-                date_string[i] = c;
-              }
-
-              tmElements_t tmx;
-              string_to_tm(&tmx, date_string);
-              setTime(makeTime(tmx));
-
-              IPRINTP("UTC: ");
-              DPRINTLN(digitalClockDisplay(now()));
-
-            }
-
-            if (payload.indexOf("Connection: close") > -1) {
-              updateClientssl = true;// SSL Verbindung
-              return;
-            }
-           
-            // Update
-            if (updateClientssl) {
-              index = payload.indexOf("\n");    // Neue Zeile
-              payload = payload.substring(index+1,len);
-            } else {
-              index = payload.indexOf("\r\n\r\n");       // Trennung von Header und Body
-              payload = payload.substring(index+7,len);      // Beginn des Body
-            }
-            
-            index = payload.indexOf("\r");                 // Ende Versionsnummer
-            payload = payload.substring(0,index);
-
-            DPRINTP("[HTTP]\tGET: ");
-            if (payload == "false") {
-              DPRINTPLN("Kein Update");
-              sys.getupdate = payload;
-            }
-            else if (payload.indexOf("v") == 0) {
-              DPRINTLN(payload);
-              sys.getupdate = payload;
-            } else {
-              DPRINTPLN("Fehler");
-              sys.getupdate = "false";
-            }
-            setconfig(eSYSTEM,{});    // Speichern
-            updateClientssl = false;
-          }
-           
-        }, NULL);
-
-        //send the request
-        String adress = createCommand(GETMETH,CHECKUPDATE,CHECKUPDATELINK,UPDATESERVER,0);
-        client->write(adress.c_str());
-        //Serial.println(adress);
-    
-      }, NULL);
-
-      if(!updateClient->connect(UPDATESERVER, 80)){
-        printClient(CHECKUPDATELINK ,CONNECTFAIL);
-        AsyncClient * client = updateClient;
-        updateClient = NULL;
-        delete client;
-      }
-      
-    
-    } else sys.getupdate = "false";
-    if (sys.update == -1) sys.update = 0;
-    // kein Speichern im EE, Zustand -1 ist nur temporär
-  } 
-}
+/*
+// FIRMWARE
+#define FIRMWARESERVER "update.wlanthermo.de/getFirmware.php" 
+// "nano.norma.uberspace.de/update/checkUpdate.php"
+// SPIFFS
+#define SPIFFSSERVER "update.wlanthermo.de/getSpiffs.php"   
+// "nano.norma.uberspace.de/update/checkUpdate.php"
+*/
 
 
 

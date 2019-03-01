@@ -42,8 +42,6 @@ class AsyncAbstractResponse: public AsyncWebServerResponse {
 };
 
 class AsyncFileResponse: public AsyncAbstractResponse {
-  using File = fs::File;
-  using FS = fs::FS;
   private:
     File _content;
     String _path;

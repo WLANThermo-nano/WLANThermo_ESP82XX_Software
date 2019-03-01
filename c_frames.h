@@ -61,7 +61,9 @@ void drawLoading() {
     display.fillRect(16,8,1,1); //Untere Ecke
     display.drawRect(0,1,16,7); //Draw Outline
     display.fillRect(2,3,MAXBATTERYBAR,4);  // Draw Battery Status
-    display.drawString(64, 30, "LADEN BEENDET");
+    if (sys.god & (1<<1)) {}
+    else
+      display.drawString(64, 30, "LADEN BEENDET");
   }
 
   display.display();
@@ -85,7 +87,15 @@ void drawQuestion(int counter) {
     switch (question.typ) {                   // Which Question?
 
       case CONFIGRESET:
-        display.drawString(32,3,"Reset Config?");
+        display.drawString(3,3,"Reset Config?");
+        break;
+
+      case RESETWIFI:
+        display.drawString(3,3,"Reset Wifi?");
+        break;
+
+      case RESETFW:
+        display.drawString(3,3,"Reset Firmware?");
         break;
 
       case IPADRESSE:
@@ -97,7 +107,7 @@ void drawQuestion(int counter) {
         break;
 
       case OTAUPDATE:
-        if (sys.getupdate == FIRMWAREVERSION) display.drawString(3,3,"Update: Erfolgreich!");
+        if (update.get == FIRMWAREVERSION) display.drawString(3,3,"Update: Erfolgreich!");
         else display.drawString(3,3,"Update: Fehlgeschlagen!");
         b1 = false;
         b0 = 2;
@@ -211,13 +221,18 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
     case PITOFF: if (millis() > BATTERYSTARTUP) display->drawString(24,0,String(battery.percentage)); break;
     case DUTYCYCLE: // show "M"
     case MANUAL: display->drawString(33,0, "M  " + String(pitMaster[0].value,0) + "%"); break;
-    case AUTO: display->drawString(33,0, "P  " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); break;
-    case AUTOTUNE: display->drawString(33,0, "A"+ String(autotune.cycles) +" / " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); break;
+    case AUTO: 
+      if (opl.detected)  display->drawString(33,0, "OPL: " + String(opl.temp,1));
+      else display->drawString(33,0, "P  " + String(pitMaster[0].set,1) + " / " + String(pitMaster[0].value,0) + "%"); 
+      break;
+    
+    case AUTOTUNE: display->drawString(33,0, "A " + String(autotune.set) + " / " + String(pitMaster[0].value,0) + "%"); break;
   }  
   
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  if (wifi.mode == 2 && millis() > 10000)  display->drawString(128,0,"AP");
-  else if (wifi.mode == 0) display->drawString(128,0,"NO");
+  if (wifi.mode == 6 && millis() > 10000)  display->drawString(128,0,"NO");
+  else if (wifi.mode == 0) display->drawString(128,0,"OFF");
+  else if (wifi.mode == 2) display->drawString(128,0,"AP");
   else if (wifi.mode == 1)  {
       //display->drawString(128,0,String(wifi.rssi)+" dBm");
     display->fillRect(116,8,2,1); //Draw ground line
@@ -231,7 +246,7 @@ void gBattery(OLEDDisplay *display, OLEDDisplayUiState* state) {
 
   //display->drawString(80,0,String(map(pit_y,0,pit_pause,0,100)) + "%");
 
-  if (sys.fastmode) display->drawString(100,0,"F");
+  //if (sys.fastmode) display->drawString(100,0,"F");
 
   
   if (flash && battery.percentage < 10) {} // nothing for flash effect
@@ -378,7 +393,11 @@ void drawpit(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
       break;
 
     case 9:         // PITMASTER TYP         
-      if ((inWork && tempor) || (!inWork && pitMaster[0].active > 0)) display->drawString(116+x, 36+y, "AUTO");
+      if ((inWork && tempor) || (!inWork && pitMaster[0].active > 0)) {
+        if (pitMaster[0].active == AUTO) display->drawString(116+x, 36+y, "AUTO");
+        else if (pitMaster[0].active == AUTOTUNE) display->drawString(116+x, 36+y, "AUTOTUNE");
+        else if (pitMaster[0].active == MANUAL) display->drawString(116+x, 36+y, "MANUAL");
+      }
       else display->drawString(116+x, 36+y, "OFF");  
       break;
   
@@ -400,13 +419,13 @@ void drawsys(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
     case 11:         // SSID
       if (wifi.mode == 2)      display->drawString(120, 36, sys.apname);
       else if (wifi.mode == 1) display->drawString(120, 36, WiFi.SSID());
-      else if (wifi.mode == 0) display->drawString(120, 36, "");
+      else if (wifi.mode == 0 || wifi.mode == 6) display->drawString(120, 36, "");
       break;
     
     case 12:         // IP
       if (wifi.mode == 2)      display->drawString(120, 36, WiFi.softAPIP().toString());
       else if (wifi.mode == 1) display->drawString(120, 36, WiFi.localIP().toString());
-      else if (wifi.mode == 0) display->drawString(120, 36, "");
+      else if (wifi.mode == 0 || wifi.mode == 6) display->drawString(120, 36, "");
       break;
 
     case 13:         // HOST

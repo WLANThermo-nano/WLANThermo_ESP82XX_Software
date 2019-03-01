@@ -23,8 +23,6 @@
 
 
 // see: https://github.com/me-no-dev/ESPAsyncTCP/issues/18
-static AsyncClient * tssettingclient = NULL;
-static AsyncClient * tsdataclient = NULL;           // Telegram Channel Data
 static AsyncClient * tsalarmclient = NULL;
 
 
@@ -33,33 +31,44 @@ static AsyncClient * tsalarmclient = NULL;
 void set_iot(bool init) {
   
    if (init) {                // clear all
+
+    #ifdef THINGSPEAK
     iot.TS_writeKey = "";     
     iot.TS_httpKey = "";       
     iot.TS_userKey = "";     
     iot.TS_chID = ""; 
+    #endif
+    
     iot.P_MQTT_USER = "";
     iot.P_MQTT_PASS = ""; 
     iot.P_MQTT_QoS = 0;
    }
-   
+
+   #ifdef THINGSPEAK
    iot.TS_show8 = false;        
-   iot.TS_int = INTERVALCOMMUNICATION/1000;
+   iot.TS_int = INTERVALCOMMUNICATION/4;
    iot.TS_on = false;
+   #endif
+   
    iot.P_MQTT_on = false;
    iot.P_MQTT_HOST = "192.168.2.1";
    iot.P_MQTT_PORT = 1883;
-   iot.P_MQTT_int = INTERVALCOMMUNICATION/1000;
-   iot.TG_on = 0;
-   iot.TG_token = "";
-   iot.TG_id = "";
-
+   iot.P_MQTT_int = INTERVALCOMMUNICATION/4;
+   
    iot.CL_on = false;
    iot.CL_token = newToken();
-   iot.CL_int = INTERVALCOMMUNICATION/1000;
-      
+   iot.CL_int = INTERVALCOMMUNICATION/4;
 }
 
+void set_push() {
+  pushd.on = 0;
+  pushd.token = "";
+  pushd.id = "";
+  pushd.repeat = 1;
+  pushd.service = 0;
+}
 
+#ifdef THINGSPEAK
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Collect Data for Sending to Thingspeak
 String collectData() {
@@ -83,142 +92,84 @@ String collectData() {
   return postStr;
 }
 
-  
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send Temp-Data to Thingspeak
-void sendDataTS(){
-
-  if(tsdataclient) return;                 //client already exists
-
-  tsdataclient = new AsyncClient();
-  if(!tsdataclient)  return;               //could not allocate client
-
-  tsdataclient->onError([](void * arg, AsyncClient * client, int error){
-    printClient(SENDTHINGSPEAK,CLIENTERRROR);
-    tsdataclient = NULL;
-    delete client;
-  }, NULL);
-
-  tsdataclient->onConnect([](void * arg, AsyncClient * client){
-    
-    tsdataclient->onError(NULL, NULL);
-
-    client->onDisconnect([](void * arg, AsyncClient * c){
-      printClient(SENDTHINGSPEAK ,DISCONNECT);
-      tsdataclient = NULL;
-      delete c;
-    }, NULL);
-
-    //send the request
-    printClient(SENDTHINGSPEAK,SENDTO);
-    String adress = createCommand(POSTMETH,SENDTS,SENDTSLINK,THINGSPEAKSERVER,0);
-    client->write(adress.c_str());
-    //Serial.println(adress);
-        
-  }, NULL);
-
-  if(!tsdataclient->connect(THINGSPEAKSERVER, 80)){
-    printClient(SENDTHINGSPEAK ,CONNECTFAIL);
-    AsyncClient * client = tsdataclient;
-    tsdataclient = NULL;
-    delete client;
-  }
-}
-
-
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Create Notification Message
-String createNote(bool ts) {
-
+String createNote() {
+  Serial.println(notification.limit);
   String postStr;
+  bool limit = notification.limit & (1<<notification.ch);
+  postStr += F("&message=");
+  postStr += (limit)?F("hoch"):F("niedrig"); 
+  postStr += F("&ch=");
+  postStr += String(notification.ch+1);    
 
-  if (notification.type > 0) {    // Test Message
-    postStr += (ts)?F("&message="):F("&msg=");
-    postStr += F("up");
-    postStr += F("&ch=1");
-    notification.type = 0;
-    
-  } else {
-    bool limit = notification.limit & (1<<notification.ch);
-  
-    postStr += (ts)?F("&message="):F("&msg=");
-    if (ts) postStr += (limit)?F("hoch"):F("niedrig"); 
-    else postStr += (limit)?F("up"):F("down");
-    postStr += F("&ch=");
-    postStr += String(notification.ch+1);    
-  } 
-
+  notification.index &= ~(1<<notification.ch);           // Kanal entfernen, sonst erneuter Aufruf
+   
   return postStr;
 }
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Send Notification
-bool sendNote(int check){
+#endif
 
-  if (check == 0) {
-    if(tsalarmclient) return false;                 //client already exists
 
-    tsalarmclient = new AsyncClient();
-    if(!tsalarmclient)  return false;               //could not allocate client
+// im Umbau
+void sendNotification() {
+  
 
-    tsalarmclient->onError([](void * arg, AsyncClient * client, int error){
-      printClient(THINGHTTPLINK,CLIENTERRROR);
-      tsalarmclient = NULL;
-      delete client;
-    }, NULL);
+    if ((notification.type == 1 && pushd.on == 2) || (notification.type == 2 && pushd.on == 1)) {           // Testnachricht
+      if (sendAPI(0)) {
+        apiindex = APINOTE;
+        urlindex = NOTELINK;
+        parindex = NOPARA;
+        sendAPI(2);
+      }
+        
+    } else if (notification.index > 0) {              // CHANNEL NOTIFICATION
 
-  } else if (check == 1) {            // Senden ueber Thingspeak
-    
-    tsalarmclient->onConnect([](void * arg, AsyncClient * client){
-    
-      tsalarmclient->onError(NULL, NULL);
+      for (int i=0; i < sys.ch; i++) {
+        if (notification.index & (1<<i)) {            // ALARM AT CHANNEL i
+            Serial.println("Alarm");
 
-      client->onDisconnect([](void * arg, AsyncClient * c){
-        printClient(THINGHTTPLINK ,DISCONNECT);
-        tsalarmclient = NULL;
-        delete c;
-      }, NULL);
-
-      //send the request
-      printClient(THINGHTTPLINK,SENDTO);
-      String adress = createCommand(GETMETH,THINGHTTP,THINGHTTPLINK,THINGSPEAKSERVER,0);
-      client->write(adress.c_str());
-      //Serial.println(adress);
-    }, NULL);
-
-    if(!tsalarmclient->connect(THINGSPEAKSERVER, 80)){
-      printClient(THINGHTTPLINK ,CONNECTFAIL);
-      AsyncClient * client = tsalarmclient;
-      tsalarmclient = NULL;
-      delete client;
+          if (pushd.on > 0) {
+            if (sendAPI(0)) {
+              notification.ch = i;
+              apiindex = APINOTE;
+              urlindex = NOTELINK;
+              parindex = NOPARA;
+              sendAPI(2);           // Notification per Nano-Server
+            }
+          }
+          #ifdef THINGSPEAK
+           else if (iot.TS_httpKey != "" && iot.TS_on) {
+            if (sendAPI(0)) {
+              notification.ch = i;
+              apiindex = NOAPI;
+              urlindex = HTTPLINK;
+              parindex = THINGHTTP;
+              sendAPI(2);           // Notification per Thingspeak
+            } 
+          }
+          #endif
+        }
+      }    
     }
-    
-  } else if (check == 2) {          // Senden ueber Server
-    
-    tsalarmclient->onConnect([](void * arg, AsyncClient * client){
-    
-      tsalarmclient->onError(NULL, NULL);
+  
 
-      client->onDisconnect([](void * arg, AsyncClient * c){
-        printClient(SENDNOTELINK ,DISCONNECT);
-        tsalarmclient = NULL;
-        delete c;
-      }, NULL);
-
-      //send the request
-      printClient(SENDNOTELINK,SENDTO);
-      String adress = createCommand(GETMETH,SENDNOTE,SENDNOTELINK,MESSAGESERVER,0);
-      client->write(adress.c_str());
-      Serial.println(adress);
-    }, NULL);
-
-    if(!tsalarmclient->connect(MESSAGESERVER, 80)){
-      printClient(SENDNOTELINK ,CONNECTFAIL);
-      AsyncClient * client = tsalarmclient;
-      tsalarmclient = NULL;
-      delete client;
-    }
-  }
-  return true;    // Nachricht kann gesendet werden
+  if (pushd.on == 3) loadconfig(ePUSH,0);     // nach Testnachricht alte Werte wieder herstellen
 }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Cloud Token Generator
+String newToken() {
+  String stamp = String(now(), HEX);
+  int x = 10 - stamp.length();          //pow(16,(10 - timestamp.length()));
+  long y = 1;    // long geht bis 16^7
+  if (x > 7) {
+    stamp += String(random(268435456), HEX);
+    x -= 7;
+  }
+  for (int i=0;i<x;i++) y *= 16;
+  stamp += String(random(y), HEX);
+  return (String) String(ESP.getChipId(), HEX) + stamp;
+}
+
 

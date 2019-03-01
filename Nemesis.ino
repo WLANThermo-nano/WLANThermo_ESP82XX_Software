@@ -1,4 +1,4 @@
- /*************************************************** 
+/*************************************************** 
     Copyright (C) 2016  Steffen Ochs, Phantomias2006
 
     This program is free software: you can redistribute it and/or modify
@@ -24,11 +24,13 @@
 // https://techtutorialsx.com/2017/01/21/esp8266-watchdog-functions/
 
 // Entwicklereinstellungen
-//#define ASYNC_TCP_SSL_ENABLED 1
-//#define OTA                                 // ENABLE OTA UPDATE
 #define DEBUG                               // ENABLE SERIAL DEBUG MESSAGES
-//#define MPR
-
+//#define OTA                                 // ENABLE OTA UPDATE
+//#define THINGSPEAK                          // ENABLE THINGSPEAK CONNECTION
+//#define MEMORYCLOUD                         // ENABLE DATA LOGGER
+//#define WEBSOCKET                           // ENABLE WEBSOCKET
+//#define AMPERE                              // ENABLE AMPERE MEASUREMENT TEST
+ 
 #ifdef DEBUG
   #define DPRINT(...)    Serial.print(__VA_ARGS__)
   #define DPRINTLN(...)  Serial.println(__VA_ARGS__)
@@ -65,9 +67,9 @@
 #include "c_sensor.h"
 #include "c_pitmaster.h"
 #include "c_temp.h"
+#include "c_ee.h"
 #include "c_fs.h"
 #include "c_com.h"
-#include "c_ee.h"
 #include "c_icons.h"
 #include "c_wifi.h"
 #include "c_frames.h"
@@ -75,14 +77,19 @@
 #include "c_pmqtt.h"
 #include "c_ota.h"
 #include "c_server.h"
-
+#include "c_api.h"
+#include "c_ws.h"
+ 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // SETUP
 void setup() {  
 
+  //delay(1000);
+
   // Initialize Serial 
   set_serial(); Serial.setDebugOutput(true);
-  
+  set_ostimer();
+  printf("SDK version:%s\n", system_get_sdk_version()); //getSdkVersion
   // Initialize OLED
   set_OLED();
 
@@ -92,9 +99,9 @@ void setup() {
 
   // Current Battery Voltage
   get_Vbat(); get_rssi();
-  
-  if (!sys.stby) {
 
+  if (!sys.stby) {
+    
     // Initalize Aktor
     set_piepser();
 
@@ -103,8 +110,8 @@ void setup() {
       piepserON(); delay(500); piepserOFF();
     }
 
-    // Initalize P_MQTT
-    set_pmqtt();
+    // Initialize mqtt
+    set_pmqtt(1);
     
     // Initialize Wifi
     set_wifi();
@@ -137,6 +144,7 @@ void setup() {
     if (checkResetInfo()) {
       //if (SPIFFS.remove(LOG_FILE)) Serial.println("Neues Log angelegt");
     }
+
   }
 }
 
@@ -144,14 +152,11 @@ void setup() {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // LOOP
 void loop() {
-  
-  // Standby oder Mess-Betrieb
-  if (standby_control()) return;
 
-  // Close Start Screen
-  if (millis() > 3000 && question.typ == SYSTEMSTART) {
-    displayblocked = false;   // Close Start Screen (if not already done)
-    question.typ = NO;
+  // Detect Serial Input
+  static char serialbuffer[300];
+  if (readline(Serial.read(), serialbuffer, 300) > 0) {
+    read_serial(serialbuffer);
   }
 
   // Manual Restart
@@ -161,15 +166,22 @@ void loop() {
     yield();
     ESP.restart();
   }
+  
+  // Standby oder Mess-Betrieb
+  if (standby_control()) return;
 
-  // WiFi Monitoring
+  // Close Start Screen
+  if (question.typ == SYSTEMSTART && millis() > 3000) {
+    displayblocked = false;   // Close Start Screen (if not already done)
+    question.typ = NO;
+  }
+
+
+  // WiFi - Monitoring
   wifimonitoring();
 
-  // Detect Serial Input
-  static char serialbuffer[300];
-  if (readline(Serial.read(), serialbuffer, 300) > 0) {
-    read_serial(serialbuffer);
-  }
+  // MQTT - Abschaltung und Initialisierung
+  checkMqtt(); 
   
   // Detect OTA
   #ifdef OTA
@@ -177,8 +189,8 @@ void loop() {
   #endif
 
   // HTTP Update
-  if (sys.update > 0) do_http_update();
-  else if (sys.update == -1) check_http_update();
+  check_api();
+  if (update.state > 0) do_http_update();
   
   // Detect Button Event
   if (button_input()) button_event();
@@ -192,22 +204,19 @@ void loop() {
   if (remainingTimeBudget > 0) {
     // Don't do stuff if you are below your time budget.
 
-    timer_sensor();           // Temperture
-    timer_alarm();            // Alarm
-    pitmaster_control(0);      // Pitmaster 1
-    pitmaster_control(1);      // Pitmaster 2
-    timer_iot();              // Charts
-    //timer_datalog();          // Datalog
-    //savelog();
-    flash_control();          // OLED Flash
-    //ampere_control();
-    sendNotification();       // Notification
+    maintimer();
 
-    if (sys.sendSettingsflag && iot.P_MQTT_on) {
-      if (sendpmqtt() && sendSettings()) sys.sendSettingsflag = false;
-    }
+    #ifdef AMPERE
+    ampere_control();
+    #endif
+
+    // Pitmaster eventuell raus aus der Bedingung
+    pitmaster_control(0);      // Pitmaster 1
+    updateServo();
     
-    delay(10);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
+    if (servointerrupt) {   // nur innerhalb eines Servo-Takts
+      delay(10);   // sonst geht das Wifi Modul nicht in Standby, yield() reicht nicht!
+    }
   }
   
 }

@@ -27,102 +27,12 @@
     
  ****************************************************/
 
+
 // https://github.com/adafruit/Adafruit_HTU21DF_Library/blob/master/Adafruit_HTU21DF.cpp
-
-#define HTU21DF_I2CADDR       0x40
-#define HTU21DF_READTEMP      0xE3
-#define HTU21DF_READHUM       0xE5
-#define HTU21DF_WRITEREG      0xE6
-#define HTU21DF_READREG       0xE7
-#define HTU21DF_RESET         0xFE
-#define TRIG_TEMP_RLS         0xF3 //Triggers a Temperature Measurement. Releases the SCK line (unblocks i2c bus). User must manually wait for completion before grabbing data.
-#define TRIG_HUM_RLS          0xF5 //Triggers a Humidity Measurement. Releases the SCK line (unblocks i2c bus). User must manually wait for completion before grabbing data.
-
-class HTU21DF {
-
-  private:
-
-    bool _exist;
-    byte _state;
-    float _temp, _hum;
-
-    void wireRead(byte x) {
-      Wire.beginTransmission(HTU21DF_I2CADDR);
-      Wire.write(x);
-      Wire.endTransmission();
-      //delay(15);
-    }
-
-    uint16_t wireReq() {
-      Wire.requestFrom(HTU21DF_I2CADDR, 3);
-      uint16_t h = (Wire.read() << 8) | Wire.read();
-      Wire.read();
-      return h;
-    }
-  
-  public:
-
-    bool exist() {
-      return _exist;
-    }
-
-    byte getState() {
-      return _state;
-    }
-
-    float temp() {
-      return _temp;
-    }
-
-    float hum() {
-      return _hum;
-    }
-
-    boolean begin(void) {
-      wireRead(HTU21DF_RESET);
-      wireRead(HTU21DF_READREG);
-      Wire.requestFrom(HTU21DF_I2CADDR, 1);
-      _exist = (Wire.read() == 0x2); // after reset should be 0x2
-      _state = 0;
-      return _exist;
-    }
-
-    void trigTemperature() {
-      wireRead(TRIG_TEMP_RLS);
-      _state = 1;
-    }
-
-    void trigHumidity() {
-      wireRead(TRIG_HUM_RLS);
-      _state = 3;
-    }
-    
-    void readTemperature(void) {
-      //wireRead(HTU21DF_READTEMP); delay(50);
-      float temp = wireReq();
-      temp *= 175.72;
-      temp /= 65536;
-      temp -= 46.85;
-      _state = 2;
-      _temp = temp;
-    }
-    
-    float readHumidity(void) {
-      //wireRead(HTU21DF_READHUM); delay(50);
-      float hum = wireReq();
-      hum *= 125;
-      hum /= 65536;
-      hum -= 6;
-      _state = 0;
-      _hum = hum;
-    }
-};
-
-HTU21DF htu;
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Initialize Sensors
-byte set_sensor() {
+void set_sensor() {
 
   // Piepser
   pinMode(MOSI, OUTPUT);
@@ -135,24 +45,56 @@ byte set_sensor() {
     digitalWrite(THERMOCOUPLE_CS, HIGH);
   }
 
-  if (htu.begin()) Serial.println("Found HTU21D");
-  else Serial.println("No HTU21D");
-  
-
-  // MAX1161x
+  // MAX11615
   byte reg = 0xA0;    // A0 = 10100000
   // page 14
   // 1: setup mode
-  // SEL2:0 = Reference (Table 6)
+  // SEL:010 = Reference (Table 6)
   // external(1)/internal(0) clock
   // unipolar(0)/bipolar(1)
   // 0: reset the configuration register to default
   // 0: dont't care
  
-  Wire.beginTransmission(MAX1161x_ADDRESS);
+  Wire.beginTransmission(MAX11615_ADDRESS);
   Wire.write(reg);
   byte error = Wire.endTransmission();
-  return error;
+  IPRINTP("MAX1161x: ");
+  if (error == 0) {
+    DPRINTP("0x");
+    DPRINTLN(MAX11615_ADDRESS, HEX);
+    MAX1161x_ADDRESS = MAX11615_ADDRESS;
+/*  } else {
+
+    // MAX11613
+    reg = 0xA0;    
+    // page 14
+    // 80 = 10000000 -> VCC (3V3) als Referenz, nur mit 0R wenn Doppelfühler, Toleranz wird größer
+    // D0 = 11010000 -> interne Referenz, passt nicht überein, Werte zu tief
+    // A0 = 10100000 -> externe Referenz, dann kein Doppelfühler
+    // IC kann nur VCC = 3V3, nicht 2V
+    // 1: setup mode
+    // SEL[0:2] = Reference (Table 6)
+    // external(1)/internal(0) clock
+    // unipolar(0)/bipolar(1)
+    // 0: reset the configuration register to default
+    // 0: dont't care
+
+    Wire.beginTransmission(MAX11613_ADDRESS);
+    Wire.write(reg);
+    error = Wire.endTransmission();
+
+    if (error == 0) {
+      DPRINTP("0x");
+      DPRINTLN(MAX11613_ADDRESS, HEX);
+      MAX1161x_ADDRESS = MAX11613_ADDRESS;
+      if (sys.ch != 3) {
+        sys.ch = 3;
+        Serial.println("Umstellung auf LITE-3");
+        setconfig(eSYSTEM,{});
+      }
+      sys.pitmaster = false;
+ */   } else DPRINTPLN("No");
+//  }
   
 }
 
@@ -163,8 +105,11 @@ int get_adc_average (byte ch) {
   // Get the average value for the ADC channel (ch) selected. 
   // MAX11613/15 samples the channel 8 times and returns the average.  
   // Setup byte required: 0xA0 
-  
-  byte config = 0x21 + (ch << 1);   //00100001 + ch  // page 15 
+
+  byte config;
+//Serial.println(ch);
+  config = 0x21 + (ch << 1);   //00100001 + ch  // page 15 0x21
+//Serial.println(config, BIN);
   // 0: config mode
   // 01: SCAN = Converts the ch eight times
   // 0000: placeholder ch
@@ -196,7 +141,8 @@ void get_Vbat() {
   
   // Digitalwert transformiert in Batteriespannung in mV
   int voltage = analogRead(ANALOGREADBATTPIN);
-
+//Serial.println(voltage);
+//ch[0].temp = voltage;
   // CHARGE DETECTION
   //                LOAD        COMPLETE        SHUTDOWN
   // MCP:           LOW           HIGH           HIGH-Z 
@@ -212,9 +158,9 @@ void get_Vbat() {
   bool curStateNone = digitalRead(CHARGEDETECTION);
   // Ladeanzeige
   battery.charge = !curStateNone;
-  
+  //Serial.println(voltage);
   // Standby erkennen
-  if (voltage < 10) {
+  if (voltage < 20) {
     sys.stby = true;
     //return;
   }
@@ -239,8 +185,8 @@ void get_Vbat() {
 
     case 1:                                                    // SHUTDOWN
       if (battery.setreference > 0 && battery.voltage > 0 && !sys.stby) {
-        voltage = 4200;
-        battery.sim = 4200;
+        voltage = battery.max +20;    // auf max setzen, mit Startpuffer
+        battery.sim = voltage;
 
         // Runterzählen
         if ((millis() - battery.correction) > CORRECTIONTIME) { 
@@ -251,9 +197,9 @@ void get_Vbat() {
         }
       }
 
-      if (battery.voltage > 4000) {
+      if (battery.voltage > 3600) {
 
-        if (battery.sim > 4000) {
+        if (battery.sim > 3600) {
 
           // Reduktion nach der Aufnahme eines neuen Werts
           if (battery.simc > MEDIAN_SIZE-1) { // angepasst an den Median
@@ -263,8 +209,7 @@ void get_Vbat() {
 
           // Aufnahme eines neuen Werts vor der Reduktion
           if (battery.simc < MEDIAN_SIZE-1 && battery.sim - battery.voltage > 5) voltage = battery.sim; // 9/10
-          //else if (battery.simc > 2 && (battery.sim - battery.voltage > 5)) voltage = battery.sim; // //10
-          //else if (battery.simc > 4 && (battery.sim - battery.voltage > 1)) voltage = battery.sim; // 5/10
+
         } else if (battery.simc > 1) battery.sim = battery.voltage - 1;  // Systemstart, etwas warten
         
       } else battery.simc = 0;
@@ -272,14 +217,20 @@ void get_Vbat() {
       break;
 
     case 3:                                                    // COMPLETE (vollständig)
-      if (battery.setreference == -1) {                        // es wurde geladen
-        battery.setreference = 180;                            // Referenzzeit setzen
+      if (battery.setreference == -1) {      // es wurde geladen, setze Referenz wenn Akku wirklich geladen
+        // Achtung, bei Ladung in Stby ist voltage nicht verfügbar
+        battery.setreference = 180; // Referenzzeit setzen
+        if (voltage > 4100) {
+          // battery.max setzen mit der aktuellen Spannung?
+          battery.max = constrain(voltage, 4100, 4180);
+        } //else battery.max = 4150; 
+        
         setconfig(eSYSTEM,{});
-      } else voltage = 4200;                                   // 100% bei USB-Quelle
+      } else if (millis() > 10000) voltage = battery.max;             // 100% bei USB-Quelle, sofern USB nach Laden verbleibt
       break;
 
     case 4:                                                     // NO BATTERY
-      voltage = 4200;
+      voltage = battery.max;
       battery.charge = false;
       break;
   }
@@ -310,7 +261,7 @@ void cal_soc() {
   
   if (vol_count > 0) {
 
-    if (vol_count == 1) {                           // Battery Initialiseurnv
+    if (vol_count == 1) {                           // Battery Initialisierung
       if (battery.voltage < vol_sum)
         battery.voltage = vol_sum;                  // beim Start Messung anpassen
     } else {
@@ -350,16 +301,6 @@ void cal_soc() {
 
   }
 
-  // HTU21D
-  if (htu.exist()) {
-    switch (htu.getState()) {
-      case 0: htu.trigTemperature(); break;
-      case 1: htu.readTemperature();
-      case 2: htu.trigHumidity(); break;
-      case 3: htu.readHumidity(); break;
-    } 
-  }
-
 }
 
 
@@ -376,20 +317,28 @@ void set_piepser() {
 
 void piepserON() {
   analogWrite(MOSI,512);
+  sys.piepoff_t = 2;
 }
 
 void piepserOFF() {
-  analogWrite(MOSI,0);
+  if (sys.piepoff_t == 0) analogWrite(MOSI,0);
+  else if (sys.piepoff_t > -2) sys.piepoff_t--;
+}
+
+void pbguard() {
+  //analogWriteFreq(5);
+  analogWrite(MOSI,1023);
+  sys.piepoff_t = 2;        // für 2 Zyklen
 }
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //Control Hardware Alarm
-void controlAlarm(bool action){                // action dient zur Pulsung des Signals
+void controlAlarm(){                // action dient zur Pulsung des Signals
 
   bool setalarm = false;
 
-  for (int i=0; i < CHANNELS; i++) {
+  for (int i=0; i < sys.ch; i++) {
     //if (ch[i].alarm > 0) {                              // CHANNEL ALARM ENABLED
                 
       // CHECK LIMITS
@@ -412,7 +361,7 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
           drawQuestion(i);
         }
       
-      } else if (!ch[i].isalarm && ch[i].temp != INACTIVEVALUE) {
+      } else if ((!ch[i].isalarm || ch[i].repeatalarm) && ch[i].temp != INACTIVEVALUE) {
         // first rising limits
 
         ch[i].isalarm = true;                      // alarm
@@ -428,6 +377,8 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
             notification.limit &= ~(1<<i);           // add lower limit              
           }
         } 
+
+        ch[i].repeatalarm = false;
         
         if (ch[i].alarm > 1) {                       // only if summer
           ch[i].showalarm = 2;                    // show OLED note first time
@@ -442,13 +393,10 @@ void controlAlarm(bool action){                // action dient zur Pulsung des S
   }
 
   // Hardware-Alarm-Variable: sys.hwalarm
-  if (setalarm && action) {
-    piepserON();
-  }
-  else {
-    piepserOFF();
-  }  
+  if (setalarm) piepserON(); 
 }
+
+#ifdef AMPERE
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Ampere IC
@@ -472,6 +420,7 @@ void ampere_control() {
     }
 }
 
+#endif
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Reading Temperature KTYPE
@@ -483,7 +432,7 @@ double get_thermocouple(bool internal) {
   digitalWrite(THERMOCOUPLE_CS, LOW);                    // START
   for (uint8_t i=32; i; i--){
     dd = dd <<1;
-    if (twi_read_bit())  dd |= 0x01;
+    if (twi_read_bit())  dd |= 0x01;                     // needs #include "core_esp8266_si2c.c"
   }
   digitalWrite(THERMOCOUPLE_CS, HIGH);                   // END
 
@@ -517,4 +466,7 @@ double get_thermocouple(bool internal) {
   return vv;
 }
 
+
+// bei einem Neustart flag auf false, ebenfalls wenn voll geladen
+// dann alle 5 min speichern und beim ersten speichern flag auf true
 

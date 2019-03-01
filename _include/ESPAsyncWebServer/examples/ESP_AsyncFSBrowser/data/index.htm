@@ -123,9 +123,11 @@
     </script>
   </head>
   <body id="body" onload="onBodyLoad()">
-    <pre id="dbg"></pre>
-    <div id="input_div">
-      $<input type="text" value="" id="input_el">
-    </div>
+    <form method="post" enctype="multipart/form-data">
+		<label>Wählen Sie eine Textdatei (*.txt, *.html usw.) von Ihrem Rechner aus.
+			<input name="datei" type="file" size="50" accept="text/*"> 
+		</label>  
+		<button>… und ab geht die Post!</button>
+	</form>
   </body>
 </html>

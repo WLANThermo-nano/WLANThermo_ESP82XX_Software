@@ -41,6 +41,7 @@
 #define NETWORK_STOP  "/stopwifi"
 #define NETWORK_CLEAR "/clearwifi"
 #define CONFIG_RESET  "/configreset"
+#define ADMIN         "/admin"
 
 #define SET_NETWORK   "/setnetwork"
 #define SET_SYSTEM    "/setsystem"
@@ -49,6 +50,9 @@
 #define SET_PID       "/setpid"
 #define SET_DC        "/setDC"
 #define SET_IOT       "/setIoT"
+#define SET_PUSH      "/setPush"
+#define SET_API       "/setapi"
+#define SET_GOD       "/god"
 #define UPDATE_CHECK  "/checkupdate"
 #define UPDATE_STATUS "/updatestatus"
 #define DC_STATUS     "/dcstatus"
@@ -65,6 +69,10 @@ const char *public_list[]={
 "/nano.ttf"
 };
 
+void printRequest(uint8_t* datas) {
+  DPRINTF("[REQUEST]\t%s\r\n", (const char*)datas);
+}
+
 // ---------------------------------------------------------------
 // WEBHANDLER
 class NanoWebHandler: public AsyncWebHandler {
@@ -73,7 +81,7 @@ class NanoWebHandler: public AsyncWebHandler {
   void handleSettings(AsyncWebServerRequest *request) {
     
     String jsonStr;
-    jsonStr = cloudSettings();
+    jsonStr = apiData(APISETTINGS);
     
     request->send(200, APPLICATIONJSON, jsonStr);
   }
@@ -83,7 +91,7 @@ class NanoWebHandler: public AsyncWebHandler {
   void handleData(AsyncWebServerRequest *request) {
 
     String jsonStr;
-    jsonStr = cloudData(false);
+    jsonStr = apiData(APIDATA);
     
     request->send(200, APPLICATIONJSON, jsonStr);
   }
@@ -293,6 +301,7 @@ public:
     setconfig(ePIT,{});
     loadconfig(ePIT,0);
     set_iot(1);
+    set_push();
     setconfig(eTHING,{});
     loadconfig(eTHING,0);
   }
@@ -301,42 +310,78 @@ public:
   // ---------------------
   void handleRequest(AsyncWebServerRequest *request){
 
-    if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == DATA_PATH){
-      handleData(request);
+    if (request->method() == HTTP_POST || request->method() == HTTP_GET) {
 
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == SETTING_PATH){
-      handleSettings(request);
+      if (request->url() == DATA_PATH){
+        handleData(request);
+        return;
 
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == NETWORK_SCAN){ 
-      handleWifiScan(request, true);
+      } else if (request->url() == SETTING_PATH){
+        handleSettings(request);
+        return;
 
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == NETWORK_LIST){ 
-      handleWifiResult(request, true);
+      } else if (request->url() == NETWORK_SCAN){ 
+        handleWifiScan(request, true);
+        return;
 
-    /*
-    } else if (request->method() == HTTP_POST &&  request->url() == FLIST_PATH){
-      if(!request->authenticate(www_username, www_password))
-        return request->requestAuthentication();
-      handleFileList(request);
-      
-    } else if (request->method() == HTTP_DELETE &&  request->url() == DELETE_PATH){
+      } else if (request->url() == NETWORK_LIST){ 
+        handleWifiResult(request, true);
+        return;
+
+       // REQUEST: /stop wifi
+      } else if (request->url() == NETWORK_STOP) { 
+        wifi.mode = 4; // Turn Wifi off with timer
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
+
+      // REQUEST: /checkupdate
+      } else if (request->url() == UPDATE_CHECK) { 
+        update.state = -1;
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
+      }
+    }
+
+    /*    
+    if (request->method() == HTTP_DELETE &&  request->url() == DELETE_PATH){
       if(!request->authenticate(www_username, www_password))
         return request->requestAuthentication();
       handleFileDelete(request);
+      return;
+    }
+    */
+
+    if (request->method() == HTTP_POST) {
+
+      // REQUEST: /updatestatus
+      if (request->url() == UPDATE_STATUS) { 
+        DPRINTLN("... in process");
+        if(update.state > 0) request->send(200, TEXTPLAIN, TEXTTRUE);
+        request->send(200, TEXTPLAIN, TEXTFALSE);
+        return;
+
+      // REQUEST: /dcstatus
+      } else if (request->url() == DC_STATUS) { 
+        if (pitMaster[0].active == DUTYCYCLE || pitMaster[1].active == DUTYCYCLE) request->send(200, TEXTPLAIN, TEXTTRUE);
+        else request->send(200, TEXTPLAIN, TEXTFALSE);
+        return;
       
-    } else if (request->method() == HTTP_POST &&  request->url() == FPUTS_PATH){
-      if(!request->authenticate(www_username, www_password))
-        return request->requestAuthentication();
-      handleFilePuts(request);
-*/
-    
-    // REQUEST: /stop wifi
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == NETWORK_STOP) { 
-      wifi.mode = 4; // Turn Wifi off with timer
-      request->send(200, TEXTPLAIN, TEXTTRUE);
-    
+   /*   } else if (request->url() == FLIST_PATH){
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();
+        handleFileList(request);
+        return;
+      
+      } else if (request->url() == FPUTS_PATH){
+        if(!request->authenticate(www_username, www_password))
+          return request->requestAuthentication();
+        handleFilePuts(request);
+        return
+   */ }
+    }
+   
     // REQUEST: /clear wifi
-    } else if (request->url() == NETWORK_CLEAR) {
+    if (request->url() == NETWORK_CLEAR) {
       if (request->method() == HTTP_GET) {
         request->send(200, "text/html", "<form method='POST' action='/clearwifi'>Wifi-Speicher wirklich leeren?<br><br><input type='submit' value='Ja'></form>");
       } else if (request->method() == HTTP_POST) {
@@ -345,6 +390,7 @@ public:
         wifi.mode = 5;
         request->send(200, TEXTPLAIN, TEXTTRUE);
       } else request->send(500, TEXTPLAIN, BAD_PATH);
+      return;
 
     // REQUEST: /configreset
     } else if (request->url() == CONFIG_RESET) {
@@ -354,6 +400,26 @@ public:
         configreset();
         request->send(200, TEXTPLAIN, TEXTTRUE);
       } else request->send(500, TEXTPLAIN, BAD_PATH);
+      return;
+
+    // REQUEST: /admin
+    } else if (request->url() == ADMIN) {
+      if (request->method() == HTTP_GET) {
+        request->send(200, "text/html", "<form method='POST' action='/setadmin'>Neues Password eingeben (max. 10 Zeichen): <input type='text' name='wwwpw'><br><br><input type='submit' value='Change'></form>");
+      } else if (request->method() == HTTP_POST) {
+        if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
+          return request->requestAuthentication();
+        if (request->hasParam("wwwpw", true)) {
+          String password = request->getParam("wwwpw", true)->value();
+          if (password.length() < 11) {
+            sys.www_password = password;
+            setconfig(eSYSTEM,{});
+            request->send(200, TEXTPLAIN, TEXTTRUE);
+          }
+          request->send(200, TEXTPLAIN, TEXTFALSE);
+        }
+      } else request->send(500, TEXTPLAIN, BAD_PATH);
+      return;
 
     // REQUEST: /update
     } else if (request->url() == UPDATE_PATH) {
@@ -363,32 +429,24 @@ public:
         if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
           return request->requestAuthentication();
         if (request->hasParam("version", true)) { 
-          ESP.wdtDisable(); 
+          //ESP.wdtDisable(); 
           // use getParam(xxx, true) for form-data parameters in POST request header
           String version = request->getParam("version", true)->value();
-          if (version.indexOf("v") == 0) sys.getupdate = version;
+          Serial.println(version);
+          if (version.indexOf("v") == 0) {
+            update.get = version;                                 // Versionswunsch speichern
+            if (update.get == update.version) update.state = 1;   // Version schon bekannt, direkt los
+            else update.state = -1;                               // Version erst vom Server anfragen
+          //ESP.wdtEnable(10);
+          }
           else request->send(200, TEXTPLAIN, "Version unknown!");
+        } else {
+          update.get = update.version;
+          update.state = 1;                                       // Version bekannt, also direkt los
         }
-        sys.update = 1;
-        ESP.wdtEnable(10);
         request->send(200, TEXTPLAIN, "Do Update...");
       } else request->send(500, TEXTPLAIN, BAD_PATH);
-
-    // REQUEST: /checkupdate
-    } else if ((request->method() == HTTP_POST || request->method() == HTTP_GET) &&  request->url() == UPDATE_CHECK) { 
-      sys.update = -1;
-      request->send(200, TEXTPLAIN, TEXTTRUE);
-    
-    // REQUEST: /updatestatus
-    } else if ((request->method() == HTTP_POST) &&  request->url() == UPDATE_STATUS) { 
-        DPRINTLN("... in process");
-        if(sys.update > 0) request->send(200, TEXTPLAIN, TEXTTRUE);
-        request->send(200, TEXTPLAIN, TEXTFALSE);
-
-    // REQUEST: /dcstatus
-    } else if ((request->method() == HTTP_POST) &&  request->url() == DC_STATUS) { 
-        if (pitMaster[0].active == DUTYCYCLE || pitMaster[1].active == DUTYCYCLE) request->send(200, TEXTPLAIN, TEXTTRUE);
-        else request->send(200, TEXTPLAIN, TEXTFALSE);
+      return;
 
     // REQUEST: File from SPIFFS
     } else if (request->method() == HTTP_GET){
@@ -421,7 +479,7 @@ public:
         || request->url() == NETWORK_LIST || request->url() == NETWORK_SCAN 
         || request->url() == NETWORK_STOP || request->url() == NETWORK_CLEAR 
         || request->url() == CONFIG_RESET || request->url() == UPDATE_PATH 
-        || request->url() == UPDATE_CHECK
+        || request->url() == UPDATE_CHECK || request->url() == ADMIN
       //|| request->url() == LOGGING_PATH
       ){
         return true;
@@ -443,7 +501,8 @@ public:
         || request->url() == NETWORK_STOP || request->url() == NETWORK_CLEAR
         || request->url() == CONFIG_RESET || request->url() == UPDATE_PATH
         || request->url() == UPDATE_CHECK || request->url() == UPDATE_STATUS
-        || request->url() == DC_STATUS  //|| request->url() == LOGGING_PATH
+        || request->url() == DC_STATUS  || request->url() == ADMIN
+        //|| request->url() == LOGGING_PATH
         )
         return true;    
     }
@@ -475,6 +534,7 @@ class BodyWebHandler: public AsyncWebHandler {
     return tex;
   }
 
+
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   bool setSystem(AsyncWebServerRequest *request, uint8_t *datas) {
 
@@ -488,8 +548,8 @@ class BodyWebHandler: public AsyncWebHandler {
   
     if (_system.containsKey("language"))  sys.language   = _system["language"].asString();
     if (_system.containsKey("unit"))      unit = _system["unit"].asString();
-    if (_system.containsKey("autoupd"))   sys.autoupdate = _system["autoupd"];
-    if (_system.containsKey("fastmode"))  sys.fastmode   = _system["fastmode"];
+    if (_system.containsKey("autoupd"))   update.autoupdate = _system["autoupd"];
+    //if (_system.containsKey("fastmode"))  sys.fastmode   = _system["fastmode"];
 
     if (_system.containsKey("host")) {
       _name = _system["host"].asString();
@@ -504,16 +564,18 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_system.containsKey("hwversion")) {
       _name = _system["hwversion"].asString();
       _name.replace("V","");
-      sys.hwversion = _name.toInt();
+      if (_name.indexOf('+') > 0) sys.hwversion = 2;    // V1+
+      else  sys.hwversion = _name.toInt();
     }
 
     setconfig(eSYSTEM,{});                                      // SPEICHERN
   
     if (sys.unit != unit)  {
       sys.unit = unit;
-      transform_limits();                             // Transform Limits
-      setconfig(eCHANNEL,{});                         // Save Config
-      get_Temperature();                              // Update Temperature
+      transform_limits();                                       // Transform Limits
+      setconfig(eCHANNEL,{});                                   // Save Config
+      for (uint8_t j = 0; j < sys.ch; j++) mem_clear(j);        // Clear Temperature Memory
+      get_Temperature();                                        // Update Temperature
     }
   
     return 1;
@@ -596,6 +658,7 @@ class BodyWebHandler: public AsyncWebHandler {
 
     bool refresh = iot.CL_on;
 
+#ifdef THINGSPEAK
     if (_chart.containsKey("TSwrite"))  iot.TS_writeKey = _chart["TSwrite"].asString(); 
     if (_chart.containsKey("TShttp"))   iot.TS_httpKey  = _chart["TShttp"].asString(); 
     if (_chart.containsKey("TSuser"))   iot.TS_userKey  = _chart["TSuser"].asString(); 
@@ -603,6 +666,8 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_chart.containsKey("TSshow8"))  iot.TS_show8    = _chart["TSshow8"];
     if (_chart.containsKey("TSint"))    iot.TS_int      = _chart["TSint"];
     if (_chart.containsKey("TSon"))     iot.TS_on       = _chart["TSon"];
+
+#endif
     
     if (_chart.containsKey("PMQhost"))  iot.P_MQTT_HOST = _chart["PMQhost"].asString(); 
     if (_chart.containsKey("PMQport"))  iot.P_MQTT_PORT = _chart["PMQport"];
@@ -612,16 +677,37 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_chart.containsKey("PMQon"))    iot.P_MQTT_on   = _chart["PMQon"]; 
     if (_chart.containsKey("PMQint"))   iot.P_MQTT_int  = _chart["PMQint"];
     
-    if (_chart.containsKey("TGon"))     iot.TG_on       = _chart["TGon"];
-    if (_chart.containsKey("TGtoken"))  iot.TG_token    = _chart["TGtoken"].asString();
-    if (_chart.containsKey("TGid"))     iot.TG_id       = _chart["TGid"].asString(); 
     if (_chart.containsKey("CLon"))     iot.CL_on       = _chart["CLon"];
     if (_chart.containsKey("CLtoken"))  iot.CL_token    = _chart["CLtoken"].asString();
     if (_chart.containsKey("CLint"))    iot.CL_int      = _chart["CLint"];
 
-    if (!refresh && iot.CL_on) lastUpdateCloud = 0; // Daten senden forcieren
+    if (!refresh && iot.CL_on) lastUpdateCloud = 1; // Daten senden forcieren
+
+    if (!iot.CL_on) sys.cloud_state = 0;
   
     if (!setconfig(eTHING,{})) return 0;    
+    return 1;
+  }
+
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  bool setPush(AsyncWebServerRequest *request, uint8_t *datas) {
+
+    printRequest(datas);
+  
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& _push = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+    if (!_push.success()) return 0;
+
+    if (_push.containsKey("on"))      pushd.on       = (byte)_push["on"];
+    if (_push.containsKey("token"))   pushd.token    = _push["token"].asString();
+    if (_push.containsKey("id"))      pushd.id       = _push["id"].asString(); 
+    if (_push.containsKey("repeat"))  pushd.repeat   = _push["repeat"];
+    if (_push.containsKey("service")) pushd.service  = _push["service"];
+
+    if (pushd.on == 2) notification.type = 1;    // Verbindungstest
+    else {
+      if (!setconfig(ePUSH,{})) return 0;     // nicht bei Verbindungstest speichern
+    } 
     return 1;
   }
 
@@ -652,58 +738,46 @@ class BodyWebHandler: public AsyncWebHandler {
       if (_pitmaster.containsKey("channel")) {
         byte cha = _pitmaster["channel"];
         pitMaster[id].channel = cha - 1;
+
+        open_lid_init(); // Speicher zurücksetzen
       }
       else return 0;
   
-      if (_pitmaster.containsKey("pid")) pitMaster[ii].pid = _pitmaster["pid"];
-      else return 0;
+      if (_pitmaster.containsKey("pid")) {
+        byte temppid = _pitmaster["pid"];
+        if (temppid != pitMaster[ii].pid) {
+          pitMaster[id].disabled = false;
+          disableHeater(id);
+          //Serial.println("PID-Wechsel");
+        }
+        pitMaster[ii].pid = temppid;
+      
+      } else return 0;
       if (_pitmaster.containsKey("set")) pitMaster[ii].set = _pitmaster["set"];
       else return 0;
   
       bool _manual = false;
-      bool _autotune = false;
+      bool _auto = false;
     
-      if (typ == "autotune") _autotune = true;
+      if (typ == "auto") _auto = true;
       else if (typ == "manual") _manual = true;
-      else if (typ == "auto") pitMaster[id].active = AUTO;
       else  pitMaster[id].active = PITOFF;
     
       if (_pitmaster.containsKey("value") && _manual) {
         int _val = _pitmaster["value"];
         pitMaster[id].value = constrain(_val,0,100);
         pitMaster[id].active = MANUAL;
-        //return 1; // nicht speichern
       }
 
-      if (_autotune && id == 0) {
-        startautotunePID(5, true, 40, 120L*60L*1000L, id);  // 1h Timelimit
-        return 1; // nicht speichern
-      } else if (autotune.initialized) {    // Autotune was still in action
-        autotune.stop = 2;
+      // kann gespeichert werden und was ist mit stoppen des autotune
+      if (_auto && id == 0) {
+        pitMaster[id].active = AUTO;
+        if (pid[pitMaster[id].pid].autotune) {
+          autotune.run = 1;    // start Autotune, falls schon gelaufen, dann neustart
+        }
       }
       
       ii++;
-    }
-
-    // Spezial-Funktionen
-    if (pid[pitMaster[0].pid].aktor == DAMPER && sys.hwversion > 1) { 
-      pitMaster[0].io = PITMASTER1;   // Zurücksetzen falls vorher Servo gewählt
-      // aktiviere zweiten Pitmaster nur wenn ein Servo-Profil vorhanden
-      if (pid[2].aktor == SERVO) {                
-        pitMaster[1].pid = 2;
-        pitMaster[1].channel = pitMaster[0].channel;
-        pitMaster[1].set = pitMaster[0].set;
-        pitMaster[1].active = pitMaster[0].active;
-        pitMaster[1].value = pitMaster[0].value;  // Manual
-      } // FAN trotzdem laufen lassen? Oder Speichern abbrechen?
-      
-    } else if (pid[pitMaster[0].pid].aktor == SERVO && sys.hwversion > 1) { 
-      pitMaster[0].io = PITMASTER2;  // SERVO DUPLICATE
-      // muss auch bei DutyCycle
-      
-    } else {
-      pitMaster[1].active = PITOFF;
-      pitMaster[0].io = PITMASTER1;     // Zurücksetzen
     }
   
     if (!setconfig(ePIT,{})) return 0;
@@ -732,9 +806,9 @@ class BodyWebHandler: public AsyncWebHandler {
       if (_pid.containsKey("Kp"))     pid[id].Kp       = _pid["Kp"];
       if (_pid.containsKey("Ki"))     pid[id].Ki       = _pid["Ki"];
       if (_pid.containsKey("Kd"))     pid[id].Kd       = _pid["Kd"];
-      if (_pid.containsKey("Kp_a"))   pid[id].Kp_a     = _pid["Kp_a"];
-      if (_pid.containsKey("Ki_a"))   pid[id].Ki_a     = _pid["Ki_a"];
-      if (_pid.containsKey("Kd_a"))   pid[id].Kd_a     = _pid["Kd_a"];
+      //if (_pid.containsKey("Kp_a"))   pid[id].Kp_a     = _pid["Kp_a"];
+      //if (_pid.containsKey("Ki_a"))   pid[id].Ki_a     = _pid["Ki_a"];
+      //if (_pid.containsKey("Kd_a"))   pid[id].Kd_a     = _pid["Kd_a"];
       if (_pid.containsKey("DCmmin")) {
         val = _pid["DCmmin"];
         if (val >= SERVOPULSMIN && val <= SERVOPULSMAX && pid[id].aktor == SERVO) {
@@ -747,10 +821,176 @@ class BodyWebHandler: public AsyncWebHandler {
           pid[id].DCmax = getDC(val*10)/10.0;    
         } else pid[id].DCmax = constrain(val*10,0,1000)/10.0;    // 1. Nachkommastelle
       }    
+      if (_pid.containsKey("opl"))    pid[id].opl       = _pid["opl"];
+      if (_pid.containsKey("tune"))   pid[id].autotune  = _pid["tune"];
+      if (_pid.containsKey("jp"))     pid[id].jumppw    = constrain(_pid["jp"],10,100);
+      
       ii++;
     }
   
     if (!setconfig(ePIT,{})) return 0;
+    return 1;
+  }
+
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  bool setServerAPI(AsyncWebServerRequest *request, uint8_t *datas) {
+
+    //printRequest(datas);
+  
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+    if (!json.success()) return 0;
+
+    // URL
+    if (json.containsKey("url")) {
+      Serial.println("Server-URL");
+      JsonObject& _url = json["url"];
+
+      for (int i = 0; i < NUMITEMS(serverurl); i++) {     // nur bekannte auslesen
+        JsonObject& _link = _url[serverurl[i].typ];
+        if (_link.containsKey("host")) serverurl[i].host = _link["host"].asString();
+        if (_link.containsKey("page")) serverurl[i].page = _link["page"].asString();
+      }
+
+      if (!setconfig(eSERVER,{})) return 0;   // für Serverlinks
+    }
+
+    // UPDATE
+    bool available = false;
+    if (json.containsKey("update")) { 
+      JsonObject& _update = json["update"];
+      if (_update.containsKey("available")) available = _update["available"];
+    
+      if (available && (update.autoupdate || update.get != "false")) { 
+        // bei update.get wurde eine bestimmte Version angefragt
+        String version;
+        if (_update.containsKey("version"))      {
+          version = _update["version"].asString();
+          if (update.get == version) {
+            if (update.state < 1) update.state = 1;           // Anfrage erfolgreich, Update starten
+            else if (update.state == 2) update.state = 3;     // Anfrage während des Updateprozesses
+          } else {                                            // keine konrekte Anfrage
+            update.version = version;
+            update.get = "false";                             // nicht die richtige Version übermittelt
+          }
+        }
+        if (_update.containsKey("firmware")) {              // Firmware-Link
+          JsonObject& _fw = _update["firmware"];
+          if (_fw.containsKey("url"))  update.firmwareUrl = _fw["url"].asString();
+          Serial.println(update.firmwareUrl);
+        }
+        if (_update.containsKey("spiffs"))  {               // SPIFFS-Link
+          JsonObject& _sf = _update["spiffs"];
+          if (_sf.containsKey("url"))  update.spiffsUrl = _sf["url"].asString();
+          Serial.println(update.spiffsUrl);
+        }
+        //if (_update.containsKey("prerelease"))  update.prerelease = _update["prerelease"];
+        if (_update.containsKey("force"))       {
+          update.get = update.version;
+          update.state = 1;   // Update erzwingen
+        }
+        
+      } else {
+        update.version = "false";                           // kein Server-Update
+        if (update.get != "false") update.get = "false";    // bestimmte Version nicht bekannt
+      }
+
+      if (update.state == 3) {} // nicht speichern falls Absturz -> wiederholen
+      else {
+        if (!setconfig(eSYSTEM,{})) return 0;   // für Update
+      }
+    }
+
+    // CLOUD
+    if (json.containsKey("cloud")) {
+      JsonObject& _cloud = json["cloud"];
+      
+      if (_cloud.containsKey("task")) {
+        if (_cloud["task"]) sys.cloud_state = 2;
+        else sys.cloud_state = 1; 
+        Serial.print("[CLOUD]: "); Serial.println(sys.cloud_state); 
+      }
+    }
+
+    // NOTE
+    if (json.containsKey("notification")) {
+      JsonObject& _note = json["notification"];
+      
+      if (_note.containsKey("task")) {
+        //if (_note["task"]) sys.online |= (1<<2);
+        //else sys.online &= ~(1<<2); 
+        Serial.print("[NOTE]: "); Serial.println(_note["task"].asString()); 
+      }
+    }
+    
+    return 1;
+  }
+
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  bool setDCTest(AsyncWebServerRequest *request, uint8_t *datas) {
+
+    printRequest(datas);
+  
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+    if (!json.success()) return 0;
+
+    byte aktor = json["aktor"];
+    bool dc = json["dc"];
+    int val = json["val"];
+    byte id = 0;  // Pitmaster0
+    if (val >= SERVOPULSMIN*10 && val <= SERVOPULSMAX*10 && aktor == SERVO) val = getDC(val);
+    else val = constrain(val,0,1000);
+    DC_start(dc, aktor, val, id);
+    return 1;        
+  }
+
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  bool setGod(AsyncWebServerRequest *request, uint8_t *datas) {
+
+    printRequest(datas);
+  
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject((const char*)datas);   //https://github.com/esp8266/Arduino/issues/1321
+    if (!json.success()) return 0;
+    
+    byte ind;
+
+    if (json.containsKey("god")) {
+      ind = json["god"];
+    
+      if (ind < 2) {
+        sys.god ^= (1<<ind);  // XOR
+        // BIT0: Start-Buzzer
+        // BIT1: Nobattery
+
+      // System auf V2 umstellen
+      } else if (ind == 2) {
+        sys.hwversion = 2;
+        sys.pitsupply = true;
+
+      // System für Damper aktivieren
+      } else if (ind == 3) {  
+        sys.hwversion = 2;  // Damper nur mit v2 Konfiguration
+        sys.pitsupply = true;
+        sys.damper = true;
+        set_pid(1);         // es wird ein Servo gebraucht
+        setconfig(ePIT,{}); 
+
+      // Typ K umschalten
+      } else if (ind == 4) {
+        if (sys.hwversion == 1 && !sys.typk) {
+          sys.typk = true;
+          set_sensor();
+        } else {
+          sys.typk = false;
+        }
+      }
+
+      setconfig(eSYSTEM,{});
+
+    } else return 0;
+
     return 1;
   }
 
@@ -788,10 +1028,21 @@ public:
     return setPID(request, datas);
   }
 
-  // {"TSwrite":"","TShttp":"","TSuser":"","TSchID":"","TSshow8":false,"TSint":30,"TSon":false,"PMQhost":"192.168.2.1","PMQport":1883,"PMQuser":"","PMQpass":"","PMQqos":0,"PMQon":false,"PMQint":30,"TGon":0,"TGtoken":"","TGid":"","CLon":true,"CLtoken":"82e0b30c6486bede","CLint":30}
+  // {"TSwrite":"","TShttp":"","TSuser":"","TSchID":"","TSshow8":false,"TSint":30,"TSon":false,"PMQhost":"192.168.2.1","PMQport":1883,"PMQuser":"","PMQpass":"","PMQqos":0,"PMQon":false,"PMQint":30,"CLon":true,"CLtoken":"82e0b30c6486bede","CLint":30}
   bool setIoT(uint8_t *datas) {
     AsyncWebServerRequest *request;
     return setIoT(request, datas);
+  }
+
+  // {"on":true,"token":"","id":"","repeat":1,"service":1}
+  bool setPush(uint8_t *datas) {
+    AsyncWebServerRequest *request;
+    return setPush(request, datas);
+  }
+
+  bool setServerAPI(uint8_t *datas) {
+    AsyncWebServerRequest *request;
+    return setServerAPI(request, datas);
   }
 
   void handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
@@ -799,35 +1050,62 @@ public:
     if (request->url() == SET_NETWORK) {
       if (!setNetwork(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
     
     } else if (request->url() == SET_CHANNELS) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setChannels(request,data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
     
     } else if (request->url() == SET_SYSTEM) {
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setSystem(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
  
     } else if (request->url() == SET_PITMASTER) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setPitmaster(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
     
     } else if (request->url() == SET_PID) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setPID(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
       
     } else if (request->url() == SET_IOT) { 
       if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
         return request->requestAuthentication();    
       if(!setIoT(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
+
+    } else if (request->url() == SET_PUSH) { 
+      if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
+        return request->requestAuthentication();    
+      if(!setPush(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+        return;
+    
+    } else if (request->url() == SET_API) { 
+      if(!request->authenticate(sys.www_username, sys.www_password.c_str()))
+        return request->requestAuthentication();    
+      if(!setServerAPI(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+    
+    } else if (request->url() == SET_DC) {     
+      if(!setDCTest(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
+        request->send(200, TEXTPLAIN, TEXTTRUE);
+
+    } else if (request->url() == SET_GOD) {     
+      if(!setGod(request, data)) request->send(200, TEXTPLAIN, TEXTFALSE);
         request->send(200, TEXTPLAIN, TEXTTRUE);
     }  
   }
@@ -837,6 +1115,8 @@ public:
     if (request->url() == SET_NETWORK || request->url() == SET_CHANNELS
       || request->url() == SET_SYSTEM || request->url() == SET_PITMASTER
       || request->url() == SET_PID || request->url() == SET_IOT
+      || request->url() == SET_API || request->url() == SET_DC
+      || request->url() == SET_PUSH || request->url() == SET_GOD
       ) return true;
     return false;
   }
