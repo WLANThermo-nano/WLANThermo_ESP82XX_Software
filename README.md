@@ -11,7 +11,7 @@ In addition, the SSD1306 library must be embedded in the Arduino IDE libaries fo
 
 In addition, the ESPAsyncWebServer library and the ESPAsyncTCP library must be embedded in the Arduino IDE libaries folder. The original versions of me-no-dev's library https://github.com/me-no-dev/ESPAsyncWebServer and https://github.com/me-no-dev/ESPAsyncTCP are used.
 
-##Troubleshooting
+## Troubleshooting
 
 If the compiler exits with an error similar to "WebHandlers.cpp:67:64: error: 'strftime' was not declared in this scope", follow these steps:
 
