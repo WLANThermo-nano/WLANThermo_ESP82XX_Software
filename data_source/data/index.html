@@ -2852,8 +2852,8 @@
 			json.device = jr.device;
 			var history = {"task": "read"};
 			json.history = history;
-			//alert(JSON.stringify(json));
-			loadJSON('https://api.wlanthermo.de/index1.php', JSON.stringify(json), '60000', function (response) {
+			console.log('HistoryRequest:' + JSON.stringify(json));
+			loadJSON('https://api.wlanthermo.com/index1.php', JSON.stringify(json), '60000', function (response) {
 				jr = JSON.parse(response);
 				byId('historylist').innerHTML = '';
 				var table_networklist = byId('historylist');
@@ -2861,12 +2861,10 @@
 					var row = table_networklist.insertRow(-1);
 					addCell(row,timeConverter(jr.history.list[i].ts_start),'','0');
 					addCell(row,timeConverter(jr.history.list[i].ts_stop),'','1');
-					addCell(row,jr.history.list[i].api_token,'','2');
+					addCell(row,'<a href="https://cloud.wlanthermo.de/indexB.html?history_token=' + jr.history.list[i].api_token + '">Klick mich</a>','','2');
 					addCell(row,'<span class="icon-download"> </span>','','3');
 					addCell(row,'<span class="icon-trash" onclick="deleteHistoryRow(\''+jr.history.list[i].api_token+'\')"> </span>','','4');
 				}	
-			
-				//alert(response);
 				showLoader('false');
 			})				
 		})	
@@ -2882,7 +2880,7 @@
 			<!-- alert(JSON.stringify(json)); -->
 			txt = 'Wollen die den aktuellen Eintrag wirklich löschen?';
 			if (confirm(txt) == true) {
-				loadJSON('https://api.wlanthermo.de/index1.php', JSON.stringify(json), '60000', function (response) {
+				loadJSON('https://api.wlanthermo.com/index1.php', JSON.stringify(json), '60000', function (response) {
 					jr = JSON.parse(response);
 					toastr.success('Löschen erfolgreich!')
 					loadHistoryList();
@@ -2902,7 +2900,7 @@
 			json.history = history;
 			json.history.api_token = jr.iot.CLtoken;
 			<!-- alert(JSON.stringify(json)); -->
-			loadJSON('https://api.wlanthermo.de/index1.php', JSON.stringify(json), '60000', function (response) {
+			loadJSON('https://api.wlanthermo.com/index1.php', JSON.stringify(json), '60000', function (response) {
 				toastr.success('Speichern erfolgreich!')
 				<!-- alert(response); -->
 				loadHistoryList();
@@ -3356,7 +3354,7 @@
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
         xobj.open('POST', url, true);
-		if (url.indexOf("api.wlanthermo.de") != -1) {
+		if (url.indexOf("api.wlanthermo.com") != -1) {
 		   xobj.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 		} else {
 		   xobj.setRequestHeader("Content-Type", "application/json");
