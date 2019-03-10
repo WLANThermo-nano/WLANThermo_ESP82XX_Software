@@ -1506,17 +1506,17 @@
 			display: none;
 		}
 		
-		.form-group select,.form-group input:focus,.form-group input:valid,.form-group input.form-file,.form-group input.has-value,.form-group textarea:focus,.form-group textarea:valid,.form-group textarea.form-file,.form-group textarea.has-value {
+		.form-group input[readonly],.form-group input[readonly="readonly"],.form-group select,.form-group input:focus,.form-group input:valid,.form-group input.form-file,.form-group input.has-value,.form-group textarea:focus,.form-group textarea:valid,.form-group textarea.form-file,.form-group textarea.has-value {
 			color: #fff;
 		}
 		
-		.form-group select ~ .control-label,.form-group input:focus ~ .control-label,.form-group input:valid ~ .control-label,.form-group input.form-file ~ .control-label,.form-group input.has-value ~ .control-label,.form-group textarea:focus ~ .control-label,.form-group textarea:valid ~ .control-label,.form-group textarea.form-file ~ .control-label,.form-group textarea.has-value ~ .control-label {
+		.form-group input[readonly] ~ .control-label,.form-group input[readonly="readonly"] ~ .control-label,.form-group select ~ .control-label,.form-group input:focus ~ .control-label,.form-group input:valid ~ .control-label,.form-group input.form-file ~ .control-label,.form-group input.has-value ~ .control-label,.form-group textarea:focus ~ .control-label,.form-group textarea:valid ~ .control-label,.form-group textarea.form-file ~ .control-label,.form-group textarea.has-value ~ .control-label {
 			font-size: 0.8rem;
 			color: gray;
 			top: -1rem;
 			left: 0;
 		}
-		
+	
 		.form-group select:focus,.form-group input:focus,.form-group textarea:focus {
 			outline: none;
 		}
@@ -2377,10 +2377,10 @@
 								<option value="300">5 Minuten</option>
 							  </select>
 							  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
-							</div>						
+							</div>	
 							<div class="form-group">
 							  <label for="input"><a id="CLtoken" class="link" href="#"></a></label><i class="bar"></i>
-							</div>							
+							</div>
 							<p class="pure-button pure-button-primary" onclick="newToken();">Token generieren</p>
 						</form>
 					</div>
@@ -2741,9 +2741,9 @@
 			byId('PMQqos').value = jr.iot.PMQqos;
 			byId('PMQinterval').value = jr.iot.PMQint;
 			byId('CLon').checked = jr.iot.CLon;
-			byId('CLinterval').value = jr.iot.CLint;
-			byId('CLtoken').innerHTML = "https://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken;			
-			byId("CLtoken").setAttribute("href", "https://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken);
+			byId('CLinterval').value = jr.iot.CLint; 
+			byId('CLtoken').innerHTML = "https://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken;
+			byId("CLtoken").setAttribute("href", "https://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken);		
 			byId('thingspeak').style.display = "inline";
 			byId('thingsheader').style.display = "none";
 			byId('mqttheader').style.display = "inline";
