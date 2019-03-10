@@ -240,7 +240,11 @@
 		.historyTable table, th, td{
 			border-collapse: collapse;
 		}
-
+		table.historyTable tr td:last-child {
+			text-align: right;
+			padding-right:0.5em;
+		}
+		
 		table.historyTable tr { background: #4a4a4a; }
 		table.historyTable tr:nth-child(odd){ background: #424242; }
 
@@ -2862,14 +2866,16 @@
 					addCell(row,timeConverter(jr.history.list[i].ts_start),'','0');
 					addCell(row,timeConverter(jr.history.list[i].ts_stop),'','1');
 					addCell(row,'<a href="https://cloud.wlanthermo.de/indexB.html?history_token=' + jr.history.list[i].api_token + '">Klick mich</a>','','2');
-					addCell(row,'<span class="icon-download"> </span>','','3');
-					addCell(row,'<span class="icon-trash" onclick="deleteHistoryRow(\''+jr.history.list[i].api_token+'\')"> </span>','','4');
+					addCell(row,'','','3');
+					addCell(row,'<span class="icon-download" onclick="goHistory(\''+jr.history.list[i].api_token+'\')"> </span>&nbsp;&nbsp;&nbsp;<span class="icon-download"> </span>&nbsp;&nbsp;&nbsp;<span class="icon-trash" onclick="deleteHistoryRow(\''+jr.history.list[i].api_token+'\')"> </span>','','4');
 				}	
 				showLoader('false');
 			})				
 		})	
 	}
-
+	function goHistory(history_token){
+		window.location = "https://cloud.wlanthermo.de/indexB.html?history_token=" + history_token;
+	}
 	function deleteHistoryRow(api_token){
 		loadJSON('settings', '', '3000', function (response){
 			jr = JSON.parse(response);
