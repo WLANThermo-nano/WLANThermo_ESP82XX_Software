@@ -1089,7 +1089,10 @@
 			margin:0.25rem;
 			position:relative;
 		}
-
+		.channel_conf p{
+			margin:0;
+			padding:0;
+		}
 		.chtitle {
 			font-size:1em;
 			text-align:left;
@@ -1151,7 +1154,7 @@
 			-o-transition:all .2s ease-out;
 			transition:all .2s ease-out;
 		}
-
+		
 		#layout {
 			position:relative;
 			left:0;
@@ -1890,6 +1893,13 @@
 .text-align-left {
 	text-align:left;
 }
+
+#menu p{
+	margin:-12px 10px -10px 0;
+	padding:0;
+	text-align:right;
+	font-size:0.75em;
+}
 		
     </style>
 </head>
@@ -1971,6 +1981,7 @@
 						F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" 
 				alt="WLANThermo" height="58" width="130"> 
 			</a>
+			<p id="menuVersion"></p>
             <ul class="pure-menu-list">
                 <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
 				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
@@ -3045,6 +3056,7 @@
 			}else{
 				byClass("notification")[0].style.display = "inline";
 			}
+			byId('menuVersion').innerHTML = jr.device.sw_version;
 			showLoader('false');
 		})
 	}
