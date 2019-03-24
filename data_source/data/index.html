@@ -4186,36 +4186,60 @@
 	
 	function networklist(){
 		loadJSON('networklist', '', '3000', function (response) {
-			jr = JSON.parse(response);
-			byId('networklist').innerHTML = '';
-			byId('networkconnect').innerHTML = '';
-			var table_networklist = byId('networklist');
-			var table_networkconnect = byId('networkconnect');
-			if (jr.Connect){			
-				byId('hr_wifi').style.display = "";
-				var row = table_networkconnect.insertRow(0);
-				addCell(row,getIcon('ok'),'row-Check','0');
-				addCell(row,jr.SSID,'row-SSID','1');
-				addCell(row,getRSSIIcon(jr.RSSI),'row-RSSI','2');
-				addCell(row,getWifiSecureIcon(jr.Enc),'row-Enc','3');
-				addCell(row,'','row-link','4');
-			}else{
-				byId('hr_wifi').style.display = "none";
+			try {
+				jr = JSON.parse(response);
+				jr.Scan.sort(function(a,b) {return b.RSSI - a.RSSI;});
+				jr.Scan = getUnique(jr.Scan,'SSID');				
+				byId('networklist').innerHTML = '';
+				byId('networkconnect').innerHTML = '';
+				var table_networklist = byId('networklist');
+				var table_networkconnect = byId('networkconnect');
+				if (jr.Connect){			
+					byId('hr_wifi').style.display = "";
+					var row = table_networkconnect.insertRow(0);
+					addCell(row,getIcon('ok'),'row-Check','0');
+					addCell(row,jr.SSID,'row-SSID','1');
+					addCell(row,getRSSIIcon(jr.RSSI),'row-RSSI','2');
+					addCell(row,getWifiSecureIcon(jr.Enc),'row-Enc','3');
+					addCell(row,'','row-link','4');
+				}else{
+					byId('hr_wifi').style.display = "none";
+				}
+				NetworkconnectRowClick();
+				for (var i = 0; i < jr.Scan.length; i++) {
+					var row = table_networklist.insertRow(-1);
+					addCell(row,'','row-Check','0');
+					addCell(row,jr.Scan[i].SSID,'row-SSID','1');
+					addCell(row,getRSSIIcon(jr.Scan[i].RSSI),'row-RSSI','2');
+					addCell(row,getWifiSecureIcon(jr.Scan[i].Enc),'row-Enc','3');
+					addCell(row,getIcon('circle-right'),'row-link','4');
+				}
+				
+				//console.log(jr.Scan);
+				byId('networkrefresh').innerHTML = '<h3><span class="icon-refresh" onclick="networkscan();"></span></h3>'
+				NetworklistRowClick();
+
+			} catch(e) {
+				// error in the above string (in this case, yes)!
+				//alert(e);
 			}
-			NetworkconnectRowClick();
-			for (var i = 0; i < jr.Scan.length; i++) {
-				var row = table_networklist.insertRow(-1);
-				addCell(row,'','row-Check','0');
-				addCell(row,jr.Scan[i].SSID,'row-SSID','1');
-				addCell(row,getRSSIIcon(jr.Scan[i].RSSI),'row-RSSI','2');
-				addCell(row,getWifiSecureIcon(jr.Scan[i].Enc),'row-Enc','3');
-				addCell(row,getIcon('circle-right'),'row-link','4');
-			}
-			byId('networkrefresh').innerHTML = '<h3><span class="icon-refresh" onclick="networkscan();"></span></h3>'
-			NetworklistRowClick();
 		})
 	}
 	
+	function getUnique(arr, comp) {
+
+	  const unique = arr
+		   .map(e => e[comp])
+
+		 // store the keys of the unique objects
+		.map((e, i, final) => final.indexOf(e) === i && i)
+
+		// eliminate the dead keys & store unique objects
+		.filter(e => arr[e]).map(e => arr[e]);
+
+	   return unique;
+	}
+
 	var ssidInput;
 	function NetworklistRowClick() {
 		var table = document.getElementById("networklist");
