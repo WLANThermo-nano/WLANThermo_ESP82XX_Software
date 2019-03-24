@@ -9,7 +9,8 @@
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
-    <title>WLANThermo - Nano</title>
+    <script src="language.js"></script>
+	<title>WLANThermo - Nano</title>
 	 <style>
 		@font-face {
 			font-family: 'nano';
@@ -2916,8 +2917,8 @@
 		<div id="channel_settings" class="content" style="display:none">
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex()"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span id="channel_settings_save">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span id="channel_settings_save"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>
 				</tr>
 			</table>	
 			<div class="float-left text-align-left"><h3 id="channel_settings_headtitle" class="headtitle">N.C.</h3></div>
@@ -2929,21 +2930,21 @@
 						<form>							
 							<div class="form-group">
 							  <input type="text" class="temp_input" id="channel_name" maxlength="10" required="required"/>
-							  <label class="control-label" for="input">Kanalname</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="channel_name">Kanalname</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
-							  <label class="control-label" for="input">Temp Max</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="temp_max">Temp Max</label><i class="bar"></i>
 							</div>							
 							<div class="form-group">
 							  <input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
-							  <label class="control-label" for="input">Temp Min</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="temp_min">Temp Min</label><i class="bar"></i>
 							</div>												
 							<div class="form-group">
 							  <select id="sensor">
 									<!-- Placeholder -->
 							  </select>
-							  <label class="control-label" for="select">Fühler</label><i class="bar"></i>
+							  <label class="control-label" for="select" data-tag="temp_sensor">Fühler</label><i class="bar"></i>
 							</div>	
 							<div class="form-group">
 							  <select id="color">
@@ -2958,10 +2959,10 @@
 								<option value="#5C7148">Kale</option>
 								<option value="#804000">Brown</option>
 							  </select>
-							  <label class="control-label" for="select">Farbe</label><i class="bar"></i>
+							  <label class="control-label" for="select" data-tag="color">Farbe</label><i class="bar"></i>
 							</div>	
-							<div class="checkbox"><label><input id="pushalarm" type="checkbox" checked="checked"/><i class="helper"></i>Push Alarm</label></div>
-							<div class="checkbox"><label><input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i>Summer Alarm</label></div>
+							<div class="checkbox"><label><input id="pushalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="push_alarm">Push Alarm</p></label></div>
+							<div class="checkbox"><label><input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="buzzer_alarm">Summer Alarm</p></label></div>
 						</form>
 					</div>
 				</div>
@@ -2972,11 +2973,11 @@
 			<!-- html for about-Site -->
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span onclick="setSystem();">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span onclick="setSystem();"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>
 				</tr>
 			</table>
-			<div class="float-left text-align-left"><h3 class="headtitle">System-Einstellungen</h3></div>
+			<div class="float-left text-align-left"><h3 class="headtitle" data-tag="system_settings">System-Einstellungen</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('System Einstellungen',help_settings)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>
 			<div class="pure-g">
@@ -2985,29 +2986,30 @@
 						<form>							
 							<div class="form-group">
 							  <input type="text" id="hostname" maxlength="13" required="required"/>
-							  <label class="control-label" for="input">Hostname</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="hostname">Hostname</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <input type="text" id="apname" maxlength="13" required="required"/>
-							  <label class="control-label" for="input">AP-Name</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="ap_name">AP-Name</label><i class="bar"></i>
 							</div>										
 							<div class="form-group">
 							  <select id="language">
-								<option value="de">Deutsch</option>
+								<option value="de" data-tag="german">Deutsch</option>
+								<option value="en" data-tag="english">Englisch</option>
 							  </select>
 							  <label class="control-label" for="select">Sprache</label><i class="bar"></i>
 							</div>							
 							<div class="form-group">
 							  <select id="unit">
-								<option value="C">Celsius</option>
-								<option value="F">Fahrenheit</option>
+								<option value="C" data-tag="celsius">Celsius</option>
+								<option value="F" data-tag="fahrenheit">Fahrenheit</option>
 							  </select>
-							  <label class="control-label" for="select">Einheit</label><i class="bar"></i>
+							  <label class="control-label" for="select" data-tag="unit">Einheit</label><i class="bar"></i>
 							</div>	
 							<div class="form-group">
-							  <select id="hwversion"></select><label class="control-label" for="select">Hardwareversion</label><i class="bar"></i>
+							  <select id="hwversion"></select><label class="control-label" for="select" data-tag="hw_version">Hardwareversion</label><i class="bar"></i>
 							</div>
-							<div class="checkbox"><label><input id="searchUpdate" type="checkbox"/><i class="helper"></i>Automatisch nach Updates suchen</label></div>								
+							<div class="checkbox"><label><input id="searchUpdate" type="checkbox"/><i class="helper"></i><p data-tag="update_search">Automatisch nach Updates suchen</p></label></div>								
 						</form>
 					</div>
 				</div>
@@ -3649,6 +3651,7 @@
 		loadJSON('settings', '', '5000', function (response) {
 			jr = JSON.parse(response);
 			byId('thermoname').innerHTML = jr.system.host;
+			loadTranslation(jr.system.language);
 			if(jr.system.getupdate == 'false'){
 				byClass("notification")[0].style.display = "none";
 			}else{
@@ -3769,13 +3772,14 @@
 			jr.system.language = byId('language').value;
 			jr.system.unit = byId('unit').value;		
 			jr.system.autoupd = byId('searchUpdate').checked;			
+			loadTranslation(jr.system.language);
 			var data = JSON.stringify(jr.system);
 			showLoader('true');
 			loadJSON('setsystem', data, '60000', function (response) {
 				byId('thermoname').innerHTML = jr.system.host;
 				showIndex();
 				showLoader('false');
-			})		
+			})			
 		})	
 	}
 	// -----------------------------------------------------------------------------------
@@ -4390,7 +4394,38 @@
 			showExtendedSettings();
 		}
 	}	
-	
+	// translation function 
+	// -----------------------------------------------------------------------------------	
+	function loadTranslation(language){
+		var translate = new Translate();
+		var currentLng = language;//'fr'
+		var attributeName = 'data-tag';
+		translate.init(attributeName, currentLng);
+		translate.process(); 
+	}
+	function Translate() { 
+		//initialization
+		this.init =  function(attribute, lng){
+			console.log("Sprache:" + lng);
+			this.attribute = attribute;
+			this.lng = lng;    
+		}
+		//translate 
+		this.process = function(){		
+			_self = this;
+			var LngObject = window[this.lng];
+			console.log(LngObject["name1"]);
+			var allDom = document.getElementsByTagName("*");
+			for(var i =0; i < allDom.length; i++){
+				var elem = allDom[i];
+				var key = elem.getAttribute(_self.attribute);    
+                if(key != null) {
+					console.log(key);
+					elem.innerHTML = LngObject[key]  ;
+				}
+			}
+		}    
+	}	
 	// -----------------------------------------------------------------------------------	
 	
 	function setHelpBox(title,v){	
