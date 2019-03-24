@@ -3077,50 +3077,6 @@
 					</div>
 				</div>
 			</div>		
-			<div id="thingsheader" style="display:none">
-				<div class="float-left text-align-left"><h3 class="headtitle">Thingspeak</h3></div>
-				<div class="float-right text-align-right"><span onclick="setHelpBox('Thingspeak',help_thingspeak)" class="icon-question_sign"></span></div>
-				<div style="clear:both;"></div>
-				<div class="pure-g">
-					<div class="pure-u-1-1 pure-u-lg-1-1">
-						<div class="1-box channel_conf">
-							<form>							
-							  <div class="checkbox">
-							    <label>
-								  <input id="TSon" type="checkbox" checked="checked"/><i class="helper"></i>Thingspeak aktivieren
-							    </label>
-							  </div>
-							  <div class="form-group">
-							    <input type="text" id="TSwrite" maxlength="26" required="required"/>
-							    <label class="control-label" for="input">Channel Write API Key</label><i class="bar"></i>
-							  </div>
-							  <div class="form-group">
-							    <input type="text" id="TShttp" maxlength="26" required="required"/>
-							    <label class="control-label" for="input">ThingHTTP API Key</label><i class="bar"></i>
-							  </div>
-							  <div class="form-group">
-							    <input type="text" id="TSchID" maxlength="26" required="required"/>
-							    <label class="control-label" for="input">Channel ID</label><i class="bar"></i>
-							  </div>
-							  <div class="form-group">
-							    <select id="TSinterval">
-								  <option value="30">30 Sekunden</option>
-								  <option value="60">1 Minute</option>
-								  <option value="120">2 Minuten</option>
-								  <option value="300">5 Minuten</option>
-							    </select>
-							    <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
-							  </div>
-							  <div class="checkbox">
-							    <label>
-								  <input id="TSshow8" type="checkbox" checked="checked"/><i class="helper"></i>Batterieladezustand anstatt CH8
-							    </label>
-							  </div>
-							</form>
-						</div>
-					</div>
-				</div>
-			</div>
 			<div id="mqttheader">
 				<div class="float-left text-align-left"><h3 class="headtitle">Private MQTT Client</h3></div>
 				<div class="float-right text-align-right"><span onclick="setHelpBox('Private MQTT Client',help_mqtt)" class="icon-question_sign"></span></div>
@@ -3342,7 +3298,6 @@
 	var getIcon = function( icon ) { return '<span class="icon-'  + icon + '"></span>'; };
 	byId('index').style.display = "inline";
 	// -----------------------------------------------------------------------------------
-	var help_thingspeak = '<p><span>Kopple deine WLANThermo Nano mit dem ThingSpeak-Dienst und erstelle dir individuelle Anwendungen zur Sensor-Datenanalyse. Ben&ouml;tigt Internetzugang.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/ThingSpeak" target="_blank"><span style="color:#3366ff">Wiki - ThingSpeak</span></a></p>';
 	var help_wifi = '<p><span>Verbinde dein WLANThermo mit deinem Heimnetzwerk und erweitere somit die Funktionsvielfalt deines WLANThermo.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/WLAN" target="_blank"><span style="color:#3366ff">Wiki - WLAN</span></a></p>';
 	var help_settings = '<p><span>Konfiguriere dein WLANThermo Nano mit Hilfe der Systemeinstellungen und mach es zu DEINEM WLANThermo.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/System-Einstellungen" target="_blank"><span style="color:#3366ff">Wiki - System</span></a></p>';
 	var help_pitmaster = '<p><span>Willst du deine Grilltemperaturen nicht nur beobachten, sondern auch regeln? Dann besorge dir die passende Pitmaster-Hardware und leg los. Ben&ouml;tigt Pitmaster-Hardware.</span></p><p><span>Siehe auch: </span><a href="https://github.com/WLANThermo-nano/WLANThermo_nano_Software/wiki/Pitmaster" target="_blank"><span style="color:#3366ff">Wiki - Pitmaster</span></a></p>';
@@ -3445,7 +3400,6 @@
 			byId('CLtoken').innerHTML = "https://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken;
 			byId("CLtoken").setAttribute("href", "https://cloud.wlanthermo.de/index.html?api_token=" + jr.iot.CLtoken);		
 			byId('thingspeak').style.display = "inline";
-			byId('thingsheader').style.display = "none";
 			byId('mqttheader').style.display = "inline";
 			showLoader('false');
 		})	
