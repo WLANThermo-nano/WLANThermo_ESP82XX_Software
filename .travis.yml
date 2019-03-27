@@ -71,10 +71,10 @@
             skip_cleanup: true
             prerelease: true
             api_key:
-                secure: gx0NhBm/7UXo7Zql79z5yV3IMRc7VyL8kYyS9RXPWTo9ZOh3ZOIU706yvw83oxc8L6jxmKX/u9kJ102jNDM8Tg/o4qfdz4BBkyWBzamHyqjNX851WsjcIpPtFcyZc1bXRn8zPjXrtmNtgnUsvRVJjtSyyTeFVcqTdC243rKXwr7b8jy9YX4CuJnCy+UgZ1swHZRo1OyEWEYJe93tEBTQGN6WfrogBfQDPB8eLihheS6KUVGfBRMds7puCUMubBYlX/4tuyyB85I038ZGbqHEEGFvFa2y+zlOA5NS4FEhG+NV81kBIuF1Hj+KCSInxmjgWijVOtbsgZnIeFC+hKR5f8etvWStdtNAaxHpWu8qRS5mB5eVNzpvh1lgY3DxMLPHjdG20XB/inOIS7X0DO0rhHolGNgfmHOZyNf6IFy8VEHaz6NBJ7uNyfAVs536Qssk97vUXvNC/dbvxXogGUDeKnkQ/IgTT4Re0o4LrfGMs0WyXP+GlwCCiCMCArGHle/3x9CYSOgUgZ6F9mcogOJbv6rVZ5wChV0EbjoZJpjowUTXe5EHSE2tIllkybP0lEYZv745D+WlCGxjwczRPFoRL3BwKlFZ4q9a8mkmSJcdhZt0lQk0CouLH/qs/zFtBUuO+LgDf/pD7nbZDqBQyv9CNb+4f3oF5gJ2eIe1DYnk+4U=
+                secure: tZAdW+bg9hEt9K476ADAb5IQTYQUoUNmsrdcEOsHmnrX2iDGcaFoeZUJsEVqav2iMFtSl8EOO6wnsQTZ2AWw998cZU7FsLTnOWs357IUcJGg7W82WCfMdRmdSWwp2I/PncbK7Yjjmcz62LKQ1QPBrxM8IkPvIbi9fcPkaxNHFWcC2Fy91szUqwAXxr32TGd3zHRcnWedEMvHmv9O+8Z+miMwYCCYb22WP5i3JKekOKeXLfcuh4bJIa6wdQ5HBqasou8ufHW2ovRvH0Hxzvom5EwEu+VENH/X98sZhJir1n4D0LJgiQg8gG0YdZd12kwXchiOeYK77Yc2mFXBFRqCRMvD0+GUNtTi6O1zArY1tfw1GMQj3fOPK4es4CBJTZ1YuMEZPudhum0976exyjU/aEd1nBkvjn5Lt83PkclKif8FsawIQweAqeYO4RJzkF/9cZux75bwAmqf70VVBobLgMC4x+yO3OhHNNZ6iCrEb/sMOadvTBGB9hTocFqbVnWPakgcP49gCW3ynq1j0l3MMhLriZWzOJs6d0Wk3Qo/FkZ8v+iG9ZS8R/5j+2K+XSxJNc0Mu8SUZYDTr3VxFFW9yDeTgPzsvkxhqgn4lrHiGqc+4bAvaDnIcwUTpLkjwuc+tkoXMf26rZ0w/cJDTu4uXGrsnf9WwTTtm6Nu+8VUmWc=
             on: 
                 all_branches: true
-                repo: becothal/WLANThermo_nano_Software
+                repo: WLANThermo-nano/WLANThermo_nano_Software
 
 
 
@@ -100,7 +100,7 @@
             skip_cleanup: true
             prerelease: false
             api_key:
-                secure: gx0NhBm/7UXo7Zql79z5yV3IMRc7VyL8kYyS9RXPWTo9ZOh3ZOIU706yvw83oxc8L6jxmKX/u9kJ102jNDM8Tg/o4qfdz4BBkyWBzamHyqjNX851WsjcIpPtFcyZc1bXRn8zPjXrtmNtgnUsvRVJjtSyyTeFVcqTdC243rKXwr7b8jy9YX4CuJnCy+UgZ1swHZRo1OyEWEYJe93tEBTQGN6WfrogBfQDPB8eLihheS6KUVGfBRMds7puCUMubBYlX/4tuyyB85I038ZGbqHEEGFvFa2y+zlOA5NS4FEhG+NV81kBIuF1Hj+KCSInxmjgWijVOtbsgZnIeFC+hKR5f8etvWStdtNAaxHpWu8qRS5mB5eVNzpvh1lgY3DxMLPHjdG20XB/inOIS7X0DO0rhHolGNgfmHOZyNf6IFy8VEHaz6NBJ7uNyfAVs536Qssk97vUXvNC/dbvxXogGUDeKnkQ/IgTT4Re0o4LrfGMs0WyXP+GlwCCiCMCArGHle/3x9CYSOgUgZ6F9mcogOJbv6rVZ5wChV0EbjoZJpjowUTXe5EHSE2tIllkybP0lEYZv745D+WlCGxjwczRPFoRL3BwKlFZ4q9a8mkmSJcdhZt0lQk0CouLH/qs/zFtBUuO+LgDf/pD7nbZDqBQyv9CNb+4f3oF5gJ2eIe1DYnk+4U=
+                secure: tZAdW+bg9hEt9K476ADAb5IQTYQUoUNmsrdcEOsHmnrX2iDGcaFoeZUJsEVqav2iMFtSl8EOO6wnsQTZ2AWw998cZU7FsLTnOWs357IUcJGg7W82WCfMdRmdSWwp2I/PncbK7Yjjmcz62LKQ1QPBrxM8IkPvIbi9fcPkaxNHFWcC2Fy91szUqwAXxr32TGd3zHRcnWedEMvHmv9O+8Z+miMwYCCYb22WP5i3JKekOKeXLfcuh4bJIa6wdQ5HBqasou8ufHW2ovRvH0Hxzvom5EwEu+VENH/X98sZhJir1n4D0LJgiQg8gG0YdZd12kwXchiOeYK77Yc2mFXBFRqCRMvD0+GUNtTi6O1zArY1tfw1GMQj3fOPK4es4CBJTZ1YuMEZPudhum0976exyjU/aEd1nBkvjn5Lt83PkclKif8FsawIQweAqeYO4RJzkF/9cZux75bwAmqf70VVBobLgMC4x+yO3OhHNNZ6iCrEb/sMOadvTBGB9hTocFqbVnWPakgcP49gCW3ynq1j0l3MMhLriZWzOJs6d0Wk3Qo/FkZ8v+iG9ZS8R/5j+2K+XSxJNc0Mu8SUZYDTr3VxFFW9yDeTgPzsvkxhqgn4lrHiGqc+4bAvaDnIcwUTpLkjwuc+tkoXMf26rZ0w/cJDTu4uXGrsnf9WwTTtm6Nu+8VUmWc=
             on: 
                 all_branches: true
-                repo: becothal/WLANThermo_nano_Software
+                repo: WLANThermo-nano/WLANThermo_nano_Software
