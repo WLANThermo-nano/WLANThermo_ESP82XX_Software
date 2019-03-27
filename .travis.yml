@@ -40,10 +40,10 @@
               - pip install -U platformio
               - platformio update 
 
-          before_script:
-              - gzip ./data_source/data/index.html
-              - mv ./data_source/data/index.html.gz ./data/index.html.gz
-              - mv ./data_source/data/nano.ttf ./data/nano.ttf 
+#          before_script:
+#              - gzip ./data_source/data/index.html
+#              - mv ./data_source/data/index.html.gz ./data/index.html.gz
+#              - mv ./data_source/data/nano.ttf ./data/nano.ttf 
 
           script:
               - platformio run && platformio run --target buildfs 
@@ -56,10 +56,10 @@
               - pip install -U platformio
               - platformio update
 
-          before_script:
-              - gzip ./data_source/data/index.html
-              - mv ./data_source/data/index.html.gz ./data/index.html.gz
-              - mv ./data_source/data/nano.ttf ./data/nano.ttf 
+#          before_script:
+#              - gzip ./data_source/data/index.html
+#              - mv ./data_source/data/index.html.gz ./data/index.html.gz
+#              - mv ./data_source/data/nano.ttf ./data/nano.ttf 
 
           script:
               - platformio run && platformio run --target buildfs 
@@ -85,10 +85,10 @@
               - pip install -U platformio
               - platformio update
 
-          before_script:
-              - gzip ./data_source/data/index.html
-              - mv ./data_source/data/index.html.gz ./data/index.html.gz
-              - mv ./data_source/data/nano.ttf ./data/nano.ttf 
+ #         before_script:
+ #             - gzip ./data_source/data/index.html
+ #             - mv ./data_source/data/index.html.gz ./data/index.html.gz
+ #             - mv ./data_source/data/nano.ttf ./data/nano.ttf 
 
           script:
               - platformio run && platformio run --target buildfs 
