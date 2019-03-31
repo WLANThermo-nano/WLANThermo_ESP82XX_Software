@@ -2662,8 +2662,8 @@
 				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link" data-tag="menuSystem">System</a></li>
 				<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link" data-tag="menuPitmaster">Pitmaster</a></li>
 				<li id="menuIOT" class="pure-menu-item"><a href="javascript:showIOT()" class="pure-menu-link" data-tag="menuIOT">IoT</a></li>
-				<li id="menuHistory" class="pure-menu-item"><a href="javascript:showHistory()" class="pure-menu-link" data-tag="menuHistory">History</a></li>
-				<li id="menuNotification" class="pure-menu-item"><a href="javascript:showPushNotification()" class="pure-menu-link" data-tag="menuNotification">Push Notification</a></li>
+				<li id="menuHistory" class="pure-menu-item"><a href="javascript:showHistory()" class="pure-menu-link" data-tag="menuHistory">Historie</a></li>
+				<li id="menuNotification" class="pure-menu-item"><a href="javascript:showPushNotification()" class="pure-menu-link" data-tag="menuNotification">Benachrichtigung</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link" data-tag="menuAbout">Über</a></li>
             </ul>
         </div>
@@ -2740,7 +2740,7 @@
 				  <td><span onclick="setWLAN(document.getElementsByName('ssidInput')[0].value, document.getElementsByName('ssidPasswordInput')[0].value)"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>	  
 				</tr>
 			</table>
-			<h3 class="headtitle" data-tag="wlanConnect">Netzwerk Verbinden</h3>
+			<h3 class="headtitle" data-tag="wlanConnect">Netzwerk verbinden</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
@@ -2823,7 +2823,7 @@
 							<form>
 								<div class="form-group">
 								  <input type="text" id="pid_name" maxlength="12" required="required"/>
-								  <label class="control-label" for="input"><span data-tag="pitProfileName">Profil Name</span></label><i class="bar"></i>
+								  <label class="control-label" for="input"><span data-tag="pitProfileName">Profil-Name</span></label><i class="bar"></i>
 								</div>
 								<div class="form-group">
 									<select id="pitmaster_profile_aktor"></select>
@@ -2901,7 +2901,7 @@
 				</div>
 			</div>
 			<div id="advanced_settings_show">
-				<h3 class="headtitle" data-tag="pitAdvancesTitle">Advanced</h3>
+				<h3 class="headtitle" data-tag="pitAdvancesTitle">Spezialfunktionen</h3>
 				<div class="pure-g">
 					<div class="pure-u-1-1 pure-u-lg-1-1">
 						<div class="1-box channel_conf">
@@ -2934,17 +2934,17 @@
 							</div>
 							<div class="form-group">
 							  <input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
-							  <label class="control-label" for="input" data-tag="temp_max">Temp Max</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="temp_max">Temperatur-Obergrenze</label><i class="bar"></i>
 							</div>							
 							<div class="form-group">
 							  <input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
-							  <label class="control-label" for="input" data-tag="temp_min">Temp Min</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="temp_min">Temperatur-Untergrenze</label><i class="bar"></i>
 							</div>												
 							<div class="form-group">
 							  <select id="sensor">
 									<!-- Placeholder -->
 							  </select>
-							  <label class="control-label" for="select" data-tag="temp_sensor">Fühler</label><i class="bar"></i>
+							  <label class="control-label" for="select" data-tag="temp_sensor">Fühlertyp</label><i class="bar"></i>
 							</div>	
 							<div class="form-group">
 							  <select id="color">
@@ -2961,8 +2961,8 @@
 							  </select>
 							  <label class="control-label" for="select" data-tag="color">Farbe</label><i class="bar"></i>
 							</div>	
-							<div class="checkbox"><label><input id="pushalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="push_alarm">Push Alarm</p></label></div>
-							<div class="checkbox"><label><input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="buzzer_alarm">Summer Alarm</p></label></div>
+							<div class="checkbox"><label><input id="pushalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="push_alarm">Push-Alarm</p></label></div>
+							<div class="checkbox"><label><input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="buzzer_alarm">Piepser-Alarm</p></label></div>
 						</form>
 					</div>
 				</div>
@@ -2990,14 +2990,14 @@
 							</div>
 							<div class="form-group">
 							  <input type="text" id="apname" maxlength="13" required="required"/>
-							  <label class="control-label" for="input" data-tag="ap_name">AP-Name</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="ap_name">APN</label><i class="bar"></i>
 							</div>										
 							<div class="form-group">
 							  <select id="language" onchange="loadTranslation(this.value)">
 								<option value="de" data-tag="german">Deutsch</option>
 								<option value="en" data-tag="english">Englisch</option>
 							  </select>
-							  <label class="control-label" for="select">Sprache</label><i class="bar"></i>
+							  <label class="control-label" for="select" data-tag="language">Sprache</label><i class="bar"></i>
 							</div>							
 							<div class="form-group">
 							  <select id="unit">
@@ -3049,7 +3049,7 @@
 				  <td><span onclick="setThingspeak();"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>	
 				</tr>
 			</table>
-			<div class="float-left text-align-left"><h3 class="headtitle" data-tag="cloudTitle">Nano Cloud</h3></div>
+			<div class="float-left text-align-left"><h3 class="headtitle" data-tag="cloudTitle">Nano-Cloud</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('Nano Cloud',help_cloud)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>
 			<div class="pure-g">
@@ -3058,7 +3058,7 @@
 						<form>
 							<div class="checkbox">
 							  <label>
-								<input id="CLon" type="checkbox" checked="checked"/><i class="helper"></i><span data-tag="cloudActivate">Nano Cloud aktivieren</span>
+								<input id="CLon" type="checkbox" checked="checked"/><i class="helper"></i><span data-tag="cloudActivate">Nano-Cloud aktivieren</span>
 							  </label>
 							</div>
 							<div class="form-group">
@@ -3069,7 +3069,7 @@
 								<option value="120" data-tag="twoMinutes">2 Minuten</option>
 								<option value="300" data-tag="fiveMinutes">5 Minuten</option>
 							  </select>
-							  <label class="control-label" for="select"><span data-tag="sendInterval">Sendeintervall</span></label><i class="bar"></i>
+							  <label class="control-label" for="select"><span data-tag="sendInterval">Sendeintervall (in Sek.)</span></label><i class="bar"></i>
 							</div>	
 							<div class="form-group">
 							  <label for="input"><a id="CLtoken" class="link" href="#"></a></label><i class="bar"></i>
@@ -3080,7 +3080,7 @@
 				</div>
 			</div>		
 			<div id="mqttheader">
-				<div class="float-left text-align-left"><h3 class="headtitle" data-tag="mqttTitle">Private MQTT Client</h3></div>
+				<div class="float-left text-align-left"><h3 class="headtitle" data-tag="mqttTitle">Privater MQTT Client</h3></div>
 				<div class="float-right text-align-right"><span onclick="setHelpBox('Private MQTT Client',help_mqtt)" class="icon-question_sign"></span></div>
 				<div style="clear:both;"></div>
 				<div class="pure-g">
@@ -3089,7 +3089,7 @@
 							<form>							
 							  <div class="checkbox">
 							    <label>
-								  <input id="PMQon" type="checkbox" checked="checked"/><i class="helper"></i><span data-tag="mqttActivate">Private MQTT aktivieren</span>
+								  <input id="PMQon" type="checkbox" checked="checked"/><i class="helper"></i><span data-tag="mqttActivate">MQTT Client aktivieren</span>
 							    </label>
 							  </div>
 							  <table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
@@ -3111,13 +3111,13 @@
 								    <td>
 									  <div class="form-group">
 										  <input type="text" id="PMQuser" maxlength="26" required="required"/>
-										  <label class="control-label" for="input"><span data-tag="mqttUser">MQTT User</span></label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="mqttUser">MQTT Benutzer</span></label><i class="bar"></i>
 									  </div>
 								    </td>
 								    <td>
 									  <div class="form-group">
 										  <input type="text" id="PMQpass" maxlength="26" required="required"/>
-										  <label class="control-label" for="input"><span data-tag="mqttPwd">MQTT Password</span></label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="mqttPwd">MQTT Passwort</span></label><i class="bar"></i>
 									  </div>
 								    </td>
 								  </tr>
@@ -3171,7 +3171,7 @@
 						<form>	
 							<div class="checkbox">
 							  <label>
-								<input id="TGon" type="checkbox" checked="checked"/><i class="helper"></i><span data-tag="notificationActivate">Push-Dienst aktivieren</span>
+								<input id="TGon" type="checkbox" checked="checked"/><i class="helper"></i><span data-tag="notificationActivate">Push-Benachrichtung aktivieren</span>
 							  </label>
 							</div>								
 							<div class="form-group">
@@ -3251,11 +3251,11 @@
 				  <td></td>
 				</tr>
 			</table>
-			<h3 class="headtitle" data-tag="historyTitle">History</h3>
+			<h3 class="headtitle" data-tag="historyTitle">Historie</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1  pure-u-md-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
-						<p class="pure-button pure-button-primary" onclick="saveChartToHistory();" data-tag="btnSaveChart">Chart Speichern</p>
+						<p class="pure-button pure-button-primary" onclick="saveChartToHistory();" data-tag="btnSaveChart">Chart speichern</p>
 						<table class="historyTable" width="100%">
 							  <thead>
 								<tr>

@@ -66,7 +66,8 @@
 #define TEXTADD "Add"
 
 const char *public_list[]={
-"/nano.ttf"
+"/nano.ttf",
+"/language.js"
 };
 
 void printRequest(uint8_t* datas) {

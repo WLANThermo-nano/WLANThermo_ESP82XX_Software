@@ -1,26 +1,27 @@
 	var en = {
 				// Reiter System-Einstellungen
-				system_settings:"System-Einstellungen", // System settings
+				system_settings:"System settings", 
 				unit:"Unit",
 				german:"German",
 				english:"English",
 				fahrenheit:"Fahrenheit",
 				celsius:"Celsius",
+				language:"Language",
 				hostname:"Hostname",
-				ap_name:"AP-Name",						// APN
-				hw_version:"Hardwareversion",  			// Hardware version
-				update_search:"Automatisch nach Updates suchen",  // Automatically check for updates
+				ap_name:"APN",
+				hw_version:"Hardware version",
+				update_search:"Automatically check for updates",
 				// Buttons
 				back:"Back",
 				save:"Save",
 				//Kanaleinstellungen
-				channel_name:"Kanalname",		// Channel name
-				temp_max:"Temp Max",			// Upper temperature limit
-				temp_min:"Temp Min",			// Lower temperature limit
-				temp_sensor:"Sensor",			// Probe type
+				channel_name:"Channel name",
+				temp_max:"Upper temperature limit",
+				temp_min:"Lower temperature limit",
+				temp_sensor:"Probe type",
 				color:"Color",
-				push_alarm:"Push Alarm",  		// Push alarm
-				buzzer_alarm:"Summer Alarm",  	// Buzzer alarm
+				push_alarm:"Push alarm",
+				buzzer_alarm:"Buzzer alarm",
 				//Menü
 				menuHome:"Home",
 				menuWlan:"WLAN",
@@ -38,55 +39,55 @@
 				//Menü About
 				aboutTitle:"WLANThermo Team",
 				forumTitle:"WLANThermo Forum",
-				forumUrl:"Wir freuen uns über deinen Besuch im Forum!",  // Visit us in our forum!
+				forumUrl:"Visit us in our forum!",
 				//Menü Notification
-				notificationTitle:"Benachrichtungsdienst",  // Notification service
-				notificationActivate:"Push-Dienst aktivieren",	// Activate push notification
+				notificationTitle:"Notification service",
+				notificationActivate:"Activate push notification",
 				notificationToken:"API Token/Key",
 				notificationKey:"Chat ID / User Key",
-				notificationService:"Dienst",				// Service
+				notificationService:"Service",
 				repeadOnce:"1x",
 				repeadThreeTimes:"3x",
 				repeadFiveTimes:"5x",
 				repeadTenTimes:"10x",
-				notificationRepead:"Wiederholungen",		// Repeats
-				notificationSendMessage:"Testnachricht senden",		// Send a test message
+				notificationRepead:"Repeats",
+				notificationSendMessage:"Send a test message",
 				//Cloud
 				cloudTitle:"Nano Cloud",
-				cloudActivate:"Nano Cloud aktivieren",  // Activate Nano Cloud
-				tenSeconds:"10 Sekunden",			// 10 seconds
-				fifteenSeconds:"15 Sekunden",		// 15 seconds
-				thirtySeconds:"30 Sekunden",		// 30 seconds
-				oneMinutes:"1 Minute",				// 1 minutes
-				twoMinutes:"2 Minuten",				// 2 minutes
-				fiveMinutes:"5 Minuten",			// 5 minutes  (wollen wir hier nur Zahlen machen und alles in Sekunden und dann Einheit zum Textfeld?)
-				sendInterval:"Sendeintervall",   	// Send interval (in sec)
-				cloudBtnToken:"Token generieren",	// Generate token
+				cloudActivate:"Activate Nano Cloud",
+				tenSeconds:"10 seconds",
+				fifteenSeconds:"15 seconds",
+				thirtySeconds:"30 seconds", 
+				oneMinutes:"1 minutes",
+				twoMinutes:"2 minutes",
+				fiveMinutes:"5 minutes",			//   (wollen wir hier nur Zahlen machen und alles in Sekunden und dann Einheit zum Textfeld?)
+				sendInterval:"Send interval (in sec)", 
+				cloudBtnToken:"Generate token",
 				mqttTitle:"Private MQTT Client",		
-				mqttActivate:"Private MQTT aktivieren",  // Activate MQTT Client
+				mqttActivate:"Activate MQTT Client",
 				mqttHost:"MQTT Host",
 				mqttPort:"MQTT Port",
 				mqttUser:"MQTT User",
 				mqttPwd:"MQTT Password",
 				mqttQos:"QoS",
 				// Menü WLAN
-				wlanTitle:"WLAN-Einstellungen",		// WLAN settings
-				wlanActivate:"WLAN aktivieren",		// Activate WLAN
-				wlanNetwork:"Netzwerk wählen...",	// Select network
-				wlanClear:"Netzwerkverbindungsdaten löschen",  // Delete stored network data
-				wlanConnect:"Netzwerk Verbinden",	// Connect network
+				wlanTitle:"WLAN settings",
+				wlanActivate:"Activate WLAN",
+				wlanNetwork:"Select network...",
+				wlanClear:"Delete stored network data",
+				wlanConnect:"Connect network",
 				wlanSSID:"SSID",
-				wlanPwd:"Passwort",		// Password
+				wlanPwd:"Password",
 				// Menü Pitmaster
-				pitTitle:"Pitmaster-Einstellungen",  // Pitmaster settings
+				pitTitle:"Pitmaster settings",
 				pitPitmaster:"Pitmaster",
-				pitProfile:"Profil",					// Profile
-				pitChannel:"Kanal",						// Channel
-				pitTemp:"Solltemperatur",				// Set temperature
-				pitValue:"Pitmaster-Wert (%)",			// Pitmaster value (%)
-				pitProfileName:"Profil Name",			// Profile name
-				pitAktorTitle:"Aktorik",				// Actuator	
-				pitAktor:"Aktor",						// Actuator
+				pitProfile:"Profile",
+				pitChannel:"Channel",
+				pitTemp:"Set temperature",
+				pitValue:"Pitmaster value (%)",
+				pitProfileName:"Profile name",
+				pitAktorTitle:"Actuator",	
+				pitAktor:"Actuator",
 				pitDCmin:"DCmin [0-100%]",
 				pitDCmax:"DCmax [0-100%]",
 				pidTitle:"PID",
@@ -94,9 +95,9 @@
 				pidKi:"Ki",
 				pidKd:"Kd",
 				pidJump:"Jump Power [10-100%]",
-				pidAutotune:"Autotune",					// Auto tune
+				pidAutotune:"Auto tune",
 				pitAdvancesTitle:"Advanced",
-				pitLid:"Deckelüberwachung"				// Lid monitoring
+				pitLid:"Lid monitoring"
 			};
 	var de = {
 				// Reiter System-Einstellungen
@@ -106,9 +107,9 @@
 				english:"Englisch",
 				fahrenheit:"Fahrenheit",
 				celsius:"Celsius",
-				hostname:"Hostname",			// warum 2x?
+				language:"Sprache",
 				hostname:"Hostname",
-				ap_name:"AP-Name",				// APN
+				ap_name:"APN",
 				hw_version:"Hardwareversion",
 				update_search:"Automatisch nach Updates suchen",
 				// Buttons
@@ -116,24 +117,24 @@
 				save:"Speichern",
 				//Kanaleinstellungen
 				channel_name:"Kanalname",
-				temp_max:"Temp Max",			// Temperatur-Obergrenze
-				temp_min:"Temp Min",			// Temperatur-Untergrenze
-				temp_sensor:"Fühler",			// Fühlertyp
+				temp_max:"Temperatur-Obergrenze",
+				temp_min:"Temperatur-Untergrenze",
+				temp_sensor:"Fühlertyp",
 				color:"Farbe",
-				push_alarm:"Push Alarm",		// Push-Alarm
-				buzzer_alarm:"Summer Alarm",	// Piepser-Alarm
+				push_alarm:"Push-Alarm",
+				buzzer_alarm:"Piepser-Alarm",
 				//Menü
 				menuHome:"Home",
 				menuWlan:"WLAN",
 				menuSystem:"System",
 				menuPitmaster:"Pitmaster",
 				menuIOT:"IoT",
-				menuHistory:"History",					// Historie   was denkst du?
-				menuNotification:"Push Notification",	// Benachrichtigung
+				menuHistory:"Historie",
+				menuNotification:"Benachrichtigung",
 				menuAbout:"Über",
 				//History
-				btnSaveChart:"Chart Speichern",			// Chart speichern
-				historyTitle:"History",					// Historie
+				btnSaveChart:"Chart speichern",
+				historyTitle:"Historie",
 				date:"Datum",
 				historyTableName:"Name",
 				//Menü About
@@ -142,7 +143,7 @@
 				forumUrl:"Wir freuen uns über deinen Besuch im Forum!",
 				//Menü Notification
 				notificationTitle:"Benachrichtungsdienst",
-				notificationActivate:"Push-Dienst aktivieren",  // Push-Benachrichtung aktivieren
+				notificationActivate:"Push-Benachrichtung aktivieren",
 				notificationToken:"API Token/Key",
 				notificationKey:"Chat ID / User Key",
 				notificationService:"Dienst",				
@@ -153,29 +154,29 @@
 				notificationRepead:"Wiederholungen",
 				notificationSendMessage:"Testnachricht senden",
 				//Cloud
-				cloudTitle:"Nano Cloud",				// Nano-Cloud
-				cloudActivate:"Nano Cloud aktivieren",	// Nano-Cloud aktivieren
+				cloudTitle:"Nano-Cloud",
+				cloudActivate:"Nano-Cloud aktivieren",
 				tenSeconds:"10 Sekunden",				// siehe Hinweis EN
 				fifteenSeconds:"15 Sekunden",			
 				thirtySeconds:"30 Sekunden",
 				oneMinutes:"1 Minute",
 				twoMinutes:"2 Minuten",
 				fiveMinutes:"5 Minuten",
-				sendInterval:"Sendeintervall",			// Sendeintervall (in Sek.)
+				sendInterval:"Sendeintervall (in Sek.)",
 				cloudBtnToken:"Token generieren",
-				mqttTitle:"Private MQTT Client",		// Privater MQTT Client
-				mqttActivate:"Private MQTT aktivieren", // MQTT Client aktivieren
+				mqttTitle:"Privater MQTT Client",
+				mqttActivate:"MQTT Client aktivieren",
 				mqttHost:"MQTT Host",
 				mqttPort:"MQTT Port",
-				mqttUser:"MQTT User",					// MQTT Benutzer
-				mqttPwd:"MQTT Password",				// MQTT Passwort
+				mqttUser:"MQTT Benutzer",
+				mqttPwd:"MQTT Passwort",
 				mqttQos:"QoS",
 				// Menü WLAN
 				wlanTitle:"WLAN-Einstellungen",
 				wlanActivate:"WLAN aktivieren",
 				wlanNetwork:"Netzwerk wählen...",
 				wlanClear:"Netzwerkverbindungsdaten löschen",
-				wlanConnect:"Netzwerk Verbinden",			// Netzwerk verbinden
+				wlanConnect:"Netzwerk verbinden",
 				wlanSSID:"SSID",
 				wlanPwd:"Passwort",
 				// Menü Pitmaster
@@ -185,7 +186,7 @@
 				pitChannel:"Kanal",
 				pitTemp:"Solltemperatur",
 				pitValue:"Pitmaster-Wert (%)",
-				pitProfileName:"Profil Name",			// Profil-Name
+				pitProfileName:"Profil-Name",
 				pitAktorTitle:"Aktorik",
 				pitAktor:"Aktor",
 				pitDCmin:"DCmin [0-100%]",
@@ -196,6 +197,6 @@
 				pidKd:"Kd",
 				pidJump:"Jump Power [10-100%]",					
 				pidAutotune:"Autotune",
-				pitAdvancesTitle:"Advanced",			// Spezialfunktionen		
+				pitAdvancesTitle:"Spezialfunktionen",		
 				pitLid:"Deckelüberwachung"					
 			};
