@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,9 @@
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
-    <title>WLANThermo - Nano</title>
+    <script src="language.js"></script>
+	<script type="text/javascript">!function(e){function t(e,t,o){var n=this;o=o||{},o.open=n.getElm(o.open),o.openEvent=o.openEvent||"click",o.style=Object(o.style),o.style.display=o.style.display||"block",o.closeOnBlur=o.closeOnBlur||!1,o.template=o.template||'<div data-col="{color}" style="background-color: {color}"></div>',n.elm=n.getElm(e),n.cbs=[],n.isOpen=!0,n.colors=t,n.options=o,n.render(),o.open&&o.open.addEventListener(o.openEvent,function(e){n.isOpen?n.close():n.open()}),n.elm.addEventListener("click",function(e){var t=e.target.getAttribute("data-col");t&&(n.set(t),n.close())}),o.closeOnBlur&&window.addEventListener("click",function(e){e.target!=o.open&&e.target!=n.elm&&n.isOpen&&n.close()}),o.autoclose!==!1&&n.close()}t.prototype.getElm=function(e){return"string"==typeof e?document.querySelector(e):e},t.prototype.render=function(){var e=this,t="";e.colors.forEach(function(o){t+=e.options.template.replace(/\{color\}/g,o)}),e.elm.innerHTML=t},t.prototype.close=function(){this.elm.style.display="none",this.isOpen=!1},t.prototype.open=function(){this.elm.style.display=this.options.style.display,this.isOpen=!0},t.prototype.colorChosen=function(e){this.cbs.push(e)},t.prototype.set=function(e,t){var o=this;o.color=e,t!==!1&&o.cbs.forEach(function(t){t.call(o,e)})},e.Piklor=t}(this);</script>
+	<title>WLANThermo - Nano</title>
 	 <style>
 		@font-face {
 			font-family: 'nano';
@@ -37,6 +39,10 @@
 
 		.icon-uniF2C7:before {
 			content: "\f2c7";
+		}
+		
+		.icon-brush:before {
+			content: "\f1fc";
 		}
 
 		.icon-uniF2C8:before {
@@ -2574,6 +2580,44 @@
 			text-align: right;
 			font-size: 0.75em;
 		}
+		<!-- color-picker -->
+		.btn-default {
+			border-radius: 0;
+			background: #fff !important;
+		}		
+
+		.picker-wrapper {
+		  transition: background-color 0.5s ease;
+		}
+
+		/* picker */
+		.color-picker {
+			background: #4A4A4A;
+			padding: 10px;
+			border: 1px solid rgba(203, 203, 203, 0.6);
+			border-radius: 2px;
+		}
+
+		.color-picker > div {
+			width: 40px;
+			display: inline-block;
+			height: 40px;
+			margin: 5px;
+			border-radius: 100%;
+			opacity: 0.7;
+		}
+
+		.picker-wrapper {
+			padding: 0px;
+		}
+
+		.color-picker > div:hover {
+			opacity: 1;
+		}
+		.color_border {
+			border-left: 10px solid #FFF;
+		}
+		<!-- ---- -->
     </style>
 </head>
 <body>
@@ -2654,16 +2698,16 @@
 						F/suI6U0ttNv4/9i06r8Fg9ccQAAAABJRU5ErkJggg==" 
 				alt="WLANThermo" height="58" width="130"> 
 			</a>
-			<p id="menuVersion"></p>
+			<p id="menuVersion">version</p>
             <ul class="pure-menu-list">
-                <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
-				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link">WLAN</a></li>
-				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link">System</a></li>
-				<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link">Pitmaster</a></li>
-				<li id="menuIOT" class="pure-menu-item"><a href="javascript:showIOT()" class="pure-menu-link">IoT</a></li>
-				<li id="menuHistory" class="pure-menu-item"><a href="javascript:showHistory()" class="pure-menu-link">History</a></li>
-				<li id="menuNotification" class="pure-menu-item"><a href="javascript:showPushNotification()" class="pure-menu-link">Push Notification</a></li>
-                <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
+                <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link" data-tag="menuHome">Home</a></li>
+				<li id="menuWlan" class="pure-menu-item"><a href="javascript:showWLAN()" class="pure-menu-link" data-tag="menuWlan">WLAN</a></li>
+				<li id="menuSystem" class="pure-menu-item"><a href="javascript:showSystem()" class="pure-menu-link" data-tag="menuSystem">System</a></li>
+				<li id="menuPitmaster" class="pure-menu-item"><a href="javascript:showPitmaster()" class="pure-menu-link" data-tag="menuPitmaster">Pitmaster</a></li>
+				<li id="menuIOT" class="pure-menu-item"><a href="javascript:showIOT()" class="pure-menu-link" data-tag="menuIOT">IoT</a></li>
+				<li id="menuHistory" class="pure-menu-item"><a href="javascript:showHistory()" class="pure-menu-link" data-tag="menuHistory">Historie</a></li>
+				<li id="menuNotification" class="pure-menu-item"><a href="javascript:showPushNotification()" class="pure-menu-link" data-tag="menuNotification">Benachrichtigung</a></li>
+                <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link" data-tag="menuAbout">Über</a></li>
             </ul>
         </div>
     </div>
@@ -2673,9 +2717,8 @@
             <h1>WLANThermo - Nano</h1>
         </div>
 		<!-- ################################################### -->
-       
         <div id="test" class="channel_template" style="display:none">
-			<div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4" onclick="showSetChannel(this.dataset.channel)">
+			<div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4" onclick="showSetChannel(this)">
 				<div class="1-box channel">
 					<div class="chtitle"></div>
 					<div class="chnumber"></div>
@@ -2696,11 +2739,11 @@
 		<div id="wlan_config" class="content" style="display:none">
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex()"><span class="icon-arrow_left"></span>Zurück</span></td>
+				  <td><span onclick="showIndex()"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
 				  <td></td>
 				</tr>
 			</table>
-			<div class="float-left text-align-left"><h3 class="headtitle">WLAN-Einstellungen</h3></div>
+			<div class="float-left text-align-left"><h3 class="headtitle" data-tag="wlanTitle">WLAN-Einstellungen</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('WLAN Einstellungen',help_wifi)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>
 			<div class="pure-g">
@@ -2708,7 +2751,7 @@
 					<div class="1-box wlan_conf">	
 						<div class="checkbox">
 						  <label>
-							<input id="wlan_active" onclick="wlan_active();" type="checkbox" checked/><i class="helper"></i>WLAN aktivieren
+							<input id="wlan_active" onclick="wlan_active();" type="checkbox" checked/><i class="helper"></i><span data-tag="wlanActivate">WLAN aktivieren</span>
 						  </label>
 						</div>
 						<hr id="hr_wifi" style="display:none"/>
@@ -2718,7 +2761,7 @@
 						<hr />
 						 <table width="100%">
 							<tr>
-								<td align="left"><h3>Netzwerk wählen...</h3></td>
+								<td align="left"><h3 data-tag="wlanNetwork">Netzwerk wählen...</h3></td>
 								<td id="networkrefresh" align="right"></td>
 							</tr>
 						</table> 		
@@ -2726,7 +2769,7 @@
 								<!--Netzwerkliste -->
 						</table>
 						<hr />
-						<p class="pure-button pure-button-primary" onclick="clearWifi();">Netzwerkverbindungsdaten löschen</p>
+						<p class="pure-button pure-button-primary" onclick="clearWifi();" data-tag="wlanClear">Netzwerkverbindungsdaten löschen</p>
 					</div>
 				</div>
 			</div>
@@ -2735,22 +2778,22 @@
 		<div id="wlan_set" class="content" style="display:none">
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showWLAN()"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span onclick="setWLAN(document.getElementsByName('ssidInput')[0].value, document.getElementsByName('ssidPasswordInput')[0].value)">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="showWLAN()"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span onclick="setWLAN(document.getElementsByName('ssidInput')[0].value, document.getElementsByName('ssidPasswordInput')[0].value)"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>	  
 				</tr>
 			</table>
-			<h3 class="headtitle">Netzwerk Verbinden</h3>
+			<h3 class="headtitle" data-tag="wlanConnect">Netzwerk verbinden</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
 						<form>							
 							<div class="form-group">
 							  <input name="ssidInput" type="text" onkeyup="setssidInput();"maxlength="32" required="required"/>
-							  <label class="control-label" for="input">SSID</label><i class="bar"></i>
+							  <label class="control-label" for="input"><span data-tag="wlanSSID">SSID</span></label><i class="bar"></i>
 							</div>			
 							<div class="form-group">
 							  <input name="ssidPasswordInput" type="password" maxlength="63" required="required"/>
-							  <label class="control-label" for="input">Passwort</label><i class="bar"></i>
+							  <label class="control-label" for="input"><span data-tag="wlanPwd">Passwort</span></label><i class="bar"></i>
 							</div>	
 						</form>
 					</div>
@@ -2761,11 +2804,11 @@
 		<div id="pitmaster_settings" class="content" style="display:none">
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex()"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span onclick="setPitmaster();">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="showIndex()"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span onclick="setPitmaster();"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>
 				</tr>
 			</table>
-			<div class="float-left text-align-left"><h3 class="headtitle">Pitmaster-Einstellungen</h3></div>
+			<div class="float-left text-align-left"><h3 class="headtitle" data-tag="pitTitle">Pitmaster-Einstellungen</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('Pitmaster Einstellungen',help_pitmaster)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>
 			<div class="pure-g">
@@ -2774,31 +2817,31 @@
 						<form>
 							<div class="form-group">
 								<select id="pitmaster_typ" onchange="changePitmasterTyp();"><!-- Placeholder --></select>
-								<label class="control-label" for="select">Pitmaster</label><i class="bar"></i>
+								<label class="control-label" for="select"><span data-tag="pitPitmaster">Pitmaster</span></label><i class="bar"></i>
 							</div>
 							<div id="pitmaster_profile_show">
 								<div class="form-group">
 									<select onchange="showPitmasterProfile(this.value);" id="pid_profile"><!-- Placeholder --></select>
-									<label class="control-label" onchange="changePitmasterView();" for="select">Profil</label></span><i class="bar"></i>
+									<label class="control-label" onchange="changePitmasterView();" for="select"><span data-tag="pitProfile">Profil</span></label></span><i class="bar"></i>
 									<span class="icon-pencil icon-form" onclick="togglePitmasterView();">
 								</div>					  
 							</div>
 							<div id="pitmaster_channel_show">
 								<div class="form-group">
 									<select id="pitmaster_channel"><!-- Placeholder --></select>
-									<label class="control-label" for="select">Kanal</label><i class="bar"></i>
+									<label class="control-label" for="select"><span data-tag="pitChannel">Kanal</span></label><i class="bar"></i>
 								</div>	
 							</div>
 							<div id="pitmaster_set_show">	
 								<div class="form-group">
 									<input type="text" id="pitmaster_set" maxlength="5" onkeyup="validateNumber(this,'1');" required="required"/>
-									<label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
+									<label class="control-label" for="input"><span data-tag="pitTemp">Solltemperatur</span></label><i class="bar"></i>
 								</div>	
 							</div>
 							<div id="pitmaster_value_show">	
 								<div class="form-group">
 								  <input type="text" id="pitmaster_value" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
-								  <label class="control-label" for="input">Pitmaster-Wert (%)</label><i class="bar"></i>
+								  <label class="control-label" for="input"><span data-tag="pitValue">Pitmaster-Wert (%)</span></label><i class="bar"></i>
 								</div>
 							</div>
 						</form>	
@@ -2810,37 +2853,37 @@
 		<div id="pitmaster_profile" class="content" style="display:none">
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="backPidProfile();"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span onclick="setPitmasterProfile();">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="backPidProfile();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span onclick="setPitmasterProfile();"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>
 				</tr>
 			</table>	
 			<div id="aktorik_settings_show">
-				<h3 class="headtitle">Aktorik</h3>
+				<h3 class="headtitle" data-tag="pitAktorTitle">Aktorik</h3>
 				<div class="pure-g">
 					<div class="pure-u-1-1 pure-u-lg-1-1">
 						<div class="1-box channel_conf">
 							<form>
 								<div class="form-group">
 								  <input type="text" id="pid_name" maxlength="12" required="required"/>
-								  <label class="control-label" for="input">Profil Name</label><i class="bar"></i>
+								  <label class="control-label" for="input"><span data-tag="pitProfileName">Profil-Name</span></label><i class="bar"></i>
 								</div>
 								<div class="form-group">
 									<select id="pitmaster_profile_aktor"></select>
-									<label class="control-label" onchange="" for="select">Aktor</label><i class="bar"></i>
+									<label class="control-label" onchange="" for="select"><span data-tag="pitAktor">Aktor</span></label><i class="bar"></i>
 								</div>
 								<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
 									<tr>
 									  <td>
 										<div class="form-group">
 										  <input type="text" id="pid_DCmin" maxlength="4" onkeyup="validateNumber(this,'1');" required="required"/>
-										  <label class="control-label" for="input">DCmin [0-100%]</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="pitDCmin">DCmin [0-100%]</span></label><i class="bar"></i>
 										  <span class="icon-play icon-input" onclick="setDC('0');"></span>
 										</div>
 									  </td>
 									  <td>	
 										<div class="form-group">
 										  <input type="text" id="pid_DCmax" maxlength="4" onkeyup="validateNumber(this,'1');" required="required"/>
-										  <label class="control-label" for="input">DCmax [0-100%]</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="pitDCmax">DCmax [0-100%]</span></label><i class="bar"></i>
 										  <span class="icon-play icon-input" onclick="setDC('1');"></span>
 										</div>							  
 									  </td>
@@ -2852,7 +2895,7 @@
 				</div>
 			</div>
 			<div id="pid_settings_show">
-				<h3 class="headtitle">PID</h3>
+				<h3 class="headtitle" data-tag="pidTitle">PID</h3>
 				<div class="pure-g">
 					<div class="pure-u-1-1 pure-u-lg-1-1">
 						<div class="1-box channel_conf">
@@ -2862,19 +2905,19 @@
 									  <td>
 										<div class="form-group">
 										  <input type="text" id="pid_Kp" maxlength="10" onkeyup="validateNumber(this,'1');" required="required"/>
-										  <label class="control-label" for="input">Kp</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="pidKp">Kp</span></label><i class="bar"></i>
 										</div>								  	  
 									  </td>
 									  <td>
 										<div class="form-group">
 										  <input type="text" id="pid_Ki" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
-										  <label class="control-label" for="input">Ki</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="pidKi">Ki</span></label><i class="bar"></i>
 										</div>								    
 									  </td>
 									  <td>
 										<div class="form-group">
 										  <input type="text" id="pid_Kd" maxlength="10" onkeyup="validateNumber(this,'1');" required="required"/>
-										  <label class="control-label" for="input">Kd</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="pidKd">Kd</span></label><i class="bar"></i>
 										</div>								  		  
 									  </td>
 									</tr>
@@ -2884,12 +2927,12 @@
 									  <td>
 										<div class="form-group">
 										  <input type="text" id="pid_jump" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
-										  <label class="control-label" for="input">Jump Power [10-100%]</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="pidJump">Jump Power [10-100%]</span></label><i class="bar"></i>
 										</div>
 									  </td>
 									  <td>	
 										<div class="form-group">
-										  <div class="checkbox"><label><input id="pid_auto" type="checkbox" /><i class="helper"></i>Autotune</label></div>
+										  <div class="checkbox"><label><input id="pid_auto" type="checkbox" /><i class="helper"></i><span data-tag="pidAutotune">Autotune</span></label></div>
 										</div>							  
 									  </td>
 									</tr>
@@ -2900,12 +2943,12 @@
 				</div>
 			</div>
 			<div id="advanced_settings_show">
-				<h3 class="headtitle">Advanced</h3>
+				<h3 class="headtitle" data-tag="pitAdvancesTitle">Spezialfunktionen</h3>
 				<div class="pure-g">
 					<div class="pure-u-1-1 pure-u-lg-1-1">
 						<div class="1-box channel_conf">
 							<form>
-								<div class="checkbox"><label><input id="pid_opl" type="checkbox" /><i class="helper"></i>Deckelüberwachung</label></div>
+								<div class="checkbox"><label><input id="pid_opl" type="checkbox" /><i class="helper"></i><span data-tag="pitLid">Deckelüberwachung</span></label></div>
 							</form>	
 						</div>
 					</div>
@@ -2916,52 +2959,48 @@
 		<div id="channel_settings" class="content" style="display:none">
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex()"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span id="channel_settings_save">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span id="channel_settings_save"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>
 				</tr>
-			</table>	
+			</table>			
 			<div class="float-left text-align-left"><h3 id="channel_settings_headtitle" class="headtitle">N.C.</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('Kanal Einstellungen',help_channel)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>			
             <div class="pure-g">
 				<div class="pure-u-1-1 pure-u-md-1-1 pure-u-lg-1-1">
-					<div class="1-box channel_conf">
+					<div class="1-box channel_conf color_border">
 						<form>							
 							<div class="form-group">
 							  <input type="text" class="temp_input" id="channel_name" maxlength="10" required="required"/>
-							  <label class="control-label" for="input">Kanalname</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="channel_name">Kanalname</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
-							  <label class="control-label" for="input">Temp Max</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="temp_max">Temperatur-Obergrenze</label><i class="bar"></i>
 							</div>							
 							<div class="form-group">
 							  <input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
-							  <label class="control-label" for="input">Temp Min</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="temp_min">Temperatur-Untergrenze</label><i class="bar"></i>
 							</div>												
 							<div class="form-group">
 							  <select id="sensor">
 									<!-- Placeholder -->
 							  </select>
-							  <label class="control-label" for="select">Fühler</label><i class="bar"></i>
-							</div>	
+							  <label class="control-label" for="select" data-tag="temp_sensor">Fühlertyp</label><i class="bar"></i>
+							</div>							
+						</form>
+						<div class="col-lg-6 picker-wrapper">
 							<div class="form-group">
-							  <select id="color">
-								<option value="#5587A2">Niagara</option>
-								<option value="#FFAEC9">Rosa</option>
-								<option value="#0C4C88">Lapis Blue</option>
-								<option value="#EF562D">Orange</option>
-								<option value="#A349A4">Lila</option>
-								<option value="#ED1C24">Red</option>
-								<option value="#22B14C">Green</option>
-								<option value="#FFC100">Gold</option>
-								<option value="#5C7148">Kale</option>
-								<option value="#804000">Brown</option>
-							  </select>
-							  <label class="control-label" for="select">Farbe</label><i class="bar"></i>
-							</div>	
-							<div class="checkbox"><label><input id="pushalarm" type="checkbox" checked="checked"/><i class="helper"></i>Push Alarm</label></div>
-							<div class="checkbox"><label><input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i>Summer Alarm</label></div>
+							  <input id="btn-color-picker" class="btn btn-default" value="&#x025A0;" type="text" readonly/>
+							  <label class="control-label" for="input" data-tag="color">Farbe</label><i class="bar"></i>
+							</div>
+							<!-- <button id="btn-color-picker" class="btn btn-default">Select color</button> -->
+							<div class="color-picker"></div>
+						</div>
+						
+						<form>
+							<div class="checkbox"><label><input id="pushalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="push_alarm">Push-Alarm</p></label></div>
+							<div class="checkbox"><label><input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="buzzer_alarm">Piepser-Alarm</p></label></div>
 						</form>
 					</div>
 				</div>
@@ -2972,11 +3011,11 @@
 			<!-- html for about-Site -->
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span onclick="setSystem();">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span onclick="setSystem();"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>
 				</tr>
 			</table>
-			<div class="float-left text-align-left"><h3 class="headtitle">System-Einstellungen</h3></div>
+			<div class="float-left text-align-left"><h3 class="headtitle" data-tag="system_settings">System-Einstellungen</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('System Einstellungen',help_settings)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>
 			<div class="pure-g">
@@ -2985,29 +3024,30 @@
 						<form>							
 							<div class="form-group">
 							  <input type="text" id="hostname" maxlength="13" required="required"/>
-							  <label class="control-label" for="input">Hostname</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="hostname">Hostname</label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <input type="text" id="apname" maxlength="13" required="required"/>
-							  <label class="control-label" for="input">AP-Name</label><i class="bar"></i>
+							  <label class="control-label" for="input" data-tag="ap_name">APN</label><i class="bar"></i>
 							</div>										
 							<div class="form-group">
-							  <select id="language">
-								<option value="de">Deutsch</option>
+							  <select id="language" onchange="loadTranslation(this.value)">
+								<option value="de" data-tag="german">Deutsch</option>
+								<option value="en" data-tag="english">Englisch</option>
 							  </select>
-							  <label class="control-label" for="select">Sprache</label><i class="bar"></i>
+							  <label class="control-label" for="select" data-tag="language">Sprache</label><i class="bar"></i>
 							</div>							
 							<div class="form-group">
 							  <select id="unit">
-								<option value="C">Celsius</option>
-								<option value="F">Fahrenheit</option>
+								<option value="C" data-tag="celsius">Celsius</option>
+								<option value="F" data-tag="fahrenheit">Fahrenheit</option>
 							  </select>
-							  <label class="control-label" for="select">Einheit</label><i class="bar"></i>
+							  <label class="control-label" for="select" data-tag="unit">Einheit</label><i class="bar"></i>
 							</div>	
 							<div class="form-group">
-							  <select id="hwversion"></select><label class="control-label" for="select">Hardwareversion</label><i class="bar"></i>
+							  <select id="hwversion"></select><label class="control-label" for="select" data-tag="hw_version">Hardwareversion</label><i class="bar"></i>
 							</div>
-							<div class="checkbox"><label><input id="searchUpdate" type="checkbox"/><i class="helper"></i>Automatisch nach Updates suchen</label></div>								
+							<div class="checkbox"><label><input id="searchUpdate" type="checkbox"/><i class="helper"></i><p data-tag="update_search">Automatisch nach Updates suchen</p></label></div>								
 						</form>
 					</div>
 				</div>
@@ -3018,8 +3058,8 @@
 			<!-- html for about-Site -->
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span onclick="">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span onclick=""><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>		  
 				</tr>
 			</table>
 			<h3 class="headtitle">Extended settings</h3>
@@ -3043,11 +3083,11 @@
 		<div id="thingspeak" class="content" style="display:none">
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span onclick="setThingspeak();">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span onclick="setThingspeak();"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>	
 				</tr>
 			</table>
-			<div class="float-left text-align-left"><h3 class="headtitle">Nano Cloud</h3></div>
+			<div class="float-left text-align-left"><h3 class="headtitle" data-tag="cloudTitle">Nano-Cloud</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('Nano Cloud',help_cloud)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>
 			<div class="pure-g">
@@ -3056,29 +3096,29 @@
 						<form>
 							<div class="checkbox">
 							  <label>
-								<input id="CLon" type="checkbox" checked="checked"/><i class="helper"></i>Nano Cloud aktivieren
+								<input id="CLon" type="checkbox" checked="checked"/><i class="helper"></i><span data-tag="cloudActivate">Nano-Cloud aktivieren</span>
 							  </label>
 							</div>
 							<div class="form-group">
 							  <select id="CLinterval">
-								<option value="15">15 Sekunden</option>
-								<option value="30">30 Sekunden</option>
-								<option value="60">1 Minute</option>
-								<option value="120">2 Minuten</option>
-								<option value="300">5 Minuten</option>
+								<option value="15" data-tag="fifteenSeconds">15 Sekunden</option>
+								<option value="30" data-tag="thirtySeconds">30 Sekunden</option>
+								<option value="60" data-tag="oneMinutes">1 Minute</option>
+								<option value="120" data-tag="twoMinutes">2 Minuten</option>
+								<option value="300" data-tag="fiveMinutes">5 Minuten</option>
 							  </select>
-							  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
+							  <label class="control-label" for="select"><span data-tag="sendInterval">Sendeintervall (in Sek.)</span></label><i class="bar"></i>
 							</div>	
 							<div class="form-group">
 							  <label for="input"><a id="CLtoken" class="link" href="#"></a></label><i class="bar"></i>
 							</div>
-							<p class="pure-button pure-button-primary" onclick="newToken();">Token generieren</p>
+							<p class="pure-button pure-button-primary" onclick="newToken();" data-tag="cloudBtnToken">Token generieren</p>
 						</form>
 					</div>
 				</div>
 			</div>		
 			<div id="mqttheader">
-				<div class="float-left text-align-left"><h3 class="headtitle">Private MQTT Client</h3></div>
+				<div class="float-left text-align-left"><h3 class="headtitle" data-tag="mqttTitle">Privater MQTT Client</h3></div>
 				<div class="float-right text-align-right"><span onclick="setHelpBox('Private MQTT Client',help_mqtt)" class="icon-question_sign"></span></div>
 				<div style="clear:both;"></div>
 				<div class="pure-g">
@@ -3087,7 +3127,7 @@
 							<form>							
 							  <div class="checkbox">
 							    <label>
-								  <input id="PMQon" type="checkbox" checked="checked"/><i class="helper"></i>Private MQTT aktivieren
+								  <input id="PMQon" type="checkbox" checked="checked"/><i class="helper"></i><span data-tag="mqttActivate">MQTT Client aktivieren</span>
 							    </label>
 							  </div>
 							  <table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
@@ -3095,13 +3135,13 @@
 								    <td>
 									  <div class="form-group">
 										  <input type="text" id="PMQhost" maxlength="26" required="required"/>
-										  <label class="control-label" for="input">MQTT Host</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="mqttHost">MQTT Host</span></label><i class="bar"></i>
 									  </div>
 								    </td>
 								    <td>
 									  <div class="form-group">
 										  <input type="text" id="PMQport" maxlength="26" required="required"/>
-										  <label class="control-label" for="input">MQTT Port</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="mqttPort">MQTT Port</span></label><i class="bar"></i>
 									  </div>
 								    </td>
 								  </tr>
@@ -3109,13 +3149,13 @@
 								    <td>
 									  <div class="form-group">
 										  <input type="text" id="PMQuser" maxlength="26" required="required"/>
-										  <label class="control-label" for="input">MQTT User</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="mqttUser">MQTT Benutzer</span></label><i class="bar"></i>
 									  </div>
 								    </td>
 								    <td>
 									  <div class="form-group">
 										  <input type="text" id="PMQpass" maxlength="26" required="required"/>
-										  <label class="control-label" for="input">MQTT Password</label><i class="bar"></i>
+										  <label class="control-label" for="input"><span data-tag="mqttPwd">MQTT Passwort</span></label><i class="bar"></i>
 									  </div>
 								    </td>
 								  </tr>
@@ -3123,13 +3163,13 @@
 								    <td>
 									  <div class="form-group">
 									    <select id="PMQinterval">
-										  <option value="10">10 Sekunden</option>
-										  <option value="30">30 Sekunden</option>
-										  <option value="60">1 Minute</option>
-										  <option value="120">2 Minuten</option>
-										  <option value="300">5 Minuten</option>
+										  <option value="10" data-tag="tenSeconds">10 Sekunden</option>
+										  <option value="30" data-tag="thirtySeconds">30 Sekunden</option>
+										  <option value="60" data-tag="oneMinutes">1 Minute</option>
+										  <option value="120" data-tag="twoMinutes">2 Minuten</option>
+										  <option value="300" data-tag="fiveMinutes">5 Minuten</option>
 									    </select>
-									    <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
+									    <label class="control-label" for="select"><span data-tag="sendInterval">Sendeintervall</span></label><i class="bar"></i>
 									  </div>
 								    </td>
 								    <td>	
@@ -3139,7 +3179,7 @@
 										  <option value="1">1</option>
 										  <option value="2">2</option>
 									    </select>
-									    <label class="control-label" for="select">QoS</label><i class="bar"></i>
+									    <label class="control-label" for="select"><span data-tag="mqttQos">QoS</span></label><i class="bar"></i>
 									  </div>
 								    </td>
 								  </tr>
@@ -3156,11 +3196,11 @@
 			<!-- html for thingspeak-Site -->
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span>Zurück</span></td>
-				  <td><span onclick="setPushNotification();">Speichern<span class="icon-arrow_right"></span></span></td>
+				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
+				  <td><span onclick="setPushNotification();"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>
 				</tr>
 			</table>
-			<div class="float-left text-align-left"><h3 class="headtitle">Benachrichtungsdienst</h3></div>
+			<div class="float-left text-align-left"><h3 class="headtitle" data-tag="notificationTitle">Benachrichtungsdienst</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('Push Einstellungen',help_notification)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>
 			<div class="pure-g">
@@ -3169,39 +3209,39 @@
 						<form>	
 							<div class="checkbox">
 							  <label>
-								<input id="TGon" type="checkbox" checked="checked"/><i class="helper"></i>Push-Dienst aktivieren
+								<input id="TGon" type="checkbox" checked="checked"/><i class="helper"></i><span data-tag="notificationActivate">Push-Benachrichtung aktivieren</span>
 							  </label>
 							</div>								
 							<div class="form-group">
 							  <input type="text" class="temp_input" id="TGtoken" maxlength="50" required="required"/>
-							  <label class="control-label" for="input">API Token/Key</label><i class="bar"></i>
+							  <label class="control-label" for="input"><span data-tag="notificationToken">API Token/Key</span></label><i class="bar"></i>
 							</div>
 							<div class="form-group">
 							  <input type="text" class="temp_input" id="TGid" maxlength="30" required="required"/>
-							  <label class="control-label" for="input">Chat ID / User Key</label><i class="bar"></i>
+							  <label class="control-label" for="input"><span data-tag="notificationKey">Chat ID / User Key</span></label><i class="bar"></i>
 							</div>
 							<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
 								<tr>
 								  <td>
 									<div class="form-group">
 									  <select id="push_service"></select>
-									  <label class="control-label" onchange="" for="select">Dienst</label><i class="bar"></i>
+									  <label class="control-label" onchange="" for="select"><span data-tag="notificationService">Dienst</span></label><i class="bar"></i>
 									</div>
 								  </td>
 								  <td>	
 									<div class="form-group">
 									  <select id="push_repeat">
-										<option value="1">1x</option>
-										<option value="3">3x</option>
-										<option value="5">5x</option>
-										<option value="10">10x</option>
+										<option value="1" data-tag="repeadOnce">1x</option>
+										<option value="3" data-tag="repeadThreeTimes">3x</option>
+										<option value="5" data-tag="repeadFiveTimes">5x</option>
+										<option value="10" data-tag="repeadTenTimes">10x</option>
 									  </select>
-									  <label class="control-label" for="select">Wiederholungen</label><i class="bar"></i>
+									  <label class="control-label" for="select" data-tag="notificationRepead">Wiederholungen</label><i class="bar"></i>
 									 </div>							  
 								  </td>
 								</tr>
 							</table>
-							<p class="pure-button pure-button-primary" onclick="sendPushNotification();">Testnachricht senden</p>
+							<p class="pure-button pure-button-primary" onclick="sendPushNotification();" data-tag="notificationSendMessage">Testnachricht senden</p>
 						</form>
 					</div>
 				</div>
@@ -3211,11 +3251,11 @@
 		<div id="about" class="content" style="display:none">
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span>Zurück</span></td>
+				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
 				  <td></td>
 				</tr>
 			</table>
-			<h3 class="headtitle">WLANThermo Team</h3>
+			<h3 class="headtitle" data-tag="aboutTitle">WLANThermo Team</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1  pure-u-md-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
@@ -3230,12 +3270,12 @@
 					</div>
 				</div>
 			</div>
-			<h3 class="headtitle">WLANThermo Forum</h3>
+			<h3 class="headtitle" data-tag="forumTitle">WLANThermo Forum</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1  pure-u-md-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
 						<form>
-							<a href="https://forum.wlanthermo.de" target="_blank">Wir freuen uns über deinen Besuch im Forum!</a>
+							<a href="https://forum.wlanthermo.de" target="_blank" data-tag="forumUrl">Wir freuen uns über deinen Besuch im Forum!</a>
 						</form>
 					</div>
 				</div>
@@ -3245,20 +3285,20 @@
 		<div id="history" class="content" style="display:none">
 			<table class="table_nav" cellpadding="0" cellspacing="0" width="100%" border="0">
 				<tr>
-				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span>Zurück</span></td>
+				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
 				  <td></td>
 				</tr>
 			</table>
-			<h3 class="headtitle">History</h3>
+			<h3 class="headtitle" data-tag="historyTitle">Historie</h3>
 			<div class="pure-g">
 				<div class="pure-u-1-1  pure-u-md-1-1 pure-u-lg-1-1">
 					<div class="1-box channel_conf">
-						<p class="pure-button pure-button-primary" onclick="saveChartToHistory();">Chart Speichern</p>
+						<p class="pure-button pure-button-primary" onclick="saveChartToHistory();" data-tag="btnSaveChart">Chart speichern</p>
 						<table class="historyTable" width="100%">
 							  <thead>
 								<tr>
-								  <th>Datum</th>
-								  <th>Name</th>
+								  <th data-tag="date">Datum</th>
+								  <th data-tag="historyTableName">Name</th>
 								  <th></th>
 								</tr>
 							  </thead>
@@ -3563,7 +3603,8 @@
 	
 	// -----------------------------------------------------------------------------------
 		
-	function showSetChannel(channel){
+	function showSetChannel(obj){
+		channel = obj.dataset.channel;							
         console.log(channel);
 		hideAll();
         showLoader('true');
@@ -3580,7 +3621,9 @@
                 byId('channel_name').value  = jr.channel[channel].name;
                 byId('temp_max').value  = jr.channel[channel].max;
                 byId('temp_min').value  = jr.channel[channel].min;
-                byId('color').value = jr.channel[channel].color;
+				byId('btn-color-picker').style.color = jr.channel[channel].color;
+				byId('btn-color-picker').setAttribute('data-color', jr.channel[channel].color);
+				document.getElementsByClassName("color_border")[0].style.borderColor = jr.channel[channel].color;
                 byId('sensor').value = jr.channel[channel].typ;
                 switch(jr.channel[channel].alarm) {
 					case 0:
@@ -3607,6 +3650,8 @@
     }
 
 	function setChannel(channel){
+		console.log('Test');
+		console.log(byId('btn-color-picker').getAttribute('data-color'));
 		showLoader('true');
 		loadJSON('data', '', '3000', function (response) {
 			jr = JSON.parse(response);
@@ -3625,7 +3670,7 @@
 				push = 3;
 			}
 			jr.channel[channel].alarm = push;
-			jr.channel[channel].color = byId('color').value;
+			jr.channel[channel].color = byId('btn-color-picker').getAttribute('data-color');
 			var data = JSON.stringify(jr.channel[channel]);
 			showLoader('true');
 			loadJSON('setchannels', data, '60000', function (response) {
@@ -3649,6 +3694,9 @@
 		loadJSON('settings', '', '5000', function (response) {
 			jr = JSON.parse(response);
 			byId('thermoname').innerHTML = jr.system.host;
+			if(jr.system.language != "de"){
+				loadTranslation(jr.system.language);
+			}
 			if(jr.system.getupdate == 'false'){
 				byClass("notification")[0].style.display = "none";
 			}else{
@@ -3769,13 +3817,14 @@
 			jr.system.language = byId('language').value;
 			jr.system.unit = byId('unit').value;		
 			jr.system.autoupd = byId('searchUpdate').checked;			
+			loadTranslation(jr.system.language);
 			var data = JSON.stringify(jr.system);
 			showLoader('true');
 			loadJSON('setsystem', data, '60000', function (response) {
 				byId('thermoname').innerHTML = jr.system.host;
 				showIndex();
 				showLoader('false');
-			})		
+			})			
 		})	
 	}
 	// -----------------------------------------------------------------------------------
@@ -3965,6 +4014,7 @@
 		for (var i = 0; i < hideIDs.length; i++) {
 			byId(hideIDs[i]).style.display = "none";
 		}
+		pk.close();
 	}
 	
 	// -----------------------------------------------------------------------------------	
@@ -4101,7 +4151,7 @@
 				var pitID = 0;
 				var ch_count = 0;
 				for (i = 0; i < x.length; i++) {
-					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;
+					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;					
 					x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
 					if(jr.pitmaster.pm[pitID].typ == 'auto'){
 						if (jr.pitmaster.pm[pitID].channel == jr.channel[i].number){
@@ -4227,7 +4277,6 @@
 	}
 	
 	function getUnique(arr, comp) {
-
 	  const unique = arr
 		   .map(e => e[comp])
 
@@ -4390,7 +4439,38 @@
 			showExtendedSettings();
 		}
 	}	
-	
+	// translation function 
+	// -----------------------------------------------------------------------------------	
+	function loadTranslation(language){
+		var translate = new Translate();
+		var currentLng = language;//'fr'
+		var attributeName = 'data-tag';
+		translate.init(attributeName, currentLng);
+		translate.process(); 
+	}
+	function Translate() { 
+		//initialization
+		this.init =  function(attribute, lng){
+			console.log("Sprache:" + lng);
+			this.attribute = attribute;
+			this.lng = lng;    
+		}
+		//translate 
+		this.process = function(){		
+			_self = this;
+			var LngObject = window[this.lng];
+			console.log(LngObject["name1"]);
+			var allDom = document.getElementsByTagName("*");
+			for(var i =0; i < allDom.length; i++){
+				var elem = allDom[i];
+				var key = elem.getAttribute(_self.attribute);    
+                if(key != null) {
+					console.log(key);
+					elem.innerHTML = LngObject[key]  ;
+				}
+			}
+		}    
+	}	
 	// -----------------------------------------------------------------------------------	
 	
 	function setHelpBox(title,v){	
@@ -4399,100 +4479,145 @@
 		byId('helpBox').style.display= 'block';
 	}
 	readTemp();
-/* eslint no-extend-native: 0 */
+	/* eslint no-extend-native: 0 */
 
-(function () {
-  // Defining locale
-  Date.shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  Date.longMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-  Date.shortDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  Date.longDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  // Defining patterns
-  var replaceChars = {
-    // Day
-    d: function () { var d = this.getDate(); return (d < 10 ? '0' : '') + d },
-    D: function () { return Date.shortDays[this.getDay()] },
-    j: function () { return this.getDate() },
-    l: function () { return Date.longDays[this.getDay()] },
-    N: function () { var N = this.getDay(); return (N === 0 ? 7 : N) },
-    S: function () { var S = this.getDate(); return (S % 10 === 1 && S !== 11 ? 'st' : (S % 10 === 2 && S !== 12 ? 'nd' : (S % 10 === 3 && S !== 13 ? 'rd' : 'th'))) },
-    w: function () { return this.getDay() },
-    z: function () { var d = new Date(this.getFullYear(), 0, 1); return Math.ceil((this - d) / 86400000) },
-    // Week
-    W: function () {
-      var target = new Date(this.valueOf())
-      var dayNr = (this.getDay() + 6) % 7
-      target.setDate(target.getDate() - dayNr + 3)
-      var firstThursday = target.valueOf()
-      target.setMonth(0, 1)
-      if (target.getDay() !== 4) {
-        target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7)
-      }
-      var retVal = 1 + Math.ceil((firstThursday - target) / 604800000)
+	(function () {
+	  // Defining locale
+	  Date.shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+	  Date.longMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+	  Date.shortDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+	  Date.longDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+	  // Defining patterns
+	  var replaceChars = {
+		// Day
+		d: function () { var d = this.getDate(); return (d < 10 ? '0' : '') + d },
+		D: function () { return Date.shortDays[this.getDay()] },
+		j: function () { return this.getDate() },
+		l: function () { return Date.longDays[this.getDay()] },
+		N: function () { var N = this.getDay(); return (N === 0 ? 7 : N) },
+		S: function () { var S = this.getDate(); return (S % 10 === 1 && S !== 11 ? 'st' : (S % 10 === 2 && S !== 12 ? 'nd' : (S % 10 === 3 && S !== 13 ? 'rd' : 'th'))) },
+		w: function () { return this.getDay() },
+		z: function () { var d = new Date(this.getFullYear(), 0, 1); return Math.ceil((this - d) / 86400000) },
+		// Week
+		W: function () {
+		  var target = new Date(this.valueOf())
+		  var dayNr = (this.getDay() + 6) % 7
+		  target.setDate(target.getDate() - dayNr + 3)
+		  var firstThursday = target.valueOf()
+		  target.setMonth(0, 1)
+		  if (target.getDay() !== 4) {
+			target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7)
+		  }
+		  var retVal = 1 + Math.ceil((firstThursday - target) / 604800000)
 
-      return (retVal < 10 ? '0' + retVal : retVal)
-    },
-    // Month
-    F: function () { return Date.longMonths[this.getMonth()] },
-    m: function () { var m = this.getMonth(); return (m < 9 ? '0' : '') + (m + 1) },
-    M: function () { return Date.shortMonths[this.getMonth()] },
-    n: function () { return this.getMonth() + 1 },
-    t: function () {
-      var year = this.getFullYear()
-      var nextMonth = this.getMonth() + 1
-      if (nextMonth === 12) {
-        year = year++
-        nextMonth = 0
-      }
-      return new Date(year, nextMonth, 0).getDate()
-    },
-    // Year
-    L: function () { var L = this.getFullYear(); return (L % 400 === 0 || (L % 100 !== 0 && L % 4 === 0)) },
-    o: function () { var d = new Date(this.valueOf()); d.setDate(d.getDate() - ((this.getDay() + 6) % 7) + 3); return d.getFullYear() },
-    Y: function () { return this.getFullYear() },
-    y: function () { return ('' + this.getFullYear()).substr(2) },
-    // Time
-    a: function () { return this.getHours() < 12 ? 'am' : 'pm' },
-    A: function () { return this.getHours() < 12 ? 'AM' : 'PM' },
-    B: function () { return Math.floor((((this.getUTCHours() + 1) % 24) + this.getUTCMinutes() / 60 + this.getUTCSeconds() / 3600) * 1000 / 24) },
-    g: function () { return this.getHours() % 12 || 12 },
-    G: function () { return this.getHours() },
-    h: function () { var h = this.getHours(); return ((h % 12 || 12) < 10 ? '0' : '') + (h % 12 || 12) },
-    H: function () { var H = this.getHours(); return (H < 10 ? '0' : '') + H },
-    i: function () { var i = this.getMinutes(); return (i < 10 ? '0' : '') + i },
-    s: function () { var s = this.getSeconds(); return (s < 10 ? '0' : '') + s },
-    v: function () { var v = this.getMilliseconds(); return (v < 10 ? '00' : (v < 100 ? '0' : '')) + v },
-    // Timezone
-    e: function () { return Intl.DateTimeFormat().resolvedOptions().timeZone },
-    I: function () {
-      var DST = null
-      for (var i = 0; i < 12; ++i) {
-        var d = new Date(this.getFullYear(), i, 1)
-        var offset = d.getTimezoneOffset()
+		  return (retVal < 10 ? '0' + retVal : retVal)
+		},
+		// Month
+		F: function () { return Date.longMonths[this.getMonth()] },
+		m: function () { var m = this.getMonth(); return (m < 9 ? '0' : '') + (m + 1) },
+		M: function () { return Date.shortMonths[this.getMonth()] },
+		n: function () { return this.getMonth() + 1 },
+		t: function () {
+		  var year = this.getFullYear()
+		  var nextMonth = this.getMonth() + 1
+		  if (nextMonth === 12) {
+			year = year++
+			nextMonth = 0
+		  }
+		  return new Date(year, nextMonth, 0).getDate()
+		},
+		// Year
+		L: function () { var L = this.getFullYear(); return (L % 400 === 0 || (L % 100 !== 0 && L % 4 === 0)) },
+		o: function () { var d = new Date(this.valueOf()); d.setDate(d.getDate() - ((this.getDay() + 6) % 7) + 3); return d.getFullYear() },
+		Y: function () { return this.getFullYear() },
+		y: function () { return ('' + this.getFullYear()).substr(2) },
+		// Time
+		a: function () { return this.getHours() < 12 ? 'am' : 'pm' },
+		A: function () { return this.getHours() < 12 ? 'AM' : 'PM' },
+		B: function () { return Math.floor((((this.getUTCHours() + 1) % 24) + this.getUTCMinutes() / 60 + this.getUTCSeconds() / 3600) * 1000 / 24) },
+		g: function () { return this.getHours() % 12 || 12 },
+		G: function () { return this.getHours() },
+		h: function () { var h = this.getHours(); return ((h % 12 || 12) < 10 ? '0' : '') + (h % 12 || 12) },
+		H: function () { var H = this.getHours(); return (H < 10 ? '0' : '') + H },
+		i: function () { var i = this.getMinutes(); return (i < 10 ? '0' : '') + i },
+		s: function () { var s = this.getSeconds(); return (s < 10 ? '0' : '') + s },
+		v: function () { var v = this.getMilliseconds(); return (v < 10 ? '00' : (v < 100 ? '0' : '')) + v },
+		// Timezone
+		e: function () { return Intl.DateTimeFormat().resolvedOptions().timeZone },
+		I: function () {
+		  var DST = null
+		  for (var i = 0; i < 12; ++i) {
+			var d = new Date(this.getFullYear(), i, 1)
+			var offset = d.getTimezoneOffset()
 
-        if (DST === null) DST = offset
-        else if (offset < DST) { DST = offset; break } else if (offset > DST) break
-      }
-      return (this.getTimezoneOffset() === DST) | 0
-    },
-    O: function () { var O = this.getTimezoneOffset(); return (-O < 0 ? '-' : '+') + (Math.abs(O / 60) < 10 ? '0' : '') + Math.floor(Math.abs(O / 60)) + (Math.abs(O % 60) === 0 ? '00' : ((Math.abs(O % 60) < 10 ? '0' : '')) + (Math.abs(O % 60))) },
-    P: function () { var P = this.getTimezoneOffset(); return (-P < 0 ? '-' : '+') + (Math.abs(P / 60) < 10 ? '0' : '') + Math.floor(Math.abs(P / 60)) + ':' + (Math.abs(P % 60) === 0 ? '00' : ((Math.abs(P % 60) < 10 ? '0' : '')) + (Math.abs(P % 60))) },
-    T: function () { var tz = this.toLocaleTimeString(navigator.language, {timeZoneName: 'short'}).split(' '); return tz[tz.length - 1] },
-    Z: function () { return -this.getTimezoneOffset() * 60 },
-    // Full Date/Time
-    c: function () { return this.format('Y-m-d\\TH:i:sP') },
-    r: function () { return this.toString() },
-    U: function () { return Math.floor(this.getTime() / 1000) }
-  }
+			if (DST === null) DST = offset
+			else if (offset < DST) { DST = offset; break } else if (offset > DST) break
+		  }
+		  return (this.getTimezoneOffset() === DST) | 0
+		},
+		O: function () { var O = this.getTimezoneOffset(); return (-O < 0 ? '-' : '+') + (Math.abs(O / 60) < 10 ? '0' : '') + Math.floor(Math.abs(O / 60)) + (Math.abs(O % 60) === 0 ? '00' : ((Math.abs(O % 60) < 10 ? '0' : '')) + (Math.abs(O % 60))) },
+		P: function () { var P = this.getTimezoneOffset(); return (-P < 0 ? '-' : '+') + (Math.abs(P / 60) < 10 ? '0' : '') + Math.floor(Math.abs(P / 60)) + ':' + (Math.abs(P % 60) === 0 ? '00' : ((Math.abs(P % 60) < 10 ? '0' : '')) + (Math.abs(P % 60))) },
+		T: function () { var tz = this.toLocaleTimeString(navigator.language, {timeZoneName: 'short'}).split(' '); return tz[tz.length - 1] },
+		Z: function () { return -this.getTimezoneOffset() * 60 },
+		// Full Date/Time
+		c: function () { return this.format('Y-m-d\\TH:i:sP') },
+		r: function () { return this.toString() },
+		U: function () { return Math.floor(this.getTime() / 1000) }
+	  }
 
-  // Simulates PHP's date function
-  Date.prototype.format = function (format) {
-    var date = this
-    return format.replace(/(\\?)(.)/g, function (_, esc, chr) {
-      return (esc === '' && replaceChars[chr]) ? replaceChars[chr].call(date) : chr
-    })
-  }
-}).call(this)	
+	  // Simulates PHP's date function
+	  Date.prototype.format = function (format) {
+		var date = this
+		return format.replace(/(\\?)(.)/g, function (_, esc, chr) {
+		  return (esc === '' && replaceChars[chr]) ? replaceChars[chr].call(date) : chr
+		})
+	  }
+	}).call(this)	
+	
+window.addEventListener("load", function () {
+    pk = new Piklor(".color-picker", [
+			  "#FFFF00"
+			, "#FFC002"
+			, "#00FF00"
+			, "#FFFFFF"
+			, "#FF1DC4"
+			, "#E46C0A"
+			, "#C3D69B"
+			, "#0FE6F1"
+			, "#0000FF"
+			, "#03A923"
+			, "#C84B32"
+			, "#FF9B69"
+			, "#5082BE"
+			, "#FFB1D0"
+			, "#A6EF03"
+			, "#D42A6B"
+			, "#FFDA8F"
+			, "#00B0F0"
+			, "#948A54"
+        ], {
+            open: ".picker-wrapper .btn"
+        })
+      //, wrapperEl = pk.getElm(".picker-wrapper")
+      //, border = pk.getElm("color_border")
+      //, footer = pk.getElm("footer")
+      ;
+
+    pk.colorChosen(function (col) {
+        //wrapperEl.style.backgroundColor = col;
+		//byId("btn-color-picker").style.backgroundColor = col;
+		byId('btn-color-picker').style.color = col;
+		var x = document.getElementsByClassName("color_border");
+		var i;
+		for (i = 0; i < x.length; i++) {
+		  x[i].style.borderColor = col;
+		} 
+		byId('btn-color-picker').setAttribute('data-color', col);
+
+    });
+});
+
+
 </script>
 
 </body>
