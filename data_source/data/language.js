@@ -61,7 +61,7 @@
 				oneMinutes:"1 minutes",
 				twoMinutes:"2 minutes",
 				fiveMinutes:"5 minutes",			//   (wollen wir hier nur Zahlen machen und alles in Sekunden und dann Einheit zum Textfeld?)
-				sendInterval:"Send interval (in sec)", 
+				sendInterval:"Send interval", 
 				cloudBtnToken:"Generate token",
 				mqttTitle:"Private MQTT Client",		
 				mqttActivate:"Activate MQTT Client",
@@ -162,7 +162,7 @@
 				oneMinutes:"1 Minute",
 				twoMinutes:"2 Minuten",
 				fiveMinutes:"5 Minuten",
-				sendInterval:"Sendeintervall (in Sek.)",
+				sendInterval:"Sendeintervall",
 				cloudBtnToken:"Token generieren",
 				mqttTitle:"Privater MQTT Client",
 				mqttActivate:"MQTT Client aktivieren",

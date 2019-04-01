@@ -2718,7 +2718,7 @@
         </div>
 		<!-- ################################################### -->
         <div id="test" class="channel_template" style="display:none">
-			<div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4" onclick="showSetChannel(this)">
+			<div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4" onclick="showSetChannel(this.dataset.channel)">
 				<div class="1-box channel">
 					<div class="chtitle"></div>
 					<div class="chnumber"></div>
@@ -3107,7 +3107,7 @@
 								<option value="120" data-tag="twoMinutes">2 Minuten</option>
 								<option value="300" data-tag="fiveMinutes">5 Minuten</option>
 							  </select>
-							  <label class="control-label" for="select"><span data-tag="sendInterval">Sendeintervall (in Sek.)</span></label><i class="bar"></i>
+							  <label class="control-label" for="select"><span data-tag="sendInterval">Sendeintervall</span></label><i class="bar"></i>
 							</div>	
 							<div class="form-group">
 							  <label for="input"><a id="CLtoken" class="link" href="#"></a></label><i class="bar"></i>
@@ -3603,8 +3603,7 @@
 	
 	// -----------------------------------------------------------------------------------
 		
-	function showSetChannel(obj){
-		channel = obj.dataset.channel;							
+	function showSetChannel(channel){
         console.log(channel);
 		hideAll();
         showLoader('true');
