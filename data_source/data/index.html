@@ -10,6 +10,7 @@
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
     <script src="language.js"></script>
+	<script type="text/javascript">!function(e){function t(e,t,o){var n=this;o=o||{},o.open=n.getElm(o.open),o.openEvent=o.openEvent||"click",o.style=Object(o.style),o.style.display=o.style.display||"block",o.closeOnBlur=o.closeOnBlur||!1,o.template=o.template||'<div data-col="{color}" style="background-color: {color}"></div>',n.elm=n.getElm(e),n.cbs=[],n.isOpen=!0,n.colors=t,n.options=o,n.render(),o.open&&o.open.addEventListener(o.openEvent,function(e){n.isOpen?n.close():n.open()}),n.elm.addEventListener("click",function(e){var t=e.target.getAttribute("data-col");t&&(n.set(t),n.close())}),o.closeOnBlur&&window.addEventListener("click",function(e){e.target!=o.open&&e.target!=n.elm&&n.isOpen&&n.close()}),o.autoclose!==!1&&n.close()}t.prototype.getElm=function(e){return"string"==typeof e?document.querySelector(e):e},t.prototype.render=function(){var e=this,t="";e.colors.forEach(function(o){t+=e.options.template.replace(/\{color\}/g,o)}),e.elm.innerHTML=t},t.prototype.close=function(){this.elm.style.display="none",this.isOpen=!1},t.prototype.open=function(){this.elm.style.display=this.options.style.display,this.isOpen=!0},t.prototype.colorChosen=function(e){this.cbs.push(e)},t.prototype.set=function(e,t){var o=this;o.color=e,t!==!1&&o.cbs.forEach(function(t){t.call(o,e)})},e.Piklor=t}(this);</script>
 	<title>WLANThermo - Nano</title>
 	 <style>
 		@font-face {
@@ -38,6 +39,10 @@
 
 		.icon-uniF2C7:before {
 			content: "\f2c7";
+		}
+		
+		.icon-brush:before {
+			content: "\f1fc";
 		}
 
 		.icon-uniF2C8:before {
@@ -2575,6 +2580,44 @@
 			text-align: right;
 			font-size: 0.75em;
 		}
+		<!-- color-picker -->
+		.btn-default {
+			border-radius: 0;
+			background: #fff !important;
+		}		
+
+		.picker-wrapper {
+		  transition: background-color 0.5s ease;
+		}
+
+		/* picker */
+		.color-picker {
+			background: #4A4A4A;
+			padding: 10px;
+			border: 1px solid rgba(203, 203, 203, 0.6);
+			border-radius: 2px;
+		}
+
+		.color-picker > div {
+			width: 40px;
+			display: inline-block;
+			height: 40px;
+			margin: 5px;
+			border-radius: 100%;
+			opacity: 0.7;
+		}
+
+		.picker-wrapper {
+			padding: 0px;
+		}
+
+		.color-picker > div:hover {
+			opacity: 1;
+		}
+		.color_border {
+			border-left: 10px solid #FFF;
+		}
+		<!-- ---- -->
     </style>
 </head>
 <body>
@@ -2674,9 +2717,8 @@
             <h1>WLANThermo - Nano</h1>
         </div>
 		<!-- ################################################### -->
-       
         <div id="test" class="channel_template" style="display:none">
-			<div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4" onclick="showSetChannel(this.dataset.channel)">
+			<div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4" onclick="showSetChannel(this)">
 				<div class="1-box channel">
 					<div class="chtitle"></div>
 					<div class="chnumber"></div>
@@ -2920,13 +2962,13 @@
 				  <td><span onclick="showIndex();"><span class="icon-arrow_left"></span><span data-tag="back">Zurück</span></span></td>
 				  <td><span id="channel_settings_save"><span data-tag="save">Speichern</span><span class="icon-arrow_right"></span></span></td>
 				</tr>
-			</table>	
+			</table>			
 			<div class="float-left text-align-left"><h3 id="channel_settings_headtitle" class="headtitle">N.C.</h3></div>
 			<div class="float-right text-align-right"><span onclick="setHelpBox('Kanal Einstellungen',help_channel)" class="icon-question_sign"></span></div>
 			<div style="clear:both;"></div>			
             <div class="pure-g">
 				<div class="pure-u-1-1 pure-u-md-1-1 pure-u-lg-1-1">
-					<div class="1-box channel_conf">
+					<div class="1-box channel_conf color_border">
 						<form>							
 							<div class="form-group">
 							  <input type="text" class="temp_input" id="channel_name" maxlength="10" required="required"/>
@@ -2945,22 +2987,18 @@
 									<!-- Placeholder -->
 							  </select>
 							  <label class="control-label" for="select" data-tag="temp_sensor">Fühlertyp</label><i class="bar"></i>
-							</div>	
+							</div>							
+						</form>
+						<div class="col-lg-6 picker-wrapper">
 							<div class="form-group">
-							  <select id="color">
-								<option value="#5587A2">Niagara</option>
-								<option value="#FFAEC9">Rosa</option>
-								<option value="#0C4C88">Lapis Blue</option>
-								<option value="#EF562D">Orange</option>
-								<option value="#A349A4">Lila</option>
-								<option value="#ED1C24">Red</option>
-								<option value="#22B14C">Green</option>
-								<option value="#FFC100">Gold</option>
-								<option value="#5C7148">Kale</option>
-								<option value="#804000">Brown</option>
-							  </select>
-							  <label class="control-label" for="select" data-tag="color">Farbe</label><i class="bar"></i>
-							</div>	
+							  <input id="btn-color-picker" class="btn btn-default" value="&#x025A0;" type="text" readonly/>
+							  <label class="control-label" for="input" data-tag="color">Farbe</label><i class="bar"></i>
+							</div>
+							<!-- <button id="btn-color-picker" class="btn btn-default">Select color</button> -->
+							<div class="color-picker"></div>
+						</div>
+						
+						<form>
 							<div class="checkbox"><label><input id="pushalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="push_alarm">Push-Alarm</p></label></div>
 							<div class="checkbox"><label><input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i><p data-tag="buzzer_alarm">Piepser-Alarm</p></label></div>
 						</form>
@@ -3565,7 +3603,8 @@
 	
 	// -----------------------------------------------------------------------------------
 		
-	function showSetChannel(channel){
+	function showSetChannel(obj){
+		channel = obj.dataset.channel;							
         console.log(channel);
 		hideAll();
         showLoader('true');
@@ -3582,7 +3621,9 @@
                 byId('channel_name').value  = jr.channel[channel].name;
                 byId('temp_max').value  = jr.channel[channel].max;
                 byId('temp_min').value  = jr.channel[channel].min;
-                byId('color').value = jr.channel[channel].color;
+				byId('btn-color-picker').style.color = jr.channel[channel].color;
+				byId('btn-color-picker').setAttribute('data-color', jr.channel[channel].color);
+				document.getElementsByClassName("color_border")[0].style.borderColor = jr.channel[channel].color;
                 byId('sensor').value = jr.channel[channel].typ;
                 switch(jr.channel[channel].alarm) {
 					case 0:
@@ -3609,6 +3650,8 @@
     }
 
 	function setChannel(channel){
+		console.log('Test');
+		console.log(byId('btn-color-picker').getAttribute('data-color'));
 		showLoader('true');
 		loadJSON('data', '', '3000', function (response) {
 			jr = JSON.parse(response);
@@ -3627,7 +3670,7 @@
 				push = 3;
 			}
 			jr.channel[channel].alarm = push;
-			jr.channel[channel].color = byId('color').value;
+			jr.channel[channel].color = byId('btn-color-picker').getAttribute('data-color');
 			var data = JSON.stringify(jr.channel[channel]);
 			showLoader('true');
 			loadJSON('setchannels', data, '60000', function (response) {
@@ -3971,6 +4014,7 @@
 		for (var i = 0; i < hideIDs.length; i++) {
 			byId(hideIDs[i]).style.display = "none";
 		}
+		pk.close();
 	}
 	
 	// -----------------------------------------------------------------------------------	
@@ -4107,7 +4151,7 @@
 				var pitID = 0;
 				var ch_count = 0;
 				for (i = 0; i < x.length; i++) {
-					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;
+					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;					
 					x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
 					if(jr.pitmaster.pm[pitID].typ == 'auto'){
 						if (jr.pitmaster.pm[pitID].channel == jr.channel[i].number){
@@ -4529,6 +4573,51 @@
 		})
 	  }
 	}).call(this)	
+	
+window.addEventListener("load", function () {
+    pk = new Piklor(".color-picker", [
+			  "#FFFF00"
+			, "#FFC002"
+			, "#00FF00"
+			, "#FFFFFF"
+			, "#FF1DC4"
+			, "#E46C0A"
+			, "#C3D69B"
+			, "#0FE6F1"
+			, "#0000FF"
+			, "#03A923"
+			, "#C84B32"
+			, "#FF9B69"
+			, "#5082BE"
+			, "#FFB1D0"
+			, "#A6EF03"
+			, "#D42A6B"
+			, "#FFDA8F"
+			, "#00B0F0"
+			, "#948A54"
+        ], {
+            open: ".picker-wrapper .btn"
+        })
+      //, wrapperEl = pk.getElm(".picker-wrapper")
+      //, border = pk.getElm("color_border")
+      //, footer = pk.getElm("footer")
+      ;
+
+    pk.colorChosen(function (col) {
+        //wrapperEl.style.backgroundColor = col;
+		//byId("btn-color-picker").style.backgroundColor = col;
+		byId('btn-color-picker').style.color = col;
+		var x = document.getElementsByClassName("color_border");
+		var i;
+		for (i = 0; i < x.length; i++) {
+		  x[i].style.borderColor = col;
+		} 
+		byId('btn-color-picker').setAttribute('data-color', col);
+
+    });
+});
+
+
 </script>
 
 </body>
