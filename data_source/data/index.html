@@ -4572,51 +4572,51 @@
 		})
 	  }
 	}).call(this)	
+	// color picker 
+	// -----------------------------------------------------------------------------------	
 	
-window.addEventListener("load", function () {
-    pk = new Piklor(".color-picker", [
-			  "#FFFF00"
-			, "#FFC002"
-			, "#00FF00"
-			, "#FFFFFF"
-			, "#FF1DC4"
-			, "#E46C0A"
-			, "#C3D69B"
-			, "#0FE6F1"
-			, "#0000FF"
-			, "#03A923"
-			, "#C84B32"
-			, "#FF9B69"
-			, "#5082BE"
-			, "#FFB1D0"
-			, "#A6EF03"
-			, "#D42A6B"
-			, "#FFDA8F"
-			, "#00B0F0"
-			, "#948A54"
-        ], {
-            open: ".picker-wrapper .btn"
-        })
-      //, wrapperEl = pk.getElm(".picker-wrapper")
-      //, border = pk.getElm("color_border")
-      //, footer = pk.getElm("footer")
-      ;
+	window.addEventListener("load", function () {
+		pk = new Piklor(".color-picker", [
+				  "#FFFF00"
+				, "#FFC002"
+				, "#00FF00"
+				, "#FFFFFF"
+				, "#FF1DC4"
+				, "#E46C0A"
+				, "#C3D69B"
+				, "#0FE6F1"
+				, "#0000FF"
+				, "#03A923"
+				, "#C84B32"
+				, "#FF9B69"
+				, "#5082BE"
+				, "#FFB1D0"
+				, "#A6EF03"
+				, "#D42A6B"
+				, "#FFDA8F"
+				, "#00B0F0"
+				, "#948A54"
+			], {
+				open: ".picker-wrapper .btn"
+			})
+		  //, wrapperEl = pk.getElm(".picker-wrapper")
+		  //, border = pk.getElm("color_border")
+		  //, footer = pk.getElm("footer")
+		  ;
 
-    pk.colorChosen(function (col) {
-        //wrapperEl.style.backgroundColor = col;
-		//byId("btn-color-picker").style.backgroundColor = col;
-		byId('btn-color-picker').style.color = col;
-		var x = document.getElementsByClassName("color_border");
-		var i;
-		for (i = 0; i < x.length; i++) {
-		  x[i].style.borderColor = col;
-		} 
-		byId('btn-color-picker').setAttribute('data-color', col);
+		pk.colorChosen(function (col) {
+			//wrapperEl.style.backgroundColor = col;
+			//byId("btn-color-picker").style.backgroundColor = col;
+			byId('btn-color-picker').style.color = col;
+			var x = document.getElementsByClassName("color_border");
+			var i;
+			for (i = 0; i < x.length; i++) {
+			  x[i].style.borderColor = col;
+			} 
+			byId('btn-color-picker').setAttribute('data-color', col);
 
-    });
-});
-
-
+		});
+	});
 </script>
 
 </body>
