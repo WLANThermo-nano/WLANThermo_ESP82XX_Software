@@ -1008,7 +1008,7 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
       
   }
 
-  command += F(" HTTP/1.1 \r\n");
+  command += F(" HTTP/1.1\r\n");
 
   if (content > 0) {
     command += F("Content-Type: application/json\r\n");
@@ -1021,7 +1021,7 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
   command += F("SN: "); command += String(ESP.getChipId(), HEX); command += F("\r\n"); 
   command += F("Host: ");
   command += String(host);
-  command += F("\r\n");
+  command += F("\r\n\r\n");
 
   return  command;
 }
