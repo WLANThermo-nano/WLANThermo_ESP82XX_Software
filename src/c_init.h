@@ -1008,20 +1008,20 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
       
   }
 
-  command += F(" HTTP/1.1\n");
+  command += F(" HTTP/1.1\r\n");
 
   if (content > 0) {
-    command += F("Content-Type: application/json\n");
+    command += F("Content-Type: application/json\r\n");
     command += F("Content-Length: ");
     command += String(content);
-    command += F("\n");
+    command += F("\r\n");
   }
 
-  command += F("User-Agent: WLANThermo nano\n");
-  command += F("SN: "); command += String(ESP.getChipId(), HEX); command += F("\n"); 
+  command += F("User-Agent: WLANThermo nano\r\n");
+  command += F("SN: "); command += String(ESP.getChipId(), HEX); command += F("\r\n"); 
   command += F("Host: ");
   command += String(host);
-  command += F("\n\n");
+  command += F("\r\n\r\n");
 
   return  command;
 }
