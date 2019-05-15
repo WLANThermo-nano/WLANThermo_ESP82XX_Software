@@ -25,7 +25,7 @@
 #define C_CONSTS_H_
 
 // HARDWARE
-#define FIRMWAREVERSION  "v1.0.6"
+#define FIRMWAREVERSION  "v1.1.0beta"
 #define GUIAPIVERSION    "1"
 #define SERVERAPIVERSION "1"
 
