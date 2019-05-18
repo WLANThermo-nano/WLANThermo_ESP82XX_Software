@@ -3,12 +3,14 @@ Import("env")
 import gzip
 import shutil
 import os
+import subprocess
 from platformio import util 
-from pip._internal import main as pipmain
+import pip
 
 
 def install_package(package):
-    pipmain(["install","--upgrade",package])
+    subprocess.call(["pip","install","--upgrade",package])
+
 install_package("html_utils_becothal")
 from html_utils import HTML
 

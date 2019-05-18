@@ -10,3 +10,5 @@
   - Pre-release : vX.X.X_y >> v0.0.1_beta \
     X ... Number of any length    
     y ... Any charecters 
+### Fix 
+- Error in calling the pip package installation.
