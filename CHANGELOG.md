@@ -12,3 +12,4 @@
     y ... Any charecters 
 ### Fix 
 - Error in calling the pip package installation.
+- Error when 'data'-dir doesn't exist

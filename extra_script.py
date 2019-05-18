@@ -21,17 +21,20 @@ def before_uploadfs():
         print "web_ui_path is not set"
         return
     inlinedWebUI = config.get("env:esp8285","web_ui_path")[:config.get("env:esp8285","web_ui_path").find(".html")] + "_inlined.html"
+    spiff_dir = config.get("env:esp8285","spiff_dir")
     html_file = HTML()
     html_file.readFile(config.get("env:esp8285","web_ui_path"))
     html_file.inlineCSS()
     html_file.inlineJS()
     html_file.writeFile(inlinedWebUI)
-    with open(inlinedWebUI) as f_in, gzip.open("./data/index.html.gz","wb") as f_out:
+    if not os.path.exists(spiff_dir):
+        os.mkdir(spiff_dir)
+    with open(inlinedWebUI) as f_in, gzip.open(spiff_dir + "index.html.gz","wb") as f_out:
         shutil.copyfileobj(f_in,f_out) 
     os.remove(inlinedWebUI)
 
 print "Current build targets", map(str, BUILD_TARGETS) 
-if("uploadfs" in BUILD_TARGETS):
+if("uploadfs" in BUILD_TARGETS or "buildfs" in BUILD_TARGETS):
     before_uploadfs()
 else: 
     print "No extraScript for this Target"
