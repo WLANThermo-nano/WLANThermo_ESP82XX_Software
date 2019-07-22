@@ -26,6 +26,9 @@ def before_uploadfs():
     html_file.readFile(config.get("env:esp8285","web_ui_path"))
     html_file.inlineCSS()
     html_file.inlineJS()
+    html.removeComments("", "<!--", "-->")
+    html.imagesToBase64()
+    html.uglify()
     html_file.writeFile(inlinedWebUI)
     if not os.path.exists(spiff_dir):
         os.mkdir(spiff_dir)
