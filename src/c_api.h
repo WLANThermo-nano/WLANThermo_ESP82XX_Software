@@ -39,6 +39,9 @@ void deviceObj(JsonObject  &jObj) {
   jObj["device"] = "nano";
   jObj["serial"] = String(ESP.getChipId(), HEX);
   if (sys.item != "") jObj["item"] = sys.item;
+
+  jObj["cpu"] = "esp82xx";
+  jObj["flash_size"] = ESP.getFlashChipRealSize();
   
   //if (sys.hwversion == 2) jObj["hw_version"] =  String("v1+");
   //else  
