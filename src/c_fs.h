@@ -328,6 +328,8 @@ bool loadconfig(byte count, bool old) {
       else return false;
       if (json.containsKey("autoupd"))  update.autoupdate = json["autoupd"];
       else return false;
+      if (json.containsKey("autoupd"))  update.prerelease = json["preupd"];
+      //else return false;
       if (json.containsKey("getupd"))   update.get = json["getupd"].asString();
       else return false;
       if (json.containsKey("god"))      sys.god = json["god"];
@@ -559,6 +561,7 @@ bool setconfig(byte count, const char* data[2]) {
       json["update"] =      update.state;
       json["getupd"] =      update.get;
       json["autoupd"] =     update.autoupdate;
+      json["preupd"] =      update.prerelease;
       json["batmax"] =      battery.max;
       json["batmin"] =      battery.min;
       json["god"] =         sys.god;

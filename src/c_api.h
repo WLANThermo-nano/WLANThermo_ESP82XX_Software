@@ -69,6 +69,7 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
     jObj["version"] =    FIRMWAREVERSION;
     jObj["getupdate"] =  update.version;
     jObj["autoupd"] =    update.autoupdate;
+    jObj["prerelease"] =  update.prerelease;
     if (sys.hwversion == 2) jObj["hwversion"] =  String("V1+");
     else  jObj["hwversion"] =  String("V")+String(sys.hwversion);
     jObj["god"] =        sys.god;
@@ -251,6 +252,8 @@ void updateObj(JsonObject  &jObj) {
 
   // nur leeres Objekt, wird vom Server befüllt
   //jObj["available"] = true;
+  jObj["prerelease"] = update.prerelease;
+
 
   // nach einer bestimmten Version fragen
   if (update.get != "false") jObj["version"] = update.get;

@@ -236,7 +236,7 @@ struct myUpdate {
   String get;                     // UPDATE MY NEW VERSION (über Eingabe)
   String version = "false";       // UPDATE SERVER NEW VERSION
   bool autoupdate;                // CHECK UPDATE INFORMATION
-  bool prerelease;                // ?
+  bool prerelease;                // CHECK PRERELEASE TOO
 };
 
 myUpdate update;
@@ -653,7 +653,8 @@ void set_system() {
     update.get = "false";   // Änderungen am EE während Update
     update.version = "false";
   }
-  update.autoupdate = 1;
+  update.autoupdate = 1;            // Automatisch nach Updates suchen
+  update.prerelease = 0;            // keine PreRelease als Default
   update.firmwareUrl = "";          // wird nur von der API befüllt wenn Update da ist
   update.spiffsUrl = "";
   sys.god = false;
