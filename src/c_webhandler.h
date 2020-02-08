@@ -550,6 +550,7 @@ class BodyWebHandler: public AsyncWebHandler {
     if (_system.containsKey("language"))  sys.language   = _system["language"].asString();
     if (_system.containsKey("unit"))      unit = _system["unit"].asString();
     if (_system.containsKey("autoupd"))   update.autoupdate = _system["autoupd"];
+    if (_system.containsKey("prerelease"))   update.prerelease = _system["prerelease"];
     //if (_system.containsKey("fastmode"))  sys.fastmode   = _system["fastmode"];
 
     if (_system.containsKey("host")) {
