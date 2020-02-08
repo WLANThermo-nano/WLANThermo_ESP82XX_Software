@@ -497,4 +497,13 @@ void set_OLED() {
 
 }
 
+void reinit_OLED() {
+  ui.init();
+  display.flipScreenVertically();
+
+  display.clear();
+  display.display();
+
+}
+
 

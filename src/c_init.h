@@ -476,6 +476,7 @@ void drawLoading();                               // Frame while Loading
 void drawQuestion(int counter);                    // Frame while Question
 void drawMenu();
 void set_OLED();                                  // Configuration OLEDDisplay
+void reinit_OLED();
 
 // FILESYSTEM (FS)
 bool loadfile(const char* filename, File& configFile);

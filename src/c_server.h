@@ -86,6 +86,11 @@ void server_setup() {
     request->send(200, TEXTPLAIN, "Done");
   });
 
+  server.on("/oled",[](AsyncWebServerRequest *request){
+    reinit_OLED();
+    request->send(200, TEXTPLAIN, "Done");
+  });
+
   server.on("/servo",[](AsyncWebServerRequest *request){          // brauchen wir für alte Nanos
     set_pid(1);
     setconfig(ePIT,{});
