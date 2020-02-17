@@ -1017,6 +1017,7 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
     command += F("\r\n");
   }
 
+  command += F("Connection: close\r\n");
   command += F("User-Agent: WLANThermo nano\r\n");
   command += F("SN: "); command += String(ESP.getChipId(), HEX); command += F("\r\n"); 
   command += F("Host: ");
