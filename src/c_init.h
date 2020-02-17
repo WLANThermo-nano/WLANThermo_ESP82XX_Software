@@ -203,7 +203,6 @@ struct System {
    String host;                     // HOST NAME
    String language;           // SYSTEM LANGUAGE
    
-   bool autoupdate;
    byte god;                  // B0: Startpiepser, B1: nobattery  (eventuell noch typ k integrieren)
    bool pitsupply;        
    bool stby;                   // STANDBY

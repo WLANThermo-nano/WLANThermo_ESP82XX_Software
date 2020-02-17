@@ -746,8 +746,9 @@ void check_api() {
 
   if (update.state == -1 || update.state == 2) {  // -1 = check, 2 = check after restart during update
     if((wifi.mode == 1)) {
-      //Serial.println("Verbindungsversuch API");
+      Serial.println("Verbindungsversuch API");
       if (sendAPI(0)) {             // blockt sich selber, so dass nur ein Client gleichzeitig offen
+        Serial.println("Serveranfrage");
         apiindex = APIUPDATE;
         urlindex = APILINK;
         parindex = NOPARA;

@@ -546,11 +546,17 @@ class BodyWebHandler: public AsyncWebHandler {
     if (!_system.success()) return 0;
 
     String unit, _name;
+    boolean autoupd, prerelease;
+    autoupd = update.autoupdate;
+    prerelease = update.prerelease;
   
-    if (_system.containsKey("language"))  sys.language   = _system["language"].asString();
-    if (_system.containsKey("unit"))      unit = _system["unit"].asString();
-    if (_system.containsKey("autoupd"))   update.autoupdate = _system["autoupd"];
-    if (_system.containsKey("prerelease"))   update.prerelease = _system["prerelease"];
+    if (_system.containsKey("language"))   sys.language   = _system["language"].asString();
+    if (_system.containsKey("unit"))       unit = _system["unit"].asString();
+    if (_system.containsKey("autoupd"))    update.autoupdate = _system["autoupd"];
+    if (_system.containsKey("prerelease")) update.prerelease = _system["prerelease"];
+    if (update.autoupdate != autoupd || update.prerelease != prerelease) {
+      update.state = -1;             // Version erst vom Server anfragen
+    }
     //if (_system.containsKey("fastmode"))  sys.fastmode   = _system["fastmode"];
 
     if (_system.containsKey("host")) {
