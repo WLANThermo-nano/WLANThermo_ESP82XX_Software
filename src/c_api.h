@@ -72,6 +72,7 @@ void systemObj(JsonObject  &jObj, bool settings = false) {
     jObj["version"] =    FIRMWAREVERSION;
     jObj["getupdate"] =  update.version;
     jObj["autoupd"] =    update.autoupdate;
+    jObj["prerelease"] =  update.prerelease;
     if (sys.hwversion == 2) jObj["hwversion"] =  String("V1+");
     else  jObj["hwversion"] =  String("V")+String(sys.hwversion);
     jObj["god"] =        sys.god;
@@ -254,6 +255,8 @@ void updateObj(JsonObject  &jObj) {
 
   // nur leeres Objekt, wird vom Server befüllt
   //jObj["available"] = true;
+  jObj["prerelease"] = update.prerelease;
+
 
   // nach einer bestimmten Version fragen
   if (update.get != "false") jObj["version"] = update.get;
@@ -746,8 +749,9 @@ void check_api() {
 
   if (update.state == -1 || update.state == 2) {  // -1 = check, 2 = check after restart during update
     if((wifi.mode == 1)) {
-      //Serial.println("Verbindungsversuch API");
+      Serial.println("Verbindungsversuch API");
       if (sendAPI(0)) {             // blockt sich selber, so dass nur ein Client gleichzeitig offen
+        Serial.println("Serveranfrage");
         apiindex = APIUPDATE;
         urlindex = APILINK;
         parindex = NOPARA;
