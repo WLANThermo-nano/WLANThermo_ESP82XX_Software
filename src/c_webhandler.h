@@ -305,6 +305,9 @@ public:
     set_push();
     setconfig(eTHING,{});
     loadconfig(eTHING,0);
+    setserverurl(0);
+    setconfig(eSERVER,{});
+    loadconfig(eSERVER,0);
   }
     
 
@@ -665,17 +668,6 @@ class BodyWebHandler: public AsyncWebHandler {
     if (!_chart.success()) return 0;
 
     bool refresh = iot.CL_on;
-
-#ifdef THINGSPEAK
-    if (_chart.containsKey("TSwrite"))  iot.TS_writeKey = _chart["TSwrite"].asString(); 
-    if (_chart.containsKey("TShttp"))   iot.TS_httpKey  = _chart["TShttp"].asString(); 
-    if (_chart.containsKey("TSuser"))   iot.TS_userKey  = _chart["TSuser"].asString(); 
-    if (_chart.containsKey("TSchID"))   iot.TS_chID     = _chart["TSchID"].asString();
-    if (_chart.containsKey("TSshow8"))  iot.TS_show8    = _chart["TSshow8"];
-    if (_chart.containsKey("TSint"))    iot.TS_int      = _chart["TSint"];
-    if (_chart.containsKey("TSon"))     iot.TS_on       = _chart["TSon"];
-
-#endif
     
     if (_chart.containsKey("PMQhost"))  iot.P_MQTT_HOST = _chart["PMQhost"].asString(); 
     if (_chart.containsKey("PMQport"))  iot.P_MQTT_PORT = _chart["PMQport"];
@@ -854,10 +846,39 @@ class BodyWebHandler: public AsyncWebHandler {
       Serial.println("Server-URL");
       JsonObject& _url = json["url"];
 
-      for (int i = 0; i < NUMITEMS(serverurl); i++) {     // nur bekannte auslesen
-        JsonObject& _link = _url[serverurl[i].typ];
-        if (_link.containsKey("host")) serverurl[i].host = _link["host"].asString();
-        if (_link.containsKey("page")) serverurl[i].page = _link["page"].asString();
+      for (int i = 1; i < NUMITEMS(serverurl); i++) {     // "api" Objekt wird nicht beschrieben
+        JsonObject& _link = _url[serverurl[i].typ];       // nur bekannte auslesen
+        if (_link.containsKey("host") && (serverurl[i].host == "" || sys.manual_server == 1)) {
+           serverurl[i].host = _link["host"].asString(); 
+        }
+        if (_link.containsKey("page") && (serverurl[i].page == "" || sys.manual_server == 1)) {
+          serverurl[i].page = _link["page"].asString();
+        }
+        if (_link.containsKey("ssl") && (serverurl[i].ssl == "" || sys.manual_server == 1)) {
+          serverurl[i].ssl  = _link["ssl"].asString();
+        } 
+      }
+
+      // Zusatzfunktion
+      String url_task;
+      if (_url.containsKey("task"))  url_task = _url["task"].asString();
+
+      if (url_task == "delete" && !sys.manual_server) {
+        clearserverurl();
+        setconfig(eSERVER,{});
+        sys.restartnow = true;      // System neu starten um URLs wieder herzustellen
+
+      } else if (url_task == "change_dev" && !sys.manual_server) {
+        sys.devapi = true;
+        setconfig(eSYSTEM,{});
+        clearserverurl();
+        sys.restartnow = true;      // System neu starten um URLs wieder herzustellen
+
+      } else if (url_task == "change_ori" && !sys.manual_server) {
+        sys.devapi = false;
+        setconfig(eSYSTEM,{});
+        clearserverurl();
+        sys.restartnow = true;      // System neu starten um URLs wieder herzustellen
       }
 
       if (!setconfig(eSERVER,{})) return 0;   // für Serverlinks

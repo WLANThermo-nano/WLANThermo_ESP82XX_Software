@@ -721,7 +721,7 @@ bool sendAPI(int check){
       //send the request
       //printClient(serverurl[urlindex].page.c_str() ,SENDTO);
       String message = apiData(apiindex);
-      String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),message.length());
+      String adress = createCommand(POSTMETH,parindex,serverurl[urlindex].page.c_str(),serverurl[urlindex].host.c_str(),serverurl[urlindex].ssl.c_str(),message.length());
       adress += message;
       client->write(adress.c_str());
       if(sys.clientlog) Serial.println(adress);

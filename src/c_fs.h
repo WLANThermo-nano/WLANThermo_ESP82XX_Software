@@ -158,6 +158,7 @@ bool loadconfig(byte count, bool old) {
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,CHANNEL_FILE)) return false;
+      //Serial.println(json.measureLength());
       
       if (json.containsKey("temp_unit"))  sys.unit = json["temp_unit"].asString();
       else return false;
@@ -200,23 +201,7 @@ bool loadconfig(byte count, bool old) {
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,THING_FILE)) return false;
-
-      #ifdef THINGSPEAK
-      if (json.containsKey("TSwrite"))  iot.TS_writeKey = json["TSwrite"].asString();
-      else return false;
-      if (json.containsKey("TShttp"))   iot.TS_httpKey = json["TShttp"].asString();
-      else return false;
-      if (json.containsKey("TSchID"))   iot.TS_chID = json["TSchID"].asString();
-      else return false;
-      if (json.containsKey("TS8"))      iot.TS_show8 = json["TS8"];
-      else return false;
-      if (json.containsKey("TSuser"))   iot.TS_userKey = json["TSuser"].asString();
-      else return false;
-      if (json.containsKey("TSint"))    iot.TS_int = json["TSint"];
-      else return false;
-      if (json.containsKey("TSon"))     iot.TS_on = json["TSon"];
-      else return false;
-      #endif
+      //Serial.println(json.measureLength());
       
       if (json.containsKey("PMQhost"))  iot.P_MQTT_HOST = json["PMQhost"].asString();
       else return false;
@@ -250,6 +235,7 @@ bool loadconfig(byte count, bool old) {
 
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,PIT_FILE)) return false;
+      //Serial.println(json.measureLength());
 
       JsonArray& _master = json["pm"];
 
@@ -279,13 +265,7 @@ bool loadconfig(byte count, bool old) {
         pid[pidsize].aktor = _pid[pidsize]["aktor"];  
         pid[pidsize].Kp = _pid[pidsize]["Kp"];  
         pid[pidsize].Ki = _pid[pidsize]["Ki"];    
-        pid[pidsize].Kd = _pid[pidsize]["Kd"];                     
-        //pid[pidsize].Kp_a = _pid[pidsize]["Kp_a"];                   
-        //pid[pidsize].Ki_a = _pid[pidsize]["Ki_a"];                   
-        //pid[pidsize].Kd_a = _pid[pidsize]["Kd_a"];                   
-        //pid[pidsize].Ki_min = _pid[pidsize]["Ki_min"];                   
-        //pid[pidsize].Ki_max = _pid[pidsize]["Ki_max"];                  
-        //pid[pidsize].pswitch = _pid[pidsize]["switch"];                              
+        pid[pidsize].Kd = _pid[pidsize]["Kd"];                                            
         pid[pidsize].DCmin    = _pid[pidsize]["DCmin"];              
         pid[pidsize].DCmax    = _pid[pidsize]["DCmax"];              
         //pid[pidsize].SVmin    = _pid[pidsize]["SVmin"];             
@@ -308,6 +288,7 @@ bool loadconfig(byte count, bool old) {
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,SYSTEM_FILE)) return false;
+      //Serial.println(json.measureLength());
   
       if (json.containsKey("ch"))       sys.ch = json["ch"];
       else sys.ch = MAXCHANNELS;
@@ -343,6 +324,9 @@ bool loadconfig(byte count, bool old) {
 
       if (json.containsKey("damper"))      sys.damper = json["damper"];
 
+      if (json.containsKey("dev"))      sys.devapi = json["dev"];
+      if (json.containsKey("murl"))      sys.manual_server = json["murl"];
+
 
       if (update.state == 3) update.state = 4;     // Ende eines Updates über alte API (v0.x.x)
   
@@ -357,6 +341,7 @@ bool loadconfig(byte count, bool old) {
       
       JsonObject& json = jsonBuffer.parseObject(buf.get());
       if (!checkjson(json,PUSH_FILE)) return false;
+      //Serial.println(json.measureLength());
       
       if (json.containsKey("onP"))      pushd.on = json["onP"];
       else return false;
@@ -371,6 +356,32 @@ bool loadconfig(byte count, bool old) {
     }
     break;
 
+    case 6:     // SERVER
+    { 
+      std::unique_ptr<char[]> buf(new char[EESERVER]);
+      readEE(buf.get(),EESERVER, EESERVERBEGIN);
+      
+      JsonObject& json = jsonBuffer.parseObject(buf.get());
+      if (!checkjson(json,SERVER_FILE)) return false;
+      //Serial.println(json.measureLength());
+      
+      for (int i = 0; i < NUMITEMS(serverurl); i++) {
+        
+        JsonObject& _link = json[serverurl[i].typ];
+
+        if (_link.containsKey("host")) serverurl[i].host = _link["host"].asString();
+        else return false;
+        
+        if (_link.containsKey("page")) serverurl[i].page = _link["page"].asString();
+        if (_link.containsKey("ssl"))  serverurl[i].ssl  = _link["ssl"].asString();
+
+      }
+
+      if (serverurl[0].host == "") return false;  // URLs neu setzen
+    }
+    break;
+
+/*
     case 6:     // SERVERURL
     {
       if (!loadfile(SERVER_FILE,configFile)) return false;
@@ -392,6 +403,8 @@ bool loadconfig(byte count, bool old) {
       }
     }
    break;
+
+   */
     
     //case 7:     // PRESETS
     //break;
@@ -464,15 +477,6 @@ bool setconfig(byte count, const char* data[2]) {
     {
       JsonObject& json = jsonBuffer.createObject();
 
-      #ifdef THINGSPEAK
-      json["TSwrite"] = iot.TS_writeKey;
-      json["TShttp"]  = iot.TS_httpKey;
-      json["TSuser"]  = iot.TS_userKey;
-      json["TSchID"]  = iot.TS_chID;
-      json["TS8"]     = iot.TS_show8;
-      json["TSint"]   = iot.TS_int;
-      json["TSon"]    = iot.TS_on;
-      #endif
       json["PMQhost"]  = iot.P_MQTT_HOST;
       json["PMQport"]  = iot.P_MQTT_PORT;
       json["PMQuser"]  = iot.P_MQTT_USER;
@@ -521,13 +525,7 @@ bool setconfig(byte count, const char* data[2]) {
         _pid["aktor"]    = pid[i].aktor;
         _pid["Kp"]       = double_with_n_digits(pid[i].Kp,1);  
         _pid["Ki"]       = double_with_n_digits(pid[i].Ki,3);    
-        _pid["Kd"]       = double_with_n_digits(pid[i].Kd,1);                   
-        //_pid["Kp_a"]     = double_with_n_digits(pid[i].Kp_a,1);               
-        //_pid["Ki_a"]     = double_with_n_digits(pid[i].Ki_a,3);                  
-        //_pid["Kd_a"]     = double_with_n_digits(pid[i].Kd_a,1);             
-        //_pid["Ki_min"]   = pid[i].Ki_min;             
-        //_pid["Ki_max"]   = pid[i].Ki_max;             
-        //_pid["switch"]   = pid[i].pswitch;                           
+        _pid["Kd"]       = double_with_n_digits(pid[i].Kd,1);                                       
         _pid["DCmin"]    = double_with_n_digits(pid[i].DCmin,1);             
         _pid["DCmax"]    = double_with_n_digits(pid[i].DCmax,1);             
         _pid["jp"]    = pid[i].jumppw;  
@@ -570,6 +568,8 @@ bool setconfig(byte count, const char* data[2]) {
       json["batfull"] =     battery.setreference;
       json["pass"] =        sys.www_password;
       json["damper"] =      sys.damper;
+      json["dev"] =         sys.devapi;
+      json["murl"] =        sys.manual_server;
     
       size_t size = json.measureLength() + 1;
       clearEE(EESYSTEM,EESYSTEMBEGIN);  // Bereich reinigen
@@ -602,6 +602,32 @@ bool setconfig(byte count, const char* data[2]) {
     }
     break;
 
+    case 6:         //SERVER
+    {
+      JsonObject& json = jsonBuffer.createObject();
+      
+      for (int i = 0; i < NUMITEMS(serverurl); i++) {
+  
+        JsonObject& _obj = json.createNestedObject(serverurl[i].typ);
+        _obj["host"] =  serverurl[i].host;
+        _obj["page"] =  serverurl[i].page;
+        _obj["ssl"] =   serverurl[i].ssl;
+      }
+      
+      size_t size = json.measureLength() + 1;
+      if (size > EESERVER) {
+        IPRINTPLN("f:full");
+        return false;
+      } else {
+        clearEE(EESERVER,EESERVERBEGIN);  // Bereich reinigen
+        static char buffer[EESERVER];
+        json.printTo(buffer, size);
+        writeEE(buffer, size, EESERVERBEGIN);
+      }
+    }
+    break;
+
+/*
     case 6:         //SERVERLINK
     {
       JsonObject& json = jsonBuffer.createObject();
@@ -617,7 +643,7 @@ bool setconfig(byte count, const char* data[2]) {
       configFile.close();
     }
     break;
-
+*/
     case 7:         //PRESETS
     {
       
@@ -699,6 +725,10 @@ bool modifyconfig(byte count, bool neu) {
     break;
 
     case 5:           // PUSH
+    // nicht notwendig, kann über setconfig beschrieben werden
+    break;
+
+    case 6:           // SERVER
     // nicht notwendig, kann über setconfig beschrieben werden
     break;
 

@@ -110,6 +110,16 @@ void server_setup() {
     request->send(200, TEXTPLAIN, "aktiviert");
   });
 
+  server.on("/dev",[](AsyncWebServerRequest *request){
+    sys.devapi=!sys.devapi;
+    setconfig(eSYSTEM,{});
+    setserverurl();
+    setconfig(eSERVER,{});
+    sys.restartnow = true;
+    if (sys.devapi) request->send(200, TEXTPLAIN, "aktiviert");
+    else request->send(200, TEXTPLAIN, "deaktiviert");
+  });
+
   server.on("/restart",[](AsyncWebServerRequest *request){
     sys.restartnow = true;
     request->redirect("/");

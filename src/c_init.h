@@ -222,6 +222,9 @@ struct System {
    bool transform;            // 12V transformation flag
    bool clientlog;
 
+   bool devapi;               // Develop Mode / API
+   int8_t manual_server;      // 0 = no, 1 = set, 2 = block
+
 };
 
 System sys;
@@ -263,16 +266,6 @@ int vol_count = 0;
 
 // IOT
 struct IoT {
-
-  #ifdef THINGSPEAK
-   String TS_writeKey;          // THINGSPEAK WRITE API KEY
-   String TS_httpKey;           // THINGSPEAK HTTP API KEY 
-   String TS_userKey;           // THINGSPEAK USER KEY 
-   String TS_chID;              // THINGSPEAK CHANNEL ID 
-   bool TS_show8;               // THINGSPEAK SHOW SOC
-   int TS_int;                  // THINGSPEAK INTERVAL IN SEC
-   bool TS_on;                  // THINGSPEAK ON / OFF
-  #endif
   
    String P_MQTT_HOST;          // PRIVATE MQTT BROKER HOST
    uint16_t P_MQTT_PORT;        // PRIVATE MQTT BROKER PORT
@@ -397,15 +390,13 @@ struct ServerData {
    String host;           // nur die Adresse ohne Anhang
    String page;           // alles was nach de, com etc. kommt  
    String typ; 
+   String ssl;           // SSL Verbindung
 };
 
-#ifdef THINGSPEAK
-ServerData serverurl[5];     // 0:api, 1: note, 2:cloud
-enum {APILINK, NOTELINK, CLOUDLINK, TSLINK, HTTPLINK};
-#else
+
 ServerData serverurl[3];     // 0:api, 1: note, 2:cloud
 enum {APILINK, NOTELINK, CLOUDLINK};
-#endif
+
 
 enum {NOPARA, TESTPARA, SENDTS, THINGHTTP};                       // Config GET/POST Request
 
@@ -540,10 +531,6 @@ void set_push();
 void sendNotification();
 String newToken();
 
-#ifdef THINGSPEAK
-String collectData();
-String createNote();
-#endif
 
 // API
 int apiindex;
@@ -569,30 +556,43 @@ void setserverurl(bool init = false) {
   serverurl[1].typ  = "note";
   serverurl[2].typ  = "cloud";
 
-  #ifdef THINGSPEAK
-  serverurl[3].typ  = "thingspeak";
-  serverurl[4].typ  = "thinghttp";
-  #endif
-
+  // kein Überschreiben bei normalem Start
   if (init) return;
   
-  serverurl[0].host = APISERVER;
-  serverurl[0].page = CHECKAPI;
+  if (sys.devapi) {
+    serverurl[0].host = APIDEVSERVER;
+    serverurl[1].host = APIDEVSERVER;
+    serverurl[2].host = APIDEVSERVER;
+  } else {
+    serverurl[0].host = APISERVER;
+    serverurl[1].host = APISERVER;
+    serverurl[2].host = APISERVER;
+    serverurl[0].page = APIPAGE;
+    serverurl[0].ssl = SSLFALSE;
+    serverurl[1].page = APIPAGE;
+    serverurl[1].ssl = SSLFALSE;
+    serverurl[2].page = APIPAGE;
+    serverurl[2].ssl = SSLFALSE;
+  }
   
-  serverurl[1].host = APISERVER;
-  serverurl[1].page = CHECKAPI;
-  
-  serverurl[2].host = APISERVER;
-  serverurl[2].page = CHECKAPI;
-  
+}
 
-  #ifdef THINGSPEAK
-  serverurl[3].host = THINGSPEAKSERVER;
-  serverurl[3].page = SENDTSLINK;
- 
-  serverurl[4].host = THINGSPEAKSERVER;
-  serverurl[4].page = THINGHTTPLINK;
-  #endif
+void clearserverurl() {
+
+  serverurl[0].typ  = "api";
+  serverurl[1].typ  = "note";
+  serverurl[2].typ  = "cloud";
+
+  serverurl[0].host = "";
+  serverurl[1].host = "";
+  serverurl[2].host = "";
+  serverurl[0].page = "";
+  serverurl[0].ssl = "";
+  serverurl[1].page = "";
+  serverurl[1].ssl = "";
+  serverurl[2].page = "";
+  serverurl[2].ssl = "";
+
 }
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -664,6 +664,9 @@ void set_system() {
   sys.pitsupply = false;           // nur mit Mod
   sys.damper = false;
   sys.restartnow = false;
+
+  sys.devapi = false;
+  sys.manual_server = 0;
 
   update.state = -1;  // Kontakt zur API herstellen
 }
@@ -751,24 +754,6 @@ void maintimer(bool stby = false) {
       if (!(oscounter % ((iot.CL_int/3)*4))) {    // 
         if (iot.CL_on && cloudcount < CLOUDLOGMAX) saveLog();
       }
-      #endif
-
-      #ifdef THINGSPEAK
-
-      // THINGSPEAK
-      if (!(oscounter % (iot.TS_int*4))) {   // variable
-        if (wifi.mode == 1 && update.state == 0 && iot.TS_on) {
-          if (iot.TS_writeKey != "" && iot.TS_chID != "") {
-            if (sendAPI(0)) {
-              apiindex = NOAPI;
-              urlindex = TSLINK;
-              parindex = SENDTS;
-              sendAPI(2);
-            }
-          }
-        }
-      } 
-
       #endif
 
       // ALARM REPEAT
@@ -954,19 +939,6 @@ String createParameter(int para) {
       command += update.get;
       break;
       
-    #ifdef THINGSPEAK
-    
-    case THINGHTTPKEY:
-      command += F("api_key=");
-      command += iot.TS_httpKey;
-      break;
-
-    case TSWRITEKEY:
-      command += F("api_key=");
-      command += iot.TS_writeKey;
-      break;
-
-    #endif
   }
 
   return command;
@@ -977,7 +949,7 @@ String createParameter(int para) {
 enum {GETMETH, POSTMETH};                                                   // Method
 
 // GET/POST Generator
-String createCommand(bool meth, int para, const char * link, const char * host, int content) {
+String createCommand(bool meth, int para, const char * link, const char * host, const char * ssl, int content) {
 
   String command;
   command += meth ? F("POST ") : F("GET ");
@@ -989,25 +961,12 @@ String createCommand(bool meth, int para, const char * link, const char * host, 
     case TESTPARA:
     break;
 
-    #ifdef THINGSPEAK
-
-    case SENDTS:
-      command += createParameter(TSWRITEKEY);
-      command += collectData();
-      break;
-
-    case THINGHTTP:
-      command += createParameter(THINGHTTPKEY);
-      command += createNote();
-      break;
-
-    #endif
-
     default:
     break;
       
   }
 
+  // TODO: ssl integrieren
   command += F(" HTTP/1.1\r\n");
 
   if (content > 0) {

@@ -100,6 +100,13 @@ void read_serial(char *buffer) {
       }
       return;    
     }
+
+    else if (command == "setapi") {
+      sys.manual_server = 1;
+      bodyWebHandler.setServerAPI(PM_buffer);
+      sys.manual_server = 2;
+      return;
+    }
   
   } else {
   

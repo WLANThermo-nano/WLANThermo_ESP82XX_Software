@@ -86,8 +86,8 @@
 #define HOSTNAME    "NANO-"
 
 // FILESYSTEM
-#define CHANNELJSONVERSION 4        // FS VERSION
-#define EEPROM_SIZE 2816            // EEPROM SIZE
+#define CHANNELJSONVERSION 5        // FS VERSION
+#define EEPROM_SIZE 3072            // EEPROM SIZE
 #define EEWIFIBEGIN         0
 #define EEWIFI              300
 #define EESYSTEMBEGIN       EEWIFIBEGIN+EEWIFI
@@ -99,7 +99,10 @@
 #define EEPITMASTERBEGIN    EETHINGBEGIN+EETHING
 #define EEPITMASTER         700
 #define EEPUSHBEGIN         EEPITMASTERBEGIN+EEPITMASTER
-#define EEPUSH              512         
+#define EEPUSH              512  
+#define EESERVERBEGIN       EEPUSHBEGIN+EEPUSH
+#define EESERVER            250
+       
 
 // PITMASTER
 #define PITMASTER0IO1 15               // PITMASTER PIN
@@ -118,8 +121,11 @@
 #define PRODUCTNUMBERLENGTH 11
 
 // API
-#define APISERVER "api.wlanthermo.de"
-#define CHECKAPI "/"
+#define APISERVER    "api.wlanthermo.de"
+#define APIDEVSERVER "dev-api.wlanthermo.de"
+#define APIPAGE      "/"
+#define SSLFALSE     "http"
+
 
 //#define APISERVER "nano.norma.uberspace.de"
 //#define CHECKAPI "/api/index.php"
