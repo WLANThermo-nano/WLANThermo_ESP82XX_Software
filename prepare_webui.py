@@ -99,11 +99,12 @@ class WebUi:
     def inlineCSS(linkItem):
         src = linkItem["href"]
         try:
-            with open(src, 'r') as handle:
+            with open(src, 'r', encoding="utf8") as handle:
                 linkItem.name = "style"
                 linkItem.clear()
                 linkItem.attrs.clear()# = {}
-                linkItem.string = handle.read()
+                content = handle.read()
+                linkItem.string = "\n" + content + "\n"
         except:
             print("Couln't inline CSS: ", src)
             raise
@@ -121,9 +122,9 @@ class WebUi:
     def inlineJS(scriptItem):
         src = scriptItem["src"]
         try:
-            with open(src, 'r') as handle:
+            with open(src, 'r', encoding="utf8") as handle:
                 content = handle.read()
-                scriptItem.string = content
+                scriptItem.string = "\n" + content + "\n"
                 del scriptItem["src"]
                 scriptItem["type"] = "text/javascript"
         except:
@@ -208,7 +209,7 @@ class WebUi:
                     continue
                 text = jsScript.string
                 minified = WebUi.minifyJs(text, jsMinify)
-                jsScript.string = "\n" + minified + "\n"
+                jsScript.string = minified
 
         if htmlMinify != "None":
             self.__log("Minify HTML")
@@ -223,29 +224,21 @@ class WebUi:
         return content #.encode("utf-8").decode("utf-8")
 
     def prepareFile(self, filePath):
-        with open(filePath, 'r') as handle:
+        with open(filePath, 'r', encoding="utf8") as handle:
             content = handle.read()
 
         htmlStr = self.prepareContent(content, os.path.dirname(filePath))
         return htmlStr
 
-webUi = WebUi(
-    {
-        "inline": {
-            "JS": True,
-            "CSS": True,
-            "IMG": True
-        },
-        "minify": {
-            "JS": "None",
-            "CSS": "None",
-            "HTML": "None"
-        }
-    }
-)
-webUi.log = True
-
-out = webUi.prepareFile("webui/_test_index.html")
-with open("webui/_test_out.html", "w", encoding="utf8") as handle:
-    handle.write(out)
-#print(out)
+### USAGE EXAMPLE
+### options = WebUi.getDefaultOptions(None)
+### 
+### webUi = WebUi(options)
+### webUi.log = True
+### 
+### out = webUi.prepareFile("webui/index.html")
+### 
+### with open("webui/_test_out.html", "w", encoding="utf8") as handle:
+###     handle.write(out)
+### 
+### #print(out)
