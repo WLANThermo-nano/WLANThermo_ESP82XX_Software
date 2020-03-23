@@ -5,13 +5,13 @@ from bs4 import BeautifulSoup, Comment, NavigableString
 # from enum import Enum  # for enum34, or the stdlib version ... TODO
 
 import re, os, base64
-
 import requests # for https://javascript-minifier.com/raw | https://cssminifier.com/
+
 #JsMinifier = Enum('None', 'online_andychilton')
 
-class WebUi:
+class WebUiPacker:
     def __init__(self, options):
-        self.options = WebUi.getDefaultOptions(options)
+        self.options = WebUiPacker.getDefaultOptions(options)
         self.log = False
 
     @staticmethod
@@ -49,7 +49,7 @@ class WebUi:
 
     def __log(self, *msgs):
         if self.log:
-            out = "[WebUi]"
+            out = "[WebUiPacker]"
             print(out, msgs);
 
     @staticmethod
@@ -113,7 +113,7 @@ class WebUi:
     def inlineIMG(imgItem):
         src = imgItem["src"]
         try:
-            imgItem["src"] = WebUi.imageFileToBase64(src)
+            imgItem["src"] = WebUiPacker.imageFileToBase64(src)
         except:
             print("Couln't inline IMG: ", src)
             raise
@@ -142,7 +142,7 @@ class WebUi:
         return prefix+base64Encoded.decode('utf-8')
         return "Foo"
 
-    def prepareContent(self, content, workingDir):
+    def processContent(self, content, workingDir):
         ## options = __getDefaultOptions(options)
         soup = BeautifulSoup(content, 'html.parser')
         curDir = os.getcwd()
@@ -157,7 +157,7 @@ class WebUi:
         if self.__getOption("remove","level_empty_lines") > 0:
             self.__log("Remove empty lines (root level)")
             for child in soup:
-                if WebUi.__isSoupEmptyLine(child):
+                if WebUiPacker.__isSoupEmptyLine(child):
                     child.extract()
                     #child.decompose()
 
@@ -165,14 +165,14 @@ class WebUi:
             self.__log("Inline CSS")
             os.chdir(workingDir)
             for style in soup.findAll('link', href=re.compile(r".+"), rel="stylesheet", type="text/css"):
-                WebUi.inlineCSS(style)
+                WebUiPacker.inlineCSS(style)
             os.chdir(curDir)
 
         if self.__getOption("inline","JS"):
             self.__log("Inline JS")
             os.chdir(workingDir)
             for jsScript in soup.findAll('script', src=re.compile(r".+")):
-                WebUi.inlineJS(jsScript)
+                WebUiPacker.inlineJS(jsScript)
             os.chdir(curDir)
 
         if self.__getOption("inline","IMG"):
@@ -180,7 +180,7 @@ class WebUi:
             os.chdir(workingDir)
             for img in soup.findAll('img', src=re.compile(r".+")):
                 if not img["src"].startswith("data:"):
-                    WebUi.inlineIMG(img)
+                    WebUiPacker.inlineIMG(img)
             os.chdir(curDir)
 
         cssMinify = self.__getOption("minify","CSS")
@@ -199,7 +199,7 @@ class WebUi:
             self.__log("Minify CSS")
             for style in soup.findAll('style'):
                 text = style.string
-                minified = WebUi.minifyCSS(text, cssMinify)
+                minified = WebUiPacker.minifyCSS(text, cssMinify)
                 style.string = "\n" + minified + "\n"
 
         if jsMinify != "None":
@@ -208,13 +208,13 @@ class WebUi:
                 if "src" in jsScript.attrs:
                     continue
                 text = jsScript.string
-                minified = WebUi.minifyJs(text, jsMinify)
+                minified = WebUiPacker.minifyJs(text, jsMinify)
                 jsScript.string = minified
 
         if htmlMinify != "None":
             self.__log("Minify HTML")
             text = str(soup)
-            minified = WebUi.minifyHtml(text, htmlMinify)
+            minified = WebUiPacker.minifyHtml(text, htmlMinify)
             content = minified
         else:
             content = str(soup)
@@ -223,22 +223,22 @@ class WebUi:
         #htmlStr = str(htmlObj)
         return content #.encode("utf-8").decode("utf-8")
 
-    def prepareFile(self, filePath):
+    def processFile(self, filePath):
         with open(filePath, 'r', encoding="utf8") as handle:
             content = handle.read()
 
-        htmlStr = self.prepareContent(content, os.path.dirname(filePath))
+        htmlStr = self.processContent(content, os.path.dirname(filePath))
         return htmlStr
 
 ### USAGE EXAMPLE
-### options = WebUi.getDefaultOptions(None)
+### options = WebUiPacker.getDefaultOptions(None)
 ### 
-### webUi = WebUi(options)
-### webUi.log = True
+### webUiPacker = WebUiPacker(options)
+### webUiPacker.log = True
 ### 
-### out = webUi.prepareFile("webui/index.html")
+### out = webUiPacker.processFile("webuiPacker/index.html")
 ### 
-### with open("webui/_test_out.html", "w", encoding="utf8") as handle:
+### with open("webuiPacker/_test_out.html", "w", encoding="utf8") as handle:
 ###     handle.write(out)
 ### 
 ### #print(out)
