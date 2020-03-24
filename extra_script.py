@@ -16,6 +16,7 @@ def install_package(package):
 
 #install_package("html_utils_becothal")
 install_package("beautifulsoup4")
+install_package("html5lib")
 
 #from html_utils import HTML
 from prepare_webui import WebUiPacker
@@ -33,7 +34,15 @@ def before_uploadfs():
     inlined_webUiFilePath = config.get(environment,"web_ui_path")[:config.get(environment,"web_ui_path").find(".html")] + "_inlined.html"
     spiff_dir = config.get(environment,"spiff_dir")
 
-    webPackerOptions = WebUiPacker.getDefaultOptions(None)
+
+    # Set all entries in minify to "None" to avoid web access
+    webPackerOptions = {
+        "minify": {
+            "JS": "online_andychilton", # "None" | "online_andychilton"
+            "CSS": "online_andychilton", # "None" | "online_andychilton"
+            "HTML": "online_andychilton" # "None" | "online_andychilton"
+        }
+    }
     webPacker = WebUiPacker(webPackerOptions)
     webPacker.log = True
 

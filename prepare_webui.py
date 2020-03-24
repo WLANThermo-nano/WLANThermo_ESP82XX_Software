@@ -30,6 +30,9 @@ class WebUiPacker:
                 "JS": "online_andychilton", # "None" | "online_andychilton"
                 "CSS": "online_andychilton", # "None" | "online_andychilton"
                 "HTML": "online_andychilton" # "None" | "online_andychilton"
+            },
+            "prettify": {
+                "HTML": False
             }
         }
         if not options:
@@ -142,9 +145,16 @@ class WebUiPacker:
         return prefix+base64Encoded.decode('utf-8')
         return "Foo"
 
+    def __unsetHtmlPrettifyOnDemand(self, reason):
+        if not self.__getOption("prettify", "HTML"):
+            return
+        self.options["prettify"]["HTML"] = False
+        self.__log("The ['prettify']['HTML'] option is set to False: ", reason)
+
     def processContent(self, content, workingDir):
         ## options = __getDefaultOptions(options)
-        soup = BeautifulSoup(content, 'html.parser')
+        soup = BeautifulSoup(content, 'html5lib')
+        #soup = BeautifulSoup(content, 'html.parser')
         curDir = os.getcwd()
 
         # remove all comments
@@ -186,6 +196,8 @@ class WebUiPacker:
         cssMinify = self.__getOption("minify","CSS")
         jsMinify = self.__getOption("minify","JS")
         htmlMinify = self.__getOption("minify","HTML")
+        
+  
 
         if htmlMinify == "online_andychilton":
             if cssMinify == htmlMinify:
@@ -197,6 +209,7 @@ class WebUiPacker:
 
         if cssMinify != "None":
             self.__log("Minify CSS")
+            self.__unsetHtmlPrettifyOnDemand("Recurs with the minify option for CSS.")
             for style in soup.findAll('style'):
                 text = style.string
                 minified = WebUiPacker.minifyCSS(text, cssMinify)
@@ -204,6 +217,7 @@ class WebUiPacker:
 
         if jsMinify != "None":
             self.__log("Minify JS")
+            self.__unsetHtmlPrettifyOnDemand("Recurs with the minify option for JS.")
             for jsScript in soup.findAll('script', type="text/javascript"):
                 if "src" in jsScript.attrs:
                     continue
@@ -212,12 +226,16 @@ class WebUiPacker:
                 jsScript.string = minified
 
         if htmlMinify != "None":
+            self.__unsetHtmlPrettifyOnDemand("Recurs with the minify option for HTML.")
             self.__log("Minify HTML")
             text = str(soup)
             minified = WebUiPacker.minifyHtml(text, htmlMinify)
             content = minified
         else:
-            content = str(soup)
+            if self.__getOption("prettify", "HTML"):
+                content = soup.prettify()
+            else:
+                content = str(soup)
 
         #htmlStr = htmlObj.prettify()
         #htmlStr = str(htmlObj)
@@ -232,7 +250,7 @@ class WebUiPacker:
 
 ### USAGE EXAMPLE
 ### options = WebUiPacker.getDefaultOptions(None)
-### 
+### options["inline"]["IMG"] = False
 ### webUiPacker = WebUiPacker(options)
 ### webUiPacker.log = True
 ### 
