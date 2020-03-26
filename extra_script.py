@@ -31,10 +31,6 @@ def before_uploadfs():
         print("web_ui_path is not set")
         return
 
-    inlined_webUiFilePath = config.get(environment,"web_ui_path")[:config.get(environment,"web_ui_path").find(".html")] + "_inlined.html"
-    spiff_dir = config.get(environment,"spiff_dir")
-
-
     # Set all entries in minify to "None" to avoid web access
     webPackerOptions = {
         "minify": {
@@ -49,23 +45,21 @@ def before_uploadfs():
     webUiFilePath = config.get(environment,"web_ui_path")
     inlined_webUiFileContent = webPacker.processFile(webUiFilePath)
 
-    with open(inlined_webUiFilePath, "w", encoding="utf8") as handle:
-        handle.write(inlined_webUiFileContent)
+    spiff_dir = config.get(environment,"spiff_dir")
 
     if not os.path.exists(spiff_dir):
         os.mkdir(spiff_dir)
-
-    # Couldn't you write directly to the .gz file instead of using a temporary file? TODO: Check
-    with open(inlined_webUiFilePath,"rb") as f_in, gzip.open(spiff_dir + "index.html.gz","wb") as f_out:
-        shutil.copyfileobj(f_in,f_out) 
-    os.remove(inlined_webUiFilePath)
+    
+    webUiCompressedFilePath = spiff_dir + "index.html.gz"
+    with gzip.open(webUiCompressedFilePath,"wb") as f_out:
+        f_out.write(inlined_webUiFileContent.encode("utf-8"))
+        print("Created ", webUiCompressedFilePath)
 
 print("Current build targets", map(str, BUILD_TARGETS)) 
 if("uploadfs" in BUILD_TARGETS or "buildfs" in BUILD_TARGETS):
     before_uploadfs()
 else: 
     print("No extraScript for this Target")
-
 
 
 #env.AddPreAction("uploadfs",before_buildfs)
