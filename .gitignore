@@ -6,3 +6,4 @@
 data
 \.vscode/
 \.vs/
+__pycache__/
