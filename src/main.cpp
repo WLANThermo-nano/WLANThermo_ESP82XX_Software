@@ -90,6 +90,7 @@ void setup() {
   set_serial(); Serial.setDebugOutput(true);
   set_ostimer();
   printf("SDK version:%s\n", system_get_sdk_version()); //getSdkVersion
+  Serial.print("Core version:"); Serial.println(ESP.getCoreVersion());
   // Initialize OLED
   set_OLED();
 
